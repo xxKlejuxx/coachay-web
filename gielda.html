@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Giełda</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+
+<!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+<style>
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  padding: 32px;
+}
+.empty-icon { font-size: 48px; opacity: 0.4; }
+.empty-tytul { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--txt-primary); text-align: center; }
+.empty-sub { font-size: 13px; color: var(--szary); font-weight: 600; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+
+  <div class="top-bar">
+    <div class="ctx-switcher" onclick="toggleCtxOv()">
+      <div class="ctx-dot" id="ctx-dot"></div>
+      <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
+      <span class="ctx-arrow">▾</span>
+    </div>
+    <div class="top-bar-right">
+      <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+      <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+    </div>
+  </div>
+
+  <div class="ctx-overlay" id="ctx-ov">
+    <div class="ov-label">Wybierz klub i zespół</div>
+    <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
+    <div class="ctx-teams" id="ctx-teams"></div>
+  </div>
+  <div class="notif-overlay" id="notif-ov">
+    <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
+  </div>
+
+  <div class="screen-body">
+    <!-- Kontener na oferty sparingów -->
+    <div id="offers-container" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none;">
+      <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">
+        Ładowanie ofert...
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+    <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+    <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+    <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+    <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+  </div>
+
+  <div class="login-overlay" id="login-ov">
+    <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
+    <button class="login-close" onclick="closeLogin()">✕</button>
+    <div class="login-body">
+      <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button>
+        <button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button>
+      </div>
+      <div id="auth-login">
+        <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+        <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
+        <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
+      </div>
+      <div id="auth-register" style="display:none">
+        <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X"></div>
+        <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj się →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+  <div class="menu-panel" id="menu-panel">
+    <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
+    <div class="menu-panel-items">
+
+      <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" onclick="window.location.href='gielda.html'"><div class="menu-item-icon">🤝</div><span class="menu-item-label">Giełda sparingów</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+    </div>
+    <div class="menu-panel-bottom">
+      <div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+<script src="coachay-core.js?v=20260730a"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   FIREBASE - ŁADOWANIE OFERT SPARINGÓW
+═══════════════════════════════════════════════════ */
+
+async function loadSparringOffers() {
+  if (!requireAuth()) return;
+  
+  const role = getDemoRole();
+  
+  // Tylko trenerzy widzą giełdę
+  if (role !== 'TRENER_GLOWNY' && role !== 'TRENER_POMOCNICZY') {
+    document.getElementById('offers-container').innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;">
+        <div style="font-size:48px;opacity:0.3;margin-bottom:16px;">🔒</div>
+        <div style="font-size:18px;font-weight:800;color:var(--bialy);margin-bottom:8px;">Dostęp tylko dla trenerów</div>
+        <div style="font-size:13px;color:var(--szary);line-height:1.6;">Giełda sparingów jest dostępna tylko dla trenerów głównych i pomocniczych.</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Pobierz zespół (dla kategorii)
+  const team = await getCurrentTeam();
+  
+  console.log('🔍 Team:', team);
+  
+  // Pobierz oferty (BEZ filtra - póki co pobieramy wszystkie)
+  const offers = await getSparringOffers(null);
+  
+  console.log('🔍 Oferty z Firebase:', offers);
+  
+  // Renderuj oferty
+  renderOffers(offers);
+  
+  console.log(`✅ Załadowano ${offers.length} ofert sparingów`);
+}
+
+function renderOffers(offers) {
+  const container = document.getElementById('offers-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (offers.length === 0) {
+    container.innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;">
+        <div style="font-size:48px;opacity:0.3;margin-bottom:16px;">🤝</div>
+        <div style="font-size:18px;font-weight:800;color:var(--bialy);margin-bottom:8px;">Brak ofert</div>
+        <div style="font-size:13px;color:var(--szary);line-height:1.6;">Nie ma jeszcze żadnych ofert sparingów w Twojej kategorii. Sprawdź później!</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Renderuj każdą ofertę
+  offers.forEach(offer => {
+    const card = createOfferCard(offer);
+    container.appendChild(card);
+  });
+}
+
+function createOfferCard(offer) {
+  const card = document.createElement('div');
+  card.style.cssText = `
+    background: var(--tlo-karta);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  `;
+  
+  // Ostrzeżenie
+  let warningBadge = '';
+  if (offer.warningLevel === 'HIGH') {
+    warningBadge = `<div style="background:rgba(248,113,113,0.15);border:1px solid #F87171;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:800;color:#F87171;margin-bottom:12px;">⚠️ ${offer.warningReason}</div>`;
+  }
+  
+  // Featured badge
+  let featuredBadge = '';
+  if (offer.featuredBadge === 'TOP_RATED') {
+    featuredBadge = `<div style="display:inline-block;background:linear-gradient(135deg,#FCD34D,#F59E0B);border-radius:6px;padding:4px 8px;font-size:9px;font-weight:900;color:#000;margin-bottom:8px;">🏆 TOP RATED</div>`;
+  }
+  
+  // Terminy
+  const datesStr = offer.dates.slice(0, 3).join(', ') + (offer.dates.length > 3 ? '...' : '');
+  
+  // Boisko
+  let venueStr = 'Elastyczne';
+  if (offer.fieldPreference === 'ONLY_OUR' && offer.venue) {
+    venueStr = offer.venue.venueName;
+  } else if (offer.fieldPreference === 'ONLY_AWAY') {
+    venueStr = 'Tylko wyjazd';
+  } else if (offer.fieldPreference === 'NEUTRAL_OR_AWAY') {
+    venueStr = 'Neutralne lub wyjazd';
+  }
+  
+  card.innerHTML = `
+    ${featuredBadge}
+    ${warningBadge}
+    
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+      <div style="flex:1;">
+        <div style="font-size:16px;font-weight:900;color:var(--bialy);margin-bottom:4px;">${offer.clubName}</div>
+        <div style="font-size:12px;color:var(--szary);font-weight:600;">${offer.teamName} · ${offer.category}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:18px;font-weight:900;color:${offer.fairPlayRating.overall >= 4.5 ? 'var(--sukces)' : offer.fairPlayRating.overall >= 3.5 ? 'var(--warn)' : 'var(--blad)'};">⭐ ${offer.fairPlayRating.overall.toFixed(1)}</div>
+        <div style="font-size:10px;color:var(--szary);font-weight:600;margin-top:2px;">${offer.distance} km</div>
+      </div>
+    </div>
+    
+    <div style="background:var(--tlo-karta2);border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:900;color:var(--szary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Terminy</div>
+      <div style="font-size:12px;color:var(--bialy);font-weight:700;">${datesStr}</div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div>
+        <div style="font-size:10px;font-weight:900;color:var(--szary);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Boisko</div>
+        <div style="font-size:11px;color:var(--bialy);font-weight:700;">${venueStr}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:900;color:var(--szary);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Poziom</div>
+        <div style="font-size:11px;color:var(--bialy);font-weight:700;">${offer.level}</div>
+      </div>
+    </div>
+    
+    <div style="background:var(--tlo-karta2);border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:900;color:var(--szary);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Fair Play</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;">
+        <div>
+          <div style="color:var(--szary);margin-bottom:2px;">⚽ Poziom</div>
+          <div style="color:var(--bialy);font-weight:800;">${offer.fairPlayRating.sportLevel.toFixed(1)}/5.0</div>
+        </div>
+        <div>
+          <div style="color:var(--szary);margin-bottom:2px;">🤝 Fair Play</div>
+          <div style="color:var(--bialy);font-weight:800;">${offer.fairPlayRating.teamFairPlay.toFixed(1)}/5.0</div>
+        </div>
+        <div>
+          <div style="color:var(--szary);margin-bottom:2px;">👥 Kibice</div>
+          <div style="color:var(--bialy);font-weight:800;">${offer.fairPlayRating.fansBehavior.toFixed(1)}/5.0</div>
+        </div>
+      </div>
+    </div>
+    
+    ${offer.description ? `<div style="font-size:12px;color:var(--szary-j);line-height:1.5;margin-bottom:12px;">"${offer.description}"</div>` : ''}
+    
+    <div style="display:flex;gap:8px;">
+      <button style="flex:1;padding:10px;background:var(--bialy);color:#000;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;">Kontakt</button>
+      <button style="flex:1;padding:10px;background:var(--tlo-karta2);color:var(--bialy);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;">Szczegóły</button>
+    </div>
+  `;
+  
+  card.onclick = () => {
+    console.log('Kliknięto ofertę:', offer.clubName);
+    // TODO: Otwórz szczegóły oferty
+  };
+  
+  return card;
+}
+
+// Inicjalizacja
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(user => {
+        if (_loaded) return;
+        if (user) {
+            _loaded = true;
+            if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
+            loadSparringOffers();
+        } else {
+            if (!isDemoMode()) window.location.href = 'login.html';
+        }
+    });
+});
+</script>
+
+</body>
+</html>

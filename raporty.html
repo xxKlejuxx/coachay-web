@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Raporty</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+.screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
+
+.rap-scroll { flex:1; overflow-y:auto; padding:16px 16px 100px; scrollbar-width:none; }
+
+.rap-select {
+    width: 100%;
+    background: var(--tlo-karta);
+    border: 1.5px solid var(--border2);
+    border-radius: 14px;
+    padding: 14px 16px;
+    color: var(--bialy);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--font);
+    appearance: none;
+    cursor: pointer;
+}
+.rap-select:focus { border-color: var(--akcent); outline: none; }
+.rap-select option { background: #1a1a1a; }
+
+.rap-row2 { display:flex; gap:10px; }
+.rap-row2 > div { flex:1; }
+
+.rap-chk-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--tlo-karta);
+    border: 1.5px solid var(--border2);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+.rap-chk-row input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--akcent); flex-shrink:0; }
+.rap-chk-row span { font-size: 14px; font-weight: 700; color: var(--bialy); }
+
+.rap-radio-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--tlo-karta);
+    border: 1.5px solid var(--border2);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+.rap-radio-row input[type=radio] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--akcent); flex-shrink:0; }
+.rap-radio-row span { font-size: 14px; font-weight: 700; color: var(--bialy); }
+
+.rap-msg { font-size: 12px; font-weight: 700; margin-top: 10px; min-height: 16px; }
+.rap-msg.err { color: var(--blad); }
+.rap-msg.ok { color: var(--sukces); }
+
+.rap-info-box {
+    background: var(--tlo-karta);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 12px;
+    color: var(--szary);
+    line-height: 1.6;
+    margin-top: 18px;
+}
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+
+    <div class="top-bar">
+        <div class="ctx-switcher" onclick="toggleCtxOv()">
+            <div class="ctx-dot" id="ctx-dot"></div>
+            <div class="ctx-text">
+                <span class="ctx-klub" id="ctx-klub"></span>
+                <span class="ctx-team" id="ctx-team"></span>
+            </div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+            <div class="menu-btn" id="menu-btn" onclick="toggleMenu()">
+                <div class="menu-btn-lines"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ctx-overlay" id="ctx-ov">
+        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ctx-klub-row" id="ctx-klub-row">
+            <div class="ctx-klub-dot" id="ctx-ov-dot"></div>
+            <span class="ctx-klub-name" id="ctx-ov-klub-name"></span>
+            <span class="ctx-klub-role" id="ctx-ov-klub-role"></span>
+        </div>
+        <div class="ctx-teams" id="ctx-teams"></div>
+    </div>
+    <div class="notif-overlay" id="notif-ov">
+        <div class="notif-hdr">
+            <span class="notif-tytul">Powiadomienia</span>
+            <span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span>
+        </div>
+    </div>
+
+    <div class="screen-body">
+        <div class="rap-scroll" id="rap-scroll">
+
+            <div id="brak-dostepu" style="display:none;padding:60px 20px;text-align:center;color:var(--szary);font-size:13px;font-weight:600;">
+                Raporty są dostępne tylko dla trenerów.
+            </div>
+
+            <div id="raport-form" style="display:none;">
+
+                <div class="form-group">
+                    <label class="form-lbl">Lista raportów:</label>
+                    <select class="rap-select" id="rap-typ-raportu"></select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-lbl">Okres</label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span>📅 Na dzień</span></label>
+                    <div class="rap-row2" id="rap-okres-miesiac">
+                        <div>
+                            <select class="rap-select" id="rap-miesiac"></select>
+                        </div>
+                        <div>
+                            <select class="rap-select" id="rap-rok"></select>
+                        </div>
+                    </div>
+                    <div id="rap-okres-dzien" style="display:none;">
+                        <input type="date" class="form-inp" id="rap-data">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-lbl">Rodzaj zajęć</label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-trening" checked><span>⚽ Treningi</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-mecz"><span>🏆 Mecze</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-wyjazd"><span>🚌 Wyjazdy</span></label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-lbl">Format pliku</label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-pdf" checked><span>📄 PDF</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-csv"><span>📋 CSV</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-xlsx"><span>📊 Excel (XLSX)</span></label>
+                </div>
+
+                <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="generujRaport()" id="rap-btn-generuj">Generuj raport</button>
+                <div class="rap-msg" id="rap-msg"></div>
+
+                <div class="rap-info-box">
+                    <strong>Legenda:</strong> 1 = obecny, 0 = nieobecny (bez zgłoszenia), 2 = absencja zgłoszona z wyprzedzeniem, puste pole = brak zajęć tego dnia.
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+    </div>
+
+    <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-panel-top">
+            <div class="menu-panel-avatar" id="menu-avatar"></div>
+            <div class="menu-panel-name" id="menu-name"></div>
+            <div class="menu-panel-role" id="menu-role"></div>
+        </div>
+        <div class="menu-panel-items">
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+        </div>
+        <div class="menu-panel-bottom">
+            <div class="menu-logout" onclick="logout()">
+                <span class="menu-logout-icon">🚪</span>
+                <span class="menu-logout-txt">Wyloguj się</span>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   RAPORTY — logika ekranu
+═══════════════════════════════════════════════════ */
+
+const MIESIACE = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+const TYP_LABELS = { TRENING: 'Treningi', MECZ: 'Mecze', WYJAZD: 'Wyjazdy' };
+const LEGENDA_PL = 'Legenda: 1 = obecny, 0 = nieobecny, 2 = absencja zgłoszona, puste = brak zajęć';
+
+let currentUserId = '', currentUserName = '', currentRole = '';
+let currentTeamId = null, currentClubId = null;
+
+/* ══════════════════════════════════════════════════════
+   REJESTR RAPORTÓW — moduł raportowy
+   Każdy wpis: label do przełącznika + generujDane(ctx), która zwraca
+   tablicę generycznych "pakietów" (jeden pakiet = jedna strona PDF /
+   jeden arkusz XLSX / jeden plik CSV):
+     { tytul, naglowek:[linie], kolumny:[etykiety], wiersze:[{label,cells,obecny,nieobecny,absencja}], nazwaBazowa }
+   Dodanie nowego raportu = nowy wpis tutaj + własna funkcja budujPakiet...().
+   Eksport (CSV/XLSX/PDF) nie wie nic o konkretnych raportach — działa
+   wyłącznie na tym generycznym kształcie.
+═══════════════════════════════════════════════════════ */
+const RAPORTY_REJESTR = {
+    obecnosc: {
+        label: 'Lista obecności (dzień po dniu)',
+        generujDane: (ctx) => ctx.typy.map(typ => budujPakietObecnoscDzien(typ, ctx))
+    },
+    szczegolowy: {
+        label: 'Szczegółowy raport zajęć (per trening/mecz)',
+        generujDane: (ctx) => ctx.typy.map(typ => budujPakietSzczegolowy(typ, ctx))
+    }
+};
+
+async function initRaporty() {
+    if (!requireAuth()) return;
+    currentUserId = getCurrentUserId();
+
+    const s = await initSession();
+    if (!s) return;
+    const { user, team, membership } = s;
+    currentRole = isDemoMode() ? getDemoRole() : getCurrentUserData().role;
+    currentTeamId = team.teamId || team.id;
+    currentClubId = team.clubId || membership?.clubId || null;
+    currentUserName = user.displayName || '';
+
+    loadCtxOverlay(user, membership, team);
+    loadMenuPanel(user, membership, team);
+
+    // Powiadomienia (dzwoneczek w top-barze)
+    window.onNotifAction = () => {};
+    loadAndRenderNotifications();
+
+    const isCoach = currentRole === 'TRENER_GLOWNY' || currentRole === 'TRENER_POMOCNICZY';
+    document.getElementById('brak-dostepu').style.display = isCoach ? 'none' : '';
+    document.getElementById('raport-form').style.display = isCoach ? '' : 'none';
+    if (!isCoach) return;
+
+    wypelnijSelektory();
+    wypelnijZParametrowUrl();
+}
+
+// Wypełnia formularz z parametrów adresu (np. link z kalendarz.html dla konkretnego eventu)
+function wypelnijZParametrowUrl() {
+    const params = new URLSearchParams(location.search);
+    const raport = params.get('raport');
+    const typ = params.get('typ');
+    const data = params.get('data');
+
+    if (raport && RAPORTY_REJESTR[raport]) {
+        document.getElementById('rap-typ-raportu').value = raport;
+    }
+    if (data) {
+        document.getElementById('rap-na-dzien').checked = true;
+        przelaczTrybOkresu();
+        document.getElementById('rap-data').value = data;
+    }
+    if (typ && ['TRENING', 'MECZ', 'WYJAZD'].includes(typ)) {
+        document.getElementById('rap-typ-trening').checked = typ === 'TRENING';
+        document.getElementById('rap-typ-mecz').checked = typ === 'MECZ';
+        document.getElementById('rap-typ-wyjazd').checked = typ === 'WYJAZD';
+    }
+}
+
+function wypelnijSelektory() {
+    const selT = document.getElementById('rap-typ-raportu');
+    selT.innerHTML = Object.entries(RAPORTY_REJESTR).map(([key, r]) => `<option value="${key}">${r.label}</option>`).join('');
+
+    const selM = document.getElementById('rap-miesiac');
+    selM.innerHTML = MIESIACE.map((m, i) => `<option value="${i+1}">${m}</option>`).join('');
+
+    const now = new Date();
+    selM.value = String(now.getMonth() + 1);
+
+    const selR = document.getElementById('rap-rok');
+    const rokTeraz = now.getFullYear();
+    const lata = [];
+    for (let r = rokTeraz - 1; r <= rokTeraz + 1; r++) lata.push(r);
+    selR.innerHTML = lata.map(r => `<option value="${r}">${r}</option>`).join('');
+    selR.value = String(rokTeraz);
+
+    document.getElementById('rap-data').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function przelaczTrybOkresu() {
+    const naDzien = document.getElementById('rap-na-dzien').checked;
+    document.getElementById('rap-okres-miesiac').style.display = naDzien ? 'none' : '';
+    document.getElementById('rap-okres-dzien').style.display = naDzien ? '' : 'none';
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function nazwaZawodnika(p) {
+    if (p.lastName || p.firstName) return `${p.lastName || ''} ${p.firstName || ''}`.trim();
+    return p.name || '—';
+}
+
+// Dokłada kolumnę Lp (numer wiersza) na początku — wspólne dla każdego raportu, dodawane raz przed eksportem
+function dodajLp(pak) {
+    return {
+        ...pak,
+        kolumny: ['Lp', ...pak.kolumny],
+        wiersze: pak.wiersze.map((w, i) => [i + 1, ...w]),
+        wyrownajLewo: (pak.wyrownajLewo || [0]).map(i => i + 1)
+    };
+}
+
+// invited może zawierać sentinel '__TEAM__' zamiast wypisanych playerId (cała drużyna zaproszona) — patrz mecz.html
+function jestZaproszony(e, pid) {
+    const invited = e.attendance?.invited || [];
+    return invited.includes(pid) || invited.includes('__TEAM__');
+}
+
+/* ── Generowanie raportu — nie wie nic o konkretnym raporcie, deleguje do rejestru ── */
+async function generujRaport() {
+    const msgEl = document.getElementById('rap-msg');
+    msgEl.textContent = '';
+    msgEl.className = 'rap-msg';
+
+    const typRaportuKey = document.getElementById('rap-typ-raportu').value;
+    const raportDef = RAPORTY_REJESTR[typRaportuKey];
+
+    const typy = [];
+    if (document.getElementById('rap-typ-trening').checked) typy.push('TRENING');
+    if (document.getElementById('rap-typ-mecz').checked) typy.push('MECZ');
+    if (document.getElementById('rap-typ-wyjazd').checked) typy.push('WYJAZD');
+    if (typy.length === 0) {
+        msgEl.textContent = 'Wybierz przynajmniej jeden rodzaj zajęć.';
+        msgEl.className = 'rap-msg err';
+        return;
+    }
+
+    const naDzien = document.getElementById('rap-na-dzien').checked;
+    let dataOd, dataDo, okresLabel, nazwaOkres;
+
+    if (naDzien) {
+        const dataStr = document.getElementById('rap-data').value;
+        if (!dataStr) {
+            msgEl.textContent = 'Wybierz datę.';
+            msgEl.className = 'rap-msg err';
+            return;
+        }
+        dataOd = dataDo = dataStr;
+        okresLabel = formatujDatePl(dataStr);
+        nazwaOkres = dataStr;
+    } else {
+        const rok = parseInt(document.getElementById('rap-rok').value, 10);
+        const miesiac = parseInt(document.getElementById('rap-miesiac').value, 10);
+        dataOd = `${rok}-${pad(miesiac)}-01`;
+        dataDo = `${rok}-${pad(miesiac)}-${pad(new Date(rok, miesiac, 0).getDate())}`;
+        okresLabel = `${MIESIACE[miesiac - 1]} ${rok}`;
+        nazwaOkres = `${rok}-${pad(miesiac)}`;
+    }
+
+    const format = document.getElementById('rap-format-pdf').checked ? 'pdf'
+        : document.getElementById('rap-format-csv').checked ? 'csv' : 'xlsx';
+
+    const btn = document.getElementById('rap-btn-generuj');
+    btn.disabled = true;
+    btn.textContent = 'Generuję...';
+
+    try {
+        const [players, events, absences, tematy] = await Promise.all([
+            pobierzAktywnychZawodnikow(),
+            pobierzEventyOkresu(dataOd, dataDo),
+            pobierzAktywneAbsencje(),
+            pobierzTematyTreningow()
+        ]);
+
+        if (players.length === 0) {
+            msgEl.textContent = 'Brak aktywnych zawodników w drużynie.';
+            msgEl.className = 'rap-msg err';
+            return;
+        }
+
+        const ctx = { dataOd, dataDo, okresLabel, nazwaOkres, typy, players, events, absences, tematy };
+        const pakiety = raportDef.generujDane(ctx).map(dodajLp);
+        const nazwaZbiorcza = `raport_${typRaportuKey}_${nazwaOkres}`;
+
+        if (format === 'csv') pobierzCSV(pakiety);
+        else if (format === 'xlsx') pobierzXLSX(pakiety, nazwaZbiorcza);
+        else pobierzPDF(pakiety, nazwaZbiorcza);
+
+        msgEl.textContent = 'Raport wygenerowany ✓';
+        msgEl.className = 'rap-msg ok';
+    } catch (e) {
+        console.error('Błąd generowania raportu:', e);
+        msgEl.textContent = 'Błąd generowania raportu.';
+        msgEl.className = 'rap-msg err';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generuj raport';
+    }
+}
+
+async function pobierzAktywnychZawodnikow() {
+    const snap = await db.collection('players').get();
+    return snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(p => p.teams && p.teams.some(t => t.teamId === currentTeamId && t.status === 'ACTIVE'))
+        .sort((a, b) => nazwaZawodnika(a).localeCompare(nazwaZawodnika(b), 'pl'));
+}
+
+async function pobierzEventyOkresu(dataOd, dataDo) {
+    const snap = await db.collection('events').where('teamId', '==', currentTeamId).get();
+    return snap.docs.map(d => d.data())
+        .filter(e => e.status !== 'DELETE' && e.date >= dataOd && e.date <= dataDo);
+}
+
+async function pobierzAktywneAbsencje() {
+    const snap = await db.collection('absences').where('teamId', '==', currentTeamId).where('isActive', '==', true).get();
+    return snap.docs.map(d => d.data());
+}
+
+// Tematy treningów (lista rozwijalna w kalendarz.html) — mapa topicId -> title
+// UWAGA: dopasowanie po polu topicId w dokumencie (tak jak w kalendarz.html), nie po ID dokumentu Firestore
+async function pobierzTematyTreningow() {
+    if (!currentClubId) return {};
+    const snap = await db.collection('trainingTopics').where('clubId', '==', currentClubId).where('isActive', '==', true).get();
+    const mapa = {};
+    snap.docs.forEach(d => {
+        const dane = d.data();
+        mapa[dane.topicId || d.id] = dane.title;
+    });
+    return mapa;
+}
+
+function formatujDatePl(dateStr) {
+    return `${dateStr.slice(8, 10)}.${dateStr.slice(5, 7)}.${dateStr.slice(0, 4)}`;
+}
+
+// Lista dat YYYY-MM-DD od dataOd do dataDo włącznie
+function enumerujDni(dataOd, dataDo) {
+    const dni = [];
+    const d = new Date(dataOd + 'T00:00:00');
+    const koniec = new Date(dataDo + 'T00:00:00');
+    while (d <= koniec) {
+        dni.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+        d.setDate(d.getDate() + 1);
+    }
+    return dni;
+}
+
+/* ── Raport: Lista obecności dzień po dniu — kolumny = dni okresu ── */
+function budujPakietObecnoscDzien(typ, ctx) {
+    const { dataOd, dataDo, okresLabel, nazwaOkres, players, events, absences } = ctx;
+    const dni = enumerujDni(dataOd, dataDo);
+    const eventyTypu = events.filter(e => e.type === typ);
+
+    const wiersze = players.map(p => {
+        const pid = p.playerId || p.id;
+        const cells = [];
+        let obecny = 0, nieobecny = 0, absencjaLiczba = 0;
+
+        dni.forEach(dateStr => {
+            const dzienEventy = eventyTypu.filter(e => e.date === dateStr);
+            const zaproszony = dzienEventy.some(e => jestZaproszony(e, pid));
+
+            if (!zaproszony) { cells.push(''); return; }
+
+            const potwierdzony = dzienEventy.some(e => (e.attendance?.confirmed || []).includes(pid));
+            if (potwierdzony) { cells.push(1); obecny++; return; }
+
+            const maAbsencje = absences.some(a => a.playerId === pid && a.dateFrom <= dateStr && a.dateTo >= dateStr);
+            if (maAbsencje) { cells.push(2); absencjaLiczba++; }
+            else { cells.push(0); nieobecny++; }
+        });
+
+        return [nazwaZawodnika(p), ...cells, obecny, nieobecny, absencjaLiczba];
+    });
+
+    return {
+        tytul: `Raport obecności — ${TYP_LABELS[typ]}`,
+        naglowek: [`Trener: ${currentUserName}`, `Okres: ${okresLabel}`],
+        kolumny: ['Zawodnik', ...dni.map(d => d.slice(8, 10)), 'Obecny', 'Nieobecny', 'Absencja'],
+        wiersze,
+        wyrownajLewo: [0],
+        legenda: LEGENDA_PL,
+        orientacja: 'poziomo',
+        nazwaBazowa: `obecnosc_${typ}_${nazwaOkres}`
+    };
+}
+
+/* ── Raport: Szczegółowy per zajęcia — lista (wiersz = 1 zawodnik na 1 zajęciach), rośnie w dół, nie wszerz ── */
+function budujPakietSzczegolowy(typ, ctx) {
+    const { okresLabel, nazwaOkres, players, events, absences, tematy } = ctx;
+    const eventyTypu = events.filter(e => e.type === typ).sort((a, b) => a.date.localeCompare(b.date));
+
+    const wiersze = [];
+    eventyTypu.forEach(e => {
+        // Trening: temat z listy rozwijalnej (topicId) ma pierwszeństwo — tytuł/opis to osobne, niezależne pola
+        const tresc = typ === 'MECZ'
+            ? (e.matchData?.opponent ? `vs ${e.matchData.opponent}` : (e.title || '—'))
+            : (tematy[e.topicId] || e.title || e.description || '—');
+
+        players.forEach(p => {
+            const pid = p.playerId || p.id;
+            const zaproszony = jestZaproszony(e, pid);
+            if (!zaproszony) return;
+
+            const potwierdzony = (e.attendance?.confirmed || []).includes(pid);
+            let status;
+            if (potwierdzony) status = 'Obecny';
+            else {
+                const maAbsencje = absences.some(a => a.playerId === pid && a.dateFrom <= e.date && a.dateTo >= e.date);
+                status = maAbsencje ? 'Absencja zgłoszona' : 'Nieobecny';
+            }
+
+            wiersze.push([nazwaZawodnika(p), formatujDatePl(e.date), tresc, status]);
+        });
+    });
+
+    return {
+        tytul: `Raport szczegółowy — ${TYP_LABELS[typ]}`,
+        naglowek: [`Trener: ${currentUserName}`, `Okres: ${okresLabel}`],
+        kolumny: ['Zawodnik', 'Data', 'Treść', 'Status'],
+        wiersze,
+        wyrownajLewo: [0, 2, 3],
+        legenda: null,
+        orientacja: 'pionowo',
+        nazwaBazowa: `szczegolowy_${typ}_${nazwaOkres}`
+    };
+}
+
+/* ── Wspólny pobierz-plik ──
+   content może być stringiem (CSV) albo Blobem (XLSX/PDF).
+   Na webie: klasyczne pobieranie przez <a download>.
+   W appce natywnej: <a download> z blob: URL nie działa w Android WebView —
+   plik zapisywany przez Filesystem i otwierany natywnym arkuszem Share (Zapisz/Udostępnij). */
+async function pobierzPlik(content, filename, mime) {
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        try {
+            const base64 = await blobLubTekstDoBase64(content);
+            const { Filesystem, Share, FileOpener } = window.Capacitor.Plugins;
+            const zapisany = await Filesystem.writeFile({ path: filename, data: base64, directory: 'CACHE' });
+            try {
+                await FileOpener.open({ filePath: zapisany.uri, contentType: mime });
+            } catch (openErr) {
+                console.warn('⚠️ FileOpener — brak aplikacji do otwarcia, pokazuję Udostępnij zamiast:', openErr);
+                await Share.share({ title: filename, url: zapisany.uri });
+            }
+        } catch (e) {
+            console.error('❌ Zapis pliku w appce:', e);
+            alert('Błąd zapisu pliku: ' + e.message);
+        }
+        return;
+    }
+    const blob = content instanceof Blob ? content : new Blob(['﻿' + content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function blobLubTekstDoBase64(content) {
+    return new Promise((resolve, reject) => {
+        if (content instanceof Blob) {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(content);
+        } else {
+            resolve(btoa(unescape(encodeURIComponent(content))));
+        }
+    });
+}
+
+/* ══════════════════════════════════════════════════════
+   WSPÓLNY EKSPORT — generyczny, nie wie nic o konkretnym raporcie.
+   Działa wyłącznie na pakietach w kształcie:
+   {
+     tytul, naglowek:[linie], kolumny:[nagłówki], wiersze:[[komórki...]],
+     legenda: string|null,           // opcjonalna — nie każdy raport jej potrzebuje
+     wyrownajLewo: [indeksy kolumn], // opcjonalne, domyślnie [0] — reszta wyśrodkowana (tylko PDF)
+     orientacja: 'poziomo'|'pionowo', // opcjonalne, domyślnie 'poziomo' (tylko PDF)
+     nazwaBazowa
+   }
+   Każda kolumna w `wiersze` musi odpowiadać pozycji w `kolumny`.
+═══════════════════════════════════════════════════════ */
+
+/* ── Export CSV — osobny plik per pakiet ── */
+async function pobierzCSV(pakiety) {
+    for (const pak of pakiety) {
+        const lines = [];
+        lines.push(pak.tytul);
+        pak.naglowek.forEach(l => lines.push(l));
+        lines.push('');
+
+        lines.push(pak.kolumny.join(';'));
+        pak.wiersze.forEach(w => lines.push(w.join(';')));
+
+        if (pak.legenda) {
+            lines.push('');
+            lines.push(pak.legenda);
+        }
+
+        await pobierzPlik(lines.join('\n'), `raport_${pak.nazwaBazowa}.csv`, 'text/csv;charset=utf-8;');
+    }
+}
+
+/* ── Export XLSX — jeden plik, jeden arkusz per pakiet ── */
+function pobierzXLSX(pakiety, nazwaZbiorcza) {
+    const wb = XLSX.utils.book_new();
+
+    pakiety.forEach(pak => {
+        const aoa = [[pak.tytul], ...pak.naglowek.map(l => [l]), []];
+        aoa.push(pak.kolumny);
+        pak.wiersze.forEach(w => aoa.push(w));
+
+        if (pak.legenda) {
+            aoa.push([]);
+            aoa.push([pak.legenda]);
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        const nazwaArkusza = pak.tytul.replace(/[:\\/?*[\]]/g, '').slice(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, nazwaArkusza);
+    });
+
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        pobierzPlik(blob, `${nazwaZbiorcza}.xlsx`, blob.type);
+    } else {
+        XLSX.writeFile(wb, `${nazwaZbiorcza}.xlsx`);
+    }
+}
+
+/* ── Export PDF — jeden plik, jedna strona A4 per pakiet (orientacja zależna od raportu) ──
+   Standardowe fonty jsPDF nie obsługują polskich znaków diakrytycznych,
+   dlatego w PDF są usuwane (tylko w PDF — CSV i XLSX mają pełne polskie znaki). */
+function usunPolskieZnaki(str) {
+    const mapa = { 'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z',
+                   'Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z' };
+    return String(str).replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, ch => mapa[ch] || ch);
+}
+
+function pobierzPDF(pakiety, nazwaZbiorcza) {
+    const { jsPDF } = window.jspdf;
+    let doc = null;
+
+    pakiety.forEach((pak, idx) => {
+        const orient = pak.orientacja === 'pionowo' ? 'portrait' : 'landscape';
+
+        if (idx === 0) {
+            doc = new jsPDF({ orientation: orient, unit: 'mm', format: 'a4' });
+        } else {
+            doc.addPage('a4', orient);
+        }
+
+        doc.setFontSize(14);
+        doc.text(usunPolskieZnaki(pak.tytul), 10, 12);
+        doc.setFontSize(10);
+        doc.text(usunPolskieZnaki(pak.naglowek.join('    ')), 10, 18);
+
+        const wyrownajLewo = pak.wyrownajLewo || [0];
+        const columnStyles = {};
+        wyrownajLewo.forEach(i => { columnStyles[i] = { halign: 'left' }; });
+        columnStyles[0] = { ...columnStyles[0], cellWidth: 38 };
+
+        const head = [pak.kolumny.map(k => usunPolskieZnaki(k))];
+        const body = pak.wiersze.map(w => w.map(c => c === '' || c == null ? '' : usunPolskieZnaki(String(c))));
+
+        doc.autoTable({
+            head, body, startY: 22,
+            styles: { fontSize: 7, cellPadding: 1, halign: 'center' },
+            headStyles: { fillColor: [30, 30, 30] },
+            columnStyles,
+            margin: { left: 10, right: 10 }
+        });
+
+        if (pak.legenda) {
+            const finalY = doc.lastAutoTable.finalY || 22;
+            doc.setFontSize(8);
+            doc.text(usunPolskieZnaki(pak.legenda), 10, finalY + 6);
+        }
+    });
+
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        pobierzPlik(doc.output('blob'), `${nazwaZbiorcza}.pdf`, 'application/pdf');
+    } else {
+        doc.save(`${nazwaZbiorcza}.pdf`);
+    }
+}
+
+/* ── Start ── */
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase nie załadowany'); return; }
+    initFirebase();
+    initRaporty();
+});
+</script>
+</body>
+</html>

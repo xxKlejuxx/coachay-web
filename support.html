@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Support</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+:root { --phone-h: 844px; }
+
+.screen-body {
+    flex: 1; display: flex; flex-direction: column;
+    overflow-y: auto; scrollbar-width: none;
+    padding-bottom: 40px;
+}
+.screen-body::-webkit-scrollbar { display: none; }
+
+/* ── Top bar ── */
+.sup-topbar {
+    height: var(--top-h); background: #000;
+    display: flex; align-items: flex-end;
+    padding: 0 18px 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 10px;
+}
+.sup-logo-name {
+    font-family: var(--font-d); font-size: 17px; font-weight: 800;
+    color: var(--bialy); letter-spacing: 3px;
+}
+.sup-topbar-badge {
+    font-size: 9px; font-weight: 900; letter-spacing: 1px;
+    text-transform: uppercase; padding: 3px 9px;
+    border-radius: var(--r-pill);
+    background: rgba(239,68,68,0.15); color: #F87171;
+    border: 1px solid rgba(239,68,68,0.25);
+    margin-left: 2px;
+}
+.sup-topbar-back {
+    margin-left: auto;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--tlo-karta); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--szary-j); cursor: pointer;
+}
+.sup-topbar-back:active { background: var(--tlo-karta2); }
+
+/* ── Sekcja nagłówka ── */
+.s-label {
+    font-size: 10px; font-weight: 900; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--szary);
+    padding: 20px 18px 8px;
+}
+
+/* ── Stats row ── */
+.sup-stats {
+    display: flex; gap: 8px; padding: 0 18px 4px;
+}
+.sup-stat {
+    flex: 1; background: var(--tlo-karta); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 3px;
+    align-items: center; text-align: center;
+}
+.sup-stat-val {
+    font-family: var(--font-d); font-size: 22px; font-weight: 800;
+    color: var(--bialy); line-height: 1;
+}
+.sup-stat-val.green { color: var(--sukces); }
+.sup-stat-val.amber { color: var(--warn); }
+.sup-stat-val.red   { color: var(--blad); }
+.sup-stat-lbl {
+    font-size: 9px; font-weight: 900; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--szary);
+}
+
+/* ── Szukaj klubu ── */
+.sup-search-wrap { padding: 4px 18px 0; }
+.sup-search {
+    width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border);
+    border-radius: var(--r); padding: 12px 16px;
+    color: var(--bialy); font-size: 14px; font-weight: 700;
+    font-family: var(--font); transition: border-color 0.2s;
+}
+.sup-search::placeholder { color: var(--szary); font-weight: 600; font-size: 13px; }
+.sup-search:focus { border-color: var(--akcent); outline: none; }
+
+/* ── Lista klubów ── */
+.sup-clubs { padding: 8px 18px 0; display: flex; flex-direction: column; gap: 8px; }
+
+.sup-club-card {
+    background: var(--tlo-karta); border: 1.5px solid var(--border);
+    border-radius: var(--r); padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.sup-club-card:active { background: var(--tlo-karta2); }
+.sup-club-card.expanded { border-color: var(--border2); }
+
+.sup-club-dot {
+    width: 38px; height: 38px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-d); font-size: 16px; font-weight: 800;
+    color: #fff; flex-shrink: 0;
+}
+.sup-club-info { flex: 1; min-width: 0; }
+.sup-club-name {
+    font-size: 13px; font-weight: 900; color: var(--bialy);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sup-club-meta { font-size: 11px; font-weight: 600; color: var(--szary); margin-top: 2px; }
+
+.sup-club-status {
+    font-size: 9px; font-weight: 900; letter-spacing: 1px;
+    text-transform: uppercase; padding: 4px 9px;
+    border-radius: var(--r-pill); flex-shrink: 0;
+}
+.sup-club-status.active  { background: rgba(74,222,128,0.12); color: var(--sukces); border: 1px solid rgba(74,222,128,0.25); }
+.sup-club-status.trial   { background: rgba(59,130,246,0.12); color: #60A5FA;       border: 1px solid rgba(59,130,246,0.25); }
+.sup-club-status.grace   { background: rgba(251,191,36,0.12); color: var(--warn);   border: 1px solid rgba(251,191,36,0.25); }
+.sup-club-status.expired { background: rgba(239,68,68,0.12);  color: var(--blad);   border: 1px solid rgba(239,68,68,0.25); }
+
+/* ── Ekspandowany panel akcji ── */
+.sup-club-actions {
+    margin: 0 18px; padding: 14px 16px;
+    background: var(--tlo-karta2); border: 1.5px solid var(--border2);
+    border-top: none; border-radius: 0 0 var(--r) var(--r);
+    display: none; flex-direction: column; gap: 8px;
+}
+.sup-club-actions.open { display: flex; }
+
+.sup-action-row { display: flex; gap: 8px; }
+
+.sup-action-btn {
+    flex: 1; padding: 11px 10px;
+    border-radius: 12px; border: 1.5px solid var(--border2);
+    background: var(--tlo-karta); font-size: 11px; font-weight: 900;
+    color: var(--szary-j); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.sup-action-btn:active { background: var(--tlo-karta2); }
+.sup-action-btn.green  { border-color: rgba(74,222,128,0.35); color: var(--sukces); }
+.sup-action-btn.green:active { background: rgba(74,222,128,0.08); }
+.sup-action-btn.amber  { border-color: rgba(251,191,36,0.35); color: var(--warn); }
+.sup-action-btn.amber:active { background: rgba(251,191,36,0.08); }
+.sup-action-btn.red    { border-color: rgba(239,68,68,0.35); color: var(--blad); }
+.sup-action-btn.red:active { background: rgba(239,68,68,0.08); }
+
+.sup-action-info {
+    font-size: 10px; font-weight: 600; color: var(--szary);
+    padding: 2px 2px 0; line-height: 1.5;
+}
+
+/* ── Impersonacja ── */
+.sup-imp-row { display: flex; gap: 8px; padding: 0 18px; }
+.sup-imp-input {
+    flex: 1; background: var(--tlo-karta); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 11px 14px;
+    color: var(--bialy); font-size: 13px; font-weight: 700;
+    font-family: var(--font); transition: border-color 0.2s;
+}
+.sup-imp-input::placeholder { color: var(--szary); font-size: 12px; }
+.sup-imp-input:focus { border-color: var(--akcent); outline: none; }
+.sup-imp-btn {
+    padding: 11px 16px; border-radius: 12px;
+    background: var(--akcent); border: none;
+    color: #fff; font-size: 12px; font-weight: 900; cursor: pointer;
+    white-space: nowrap;
+}
+.sup-imp-btn:active { opacity: 0.8; }
+.sup-imp-msg { padding: 0 18px; font-size: 11px; font-weight: 700; display: none; margin-top: 2px; }
+.sup-imp-msg.ok  { color: var(--sukces); display: block; }
+.sup-imp-msg.err { color: var(--blad);   display: block; }
+
+/* ── Bottom sheet aktywacji licencji ── */
+.sup-sheet-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 200; display: none; align-items: flex-end;
+}
+.sup-sheet-overlay.open { display: flex; }
+.sup-sheet {
+    width: 100%; background: var(--tlo-karta);
+    border-radius: 24px 24px 0 0; border-top: 1px solid var(--border2);
+    padding: 20px 20px 36px;
+    animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+.sup-sheet-handle {
+    width: 36px; height: 4px; background: var(--border2);
+    border-radius: 2px; margin: 0 auto 20px;
+}
+.sup-sheet-title {
+    font-family: var(--font-d); font-size: 16px; font-weight: 800;
+    color: var(--bialy); margin-bottom: 4px;
+}
+.sup-sheet-sub {
+    font-size: 12px; font-weight: 600; color: var(--szary);
+    margin-bottom: 20px; line-height: 1.6;
+}
+.sup-sheet-field { margin-bottom: 12px; }
+.sup-sheet-label {
+    font-size: 10px; font-weight: 900; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--szary); margin-bottom: 6px;
+}
+.sup-sheet-input {
+    width: 100%; background: var(--tlo-karta2); border: 1.5px solid var(--border2);
+    border-radius: 12px; padding: 12px 14px;
+    color: var(--bialy); font-size: 14px; font-weight: 700;
+    font-family: var(--font); transition: border-color 0.2s;
+}
+.sup-sheet-input:focus { border-color: var(--akcent); outline: none; }
+.sup-sheet-plans {
+    display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
+}
+.sup-sheet-plan {
+    padding: 12px 16px; border-radius: 12px;
+    border: 1.5px solid var(--border); background: var(--tlo-karta2);
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    transition: border-color 0.2s;
+}
+.sup-sheet-plan.selected { border-color: var(--akcent); background: rgba(59,130,246,0.06); }
+.sup-sheet-plan-radio {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid var(--border2); display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s;
+}
+.sup-sheet-plan.selected .sup-sheet-plan-radio { border-color: var(--akcent); background: var(--akcent); }
+.sup-sheet-plan-radio::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; display: none; }
+.sup-sheet-plan.selected .sup-sheet-plan-radio::after { display: block; }
+.sup-sheet-plan-name { flex: 1; font-size: 13px; font-weight: 800; color: var(--bialy); }
+.sup-sheet-plan-sub  { font-size: 11px; font-weight: 600; color: var(--szary); margin-top: 1px; }
+.sup-sheet-confirm {
+    width: 100%; padding: 15px;
+    border-radius: var(--r-pill); background: var(--akcent); border: none;
+    color: #fff; font-size: 14px; font-weight: 900; cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+}
+.sup-sheet-confirm:active { opacity: 0.85; transform: scale(0.98); }
+.sup-sheet-cancel {
+    width: 100%; padding: 12px; margin-top: 8px;
+    border-radius: var(--r-pill); background: transparent; border: 1px solid var(--border2);
+    color: var(--szary-j); font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.sup-sheet-cancel:active { background: var(--tlo-karta2); }
+.sup-sheet-msg { margin-top: 10px; font-size: 12px; font-weight: 700; text-align: center; display: none; }
+.sup-sheet-msg.ok  { color: var(--sukces); display: block; }
+.extend-period-btn {
+    padding: 8px 14px; border-radius: 10px; border: 1.5px solid var(--border2);
+    background: var(--tlo-karta2); color: var(--szary-j);
+    font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.15s;
+}
+.extend-period-btn.selected { border-color: var(--akcent); color: var(--akcent); background: rgba(59,130,246,0.08); }
+.extend-period-btn:active { background: var(--tlo-karta); }
+.sup-sheet-msg.err { color: var(--blad);   display: block; }
+
+/* ── Empty state ── */
+.sup-empty { padding: 40px 18px; text-align: center; }
+.sup-empty-icon { font-size: 36px; margin-bottom: 10px; }
+.sup-empty-txt { font-size: 13px; font-weight: 600; color: var(--szary); }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+
+    <!-- Top bar -->
+    <div class="sup-topbar">
+        <div class="sup-logo-name">COACHAY</div>
+        <span class="sup-topbar-badge">SUPPORT</span>
+        <div class="sup-topbar-back" onclick="window.location.replace('start.html')">✕</div>
+    </div>
+
+    <!-- Bottom sheet przedłużenia licencji -->
+    <div class="sup-sheet-overlay" id="extend-overlay" onclick="closeExtendSheet(event)">
+        <div class="sup-sheet" id="extend-sheet">
+            <div class="sup-sheet-handle"></div>
+            <div class="sup-sheet-title" id="extend-title">Przedłuż licencję</div>
+            <div class="sup-sheet-sub" id="extend-sub"></div>
+
+            <!-- Liczba licencji (z poprzedniego zakupu) -->
+            <div class="sup-sheet-field">
+                <div class="sup-sheet-label">Liczba licencji</div>
+                <input type="number" id="extend-total" class="sup-sheet-input" min="1" max="9999" placeholder="np. 50">
+                <div id="extend-total-hint" style="font-size:10px;color:var(--szary);margin-top:4px"></div>
+            </div>
+
+            <!-- Okres przedłużenia -->
+            <div class="sup-sheet-field">
+                <div class="sup-sheet-label">Przedłuż o</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="extend-period-btn selected" data-days="30"  onclick="selectExtendPeriod(this,30)">30 dni</button>
+                    <button class="extend-period-btn"          data-days="90"  onclick="selectExtendPeriod(this,90)">90 dni</button>
+                    <button class="extend-period-btn"          data-days="365" onclick="selectExtendPeriod(this,365)">365 dni</button>
+                    <button class="extend-period-btn"          data-days="0"   onclick="selectExtendPeriod(this,0)">Inne</button>
+                </div>
+                <input type="number" id="extend-days" class="sup-sheet-input" value="30" min="1" max="3650"
+                       style="margin-top:8px" placeholder="Liczba dni">
+            </div>
+
+            <!-- Aktualny valid_until -->
+            <div id="extend-current-expiry" style="font-size:11px;color:var(--szary);padding:4px 0 12px;font-weight:600"></div>
+
+            <button class="sup-sheet-confirm" id="extend-confirm" onclick="confirmExtend()">Przedłuż →</button>
+            <button class="sup-sheet-cancel"  onclick="closeExtendSheet()">Anuluj</button>
+            <div class="sup-sheet-msg" id="extend-msg"></div>
+        </div>
+    </div>
+
+    <!-- Bottom sheet aktywacji licencji -->
+    <div class="sup-sheet-overlay" id="sheet-overlay" onclick="closeSheet(event)">
+        <div class="sup-sheet" id="sup-sheet">
+            <div class="sup-sheet-handle"></div>
+            <div class="sup-sheet-title" id="sheet-title">Aktywuj licencję</div>
+            <div class="sup-sheet-sub" id="sheet-sub">Ręczna aktywacja dostępu dla klubu.</div>
+
+            <div class="sup-sheet-field">
+                <div class="sup-sheet-label">Czas trwania (dni)</div>
+                <input type="number" id="sheet-days" class="sup-sheet-input" value="365" min="1" max="3650" placeholder="365">
+            </div>
+
+            <div class="sup-sheet-plans" id="sheet-plans">
+                <!-- renderowane przez JS -->
+            </div>
+
+            <button class="sup-sheet-confirm" id="sheet-confirm" onclick="confirmActivation()">Aktywuj →</button>
+            <button class="sup-sheet-cancel" onclick="closeSheet()">Anuluj</button>
+            <div class="sup-sheet-msg" id="sheet-msg"></div>
+        </div>
+    </div>
+
+    <!-- Główna zawartość -->
+    <div class="screen-body">
+
+        <!-- Stats -->
+        <div class="s-label">Przegląd platformy</div>
+        <div class="sup-stats">
+            <div class="sup-stat">
+                <div class="sup-stat-val green" id="stat-active">—</div>
+                <div class="sup-stat-lbl">Aktywne</div>
+            </div>
+            <div class="sup-stat">
+                <div class="sup-stat-val amber" id="stat-trial">—</div>
+                <div class="sup-stat-lbl">Trial</div>
+            </div>
+            <div class="sup-stat">
+                <div class="sup-stat-val red" id="stat-expired">—</div>
+                <div class="sup-stat-lbl">Wygasłe</div>
+            </div>
+            <div class="sup-stat">
+                <div class="sup-stat-val" id="stat-total">—</div>
+                <div class="sup-stat-lbl">Razem</div>
+            </div>
+        </div>
+
+        <!-- Wyszukiwarka -->
+        <div class="s-label">Kluby</div>
+        <div class="sup-search-wrap">
+            <input type="text" id="sup-search" class="sup-search" placeholder="Szukaj klubu..." oninput="filterClubs()">
+        </div>
+
+        <!-- Lista klubów -->
+        <div class="sup-clubs" id="sup-clubs">
+            <div class="sup-empty">
+                <div class="sup-empty-icon">⏳</div>
+                <div class="sup-empty-txt">Ładowanie klubów...</div>
+            </div>
+        </div>
+
+        <!-- Impersonacja -->
+        <div class="s-label">Impersonacja użytkownika</div>
+        <div id="imp-active-banner" style="display:none; margin:0 18px 8px; padding:12px 16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:14px; align-items:center; gap:10px;">
+            <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">⚠ Jesteś w trybie impersonacji</span>
+            <button onclick="exitImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">Wróć →</button>
+        </div>
+        <div class="sup-imp-row">
+            <input type="text" id="imp-input" class="sup-imp-input" placeholder="userId (np. user_TRENER_...)">
+            <button class="sup-imp-btn" onclick="impersonate()">Zaloguj →</button>
+        </div>
+        <div class="sup-imp-msg" id="imp-msg"></div>
+
+    </div><!-- /screen-body -->
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   SUPPORT — panel ADMIN_PLATFORMY
+═══════════════════════════════════════════════════ */
+
+let allClubs    = [];   // { id, name, color, memberCount, teamCount, licenseStatus, licenseExpiry }
+let sheetClubId = '';
+let sheetPlanSelected = 'club_yearly';
+
+const SHEET_PLANS = [
+    { id: 'club_monthly', name: 'Miesięczny',  sub: '30 dni · floating license' },
+    { id: 'club_yearly',  name: 'Roczny',      sub: '365 dni · floating license' },
+    { id: 'club_2year',   name: '2-letni',     sub: '730 dni' },
+];
+
+/* ── Init ── */
+window.addEventListener('DOMContentLoaded', () => {
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(async user => {
+        if (_loaded) return;
+        if (user) {
+            _loaded = true;
+            const session = await initSession();
+
+            // Sprawdź isPlatformAdmin bezpośrednio z session.user (Firestore doc)
+            const fbUser = session?.user;
+            const isPlatformAdmin = fbUser?.isPlatformAdmin === true
+                || getCurrentUserData()?._raw?.isPlatformAdmin === true;
+
+            if (!isPlatformAdmin) {
+                window.location.href = 'start.html';
+                return;
+            }
+            checkImpersonationBanner();
+            loadClubs();
+        } else {
+            window.location.href = 'login.html';
+        }
+    });
+});
+
+/* ── Ładuj kluby ── */
+async function loadClubs() {
+    try {
+        // Równoległe zapytania: kluby + drużyny + memberships + access_rights (daty licencji)
+        const now = new Date();
+        const [clubsSnap, teamsSnap, membSnap, arSnap] = await Promise.all([
+            db.collection('clubs').get(),
+            db.collection('teams').get(),
+            db.collection('memberships').get(),
+            db.collection('access_rights').where('valid_until', '>', firebase.firestore.Timestamp.fromDate(now)).get(),
+        ]);
+
+        // Mapa: clubId → najdalsza data valid_until z aktywnych access_rights
+        const arExpiryByClub = {};
+        arSnap.docs.forEach(d => {
+            const { club_id: cid, valid_until } = d.data();
+            if (!cid || !valid_until) return;
+            const expiry = valid_until?.toDate?.() ?? new Date(valid_until);
+            if (!arExpiryByClub[cid] || expiry > arExpiryByClub[cid]) {
+                arExpiryByClub[cid] = expiry;
+            }
+        });
+
+        // Policz drużyny per klub
+        const teamCountByClub = {};
+        teamsSnap.docs.forEach(d => {
+            const cid = d.data().clubId;
+            if (cid) teamCountByClub[cid] = (teamCountByClub[cid] || 0) + 1;
+        });
+
+        // Policz unikalnych użytkowników per klub (bez REMOVED)
+        const membersByClub = {};
+        membSnap.docs.forEach(d => {
+            const { clubId: cid, userId, status } = d.data();
+            if (cid && userId && status !== 'REMOVED') {
+                if (!membersByClub[cid]) membersByClub[cid] = new Set();
+                membersByClub[cid].add(userId);
+            }
+        });
+
+        allClubs = [];
+        let active = 0, trial = 0, expired = 0;
+
+        for (const doc of clubsSnap.docs) {
+            const d = doc.data();
+
+            // Ustal status licencji z clubs.license
+            const now = new Date();
+            let licenseStatus = 'trial';
+            let licenseExpiry = null;
+            let trialExpiry   = null;
+
+            // Oblicz datę końca trialu (createdAt + 90 dni)
+            // createdAt może być Timestamp lub string ISO — obsługujemy oba
+            const createdAtDate = d.createdAt?.toDate?.()
+                ?? (d.createdAt ? new Date(d.createdAt) : null);
+            if (createdAtDate && !isNaN(createdAtDate)) {
+                trialExpiry = new Date(createdAtDate.getTime() + 90 * 86400 * 1000);
+            }
+
+            // Czytaj status wyliczony przez CF (updateClubLicenseStatuses, co 06:00)
+            // Fallback: jeśli CF nie uruchomiła jeszcze — licz z createdAt
+            if (d.licenseStatus) {
+                licenseStatus = d.licenseStatus.toLowerCase();
+                // licenseExpiry: najpierw clubs.license, fallback na access_rights admina
+                const rawExp = d.license?.valid_until ?? d.license?.expiresAt;
+                licenseExpiry = rawExp?.toDate?.() ?? (rawExp ? new Date(rawExp) : null)
+                             ?? arExpiryByClub[doc.id] ?? null;
+            } else {
+                // Fallback: trial z createdAt
+                if (trialExpiry && trialExpiry < now) {
+                    const graceEnd = new Date(trialExpiry.getTime() + 7 * 86400 * 1000);
+                    licenseStatus = graceEnd > now ? 'grace' : 'expired';
+                }
+            }
+
+            if (licenseStatus === 'active')  active++;
+            else if (licenseStatus === 'trial' || licenseStatus === 'grace') trial++;
+            else expired++;
+
+            // Nazwa: pole name, fallback na clubName, fallback na '(brak nazwy)'
+            const clubName = d.name || d.clubName || d.title || '';
+
+            allClubs.push({
+                id:            doc.id,
+                name:          clubName || '(brak nazwy)',
+                nameRaw:       clubName, // pusty string = brak nazwy w Firestore
+                trialExpiry,
+                color:         d.color || 'var(--akcent)',
+                teamCount:     teamCountByClub[doc.id]  || 0,
+                memberCount:   membersByClub[doc.id]?.size || 0,
+                licenseStatus,
+                licenseExpiry,
+                createdAt:     createdAtDate || null,
+                licensePlan:   d.license?.planId || null,
+            });
+        }
+
+        document.getElementById('stat-active').textContent  = active;
+        document.getElementById('stat-trial').textContent   = trial;
+        document.getElementById('stat-expired').textContent = expired;
+        document.getElementById('stat-total').textContent   = allClubs.length;
+
+        allClubs.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+        renderClubs(allClubs);
+    } catch (e) {
+        console.error('loadClubs:', e);
+        document.getElementById('sup-clubs').innerHTML =
+            `<div class="sup-empty"><div class="sup-empty-icon">⚠️</div><div class="sup-empty-txt">Błąd: ${e.message}</div></div>`;
+    }
+}
+
+/* ── Renderuj listę ── */
+function renderClubs(clubs) {
+    const container = document.getElementById('sup-clubs');
+    if (!clubs.length) {
+        container.innerHTML = '<div class="sup-empty"><div class="sup-empty-icon">🔍</div><div class="sup-empty-txt">Brak wyników.</div></div>';
+        return;
+    }
+
+    container.innerHTML = '';
+    clubs.forEach(club => {
+        // Grace = nadal aktywna, badge taki sam jak Active
+        const badgeClass = club.licenseStatus === 'grace' ? 'active' : club.licenseStatus;
+        const statusLabel = { active: 'Aktywna', trial: 'Trial', expired: 'Wygasła' }[badgeClass] || '—';
+
+        const _expiryDate = club.licenseExpiry ?? club.trialExpiry ?? null;
+        const expiryStr = _expiryDate
+            ? _expiryDate.toISOString().slice(0, 10)
+            : '—';
+
+        // Tekst info-bara licencji
+        let licenseInfo = '—';
+        if (club.licenseStatus === 'trial') {
+            if (club.trialExpiry) {
+                const trialStr = club.trialExpiry.toLocaleDateString('pl-PL', { day:'2-digit', month:'short', year:'numeric' });
+                licenseInfo = `Trial wygasa: <strong>${trialStr}</strong>`;
+            } else {
+                licenseInfo = 'Brak licencji · brak daty utworzenia';
+            }
+        } else if (club.licenseStatus === 'expired' && !club.licenseExpiry) {
+            // Trial wygasł (brak licencji)
+            if (club.trialExpiry) {
+                const trialStr = club.trialExpiry.toLocaleDateString('pl-PL', { day:'2-digit', month:'short', year:'numeric' });
+                licenseInfo = `Trial wygasł: <strong>${trialStr}</strong> — brak licencji`;
+            } else {
+                licenseInfo = 'Brak licencji · trial wygasł';
+            }
+        } else if (club.licenseStatus === 'grace' && club.licenseExpiry) {
+            const daysLeft = Math.ceil((club.licenseExpiry - new Date()) / 86400000);
+            licenseInfo = `⚠ Grace — wygasa za <strong>${daysLeft} dni</strong> (${expiryStr})`;
+        } else if (club.licenseExpiry) {
+            const planLabel = { club_monthly: 'Mies.', club_yearly: 'Roczna', club_2year: '2-letnia' }[club.licensePlan] || 'Licencja';
+            licenseInfo = `${planLabel} · ważna do: <strong>${expiryStr}</strong>`;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.dataset.clubId = club.id;
+
+        wrapper.innerHTML = `
+            <div class="sup-club-card" id="card-${club.id}" onclick="toggleActions('${club.id}')">
+                <div class="sup-club-dot" style="background:${club.color}">${club.nameRaw ? club.nameRaw.charAt(0).toUpperCase() : '?'}</div>
+                <div class="sup-club-info">
+                    <div class="sup-club-name">${club.name}</div>
+                    <div class="sup-club-meta" id="meta-${club.id}">${club.teamCount} drużyn · ${club.memberCount} członków</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
+                    <span class="sup-club-status ${badgeClass}">${statusLabel}</span>
+                    ${expiryStr !== '—' ? `<span style="font-size:9px;font-weight:600;color:var(--szary)">${expiryStr}</span>` : ''}
+                </div>
+            </div>
+            <div class="sup-club-actions" id="actions-${club.id}">
+
+                <!-- Stan licencji -->
+                <div style="padding:10px 12px; background:var(--tlo-karta); border:1px solid var(--border); border-radius:10px; margin-bottom:4px; display:flex; align-items:center; gap:10px;">
+                    <span class="sup-club-status ${badgeClass}" style="flex-shrink:0">${statusLabel}</span>
+                    <span style="font-size:11px; font-weight:600; color:var(--szary-j); flex:1">${licenseInfo}</span>
+                </div>
+
+                <div class="sup-action-row">
+                    <button class="sup-action-btn green" onclick="openSheet('${club.id}', '${club.name}')">
+                        ✓ Aktywuj licencję
+                    </button>
+                    <button class="sup-action-btn amber" onclick="extendLicense('${club.id}', '${club.name}')">
+                        ↺ Przedłuż
+                    </button>
+                </div>
+                <div class="sup-action-row">
+                    <button class="sup-action-btn" onclick="viewClubUsers('${club.id}')">
+                        👥 Użytkownicy
+                    </button>
+                    <button class="sup-action-btn red" onclick="revokeLicense('${club.id}', '${club.name}')">
+                        ⛔ Zablokuj awaryjnie
+                    </button>
+                </div>
+                <div class="sup-action-info" id="action-info-${club.id}"></div>
+            </div>
+        `;
+        container.appendChild(wrapper);
+    });
+}
+
+/* ── Toggle akcji ── */
+function toggleActions(clubId) {
+    const actions = document.getElementById(`actions-${clubId}`);
+    const card    = document.getElementById(`card-${clubId}`);
+    const isOpen  = actions.classList.contains('open');
+    // Zamknij wszystkie — wyczyść listę użytkowników
+    document.querySelectorAll('.sup-club-actions.open').forEach(el => {
+        el.classList.remove('open');
+        const infoEl = el.querySelector('[id^="action-info-"]');
+        if (infoEl) infoEl.innerHTML = '';
+    });
+    document.querySelectorAll('.sup-club-card.expanded').forEach(el => el.classList.remove('expanded'));
+    if (!isOpen) {
+        actions.classList.add('open');
+        card.classList.add('expanded');
+        card.style.borderRadius = 'var(--r) var(--r) 0 0';
+    } else {
+        card.style.borderRadius = '';
+    }
+}
+
+/* ── Filtrowanie ── */
+function filterClubs() {
+    const q = document.getElementById('sup-search').value.toLowerCase();
+    const filtered = allClubs.filter(c => c.name.toLowerCase().includes(q));
+    renderClubs(filtered);
+}
+
+/* ══ BOTTOM SHEET — Aktywacja licencji ══ */
+function openSheet(clubId, clubName) {
+    sheetClubId = clubId;
+    sheetPlanSelected = 'club_yearly';
+    document.getElementById('sheet-title').textContent = `Aktywuj: ${clubName}`;
+    document.getElementById('sheet-sub').textContent   = `Ręczna aktywacja licencji klubowej dla "${clubName}".`;
+    document.getElementById('sheet-days').value = 365;
+    document.getElementById('sheet-msg').className = 'sup-sheet-msg';
+    document.getElementById('sheet-msg').textContent  = '';
+    renderSheetPlans();
+    document.getElementById('sheet-overlay').classList.add('open');
+}
+
+function renderSheetPlans() {
+    const container = document.getElementById('sheet-plans');
+    container.innerHTML = '';
+    SHEET_PLANS.forEach(plan => {
+        const div = document.createElement('div');
+        div.className = 'sup-sheet-plan' + (plan.id === sheetPlanSelected ? ' selected' : '');
+        div.innerHTML = `
+            <div class="sup-sheet-plan-radio"></div>
+            <div>
+                <div class="sup-sheet-plan-name">${plan.name}</div>
+                <div class="sup-sheet-plan-sub">${plan.sub}</div>
+            </div>
+        `;
+        div.addEventListener('click', () => {
+            sheetPlanSelected = plan.id;
+            const daysMap = { club_monthly: 30, club_yearly: 365, club_2year: 730 };
+            document.getElementById('sheet-days').value = daysMap[plan.id] || 365;
+            renderSheetPlans();
+        });
+        container.appendChild(div);
+    });
+}
+
+function closeSheet(e) {
+    if (e && e.target !== document.getElementById('sheet-overlay')) return;
+    document.getElementById('sheet-overlay').classList.remove('open');
+}
+
+async function confirmActivation() {
+    const btn    = document.getElementById('sheet-confirm');
+    if (btn.disabled) return; // zabezpieczenie przed podwójnym kliknięciem
+    if (!sheetClubId) return;
+
+    const days   = parseInt(document.getElementById('sheet-days').value) || 365;
+    const msgEl  = document.getElementById('sheet-msg');
+
+    msgEl.className = 'sup-sheet-msg';
+    msgEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Aktywuję...';
+
+    try {
+        const now    = new Date();
+        const expiry = new Date(now.getTime() + days * 86400 * 1000);
+
+        await db.collection('clubs').doc(sheetClubId).set({
+            license: {
+                product_id:  sheetPlanSelected,
+                valid_until: firebase.firestore.Timestamp.fromDate(expiry),
+                used:        0,
+                total:       9999,    // nieograniczona pula — aktywacja manualna przez support
+                scope:       'all',
+                provider:    'manual_support',
+                auto_renew:  false,
+                card_token:  null,
+                activatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                activatedBy: getCurrentUserId(),
+            }
+        }, { merge: true });
+
+        // Zaktualizuj lokalnie
+        const club = allClubs.find(c => c.id === sheetClubId);
+        if (club) {
+            club.licenseStatus = 'active';
+            club.licenseExpiry = expiry;
+        }
+
+        msgEl.className = 'sup-sheet-msg ok';
+        msgEl.textContent = `✓ Aktywowano do ${expiry.toLocaleDateString('pl-PL')}.`;
+
+        setTimeout(async () => {
+            document.getElementById('sheet-overlay').classList.remove('open');
+            renderClubs(allClubs);
+            await loadClubs(); // odśwież statystyki
+        }, 1500);
+
+    } catch (e) {
+        console.error('confirmActivation:', e);
+        msgEl.className = 'sup-sheet-msg err';
+        msgEl.textContent = 'Błąd zapisu. Sprawdź uprawnienia.';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Aktywuj →';
+    }
+}
+
+/* ── Przedłuż — otwórz sheet ── */
+let extendClubId = '';
+let extendDays   = 30;
+
+async function extendLicense(clubId, clubName) {
+    extendClubId = clubId;
+    extendDays   = 30;
+
+    document.getElementById('extend-title').textContent = `Przedłuż: ${clubName}`;
+    document.getElementById('extend-msg').className     = 'sup-sheet-msg';
+    document.getElementById('extend-msg').textContent   = '';
+
+    // Pobierz aktualne dane licencji
+    try {
+        const clubDoc = await db.collection('clubs').doc(clubId).get();
+        const license = clubDoc.data()?.license;
+
+        // Aktualna liczba licencji — z poprzedniego zakupu (pamięć)
+        const prevTotal = license?.total && license.total < 9999 ? license.total : '';
+        const inp = document.getElementById('extend-total');
+        inp.value = prevTotal;
+        document.getElementById('extend-total-hint').textContent =
+            prevTotal ? `Poprzedni zakup: ${prevTotal} licencji` : 'Brak poprzedniego pakietu';
+
+        // Aktualny termin ważności
+        const rawExp   = license?.valid_until ?? license?.expiresAt;
+        const expiry   = rawExp?.toDate?.() ?? (rawExp ? new Date(rawExp) : null);
+        const expiryEl = document.getElementById('extend-current-expiry');
+        if (expiry) {
+            const isPast = expiry < new Date();
+            expiryEl.textContent = `Obecny termin: ${expiry.toLocaleDateString('pl-PL', { day:'2-digit', month:'short', year:'numeric' })}${isPast ? ' (wygasła)' : ''}`;
+            expiryEl.style.color = isPast ? 'var(--blad)' : 'var(--szary)';
+        } else {
+            expiryEl.textContent = 'Brak aktywnej licencji klubowej';
+            expiryEl.style.color = 'var(--szary)';
+        }
+
+        document.getElementById('extend-sub').textContent =
+            `Przedłuż licencję klubową dla "${clubName}". Liczba licencji z poprzedniego zakupu jest pre-wypełniona.`;
+
+    } catch (e) {
+        document.getElementById('extend-total-hint').textContent = 'Błąd odczytu danych.';
+    }
+
+    // Reset przycisków okresu
+    document.querySelectorAll('.extend-period-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelector('.extend-period-btn[data-days="30"]').classList.add('selected');
+    document.getElementById('extend-days').value = 30;
+
+    document.getElementById('extend-overlay').classList.add('open');
+}
+
+function selectExtendPeriod(btn, days) {
+    document.querySelectorAll('.extend-period-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    if (days > 0) {
+        document.getElementById('extend-days').value = days;
+        extendDays = days;
+    }
+}
+
+function closeExtendSheet(e) {
+    if (e && e.target !== document.getElementById('extend-overlay')) return;
+    document.getElementById('extend-overlay').classList.remove('open');
+}
+
+async function confirmExtend() {
+    const btn    = document.getElementById('extend-confirm');
+    if (btn.disabled) return;
+    if (!extendClubId) return;
+
+    const days  = parseInt(document.getElementById('extend-days').value) || 30;
+    const total = parseInt(document.getElementById('extend-total').value) || null;
+    const msgEl = document.getElementById('extend-msg');
+
+    if (!total || total < 1) {
+        msgEl.className = 'sup-sheet-msg err';
+        msgEl.textContent = 'Podaj liczbę licencji.';
+        return;
+    }
+
+    msgEl.className  = 'sup-sheet-msg';
+    msgEl.textContent = '';
+    btn.disabled     = true;
+    btn.textContent  = 'Zapisuję...';
+
+    try {
+        const clubDoc = await db.collection('clubs').doc(extendClubId).get();
+        const rawExp  = clubDoc.data()?.license?.valid_until ?? clubDoc.data()?.license?.expiresAt;
+        const current = rawExp?.toDate?.() ?? (rawExp ? new Date(rawExp) : new Date());
+        const base    = current > new Date() ? current : new Date();
+        const expiry  = new Date(base.getTime() + days * 86400 * 1000);
+
+        await db.collection('clubs').doc(extendClubId).set({
+            license: {
+                total,
+                used:        clubDoc.data()?.license?.used || 0,
+                valid_until: firebase.firestore.Timestamp.fromDate(expiry),
+                auto_renew:  false,
+                extendedAt:  firebase.firestore.FieldValue.serverTimestamp(),
+                extendedBy:  getCurrentUserId(),
+                provider:    'manual_support',
+            }
+        }, { merge: true });
+
+        msgEl.className  = 'sup-sheet-msg ok';
+        msgEl.textContent = `✓ Przedłużono do ${expiry.toLocaleDateString('pl-PL')} · ${total} licencji.`;
+
+        const club = allClubs.find(c => c.id === extendClubId);
+        if (club) { club.licenseStatus = 'active'; club.licenseExpiry = expiry; }
+
+        setTimeout(async () => {
+            document.getElementById('extend-overlay').classList.remove('open');
+            renderClubs(allClubs);
+            await loadClubs();
+        }, 1500);
+
+    } catch (e) {
+        console.error('confirmExtend:', e);
+        msgEl.className  = 'sup-sheet-msg err';
+        msgEl.textContent = 'Błąd zapisu.';
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Przedłuż →';
+    }
+}
+
+/* ── Cofnij dostęp ── */
+async function revokeLicense(clubId, clubName) {
+    if (!await showConfirmSheet(`Cofnąć dostęp dla klubu "${clubName}"? Użytkownicy zostaną przeniesieni do blocked.html.`)) return;
+
+    const infoEl = document.getElementById(`action-info-${clubId}`);
+    infoEl.textContent = 'Cofam...';
+
+    try {
+        await db.collection('clubs').doc(clubId).set({
+            license: {
+                status: 'EXPIRED',
+                revokedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                revokedBy: getCurrentUserId(),
+            }
+        }, { merge: true });
+
+        infoEl.textContent = '✓ Dostęp cofnięty.';
+        const club = allClubs.find(c => c.id === clubId);
+        if (club) { club.licenseStatus = 'expired'; }
+        setTimeout(() => { infoEl.textContent = ''; renderClubs(allClubs); }, 2000);
+    } catch (e) {
+        infoEl.textContent = '⚠ Błąd zapisu.';
+    }
+}
+
+/* ── Podgląd użytkowników klubu ── */
+async function viewClubUsers(clubId) {
+    const infoEl = document.getElementById(`action-info-${clubId}`);
+    infoEl.innerHTML = '<span style="color:var(--szary);font-size:12px">Ładuję...</span>';
+
+    try {
+        const snap = await db.collection('memberships')
+            .where('clubId', '==', clubId)
+            .get();
+
+        const roleNames  = { TRENER_GLOWNY: 'Trener główny', TRENER_POMOCNICZY: 'Trener pom.', RODZIC: 'Rodzic', ZAWODNIK: 'Zawodnik', KIBIC: 'Kibic' };
+        const roleOrder  = { TRENER_GLOWNY: 0, TRENER_POMOCNICZY: 1, RODZIC: 2, ZAWODNIK: 3, KIBIC: 4 };
+        const statusColor = { ACTIVE: 'var(--sukces)', PENDING: 'var(--warn)', BLOCKED: 'var(--blad)', REMOVED: 'var(--szary)' };
+
+        // Deduplikacja po userId — bierzemy wszystkich z wyjątkiem REMOVED
+        const usersMap = {};
+        snap.docs.forEach(d => {
+            const data = d.data();
+            if (data.status === 'REMOVED') return;
+            if (!data.userId) return;
+            if (!usersMap[data.userId]) {
+                usersMap[data.userId] = {
+                    userId:      data.userId,
+                    displayName: data.displayName || '',
+                    status:      data.status || 'ACTIVE',
+                    roles:       new Set()
+                };
+            }
+            const r = data.role === 'TRENER' ? (data.trainerRole || 'TRENER_GLOWNY') : (data.role || '?');
+            usersMap[data.userId].roles.add(r);
+        });
+
+        // Pobierz user docs żeby uzyskać prawdziwe imiona (memberships.displayName bywa puste)
+        const userIds = Object.keys(usersMap);
+        if (userIds.length > 0) {
+            const userDocs = await Promise.all(userIds.map(uid => db.collection('users').doc(uid).get()));
+            userDocs.forEach(doc => {
+                if (!doc.exists || !usersMap[doc.id]) return;
+                const d = doc.data();
+                const name = [d.firstName, d.lastName].filter(Boolean).join(' ')
+                          || d.displayName
+                          || usersMap[doc.id].displayName
+                          || '—';
+                usersMap[doc.id].displayName = name;
+            });
+        }
+
+        const members = Object.values(usersMap).map(u => ({
+            userId:      u.userId,
+            displayName: u.displayName || '—',
+            status:      u.status,
+            roleLabel:   [...u.roles].map(r => roleNames[r] || r).join(' + '),
+            sortKey:     Math.min(...[...u.roles].map(r => roleOrder[r] ?? 9))
+        }));
+        members.sort((a, b) => a.sortKey - b.sortKey || a.displayName.localeCompare(b.displayName, 'pl'));
+
+        // Aktualizuj licznik na karcie klubu
+        const activeCount = members.filter(m => m.status === 'ACTIVE').length;
+        const metaEl = document.getElementById(`meta-${clubId}`);
+        if (metaEl) {
+            const club = allClubs.find(c => c.id === clubId);
+            if (club) {
+                club.memberCount = activeCount;
+                metaEl.textContent = `${club.teamCount} drużyn · ${activeCount} członków`;
+            }
+        }
+
+        if (members.length === 0) {
+            infoEl.innerHTML = '<span style="color:var(--szary);font-size:12px">Brak członków w tym klubie.</span>';
+            return;
+        }
+
+        // Skróć userId do czytelnej formy
+        const shortId = uid => {
+            const parts = uid.split('_');
+            return parts.length >= 2 ? parts.slice(-2).join('_') : uid.slice(-16);
+        };
+
+        infoEl.innerHTML = `
+            <div style="margin-top:6px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <span style="font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--szary)">${activeCount} aktywnych / ${members.length} razem</span>
+                    <button id="imp-btn-${clubId}" disabled onclick="impersonateSelected('${clubId}')"
+                        style="padding:6px 14px;border-radius:var(--r-pill);background:var(--akcent);border:none;color:#fff;font-size:11px;font-weight:900;cursor:pointer;opacity:0.35;transition:opacity 0.2s">
+                        Zaloguj jako →
+                    </button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;scrollbar-width:none;">
+                    ${members.map(m => `
+                    <label style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--tlo-karta);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color 0.15s"
+                           onmousedown="selectMember(this,'${m.userId}','${clubId}')">
+                        <input type="radio" name="imp-radio-${clubId}" value="${m.userId}"
+                               style="accent-color:var(--akcent);width:15px;height:15px;flex-shrink:0;pointer-events:none">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:12px;font-weight:800;color:var(--bialy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.displayName}</div>
+                            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                                <span style="font-size:10px;color:var(--szary);font-weight:600">${m.roleLabel}</span>
+                                ${m.status !== 'ACTIVE' ? `<span style="font-size:9px;font-weight:900;color:${statusColor[m.status] || 'var(--szary)'}">· ${m.status}</span>` : ''}
+                            </div>
+                            <div style="font-size:9px;color:var(--border2);font-family:var(--font-d);margin-top:1px;letter-spacing:0.3px">${shortId(m.userId)}</div>
+                        </div>
+                    </label>`).join('')}
+                </div>
+            </div>`;
+    } catch (e) {
+        console.error('viewClubUsers:', e);
+        infoEl.innerHTML = `<span style="color:var(--blad);font-size:12px">⚠ Błąd: ${e.message}</span>`;
+    }
+}
+
+function selectMember(label, userId, clubId) {
+    const infoEl = document.getElementById(`action-info-${clubId}`);
+    const btn    = document.getElementById(`imp-btn-${clubId}`);
+
+    // Aktywuj przycisk
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+
+    // Podświetl wybrany wiersz, odznacz pozostałe
+    if (infoEl) {
+        infoEl.querySelectorAll('label').forEach(l => l.style.borderColor = 'var(--border)');
+        infoEl._selectedUserId = userId;
+    }
+    label.style.borderColor = 'var(--akcent)';
+}
+
+async function impersonateSelected(clubId) {
+    const infoEl = document.getElementById(`action-info-${clubId}`);
+    const userId = infoEl?._selectedUserId;
+    if (!userId) return;
+    document.getElementById('imp-input').value = userId;
+    await impersonate();
+}
+
+/* ── Impersonacja ── */
+function checkImpersonationBanner() {
+    const original = localStorage.getItem('supportOriginalUserId');
+    if (original) {
+        const banner = document.getElementById('imp-active-banner');
+        if (banner) banner.style.display = 'flex';
+    }
+}
+
+function exitImpersonation() {
+    const original = localStorage.getItem('supportOriginalUserId');
+    if (!original) return; // nie jesteśmy w trybie impersonacji
+    localStorage.setItem('currentUserId', original);
+    localStorage.removeItem('supportOriginalUserId');
+    localStorage.removeItem('selectedMembershipId');
+    localStorage.removeItem('selectedTeamId');
+    window.location.reload(); // przeładuj — initSession() czyta nowy currentUserId
+}
+
+async function impersonate() {
+    const userId = document.getElementById('imp-input').value.trim();
+    const msgEl  = document.getElementById('imp-msg');
+    msgEl.className = 'sup-imp-msg';
+    msgEl.textContent = '';
+
+    if (!userId) {
+        msgEl.className = 'sup-imp-msg err';
+        msgEl.textContent = 'Wpisz userId.';
+        return;
+    }
+
+    try {
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (!userDoc.exists) {
+            msgEl.className = 'sup-imp-msg err';
+            msgEl.textContent = 'Nie znaleziono użytkownika.';
+            return;
+        }
+        const userData = userDoc.data();
+
+        // Zapisz oryginalnego usera żeby móc wrócić
+        const originalUserId = localStorage.getItem('currentUserId');
+        localStorage.setItem('supportOriginalUserId', originalUserId);
+
+        // Zmień currentUserId — to jedyna zmienna którą czyta initSession()
+        localStorage.setItem('currentUserId', userId);
+        localStorage.removeItem('selectedMembershipId');
+        localStorage.removeItem('selectedTeamId');
+
+        // Znajdź pierwsze aktywne membership impersonowanego usera
+        const mSnap = await db.collection('memberships')
+            .where('userId', '==', userId)
+            .where('status', '==', 'ACTIVE')
+            .limit(1).get();
+
+        if (!mSnap.empty) {
+            const m = mSnap.docs[0];
+            localStorage.setItem('selectedMembershipId', m.id);
+            if (m.data().teamId) localStorage.setItem('selectedTeamId', m.data().teamId);
+        }
+
+        msgEl.className = 'sup-imp-msg ok';
+        msgEl.textContent = `✓ Przełączono na: ${userData.displayName || userId}. Przekierowanie...`;
+        setTimeout(() => { window.location.href = 'start.html'; }, 1200);
+    } catch (e) {
+        console.error('impersonate:', e);
+        msgEl.className = 'sup-imp-msg err';
+        msgEl.textContent = 'Błąd połączenia.';
+    }
+}
+</script>
+</body>
+</html>

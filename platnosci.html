@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Wybierz plan</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<style>
+:root { --phone-h: 750px; }
+
+.screen-body {
+    flex: 1; display: flex; flex-direction: column;
+    overflow-y: auto; scrollbar-width: none;
+    padding-bottom: 32px;
+}
+.screen-body::-webkit-scrollbar { display: none; }
+
+/* ── Tło ── */
+.pay-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 300px 250px at 50% -40px, rgba(59,130,246,0.08), transparent);
+}
+
+/* ── Header ── */
+.pay-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 48px 22px 20px;
+    flex-shrink: 0;
+}
+.pay-logo {
+    display: flex; align-items: center; gap: 10px;
+}
+.pay-logo-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--bialy);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+}
+.pay-logo-name {
+    font-family: var(--font-d); font-size: 20px; font-weight: 800;
+    color: var(--bialy); letter-spacing: 2px;
+}
+.pay-logo-sub { font-size: 11px; font-weight: 600; color: var(--szary); margin-top: 1px; }
+.pay-close {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--tlo-karta); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--szary-j); cursor: pointer;
+    flex-shrink: 0;
+}
+.pay-close:active { background: var(--tlo-karta2); }
+
+/* ── Tytuł sekcji ── */
+.pay-title {
+    padding: 0 22px 6px;
+    font-family: var(--font-d); font-size: 14px; font-weight: 800;
+    color: var(--bialy); letter-spacing: 0.5px;
+}
+.pay-subtitle {
+    padding: 0 22px 20px;
+    font-size: 12px; font-weight: 600; color: var(--szary);
+    line-height: 1.6;
+}
+
+/* ── Toggle Indywidualny / Rodzinny ── */
+.pay-toggle-wrap {
+    margin: 0 22px 20px;
+    background: var(--tlo-karta); border: 1px solid var(--border);
+    border-radius: var(--r-pill); padding: 4px;
+    display: flex;
+}
+.pay-toggle-btn {
+    flex: 1; padding: 9px;
+    border-radius: var(--r-pill);
+    font-size: 12px; font-weight: 900;
+    color: var(--szary); cursor: pointer; border: none;
+    background: none; transition: all 0.2s;
+}
+.pay-toggle-btn.active {
+    background: var(--tlo-karta2);
+    color: var(--bialy);
+    border: 1px solid var(--border2);
+}
+
+/* ── Karty pakietów ── */
+.pay-cards { padding: 0 22px; display: flex; flex-direction: column; gap: 10px; }
+
+.pay-card {
+    background: var(--tlo-karta); border: 1.5px solid var(--border);
+    border-radius: var(--r); padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    position: relative;
+}
+.pay-card:active { background: var(--tlo-karta2); }
+.pay-card.selected {
+    border-color: var(--akcent);
+    background: rgba(59,130,246,0.06);
+}
+
+.pay-card-radio {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s;
+}
+.pay-card.selected .pay-card-radio {
+    border-color: var(--akcent);
+    background: var(--akcent);
+}
+.pay-card-radio::after {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: #fff; display: none;
+}
+.pay-card.selected .pay-card-radio::after { display: block; }
+
+.pay-card-info { flex: 1; }
+.pay-card-name {
+    font-size: 13px; font-weight: 900; color: var(--bialy);
+    display: flex; align-items: center; gap: 7px;
+}
+.pay-card-sub { font-size: 11px; font-weight: 600; color: var(--szary); margin-top: 2px; }
+
+.pay-badge {
+    font-size: 9px; font-weight: 900; letter-spacing: 1px;
+    text-transform: uppercase; padding: 3px 8px;
+    border-radius: var(--r-pill);
+    background: rgba(74,222,128,0.15); color: var(--sukces);
+    border: 1px solid rgba(74,222,128,0.25);
+}
+.pay-badge.popular {
+    background: rgba(59,130,246,0.15); color: #60A5FA;
+    border-color: rgba(59,130,246,0.25);
+}
+
+.pay-card-price {
+    text-align: right; flex-shrink: 0;
+}
+.pay-card-amount {
+    font-family: var(--font-d); font-size: 17px; font-weight: 800;
+    color: var(--bialy);
+}
+.pay-card-period { font-size: 10px; font-weight: 700; color: var(--szary); margin-top: 1px; }
+
+/* ── Divider ── */
+.pay-divider {
+    margin: 18px 22px;
+    display: flex; align-items: center; gap: 10px;
+}
+.pay-divider-line { flex: 1; height: 1px; background: var(--border); }
+.pay-divider-txt { font-size: 11px; font-weight: 700; color: var(--szary); white-space: nowrap; }
+
+/* ── Sekcja metody płatności ── */
+.pay-method-label {
+    padding: 0 22px 10px;
+    font-size: 10px; font-weight: 900; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--szary);
+}
+.pay-methods { padding: 0 22px; display: flex; flex-direction: column; gap: 8px; }
+
+.pay-method-btn {
+    width: 100%; padding: 14px 18px;
+    border-radius: var(--r); border: 1.5px solid var(--border);
+    background: var(--tlo-karta);
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    font-family: var(--font);
+}
+.pay-method-btn:active { background: var(--tlo-karta2); }
+.pay-method-btn.pl-only { display: none; } /* pokazywane przez JS jeśli PL */
+
+.pay-method-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    background: var(--tlo-karta2); border: 1px solid var(--border2);
+}
+.pay-method-info { flex: 1; text-align: left; }
+.pay-method-name { font-size: 13px; font-weight: 800; color: var(--bialy); }
+.pay-method-sub  { font-size: 11px; font-weight: 600; color: var(--szary); margin-top: 1px; }
+.pay-method-arr  { font-size: 18px; color: var(--szary); }
+
+/* ── Stopka ── */
+.pay-footer {
+    padding: 18px 22px 0;
+    font-size: 10px; font-weight: 600; color: var(--szary);
+    text-align: center; line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+    <div class="pay-bg"></div>
+
+    <div class="screen-body">
+
+        <!-- Header -->
+        <div class="pay-header">
+            <div class="pay-logo">
+                <div class="pay-logo-text">
+                    <div class="pay-logo-name">COACHAY</div>
+                    <div class="pay-logo-sub">Platforma dla trenerów i drużyn</div>
+                </div>
+            </div>
+            <div class="pay-close" onclick="goBack()">✕</div>
+        </div>
+
+        <div class="pay-title">Wybierz plan</div>
+        <div class="pay-subtitle">Pełny dostęp do Coachay. Anuluj kiedy chcesz.</div>
+
+        <!-- Toggle Indywidualny / Rodzinny -->
+        <div class="pay-toggle-wrap">
+            <button class="pay-toggle-btn active" id="tab-ind" onclick="setTab('individual')">Indywidualny</button>
+            <button class="pay-toggle-btn" id="tab-fam" onclick="setTab('family')">Rodzinny</button>
+        </div>
+
+        <!-- Karty pakietów -->
+        <div class="pay-cards" id="pay-cards"></div>
+
+        <!-- Divider -->
+        <div class="pay-divider">
+            <div class="pay-divider-line"></div>
+            <div class="pay-divider-txt">Wybierz metodę płatności</div>
+            <div class="pay-divider-line"></div>
+        </div>
+
+        <!-- Metody płatności -->
+        <div class="pay-method-label">Zapłać przez</div>
+        <div class="pay-methods">
+
+            <!-- Przelewy24 — tylko PL -->
+            <button class="pay-method-btn pl-only" id="btn-p24" onclick="payWith('przelewy24')">
+                <div class="pay-method-icon" style="background:#1A1A2E; border-color:#2D2D5E;">
+                    <svg width="32" height="14" viewBox="0 0 120 52" fill="none">
+                        <text x="2" y="40" font-family="Arial Black,sans-serif" font-weight="900" font-size="44" fill="#E8332A">P</text>
+                        <text x="30" y="40" font-family="Arial Black,sans-serif" font-weight="900" font-size="44" fill="#ffffff">24</text>
+                    </svg>
+                </div>
+                <div class="pay-method-info">
+                    <div class="pay-method-name">Przelewy24</div>
+                    <div class="pay-method-sub">BLIK · karta · przelew · tylko Polska</div>
+                </div>
+                <span class="pay-method-arr">›</span>
+            </button>
+
+            <!-- Google Play -->
+            <button class="pay-method-btn" onclick="payWith('google')">
+                <div class="pay-method-icon" style="background:#1A1A1A; border-color:#2A2A2A;">
+                    <svg width="22" height="22" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                </div>
+                <div class="pay-method-info">
+                    <div class="pay-method-name">Google Play</div>
+                    <div class="pay-method-sub">Odnowienie automatyczne</div>
+                </div>
+                <span class="pay-method-arr">›</span>
+            </button>
+
+            <!-- Apple -->
+            <button class="pay-method-btn" onclick="payWith('apple')">
+                <div class="pay-method-icon" style="background:#1A1A1A; border-color:#2A2A2A;">
+                    <svg width="20" height="22" viewBox="0 0 814 1000" fill="white">
+                        <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.5 269-317.5 70.1 0 128.4 46.4 172.5 46.4 43.4 0 112.7-49 192.8-49 34.3 0 122.3 3.2 174.7 93.3zm-169-156c-28.6 34.6-73.5 62.2-120.8 58.7-5.8-48.3 16.9-99.3 44.2-131.3 27.9-33.8 79.8-62.2 120.8-63.5 5.2 50.3-14.9 98.7-44.2 136.1z"/>
+                    </svg>
+                </div>
+                <div class="pay-method-info">
+                    <div class="pay-method-name">Apple</div>
+                    <div class="pay-method-sub">Odnowienie automatyczne</div>
+                </div>
+                <span class="pay-method-arr">›</span>
+            </button>
+
+        </div>
+
+        <!-- Stopka -->
+        <div class="pay-footer" id="pay-footer">
+            Wybierz pakiet powyżej, a następnie metodę płatności.
+        </div>
+
+    </div>
+</div>
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   PLATNOSCI — logika ekranu
+═══════════════════════════════════════════════════ */
+
+const params   = new URLSearchParams(location.search);
+const CLUB_ID  = params.get('clubId') || '';
+const REDIRECT = params.get('redirect') || 'start.html';
+
+/* ── Pakiety ── */
+const PLANS = {
+    individual: [
+        { id: 'sub_individual_monthly', name: 'Miesięczny',  period: 'mies', sub: '30 dni dostępu',
+          priceBase: '2 zł',  priceApple: '4 zł',  badge: null },
+        { id: 'sub_individual_yearly',  name: 'Roczny',      period: 'rok',  sub: 'Oszczędzasz 76% vs miesięczny',
+          priceBase: '20 zł', priceApple: '40 zł', badge: 'Polecane' },
+    ],
+    family: [
+        { id: 'sub_family_monthly', name: 'Rodzinny mies.', period: 'mies', sub: '6 kont · 30 dni',
+          priceBase: '5 zł',  priceApple: '10 zł', badge: null },
+        { id: 'sub_family_yearly',  name: 'Rodzinny roczny', period: 'rok',  sub: '6 kont · oszczędzasz vs miesięczny',
+          priceBase: '50 zł', priceApple: '100 zł', badge: 'Najlepszy' },
+    ]
+};
+
+let currentTab      = 'individual';
+let selectedPlanId  = 'sub_individual_yearly'; // domyślnie
+let isApple         = false;
+let isPL            = false;
+
+/* ── Detekcja kraju/platformy ── */
+function detectContext() {
+    isPL = navigator.language?.startsWith('pl') || false;
+    isApple = /iPhone|iPad|iPod|Mac/.test(navigator.userAgent);
+
+    if (isPL) {
+        document.querySelectorAll('.pl-only').forEach(el => el.style.display = 'flex');
+    }
+}
+
+/* ── Renderuj karty ── */
+function renderCards() {
+    const plans = PLANS[currentTab];
+    const container = document.getElementById('pay-cards');
+    container.innerHTML = '';
+
+    plans.forEach(plan => {
+        const isSelected = plan.id === selectedPlanId;
+        const price = isApple ? plan.priceApple : plan.priceBase;
+        const badgeHtml = plan.badge
+            ? `<span class="pay-badge ${plan.badge === 'Polecane' ? 'popular' : ''}">${plan.badge}</span>`
+            : '';
+
+        const card = document.createElement('div');
+        card.className = 'pay-card' + (isSelected ? ' selected' : '');
+        card.innerHTML = `
+            <div class="pay-card-radio"></div>
+            <div class="pay-card-info">
+                <div class="pay-card-name">${plan.name} ${badgeHtml}</div>
+                <div class="pay-card-sub">${plan.sub}</div>
+            </div>
+            <div class="pay-card-price">
+                <div class="pay-card-amount">${price}</div>
+                <div class="pay-card-period">/ ${plan.period}</div>
+            </div>
+        `;
+        card.addEventListener('click', () => selectPlan(plan.id));
+        container.appendChild(card);
+    });
+
+    updateFooter();
+}
+
+function selectPlan(planId) {
+    selectedPlanId = planId;
+    renderCards();
+}
+
+function setTab(tab) {
+    currentTab = tab;
+    // Wybierz domyślnie roczny dla każdego taba
+    selectedPlanId = tab === 'individual' ? 'sub_individual_yearly' : 'sub_family_yearly';
+    document.getElementById('tab-ind').classList.toggle('active', tab === 'individual');
+    document.getElementById('tab-fam').classList.toggle('active', tab === 'family');
+    renderCards();
+}
+
+/* ── Stopka z podsumowaniem ── */
+function updateFooter() {
+    const allPlans = [...PLANS.individual, ...PLANS.family];
+    const plan = allPlans.find(p => p.id === selectedPlanId);
+    if (!plan) return;
+    const price = isApple ? plan.priceApple : plan.priceBase;
+    document.getElementById('pay-footer').textContent =
+        `Wybrany: ${plan.name} — ${price} / ${plan.period}. Anuluj w dowolnym momencie.`;
+}
+
+/* ── Obsługa płatności ── */
+function payWith(provider) {
+    if (!selectedPlanId) {
+        alert('Wybierz pakiet przed kontynuowaniem.');
+        return;
+    }
+
+    const allPlans = [...PLANS.individual, ...PLANS.family];
+    const plan = allPlans.find(p => p.id === selectedPlanId);
+    const price = (provider === 'apple' || provider === 'google') ? plan.priceApple : plan.priceBase;
+
+    // TODO: implementacja webhooków płatności
+    // Na razie — placeholder
+    alert(`[DEV] Płatność:\nPlan: ${plan.name}\nCena: ${price} / ${plan.period}\nMetoda: ${provider}\n\nImplementacja webhooków w toku.`);
+}
+
+function goBack() {
+    if (document.referrer) {
+        history.back();
+    } else {
+        window.location.href = REDIRECT;
+    }
+}
+
+/* ── Init ── */
+detectContext();
+renderCards();
+</script>
+</body>
+</html>

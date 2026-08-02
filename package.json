@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "firebase-admin": "^13.7.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0"
+  }
+}

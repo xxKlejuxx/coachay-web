@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Konto zawieszone</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+.screen-body { padding: 0 0 40px !important; gap: 0 !important; display: block !important; overflow-y: auto !important; scrollbar-width: none; flex: 1; min-height: 0; }
+.screen-body::-webkit-scrollbar { display: none; }
+.screen-body > * { flex-shrink: 0; }
+
+/* ── Top bar (uproszczony — tylko ctx-switcher) ── */
+.blocked-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; padding: 0 16px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
+/* ── Ctx overlay (aktywne memberships) ── */
+.blocked-ctx-ov { position: absolute; top: var(--top-h); left: 0; right: 0; background: var(--tlo-karta); border-bottom: 1px solid var(--border2); z-index: 100; padding: 12px 16px; display: none; }
+.blocked-ctx-ov.open { display: block; }
+.blocked-ctx-title { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 10px; }
+.blocked-ctx-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; cursor: pointer; border: 1px solid var(--border); margin-bottom: 6px; }
+.blocked-ctx-item:active { background: var(--tlo-karta2); }
+.blocked-ctx-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
+.blocked-ctx-info { flex: 1; }
+.blocked-ctx-klub { font-size: 12px; font-weight: 800; color: var(--bialy); }
+.blocked-ctx-team { font-size: 11px; color: var(--szary); font-weight: 600; margin-top: 1px; }
+.blocked-ctx-arrow { font-size: 16px; color: var(--szary); }
+.blocked-ctx-empty { text-align: center; padding: 12px; font-size: 12px; color: var(--szary); font-weight: 600; }
+
+/* ── Karta blokady ── */
+.blocked-card { margin: 24px 16px 0; background: var(--tlo-karta); border: 1px solid rgba(239,68,68,0.35); border-radius: 20px; padding: 28px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.blocked-icon { font-size: 44px; line-height: 1; }
+.blocked-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
+.blocked-text { font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.7; max-width: 260px; }
+.blocked-logout-btn { margin-top: 8px; padding: 12px 32px; border-radius: var(--r-pill); background: var(--tlo-karta2); border: 1px solid var(--border2); color: var(--szary-j); font-size: 12px; font-weight: 900; cursor: pointer; }
+.blocked-logout-btn:active { opacity: 0.7; }
+
+/* ── Karta wygaśnięcia płatności ── */
+.payment-card { margin: 24px 16px 0; border-radius: 20px; padding: 28px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: linear-gradient(160deg, rgba(245,158,11,0.08), rgba(239,68,68,0.06)); border: 1px solid rgba(245,158,11,0.3); }
+.payment-icon { font-size: 44px; line-height: 1; }
+.payment-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
+.payment-text { font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.7; max-width: 260px; }
+.payment-btn-primary { width: 100%; padding: 15px; border-radius: var(--r-pill); background: linear-gradient(135deg, #F59E0B, #EF4444); border: none; color: #fff; font-size: 14px; font-weight: 900; cursor: pointer; margin-top: 4px; transition: opacity 0.15s, transform 0.15s; }
+.payment-btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+.payment-btn-secondary { width: 100%; padding: 12px; border-radius: var(--r-pill); background: transparent; border: 1px solid var(--border2); color: var(--szary-j); font-size: 12px; font-weight: 800; cursor: pointer; }
+.payment-btn-secondary:active { background: var(--tlo-karta2); }
+
+/* ── Karta kodu zaproszenia ── */
+.invite-card { margin: 16px 16px 0; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.invite-label { font-size: 10px; font-weight: 800; color: var(--szary); text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
+.invite-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.invite-input { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 22px; font-weight: 900; font-family: var(--font-d); letter-spacing: 6px; text-transform: uppercase; text-align: center; box-sizing: border-box; }
+.invite-input:focus { border-color: var(--akcent); outline: none; }
+.invite-input::placeholder { font-size: 13px; font-weight: 600; letter-spacing: 0; color: var(--szary); text-transform: none; font-family: inherit; }
+.invite-btn { width: 100%; padding: 13px; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: var(--r-pill); color: var(--szary-j); font-size: 14px; font-weight: 800; cursor: pointer; }
+.invite-btn:active { border-color: var(--bialy); color: var(--bialy); }
+.invite-msg { font-size: 12px; font-weight: 700; display: none; text-align: center; }
+.invite-msg.ok  { color: #34d399; display: block; }
+.invite-msg.err { color: #ef4444; display: block; }
+
+/* ── Karta testowego zakupu ── */
+.dev-card { margin: 16px 16px 0; background: var(--tlo-karta); border: 1px solid rgba(99,102,241,0.4); border-radius: 16px; overflow: hidden; }
+.dev-card-title { font-size: 10px; font-weight: 900; color: #818cf8; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 14px 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+.dev-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.dev-btn { width: 100%; padding: 11px; border-radius: var(--r-pill); background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.35); color: #818cf8; font-size: 12px; font-weight: 800; cursor: pointer; text-align: left; }
+.dev-btn:active { background: rgba(99,102,241,0.22); }
+.dev-btn-label { font-size: 10px; color: var(--szary); font-weight: 600; margin-top: 1px; }
+.dev-msg { font-size: 11px; font-weight: 700; text-align: center; min-height: 16px; }
+.dev-msg.ok  { color: #34d399; }
+.dev-msg.err { color: #ef4444; }
+
+/* ── Karta gry ── */
+.game-card { margin: 12px 16px 0; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 20px; padding: 18px 20px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
+.game-card:active { background: var(--tlo-karta2); }
+.game-card-icon { width: 48px; height: 48px; border-radius: 14px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.game-card-info { flex: 1; }
+.game-card-title { font-family: var(--font-d); font-size: 14px; font-weight: 900; color: var(--bialy); letter-spacing: 2px; }
+.game-card-sub { font-size: 11px; color: var(--szary); font-weight: 600; margin-top: 3px; }
+.game-card-arrow { font-size: 20px; color: var(--szary); }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+
+    <!-- Top bar — tylko ctx-switcher -->
+    <div class="blocked-topbar">
+        <div class="ctx-switcher" onclick="toggleBlockedCtx()">
+            <div class="ctx-dot" id="ctx-dot">?</div>
+            <div class="ctx-text">
+                <span class="ctx-klub" id="ctx-klub">Coachay</span>
+                <span class="ctx-team" id="ctx-team">Konto zawieszone</span>
+            </div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+    </div>
+
+    <!-- Ctx overlay -->
+    <div class="blocked-ctx-ov" id="blocked-ctx-ov">
+        <div class="blocked-ctx-title">Przełącz konto</div>
+        <div id="blocked-ctx-list"></div>
+    </div>
+
+    <!-- Baner impersonacji support (widoczny gdy admin przegląda jako inny user) -->
+    <div id="imp-support-banner" style="display:none; margin:8px 18px; padding:12px 16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:14px; align-items:center; gap:10px;">
+        <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">⚠ Tryb impersonacji — widok tego usera</span>
+        <button onclick="exitSupportImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">← Wróć</button>
+    </div>
+
+    <!-- Główna zawartość -->
+    <div class="screen-body">
+
+        <!-- Karta blokady (domyślna) -->
+        <div class="blocked-card" id="card-suspended">
+            <div class="blocked-icon">🔒</div>
+            <div class="blocked-title">Konto zawieszone</div>
+            <div class="blocked-text">Twój dostęp do tego konta został zawieszony. Skontaktuj się z administratorem klubu.</div>
+            <button class="blocked-logout-btn" onclick="logout()">Wyloguj się</button>
+        </div>
+
+        <!-- Karta wygaśnięcia płatności — trener (może zapłacić) -->
+        <div class="payment-card" id="card-payment" style="display:none">
+            <div class="payment-icon">💳</div>
+            <div class="payment-title">Dostęp wygasł</div>
+            <div class="payment-text">Okres próbny lub subskrypcja dobiegły końca. Wybierz plan, aby dalej korzystać z Coachay.</div>
+            <button class="payment-btn-primary" id="btn-pay" onclick="goToPayment()">Wybierz plan →</button>
+            <button class="payment-btn-secondary" onclick="logout()">Wyloguj się</button>
+        </div>
+
+        <!-- Karta wygaśnięcia — rodzic / zawodnik / kibic (nie płaci) -->
+        <div class="blocked-card" id="card-payment-member" style="display:none">
+            <div class="blocked-icon">⏰</div>
+            <div class="blocked-title">Klub nie ma licencji</div>
+            <div class="blocked-text">Dostęp do aplikacji wygasł. Skontaktuj się z trenerem — to on odnawia dostęp dla całego klubu.</div>
+            <button class="blocked-logout-btn" onclick="logout()">Wyloguj się</button>
+        </div>
+
+        <!-- Kod zaproszenia -->
+        <div class="invite-card">
+            <div class="invite-label">Masz kod zaproszenia?</div>
+            <div class="invite-body">
+                <input type="text" id="invite-input" class="invite-input" placeholder="np. ABC123" maxlength="6"
+                    autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); if(this.value.length===6) redeemCode()">
+                <div class="invite-msg" id="invite-msg"></div>
+            </div>
+        </div>
+
+        <!-- Testowy zakup licencji (zastępcza procedura) -->
+        <div class="dev-card" id="dev-purchase-card" style="display:none">
+            <div class="dev-card-title">🧪 Aktywuj dostęp (test)</div>
+            <div class="dev-card-body" id="dev-purchase-body">
+                <div class="dev-msg" id="dev-msg"></div>
+            </div>
+        </div>
+
+        <!-- Przejście do gry -->
+        <div class="game-card" onclick="window.location.href='game01.html'">
+            <div class="game-card-icon">🧱</div>
+            <div class="game-card-info">
+                <div class="game-card-title">ARKANOID</div>
+                <div class="game-card-sub">Zabij czas · sprawdź ranking</div>
+            </div>
+            <span class="game-card-arrow">›</span>
+        </div>
+
+    </div><!-- /screen-body -->
+
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   BLOCKED — logika ekranu
+═══════════════════════════════════════════════════ */
+
+let blockedUserId = '';
+const _params  = new URLSearchParams(location.search);
+const _reason  = _params.get('reason') || '';    // 'payment_expired' | ''
+const _clubId  = _params.get('clubId') || '';
+
+/* ── Init ── */
+window.addEventListener('DOMContentLoaded', () => {
+    initFirebase();
+    applyReason();
+    checkSupportBanner();
+    let _loaded = false;
+    auth.onAuthStateChanged(async user => {
+        if (_loaded) return;
+        if (user) { _loaded = true; initBlocked(); }
+        else { window.location.href = 'login.html'; }
+    });
+});
+
+function checkSupportBanner() {
+    const original = localStorage.getItem('supportOriginalUserId');
+    if (!original) return;
+    const banner = document.getElementById('imp-support-banner');
+    if (banner) banner.style.display = 'flex';
+}
+
+function exitSupportImpersonation() {
+    const original = localStorage.getItem('supportOriginalUserId');
+    if (!original) return;
+    localStorage.setItem('currentUserId', original);
+    localStorage.removeItem('supportOriginalUserId');
+    localStorage.removeItem('selectedMembershipId');
+    localStorage.removeItem('selectedTeamId');
+    window.location.href = 'support.html';
+}
+
+function applyReason() {
+    if (_reason === 'payment_expired') {
+        document.getElementById('card-suspended').style.display = 'none';
+        document.getElementById('ctx-team').textContent = 'Dostęp wygasł';
+        // Właściwa karta zostanie pokazana w initBlocked() po sprawdzeniu roli
+    }
+}
+
+function goToPayment() {
+    window.location.href = `platnosci.html?clubId=${_clubId}&redirect=${encodeURIComponent('start.html')}`;
+}
+
+async function initBlocked() {
+    blockedUserId = getCurrentUserId();
+    if (!blockedUserId || !db) return;
+
+    if (_reason === 'payment_expired') {
+        // Logika per platnosci.md sekcja 7:
+        // Trener + klub ma licencje → "skontaktuj się z adminem"
+        // Trener + brak licencji → opcje płatności
+        // Rodzic / Kibic → opcje płatności (płaci sam lub czeka na klub)
+        // Zawodnik → nigdy tu nie trafia (blokada pomijana w start.html)
+        try {
+            const snap = await db.collection('memberships')
+                .where('userId', '==', blockedUserId)
+                .where('status', '==', 'ACTIVE')
+                .limit(10).get();
+
+            const TRENER_ROLES = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER'];
+            const myMembership = snap.docs.find(d => !_clubId || d.data().clubId === _clubId);
+            const role = myMembership?.data()?.role || '';
+            const isTrainer = TRENER_ROLES.includes(role);
+
+            if (isTrainer && _clubId) {
+                // Sprawdź czy klub ma aktywną licencję (B2B pool)
+                const clubDoc = await db.collection('clubs').doc(_clubId).get();
+                const license = clubDoc.exists ? clubDoc.data()?.license : null;
+                const hasActiveLicense = license &&
+                    license.valid_until?.toDate?.() > new Date() &&
+                    license.used < license.total;
+
+                if (hasActiveLicense) {
+                    // Klub ma licencje — trener powinien skontaktować się z adminem
+                    document.getElementById('card-payment').style.display = 'none';
+                    document.getElementById('card-payment-member').style.display = 'flex';
+                    document.querySelector('#card-payment-member .blocked-icon').textContent = '🏢';
+                    document.querySelector('#card-payment-member .blocked-title').textContent = 'Klub ma aktywną licencję';
+                    document.querySelector('#card-payment-member .blocked-text').textContent =
+                        'Twój klub posiada licencję — skontaktuj się z administratorem klubu, aby przypisać Ci dostęp.';
+                } else {
+                    document.getElementById('card-payment').style.display = 'flex';
+                }
+            } else {
+                // Rodzic / Kibic — pokaż opcje płatności
+                document.getElementById('card-payment').style.display = 'flex';
+            }
+        } catch (e) {
+            console.error('initBlocked payment check:', e);
+            document.getElementById('card-payment').style.display = 'flex';
+        }
+    }
+
+    // Karta testowego zakupu — tylko przy payment_expired i gdy jest clubId
+    if (_reason === 'payment_expired' && _clubId) {
+        try {
+            const mSnap = await db.collection('memberships')
+                .where('userId', '==', blockedUserId)
+                .where('clubId', '==', _clubId)
+                .where('status', '==', 'ACTIVE')
+                .limit(1).get();
+            const role = mSnap.empty ? '' : mSnap.docs[0].data().role || '';
+            await initDevPurchase(role, _clubId);
+        } catch(e) {}
+    }
+
+    const activeMemberships = await getUserMemberships(blockedUserId);
+    renderBlockedCtx(activeMemberships);
+}
+
+/* ── Ctx switcher ── */
+function toggleBlockedCtx() {
+    document.getElementById('blocked-ctx-ov').classList.toggle('open');
+}
+
+async function renderBlockedCtx(memberships) {
+    const listEl = document.getElementById('blocked-ctx-list');
+    if (!listEl) return;
+
+    if (memberships.length === 0) {
+        listEl.innerHTML = '<div class="blocked-ctx-empty">Brak innych aktywnych kont</div>';
+        return;
+    }
+
+    listEl.innerHTML = '';
+    const roleNames = { TRENER_GLOWNY: 'Trener główny', TRENER_POMOCNICZY: 'Trener pomocniczy', RODZIC: 'Rodzic', ZAWODNIK: 'Zawodnik', KIBIC: 'Kibic' };
+
+    for (const m of memberships) {
+        let teamName = '', clubName = m.clubId || '', color = 'var(--akcent)';
+        try {
+            if (m.teamId) {
+                const tDoc = await db.collection('teams').doc(m.teamId).get();
+                if (tDoc.exists) { teamName = tDoc.data().name || ''; clubName = tDoc.data().clubName || clubName; color = tDoc.data().teamColor || color; }
+            }
+            if (m.clubId && !clubName) {
+                const cDoc = await db.collection('clubs').doc(m.clubId).get();
+                if (cDoc.exists) clubName = cDoc.data().name || m.clubId;
+            }
+        } catch (e) {}
+
+        const role = m.role === 'TRENER' ? (m.trainerRole || 'TRENER_GLOWNY') : m.role;
+        const item = document.createElement('div');
+        item.className = 'blocked-ctx-item';
+        item.innerHTML = `
+            <div class="blocked-ctx-dot" style="background:${color}">${(clubName.charAt(0) || '?').toUpperCase()}</div>
+            <div class="blocked-ctx-info">
+                <div class="blocked-ctx-klub">${clubName}</div>
+                <div class="blocked-ctx-team">${teamName ? teamName + ' · ' : ''}${roleNames[role] || role}</div>
+            </div>
+            <span class="blocked-ctx-arrow">›</span>
+        `;
+        item.addEventListener('click', () => {
+            localStorage.setItem('selectedMembershipId', m.id);
+            if (m.teamId) localStorage.setItem('selectedTeamId', m.teamId);
+            window.location.href = 'start.html';
+        });
+        listEl.appendChild(item);
+    }
+}
+
+/* ── Testowy zakup licencji ── */
+async function initDevPurchase(role, clubId) {
+    if (!clubId) return;
+    const card = document.getElementById('dev-purchase-card');
+    const body = document.getElementById('dev-purchase-body');
+    card.style.display = '';
+
+    const TRENER_ROLES = ['TRENER_GLOWNY','TRENER_POMOCNICZY','TRENER','OWNER'];
+    const isTrainer = TRENER_ROLES.includes(role);
+    const isRodzic  = role === 'RODZIC';
+    const isKibic   = role === 'KIBIC';
+
+    const buttons = [];
+
+    if (isTrainer) {
+        buttons.push({
+            label: '💳 Kup licencję indywidualną (1 rok)',
+            sub:   'Tworzy access_rights dla Ciebie',
+            fn:    () => devBuyIndividual(blockedUserId, clubId)
+        });
+        buttons.push({
+            label: '🏢 Kup licencję klubową B2B (10 slotów, 1 rok)',
+            sub:   'Aktualizuje clubs.license — obejmuje wszystkich trenerów i rodziców',
+            fn:    () => devBuyClub(clubId, 10)
+        });
+    }
+
+    if (isRodzic) {
+        buttons.push({
+            label: '💳 Kup licencję indywidualną (1 rok)',
+            sub:   'Tworzy access_rights dla Ciebie',
+            fn:    () => devBuyIndividual(blockedUserId, clubId)
+        });
+        buttons.push({
+            label: '👨‍👩‍👧‍👦 Kup licencję Family (5 kibiców, 1 rok)',
+            sub:   'Tworzy access_rights z slots_total=6 (Ty + 5 kibiców)',
+            fn:    () => devBuyFamily(blockedUserId, clubId, 6)
+        });
+    }
+
+    if (isKibic) {
+        buttons.push({
+            label: 'ℹ️ Kibic nie kupuje licencji',
+            sub:   'Dostęp pochodzi z licencji Family rodzica. Poproś rodzica o zakup.',
+            fn:    null
+        });
+    }
+
+    const msgEl = document.getElementById('dev-msg');
+    body.innerHTML = '<div class="dev-msg" id="dev-msg"></div>';
+
+    buttons.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'dev-btn';
+        btn.innerHTML = `${b.label}<div class="dev-btn-label">${b.sub}</div>`;
+        if (!b.fn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'default'; }
+        else btn.onclick = async () => {
+            btn.disabled = true;
+            const msg = document.getElementById('dev-msg');
+            msg.textContent = 'Tworzę rekord...';
+            msg.className = 'dev-msg ok';
+            try {
+                await b.fn();
+                msg.textContent = 'Weryfikuję dostęp...';
+                const access = await getAccessStatus(blockedUserId, clubId, { claimSlot: true });
+                if (access.status === 'ACTIVE' || access.status === 'TRIAL') {
+                    msg.textContent = `✓ Dostęp aktywny (${access.source}) — przekierowanie...`;
+                    setTimeout(() => window.location.href = 'start.html', 1500);
+                } else {
+                    msg.textContent = `⚠ getAccessStatus zwrócił: ${access.status} (${access.source}) — sprawdź dane`;
+                    msg.className = 'dev-msg err';
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                console.error('devPurchase:', e);
+                msg.textContent = 'Błąd: ' + e.message;
+                msg.className = 'dev-msg err';
+                btn.disabled = false;
+            }
+        };
+        body.appendChild(btn);
+    });
+}
+
+async function devBuyIndividual(uid, clubId) {
+    const validUntil = new Date();
+    validUntil.setFullYear(validUntil.getFullYear() + 1);
+    const docId = `ar_${uid}_${clubId}`;
+    await db.collection('access_rights').doc(docId).set({
+        uid,
+        club_id: clubId,
+        valid_until: firebase.firestore.Timestamp.fromDate(validUntil),
+        source: 'individual',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+}
+
+async function devBuyFamily(uid, clubId, slotsTotal) {
+    const validUntil = new Date();
+    validUntil.setFullYear(validUntil.getFullYear() + 1);
+    const docId = `ar_${uid}_${clubId}`;
+    await db.collection('access_rights').doc(docId).set({
+        uid,
+        club_id: clubId,
+        valid_until: firebase.firestore.Timestamp.fromDate(validUntil),
+        source: 'family',
+        slots_total: slotsTotal,
+        slots_used: 1,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+}
+
+async function devBuyClub(clubId, total) {
+    const validUntil = new Date();
+    validUntil.setFullYear(validUntil.getFullYear() + 1);
+    await db.collection('clubs').doc(clubId).update({
+        'license.type':        'B2B',
+        'license.valid_until': firebase.firestore.Timestamp.fromDate(validUntil),
+        'license.total':       total,
+        'license.used':        0,
+        'license.scope':       'all',
+        'license.renewed_at':  firebase.firestore.FieldValue.serverTimestamp(),
+        licenseStatus: 'ACTIVE'
+    });
+}
+
+/* ── Kod zaproszenia ── */
+async function redeemCode() {
+    const code  = document.getElementById('invite-input').value.trim().toUpperCase();
+    const msgEl = document.getElementById('invite-msg');
+    msgEl.className = 'invite-msg';
+    msgEl.textContent = '';
+
+    if (code.length < 5) {
+        msgEl.className = 'invite-msg err';
+        msgEl.textContent = 'Wpisz pełny kod zaproszenia.';
+        return;
+    }
+
+    try {
+        const snap = await db.collection('inviteCodes')
+            .where('code', '==', code).where('isUsed', '==', false).limit(1).get();
+
+        if (snap.empty) { msgEl.className = 'invite-msg err'; msgEl.textContent = 'Nieprawidłowy lub wygasły kod.'; return; }
+
+        const codeDoc  = snap.docs[0];
+        const codeData = codeDoc.data();
+
+        if (codeData.expiresAt && codeData.expiresAt.toDate() < new Date()) {
+            msgEl.className = 'invite-msg err'; msgEl.textContent = 'Ten kod wygasł.'; return;
+        }
+
+        const userDoc     = await db.collection('users').doc(blockedUserId).get();
+        const user        = userDoc.exists ? userDoc.data() : {};
+        const displayName = user.displayName || user.firstName || '';
+        const now         = new Date();
+        const ts          = now.toISOString().replace(/[-:T.]/g,'').slice(0,8);
+        const rand        = Math.random().toString(36).slice(2,9).toUpperCase();
+        const membershipId = `mbr_${ts}_${rand}`;
+        const role         = codeData.type || 'ZAWODNIK';
+
+        await db.collection('memberships').doc(membershipId).set({
+            membershipId, userId: blockedUserId,
+            teamId: codeData.teamId || null, clubId: codeData.clubId || null,
+            role, trainerRole: role === 'TRENER' ? 'TRENER_POMOCNICZY' : null,
+            playerId: codeData.playerId || null,
+            displayName, status: 'ACTIVE',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await codeDoc.ref.update({ isUsed: true, usedBy: blockedUserId, usedAt: now.toISOString() });
+
+        localStorage.setItem('selectedMembershipId', membershipId);
+        if (codeData.teamId) localStorage.setItem('selectedTeamId', codeData.teamId);
+
+        msgEl.className = 'invite-msg ok';
+        msgEl.textContent = 'Dołączono! Przekierowanie...';
+        setTimeout(() => { window.location.href = 'start.html'; }, 1200);
+
+    } catch (e) {
+        console.error('❌ redeemCode:', e);
+        msgEl.className = 'invite-msg err';
+        msgEl.textContent = 'Błąd połączenia. Spróbuj ponownie.';
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COACHAY — Wiadomość</title>
+    <link rel="stylesheet" href="_global.css?v=20260730a">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <style>
+        .screen-body { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding: 0 !important; }
+
+        /* ── Top bar z powrotem ── */
+        .detail-topbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px 10px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .detail-back {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: var(--tlo-karta);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; flex-shrink: 0;
+            color: var(--bialy);
+        }
+        .detail-header { flex: 1; min-width: 0; }
+        .detail-from {
+            font-size: 14px; font-weight: 800; color: var(--bialy);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .detail-subject {
+            font-size: 12px; color: var(--szary); font-weight: 600; margin-top: 1px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* ── Wątek wiadomości ── */
+        .detail-messages {
+            flex: 1; overflow-y: auto;
+            padding: 16px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+
+        /* ── Ogłoszenie ── */
+        .detail-broadcast-body {
+            font-size: 14px; color: var(--bialy);
+            line-height: 1.6; white-space: pre-wrap;
+            flex: 1; overflow-y: auto; padding: 16px;
+        }
+        .detail-broadcast-meta {
+            padding: 10px 16px 14px;
+            font-size: 11px; color: var(--szary);
+            border-top: 1px solid var(--border2);
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .broadcast-badge {
+            display: inline-block;
+            background: rgba(59,130,246,0.15);
+            color: var(--akcent);
+            font-size: 10px; font-weight: 900;
+            padding: 3px 8px; border-radius: 6px;
+            margin-left: 8px; text-transform: uppercase;
+            vertical-align: middle;
+        }
+
+        /* ── Bąbelki ── */
+        .konw-msg-wrap { display: flex; flex-direction: column; }
+        .konw-msg-wrap.mine { align-items: flex-end; }
+        .konw-msg-wrap.theirs { align-items: flex-start; }
+        .konw-msg-sender { font-size: 11px; color: var(--szary); font-weight: 700; margin-bottom: 3px; padding-left: 2px; }
+        .konw-msg {
+            width: fit-content; max-width: 85%;
+            padding: 10px 14px; border-radius: 16px;
+            font-size: 14px; line-height: 1.5;
+            word-break: break-word; white-space: pre-wrap;
+        }
+        .konw-msg.mine { background: var(--akcent); color: #fff; border-bottom-right-radius: 4px; }
+        .konw-msg.theirs { background: var(--tlo-karta); color: var(--bialy); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .konw-msg-time-bubble { font-size: 10px; color: var(--szary); margin-top: 3px; padding: 0 2px; }
+        .konw-day-sep { text-align: center; font-size: 11px; color: var(--szary); font-weight: 700; margin: 4px 0; }
+
+        /* ── Input odpowiedzi ── */
+        .detail-input-wrap {
+            padding: 10px 16px 12px;
+            border-top: 1px solid var(--border);
+            background: var(--tlo);
+            flex-shrink: 0;
+            display: flex; gap: 8px; align-items: flex-end;
+        }
+        .detail-input {
+            flex: 1;
+            background: var(--tlo-karta);
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 14px; color: var(--bialy);
+            resize: none; max-height: 100px; min-height: 40px;
+            font-family: inherit;
+        }
+        .detail-send {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--akcent); border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0; font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="notch"></div>
+        <div class="screen-body">
+            <!-- Top bar -->
+            <div class="detail-topbar">
+                <div class="detail-back" onclick="history.back()">←</div>
+                <div class="detail-header">
+                    <div class="detail-from" id="detail-from">Ładowanie...</div>
+                    <div class="detail-subject" id="detail-subject"></div>
+                </div>
+            </div>
+
+            <!-- Treść wiadomości -->
+            <div class="detail-messages" id="detail-messages"></div>
+
+            <!-- Input odpowiedzi (ukryty dla ogłoszeń) -->
+            <div class="detail-input-wrap" id="detail-input-wrap">
+                <textarea class="detail-input" id="detail-input" placeholder="Napisz odpowiedź..." rows="1"
+                    oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}"></textarea>
+                <button class="detail-send" onclick="sendReply()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="coachay-core.js?v=20260730a"></script>
+    <script>
+        let currentUserId = null;
+        let currentMsgId = null;
+        let rootMsg = null;
+
+        function formatDate(d) {
+            if (!d) return '';
+            return d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+        function formatTime(d) {
+            if (!d) return '';
+            return d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function addDaySep(container, date) {
+            const sep = document.createElement('div');
+            sep.className = 'konw-day-sep';
+            sep.textContent = formatDate(date);
+            container.appendChild(sep);
+        }
+
+        function appendBubble(container, msg, fromName, lastDateStr) {
+            const isMine = msg.from === currentUserId;
+            const msgDate = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
+            const ds = msgDate.toDateString();
+            if (ds !== lastDateStr.val) { addDaySep(container, msgDate); lastDateStr.val = ds; }
+            const wrap = document.createElement('div');
+            wrap.className = 'konw-msg-wrap ' + (isMine ? 'mine' : 'theirs');
+            if (!isMine) {
+                const sEl = document.createElement('div');
+                sEl.className = 'konw-msg-sender';
+                sEl.textContent = fromName;
+                wrap.appendChild(sEl);
+            }
+            const bubble = document.createElement('div');
+            bubble.className = 'konw-msg ' + (isMine ? 'mine' : 'theirs');
+            bubble.textContent = msg.body || '';
+            const timeEl = document.createElement('div');
+            timeEl.className = 'konw-msg-time-bubble';
+            timeEl.textContent = formatTime(msgDate);
+            wrap.appendChild(bubble);
+            wrap.appendChild(timeEl);
+            container.appendChild(wrap);
+        }
+
+        async function loadDetail() {
+            if (!requireAuth()) return;
+
+            currentUserId = getCurrentUserId();
+            const params = new URLSearchParams(window.location.search);
+            currentMsgId = params.get('msgId');
+            if (!currentMsgId) { history.back(); return; }
+
+            await _persistenceReady;
+
+            // Pobierz wiadomość główną
+            const msgDoc = await db.collection('messages').doc(currentMsgId).get();
+            if (!msgDoc.exists) { document.getElementById('detail-from').textContent = 'Nie znaleziono'; return; }
+            rootMsg = { id: msgDoc.id, ...msgDoc.data() };
+
+            const isBroadcast = rootMsg.type === 'BROADCAST';
+            const fromName = await getUserName(rootMsg.from);
+
+            // Header
+            document.getElementById('detail-from').innerHTML =
+                fromName + (isBroadcast ? '<span class="broadcast-badge">Ogłoszenie</span>' : '');
+            document.getElementById('detail-subject').textContent = rootMsg.title || 'Brak tematu';
+
+            // Ogłoszenie — ukryj input
+            if (isBroadcast) {
+                document.getElementById('detail-input-wrap').style.display = 'none';
+            }
+
+            const container = document.getElementById('detail-messages');
+            const lastDateStr = { val: '' };
+
+            if (isBroadcast) {
+                // Ogłoszenie: pełna treść
+                const bodyEl = document.createElement('div');
+                bodyEl.className = 'detail-broadcast-body';
+                bodyEl.textContent = rootMsg.body || '';
+                container.appendChild(bodyEl);
+                // Meta
+                const meta = document.createElement('div');
+                meta.className = 'detail-broadcast-meta';
+                const msgDate = rootMsg.createdAt?.toDate ? rootMsg.createdAt.toDate() : new Date();
+                meta.innerHTML = `<span>📅 ${formatDate(msgDate)} · ${formatTime(msgDate)}</span>`;
+                if (rootMsg.expiresAt) {
+                    const exp = rootMsg.expiresAt?.toDate ? rootMsg.expiresAt.toDate() : new Date(rootMsg.expiresAt);
+                    const isActive = exp >= new Date();
+                    meta.innerHTML += `<span style="color:${isActive ? 'var(--sukces)' : 'var(--blad)'}">
+                        ${isActive ? '✅' : '⏰'} Ważne do ${formatDate(exp)}</span>`;
+                }
+                container.appendChild(meta);
+            } else {
+                // Wątek: oryginał + odpowiedzi
+                appendBubble(container, rootMsg, fromName, lastDateStr);
+
+                const repliesSnap = await db.collection('messages')
+                    .where('replyTo', '==', currentMsgId)
+                    .get();
+                const replies = repliesSnap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .filter(r => r.createdAt)
+                    .sort((a, b) => a.createdAt.toDate() - b.createdAt.toDate());
+
+                for (const r of replies) {
+                    const rName = await getUserName(r.from);
+                    appendBubble(container, r, rName, lastDateStr);
+                }
+
+                // Oznacz jako przeczytane
+                markRead(rootMsg, replies);
+            }
+
+            // Oznacz powiadomienia jako przeczytane
+            markNotifications();
+
+            // Scroll na dół
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function markRead(msg, replies) {
+            if (!db) return;
+            if (!(msg.readBy || []).includes(currentUserId)) {
+                db.collection('messages').doc(msg.id).update({
+                    readBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                }).catch(() => {});
+            }
+            replies.filter(r => r.from !== currentUserId && !(r.readBy || []).includes(currentUserId))
+                .forEach(r => {
+                    db.collection('messages').doc(r.id).update({
+                        readBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                    }).catch(() => {});
+                });
+        }
+
+        async function markNotifications() {
+            if (!db || !currentUserId || !currentMsgId) return;
+            try {
+                const snap = await db.collection('notifications')
+                    .where('userId', '==', currentUserId)
+                    .where('referenceId', '==', currentMsgId)
+                    .where('isRead', '==', false)
+                    .get();
+                snap.docs.forEach(d => d.ref.update({ isRead: true, readAt: new Date().toISOString() }));
+            } catch (e) {}
+        }
+
+        async function sendReply() {
+            const input = document.getElementById('detail-input');
+            const body = (input.value || '').trim();
+            if (!body || !rootMsg) return;
+            input.value = '';
+            input.style.height = 'auto';
+
+            const replyData = {
+                teamId: rootMsg.teamId,
+                from: currentUserId,
+                to: rootMsg.from === currentUserId ? (rootMsg.to || []) : [rootMsg.from],
+                body,
+                type: 'MESSAGE',
+                replyTo: rootMsg.id,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                readBy: [currentUserId]
+            };
+
+            try {
+                const replyId = makeMessId();
+                await db.collection('messages').doc(replyId).set(replyData);
+                const ref = { id: replyId };
+
+                // Powiadomienie dla odbiorcy — ktokolwiek w rozmowie kto NIE jest mną
+                const participants = [rootMsg.from, ...(rootMsg.to || [])];
+                const recipientId = participants.find(id => id && id !== currentUserId) || null;
+                if (recipientId) {
+                    const senderName = await getUserName(currentUserId);
+                    const bodyShort = body.length > 80 ? body.slice(0, 77) + '…' : body;
+                    await createNotification({
+                        userId: recipientId,
+                        teamId: rootMsg.teamId,
+                        type: 'NEW_MESSAGE',
+                        title: `💬 ${senderName}: ${rootMsg.title || 'Odpowiedź'}`,
+                        body: bodyShort,
+                        referenceId: rootMsg.id,
+                        referenceType: 'message'
+                    });
+                }
+
+                // Optimistic UI
+                const container = document.getElementById('detail-messages');
+                const lastDateStr = { val: container.querySelector('.konw-day-sep:last-of-type')?.textContent || '' };
+                const fakeMsg = { ...replyData, id: ref.id, createdAt: { toDate: () => new Date() } };
+                appendBubble(container, fakeMsg, 'Ty', lastDateStr);
+                container.scrollTop = container.scrollHeight;
+            } catch (e) {
+                console.error('Błąd wysyłania:', e);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
+            initFirebase();
+            let _loaded = false;
+            auth.onAuthStateChanged(async user => {
+                if (_loaded || !user) { if (!user) window.location.href = 'login.html'; return; }
+                _loaded = true;
+                await initSession();
+                loadDetail();
+            });
+        });
+    </script>
+</body>
+</html>

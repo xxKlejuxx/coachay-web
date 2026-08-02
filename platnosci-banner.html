@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Dostęp</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<style>
+:root { --phone-h: 750px; }
+
+.screen-body {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 32px 24px; gap: 0; overflow: hidden;
+    position: relative;
+}
+
+.bg-glow { display: none; }
+
+/* ── Logo — jak login.html (tylko tekst) ── */
+.banner-logo {
+    margin-bottom: 48px;
+    animation: fadeUp 0.5s 0.05s cubic-bezier(0.16,1,0.3,1) both;
+    text-align: center;
+}
+.banner-logo-name {
+    font-family: var(--font-d); font-size: 28px; font-weight: 800;
+    color: var(--bialy); letter-spacing: 4px;
+}
+.banner-logo-sub { font-size: 11px; font-weight: 600; color: var(--szary); margin-top: 3px; }
+
+/* ── Licznik dni ── */
+.banner-days {
+    font-family: var(--font-d); font-size: 72px; font-weight: 800;
+    line-height: 1; margin-bottom: 4px;
+    animation: fadeUp 0.5s 0.1s cubic-bezier(0.16,1,0.3,1) both;
+}
+.banner-days.trial { color: var(--akcent); }
+.banner-days.grace { color: var(--warn); }
+
+.banner-days-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--szary);
+    margin-bottom: 24px;
+    animation: fadeUp 0.5s 0.13s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+/* ── Pasek postępu trialu ── */
+.banner-progress-wrap {
+    width: 100%; margin-bottom: 32px;
+    animation: fadeUp 0.5s 0.15s cubic-bezier(0.16,1,0.3,1) both;
+}
+.banner-progress-track {
+    width: 100%; height: 3px;
+    background: var(--border2); border-radius: 2px; overflow: hidden;
+}
+.banner-progress-bar {
+    height: 100%; border-radius: 2px; background: var(--akcent);
+    transition: width 1s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ── Tytuł i opis ── */
+.banner-title {
+    font-family: var(--font-d); font-size: 15px; font-weight: 800;
+    color: var(--bialy); text-align: center;
+    margin-bottom: 10px; line-height: 1.2;
+    animation: fadeUp 0.5s 0.18s cubic-bezier(0.16,1,0.3,1) both;
+}
+.banner-text {
+    font-size: 13px; font-weight: 600; color: var(--szary);
+    text-align: center; line-height: 1.7;
+    max-width: 280px; margin-bottom: 36px;
+    animation: fadeUp 0.5s 0.21s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+/* ── Przyciski ── */
+.banner-btn-primary {
+    width: 100%; padding: 16px;
+    border-radius: var(--r-pill);
+    font-size: 14px; font-weight: 900; letter-spacing: 0.5px;
+    color: #fff; cursor: pointer; border: none;
+    margin-bottom: 12px;
+    animation: fadeUp 0.5s 0.25s cubic-bezier(0.16,1,0.3,1) both;
+    transition: opacity 0.15s, transform 0.15s;
+}
+.banner-btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+.banner-btn-primary.trial  { background: var(--akcent); }
+.banner-btn-primary.grace  { background: linear-gradient(135deg, #F59E0B, #EF4444); }
+
+.banner-btn-secondary {
+    width: 100%; padding: 14px;
+    border-radius: var(--r-pill);
+    background: transparent; border: 1px solid var(--border2);
+    font-size: 13px; font-weight: 800; color: var(--szary-j); cursor: pointer;
+    animation: fadeUp 0.5s 0.28s cubic-bezier(0.16,1,0.3,1) both;
+    transition: background 0.15s;
+}
+.banner-btn-secondary:active { background: var(--tlo-karta); }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+    <div class="screen-body">
+        <div class="bg-glow" id="bg-glow"></div>
+
+        <!-- Logo — tylko tekst, jak login.html -->
+        <div class="banner-logo">
+            <div class="banner-logo-name">COACHAY</div>
+            <div class="banner-logo-sub">Platforma dla trenerów i drużyn</div>
+        </div>
+
+        <!-- Licznik -->
+        <div class="banner-days" id="banner-days"></div>
+        <div class="banner-days-label" id="banner-days-label"></div>
+
+        <!-- Pasek postępu (tylko TRIAL) -->
+        <div class="banner-progress-wrap" id="banner-progress" style="display:none">
+            <div class="banner-progress-track">
+                <div class="banner-progress-bar" id="banner-progress-bar" style="width:0%"></div>
+            </div>
+        </div>
+
+        <!-- Tytuł i tekst -->
+        <div class="banner-title" id="banner-title"></div>
+        <div class="banner-text" id="banner-text"></div>
+
+        <!-- Przyciski -->
+        <button class="banner-btn-primary" id="btn-primary" onclick="handlePrimary()"></button>
+        <button class="banner-btn-secondary" id="btn-secondary" onclick="handleSecondary()" style="display:none"></button>
+    </div>
+</div>
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+const params   = new URLSearchParams(location.search);
+const STATUS   = params.get('status')   || 'TRIAL';
+const DAYS     = parseInt(params.get('days')) || 30;
+const NAME     = params.get('name')     || '';
+const CLUB_ID  = params.get('clubId')   || '';
+const REDIRECT = params.get('redirect') || 'start.html';
+
+function handlePrimary() {
+    if (STATUS === 'TRIAL') {
+        window.location.href = REDIRECT;
+    } else {
+        window.location.href = `platnosci.html?clubId=${CLUB_ID}&redirect=${encodeURIComponent(REDIRECT)}`;
+    }
+}
+function handleSecondary() {
+    window.location.href = REDIRECT;
+}
+
+function renderBanner() {
+    const bgGlow  = document.getElementById('bg-glow');
+    const days    = document.getElementById('banner-days');
+    const daysLbl = document.getElementById('banner-days-label');
+    const prog    = document.getElementById('banner-progress');
+    const progBar = document.getElementById('banner-progress-bar');
+    const title   = document.getElementById('banner-title');
+    const text    = document.getElementById('banner-text');
+    const btnP    = document.getElementById('btn-primary');
+    const btnS    = document.getElementById('btn-secondary');
+
+    const greeting = NAME ? `Witaj, ${NAME}!` : 'Witaj!';
+
+    if (STATUS === 'TRIAL') {
+        bgGlow.classList.add('trial');
+        days.className = 'banner-days trial';
+        days.textContent = DAYS;
+        daysLbl.textContent = DAYS === 1 ? 'dzień okresu próbnego' : 'dni okresu próbnego';
+        title.textContent = greeting;
+        text.textContent = 'Korzystasz z bezpłatnego okresu próbnego. Po jego zakończeniu wybierz plan dopasowany do swoich potrzeb.';
+        btnP.className = 'banner-btn-primary trial';
+        btnP.textContent = 'Zaczynam →';
+        prog.style.display = 'block';
+        const pct = Math.max(5, Math.round((DAYS / 90) * 100));
+        setTimeout(() => { progBar.style.width = pct + '%'; }, 100);
+
+    } else {
+        bgGlow.classList.add('grace');
+        days.className = 'banner-days grace';
+        days.textContent = DAYS;
+        daysLbl.textContent = DAYS === 1 ? 'dzień na odnowienie' : 'dni na odnowienie';
+        title.textContent = 'Dostęp wygasł';
+        text.textContent = `${greeting} Masz jeszcze ${DAYS} ${DAYS === 1 ? 'dzień' : 'dni'} na odnowienie. Po tym czasie dostęp zostanie zablokowany.`;
+        btnP.className = 'banner-btn-primary grace';
+        btnP.textContent = 'Odnów dostęp →';
+        if (DAYS > 1) {
+            btnS.style.display = 'block';
+            btnS.textContent = 'Przypomnij mi później';
+        }
+    }
+}
+
+renderBanner();
+</script>
+</body>
+</html>

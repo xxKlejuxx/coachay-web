@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Klub</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+.screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
+
+/* ── Nagłówek ── */
+.kb-header { padding: 12px 16px 10px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.kb-header-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
+
+/* ── Scroll główny ── */
+.kb-scroll { flex: 1; overflow-y: auto; padding: 10px 16px 90px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+.kb-scroll::-webkit-scrollbar { display: none; }
+.kb-empty { padding: 30px 20px; text-align: center; color: var(--szary); font-size: 13px; font-weight: 600; }
+.kb-section-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin: 8px 0 4px; }
+
+/* ── Karta klubu ── */
+.club-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+.club-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.club-card-name { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.club-edit-btn { font-size: 11px; font-weight: 800; color: var(--akcent); background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 999px; padding: 4px 12px; cursor: pointer; flex-shrink: 0; display: none; }
+.club-edit-btn:active { opacity: 0.7; }
+.club-card-rows { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+.club-card-row { display: flex; align-items: flex-start; gap: 8px; }
+.club-card-row-icon { font-size: 12px; width: 16px; flex-shrink: 0; margin-top: 1px; }
+.club-card-row-val { font-size: 12px; font-weight: 600; color: var(--szary-j); line-height: 1.4; }
+.club-card-row-val.empty { color: var(--szary); font-style: italic; }
+
+/* ── Karta drużyny ── */
+.team-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.15s; }
+.team-card:active { background: var(--tlo-karta2); }
+.team-card-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.team-card-info { flex: 1; min-width: 0; }
+.team-card-name { font-size: 14px; font-weight: 800; color: var(--bialy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-card-coach { font-size: 11px; color: var(--szary); margin-top: 2px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-card-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+.team-tag { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+.tag-cat { background: rgba(74,222,128,0.1); color: #16A34A; border: 1px solid rgba(74,222,128,0.2); }
+.tag-league { background: rgba(251,191,36,0.1); color: #D97706; border: 1px solid rgba(251,191,36,0.2); }
+.team-card-arrow { color: var(--border2); font-size: 16px; flex-shrink: 0; }
+
+/* ── FAB ── */
+.fab { position: absolute; bottom: 72px; right: 16px; width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); z-index: 10; }
+.fab:active { opacity: 0.85; }
+
+/* ── Detail panel (drużyna, slide right) ── */
+.detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.detail-panel.open { transform: translateX(0); }
+.dp-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-back { display: flex; align-items: center; gap: 8px; color: var(--bialy); font-size: 13px; font-weight: 800; cursor: pointer; }
+.dp-back-icon { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.dp-edit-btn { font-size: 12px; font-weight: 900; color: var(--akcent); cursor: pointer; padding: 4px 0; display: none; }
+.dp-hero { background: #000; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-team-name { font-family: var(--font-d); font-size: 19px; font-weight: 800; color: var(--bialy); }
+.dp-coach-row { font-size: 12px; color: var(--szary); margin-top: 3px; font-weight: 600; }
+.dp-scroll { flex: 1; overflow-y: auto; padding: 12px 16px 80px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+.dp-scroll::-webkit-scrollbar { display: none; }
+.dp-section-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin: 4px 0 2px; }
+
+/* ── Wiersz zawodnika ── */
+.player-row { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+.player-row-av { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; border: 1px solid var(--border2); flex-shrink: 0; background: var(--tlo-karta2); }
+.player-row-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.player-row-info { flex: 1; min-width: 0; }
+.player-row-name { font-size: 13px; font-weight: 800; color: var(--bialy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-row-sub { font-size: 11px; color: var(--szary); margin-top: 1px; }
+.player-transfer-btn { font-size: 11px; font-weight: 800; color: var(--akcent); background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 999px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
+.player-transfer-btn:active { opacity: 0.7; }
+.player-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.player-action-btn { font-size: 11px; font-weight: 800; border-radius: 999px; padding: 4px 9px; cursor: pointer; border: 1px solid; }
+.player-action-edit { color: var(--akcent); background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.2); }
+.player-action-block { color: #FBBF24; background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.25); }
+.player-action-blocked { color: #34D399; background: rgba(52,211,153,0.08); border-color: rgba(52,211,153,0.25); }
+.player-action-delete { color: #EF4444; background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+
+/* ── Panele slide-bottom (wspólne) ── */
+.slide-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.slide-panel.open { transform: translateY(0); }
+.sp-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.sp-title { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+.sp-cancel { font-size: 13px; font-weight: 700; color: var(--szary); cursor: pointer; }
+.sp-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+.sp-body::-webkit-scrollbar { display: none; }
+.sp-section { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin: 4px 0 -4px; }
+
+/* ── Formularz ── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-lbl { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--szary); }
+.form-inp { width: 100%; background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px 14px; font-size: 14px; font-weight: 600; color: var(--bialy); box-sizing: border-box; }
+.form-inp:focus { outline: none; border-color: var(--akcent); }
+.form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form-row3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+.form-select { width: 100%; background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px 14px; font-size: 14px; font-weight: 600; color: var(--bialy); box-sizing: border-box; appearance: none; cursor: pointer; }
+.form-select:focus { outline: none; border-color: var(--akcent); }
+.btn-save { width: 100%; padding: 14px; background: var(--akcent); border-radius: var(--r); font-size: 14px; font-weight: 800; color: #fff; border: none; cursor: pointer; }
+.btn-save:active { opacity: 0.8; }
+.btn-danger { width: 100%; padding: 12px; background: transparent; border: 1px solid rgba(248,113,113,0.3); border-radius: var(--r); font-size: 13px; font-weight: 800; color: var(--blad); cursor: pointer; }
+.btn-danger:active { background: rgba(248,113,113,0.08); }
+
+/* ── Panel transfer ── */
+.tp-player-info { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+.tp-player-name { font-size: 15px; font-weight: 800; color: var(--bialy); }
+.tp-player-from { font-size: 12px; color: var(--szary); margin-top: 4px; font-weight: 600; }
+.tp-arrow { text-align: center; font-size: 22px; color: var(--border2); margin: -4px 0; }
+.tp-team-opt { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: all 0.15s; }
+.tp-team-opt:active { background: var(--tlo-karta2); }
+.tp-team-opt.selected { border-color: var(--akcent); background: rgba(59,130,246,0.08); }
+.tp-team-opt-name { font-size: 13px; font-weight: 800; color: var(--bialy); }
+.tp-team-opt-coach { font-size: 11px; color: var(--szary); margin-top: 2px; }
+.tp-confirm-btn { width: 100%; padding: 14px; background: var(--akcent); border-radius: var(--r); font-size: 14px; font-weight: 800; color: #fff; border: none; cursor: pointer; }
+.tp-confirm-btn:active { opacity: 0.8; }
+.tp-confirm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+
+    <div class="top-bar">
+        <div class="ctx-switcher" onclick="toggleCtxOv()">
+            <div class="ctx-dot" id="ctx-dot"></div>
+            <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+            <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+        </div>
+    </div>
+
+    <div class="ctx-overlay" id="ctx-ov">
+        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
+        <div class="ctx-teams" id="ctx-teams"></div>
+    </div>
+    <div class="notif-overlay" id="notif-ov">
+        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
+    </div>
+
+    <div class="screen-body">
+        <div class="kb-header">
+            <div class="kb-header-title">Klub</div>
+        </div>
+        <div class="kb-scroll" id="kb-scroll">
+            <div class="kb-empty">Ładowanie...</div>
+        </div>
+    </div>
+
+    <button class="fab" id="fab-add" onclick="openAddTeam()">＋ Dodaj drużynę</button>
+
+    <!-- ── Detail panel: drużyna ── -->
+    <div class="detail-panel" id="detail-panel">
+        <div class="dp-topbar">
+            <div class="dp-back" onclick="closeDetailPanel()"><div class="dp-back-icon">‹</div>Klub</div>
+            <div class="dp-edit-btn" id="dp-edit-btn" onclick="openEditTeam()">Edytuj</div>
+        </div>
+        <div class="dp-hero">
+            <div class="dp-team-name" id="dp-team-name"></div>
+            <div class="dp-coach-row" id="dp-coach-row"></div>
+        </div>
+        <div class="dp-scroll" id="dp-scroll"><div class="kb-empty">Ładowanie...</div></div>
+    </div>
+
+    <!-- ── Slide panel: dane klubu ── -->
+    <div class="slide-panel" id="club-edit-panel" style="z-index:150;">
+        <div class="sp-hdr">
+            <div class="sp-title" id="club-edit-title">Dane klubu</div>
+            <div class="sp-cancel" onclick="closeClubEdit()">Anuluj</div>
+        </div>
+        <div class="sp-body">
+            <div class="sp-section">Podstawowe</div>
+            <div class="form-group"><div class="form-lbl">Nazwa klubu</div><input type="text" class="form-inp" id="ce-clubName" placeholder="np. Orły Praga FC"></div>
+            <div class="form-group"><div class="form-lbl">Nazwa prawna</div><input type="text" class="form-inp" id="ce-legalName" placeholder="np. Klub Sportowy Orły Praga"></div>
+            <div class="form-row2">
+                <div class="form-group"><div class="form-lbl">NIP</div><input type="text" class="form-inp" id="ce-nip" placeholder="0000000000" maxlength="10"></div>
+                <div class="form-group"><div class="form-lbl">REGON</div><input type="text" class="form-inp" id="ce-regon" placeholder="000000000" maxlength="9"></div>
+            </div>
+            <div class="form-row2">
+                <div class="form-group"><div class="form-lbl">Data założenia</div><input type="date" class="form-inp" id="ce-founded"></div>
+                <div class="form-group"><div class="form-lbl">Prezes</div><input type="text" class="form-inp" id="ce-president" placeholder="Imię i nazwisko"></div>
+            </div>
+
+            <div class="sp-section">Adres</div>
+            <div class="form-row3">
+                <div class="form-group"><div class="form-lbl">Ulica</div><input type="text" class="form-inp" id="ce-street" placeholder="ul. Targowa"></div>
+                <div class="form-group"><div class="form-lbl">Nr domu</div><input type="text" class="form-inp" id="ce-houseNumber" placeholder="12"></div>
+                <div class="form-group"><div class="form-lbl">Nr lokalu</div><input type="text" class="form-inp" id="ce-apartmentNumber" placeholder="—"></div>
+            </div>
+            <div class="form-row2">
+                <div class="form-group"><div class="form-lbl">Kod pocztowy</div><input type="text" class="form-inp" id="ce-postalCode" placeholder="00-000" maxlength="6"></div>
+                <div class="form-group"><div class="form-lbl">Miasto</div><input type="text" class="form-inp" id="ce-city" placeholder="Warszawa"></div>
+            </div>
+            <div class="form-row2">
+                <div class="form-group"><div class="form-lbl">Dzielnica</div><input type="text" class="form-inp" id="ce-district" placeholder="np. Praga Północ"></div>
+                <div class="form-group"><div class="form-lbl">Województwo</div><input type="text" class="form-inp" id="ce-voivodeship" placeholder="Mazowieckie"></div>
+            </div>
+
+            <div class="sp-section">Kontakt</div>
+            <div class="form-group"><div class="form-lbl">Email klubu</div><input type="email" class="form-inp" id="ce-email" placeholder="kontakt@klub.pl"></div>
+            <div class="form-group"><div class="form-lbl">Telefon</div><input type="tel" class="form-inp" id="ce-phone" placeholder="+48 000 000 000"></div>
+            <div class="form-group"><div class="form-lbl">Strona www</div><input type="url" class="form-inp" id="ce-website" placeholder="https://"></div>
+            <div class="form-row2">
+                <div class="form-group"><div class="form-lbl">Facebook</div><input type="text" class="form-inp" id="ce-facebook" placeholder="facebook.com/..."></div>
+                <div class="form-group"><div class="form-lbl">Instagram</div><input type="text" class="form-inp" id="ce-instagram" placeholder="@klub"></div>
+            </div>
+
+            <button class="btn-save" onclick="saveClub()">Zapisz dane klubu</button>
+        </div>
+    </div>
+
+    <!-- ── Slide panel: dodaj/edytuj drużynę ── -->
+    <div class="slide-panel" id="team-edit-panel" style="z-index:150;">
+        <div class="sp-hdr">
+            <div class="sp-title" id="team-edit-title">Nowa drużyna</div>
+            <div class="sp-cancel" onclick="closeTeamEdit()">Anuluj</div>
+        </div>
+        <div class="sp-body">
+            <div class="form-group"><div class="form-lbl">Nazwa drużyny</div><input type="text" class="form-inp" id="te-name" placeholder="np. Juniorzy U12"></div>
+            <div class="form-group">
+                <div class="form-lbl">Trenerzy</div>
+                <div id="te-trainers-list" style="display:flex;flex-direction:column;gap:6px;">
+                    <div style="color:var(--szary);font-size:12px;font-weight:600;padding:8px 0;">Ładowanie...</div>
+                </div>
+            </div>
+            <button class="btn-save" onclick="saveTeam()">Zapisz drużynę</button>
+            <button class="btn-danger" id="te-delete-btn" onclick="deleteTeam()" style="display:none">Usuń drużynę</button>
+        </div>
+    </div>
+
+    <!-- ══ PANEL DODAJ/EDYTUJ ZAWODNIKA ══ -->
+    <div class="slide-panel" id="player-edit-panel" style="z-index:160;">
+        <div class="sp-hdr">
+            <div class="dp-back" onclick="closePlayerEdit()"><div class="dp-back-icon">‹</div><span id="player-edit-title">Nowy zawodnik</span></div>
+        </div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1;">
+            <div class="form-group"><div class="form-lbl">Imię *</div><input type="text" class="form-inp" id="ppe-firstname" placeholder="Jan"></div>
+            <div class="form-group"><div class="form-lbl">Nazwisko *</div><input type="text" class="form-inp" id="ppe-lastname" placeholder="Kowalski"></div>
+            <div class="form-group"><div class="form-lbl">Data urodzenia *</div><input type="date" class="form-inp" id="ppe-birth"></div>
+            <div class="form-group"><div class="form-lbl">Pozycja</div><input type="text" class="form-inp" id="ppe-position" placeholder="np. Napastnik"></div>
+            <div class="form-group"><div class="form-lbl">Numer</div><input type="number" class="form-inp" id="ppe-number" placeholder="np. 9" min="1" max="99"></div>
+            <button class="btn-save" onclick="savePlayer()">Zapisz zawodnika</button>
+        </div>
+    </div>
+
+    <!-- ── Slide panel: transfer zawodnika ── -->
+    <div class="slide-panel" id="transfer-panel" style="z-index:160;">
+        <div class="sp-hdr">
+            <div class="sp-title">Zmiana drużyny</div>
+            <div class="sp-cancel" onclick="closeTransferPanel()">Anuluj</div>
+        </div>
+        <div class="sp-body">
+            <div class="tp-player-info">
+                <div class="tp-player-name" id="tp-player-name"></div>
+                <div class="tp-player-from" id="tp-player-from"></div>
+            </div>
+            <div class="tp-arrow">↓</div>
+            <div class="form-lbl">Wybierz docelową drużynę</div>
+            <div id="tp-teams-list"></div>
+            <button class="tp-confirm-btn" id="tp-confirm-btn" onclick="confirmTransfer()" disabled>Potwierdź przeniesienie</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+    </div>
+
+    <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
+        <div class="menu-panel-items">
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item menu-item-active" id="menu-klub" onclick="closeMenu()"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+        </div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
+    </div>
+
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   KLUB.HTML — Zarządzanie klubem i drużynami
+═══════════════════════════════════════════════════ */
+
+let currentUserId = '';
+let currentMembership = null;
+let currentRole   = '';
+let currentTeamId = '';
+let currentClubId = '';
+let canManage     = false;
+let isAdmin       = false;
+
+let clubData          = null;  // dane klubu z Firestore
+let allTeams          = [];    // drużyny klubu
+let allTrainers       = [];    // trenerzy [{userId, displayName, ...}]
+let mainTrainerByTeam = {};    // teamId → userId TRENER_GLOWNY (z aktywnych memberships)
+let teamStats         = {};
+let selectedTeam      = null;  // drużyna otwarta w detail panel
+let editMode          = null;  // 'add' | 'edit'
+
+// Transfer
+let transferPlayer   = null;
+let transferFromTeam = null;
+let transferToTeamId = null;
+
+/* ── Auth + init ── */
+window.addEventListener('DOMContentLoaded', () => {
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(async user => {
+        if (_loaded) return;
+        if (user) { _loaded = true; await initKlub(); }
+        else { if (!isDemoMode()) window.location.href = 'login.html'; }
+    });
+});
+
+async function initKlub() {
+    currentUserId = getCurrentUserId();
+
+    // Baner gdy przekierowano z innego ekranu (brak drużyny)
+    if (sessionStorage.getItem('noTeamRedirect')) {
+        sessionStorage.removeItem('noTeamRedirect');
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:#f59e0b22;border:1px solid #f59e0b66;border-radius:10px;padding:12px 16px;margin:0 0 12px;font-size:.83rem;color:#f59e0b;line-height:1.5;';
+        banner.textContent = '⚠️ Dodaj drużynę żeby korzystać z aplikacji.';
+        document.getElementById('kb-scroll').before(banner);
+    }
+
+    const session = await initSession();
+    if (!session) {
+        document.getElementById('kb-scroll').innerHTML = '<div class="kb-empty">Błąd ładowania sesji.</div>';
+        return;
+    }
+    const { user, membership, team } = session;
+    currentMembership = membership;
+    const ud = getCurrentUserData();
+
+    currentRole   = ud?.role || '';
+    currentTeamId = membership?.teamId || '';
+    currentClubId = membership?.clubId || team?.clubId || '';
+
+    // Trener (role TRENER lub TRENER_GLOWNY) i ADMIN mają uprawnienia do edycji
+    const rawRole = membership?.role || '';
+    isAdmin   = membership?.isClubAdmin === true || currentRole === 'ADMIN_PLATFORMY';
+
+    // Sprawdź trainer doc (fallback — membership mogło nie mieć flagi isClubAdmin)
+    if (!isAdmin && currentClubId) {
+        try {
+            const tSnap = await db.collection('trainers')
+                .where('userId', '==', currentUserId)
+                .where('clubId', '==', currentClubId)
+                .limit(1).get();
+            if (!tSnap.empty && tSnap.docs[0].data().isClubAdmin === true) isAdmin = true;
+        } catch (e) {}
+    }
+
+    canManage = isAdmin ||
+                ['TRENER_GLOWNY', 'ADMIN_PLATFORMY'].includes(currentRole) ||
+                ['TRENER_GLOWNY', 'TRENER'].includes(rawRole);
+
+    if (canManage) {
+        document.getElementById('fab-add').style.display = 'flex';
+    }
+
+    loadCtxOverlay(user, membership, team);
+    loadMenuPanel(user, membership, team);
+
+    await loadAll();
+}
+
+/* ── Ładowanie wszystkiego ── */
+async function loadAll() {
+    if (!currentClubId) {
+        document.getElementById('kb-scroll').innerHTML = '<div class="kb-empty">Brak przypisanego klubu.</div>';
+        return;
+    }
+    try {
+        // Równolegle: dane klubu + drużyny
+        const [clubSnap, teamsSnap] = await Promise.all([
+            db.collection('clubs').doc(currentClubId).get(),
+            db.collection('teams').where('clubId', '==', currentClubId).get()
+        ]);
+
+        clubData = clubSnap.exists ? { id: clubSnap.id, ...clubSnap.data() } : null;
+        allTeams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Sekwencyjnie: najpierw stats (buduje mainTrainerByTeam), potem trainers (używa mainTrainerByTeam)
+        await loadTeamStats();
+        await loadTrainers();
+        renderAll();
+    } catch (e) {
+        console.error('❌ loadAll:', e);
+        document.getElementById('kb-scroll').innerHTML = '<div class="kb-empty">Błąd ładowania danych.</div>';
+    }
+}
+
+async function loadTeamStats() {
+    const teamIds = allTeams.map(t => t.id || t.teamId).filter(Boolean);
+    if (!teamIds.length) { teamStats = {}; mainTrainerByTeam = {}; return; }
+    try {
+        const playersSnap = await db.collection('players').get();
+
+        // Licz trenerów z memberships (obie wersje statusu: 'ACTIVE' i 'active')
+        const trainerCount = {};  // teamId → liczba trenerów
+        mainTrainerByTeam = {};   // teamId → userId TRENER_GLOWNY
+        window.trainersByTeam = {}; // teamId → [{userId, isGlowny}]
+        for (let i = 0; i < teamIds.length; i += 10) {
+            const chunk = teamIds.slice(i, i + 10);
+            const [snapA, snapB] = await Promise.all([
+                db.collection('memberships').where('teamId', 'in', chunk).where('status', '==', 'ACTIVE').get(),
+                db.collection('memberships').where('teamId', 'in', chunk).where('status', '==', 'active').get()
+            ]);
+            const seen = new Set();
+            [...snapA.docs, ...snapB.docs].forEach(d => {
+                if (seen.has(d.id)) return; seen.add(d.id);
+                const m = d.data();
+                if (!['TRENER_GLOWNY','TRENER_POMOCNICZY','TRENER'].includes(m.role) || !m.userId) return;
+                trainerCount[m.teamId] = (trainerCount[m.teamId] || 0) + 1;
+                const isGlowny = m.role === 'TRENER_GLOWNY';
+                if (isGlowny && !mainTrainerByTeam[m.teamId])
+                    mainTrainerByTeam[m.teamId] = m.userId;
+                if (!window.trainersByTeam[m.teamId]) window.trainersByTeam[m.teamId] = [];
+                window.trainersByTeam[m.teamId].push({ userId: m.userId, isGlowny });
+            });
+        }
+
+        // Licz zawodników i trenerów per drużyna
+        teamStats = {};
+        allTeams.forEach(t => {
+            const tid = t.id || t.teamId;
+            teamStats[tid] = { players: 0, trainers: trainerCount[tid] || 0 };
+        });
+        playersSnap.docs.forEach(d => {
+            const p = d.data();
+            (p.teams || []).forEach(t => {
+                if (t.status === 'ACTIVE' && teamStats[t.teamId] !== undefined)
+                    teamStats[t.teamId].players++;
+            });
+        });
+    } catch (e) { console.error('❌ loadTeamStats:', e); teamStats = {}; }
+}
+
+async function loadTrainers() {
+    try {
+        // Wszyscy aktywni trenerzy klubu — z memberships (clubId match, rola trenerska, ACTIVE)
+        const trainerRoles = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER'];
+        const [snapA, snapB] = await Promise.all([
+            db.collection('memberships').where('clubId','==',currentClubId).where('status','==','ACTIVE').get(),
+            db.collection('memberships').where('clubId','==',currentClubId).where('status','==','active').get()
+        ]);
+        const seen = new Set(); const userIds = [];
+        [...snapA.docs, ...snapB.docs].forEach(d => {
+            if (seen.has(d.id)) return; seen.add(d.id);
+            const m = d.data();
+            if (trainerRoles.includes(m.role) && m.userId && !userIds.includes(m.userId))
+                userIds.push(m.userId);
+        });
+        if (!userIds.length) { allTrainers = []; return; }
+        const userDocs = await Promise.all(userIds.map(uid => db.collection('users').doc(uid).get()));
+        allTrainers = userDocs.filter(d => d.exists).map(d => ({ userId: d.id, ...d.data() }));
+    } catch (e) {
+        console.error('❌ loadTrainers:', e);
+        allTrainers = [];
+    }
+}
+
+/* ── Render główny ── */
+function renderAll() {
+    const scroll = document.getElementById('kb-scroll');
+    scroll.innerHTML = '';
+
+    // Karta klubu
+    scroll.appendChild(buildClubCard());
+
+    // Sekcja drużyn
+    const lbl = document.createElement('div');
+    lbl.className = 'kb-section-label';
+    lbl.textContent = `Drużyny (${allTeams.length})`;
+    scroll.appendChild(lbl);
+
+    if (!allTeams.length) {
+        const empty = document.createElement('div');
+        empty.className = 'kb-empty';
+        empty.style.cssText = 'padding:24px 0;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;';
+        empty.innerHTML = `
+            <div style="font-size:2rem">🏟️</div>
+            <div style="font-size:.95rem;font-weight:600;color:var(--bialy)">Brak drużyn</div>
+            <div style="font-size:.82rem;color:var(--szary);line-height:1.5">Dodaj pierwszą drużynę klikając<br>przycisk <strong>+</strong> poniżej</div>`;
+        scroll.appendChild(empty);
+        return;
+    }
+    allTeams.forEach(t => scroll.appendChild(buildTeamCard(t)));
+}
+
+function buildClubCard() {
+    const c = clubData || {};
+    const addr = c.address || {};
+    const contact = c.contact || {};
+    const social = c.socialMedia || {};
+
+    const addrLine = [addr.street, addr.houseNumber ? addr.houseNumber + (addr.apartmentNumber ? '/'+addr.apartmentNumber : '') : '', addr.postalCode, addr.city].filter(Boolean).join(' ');
+
+    const div = document.createElement('div');
+    div.className = 'club-card';
+    div.innerHTML = `
+        <div class="club-card-top">
+            <div class="club-card-name">${c.clubName || c.name || currentClubId}</div>
+            ${canManage ? `<div class="club-edit-btn" id="club-edit-btn" onclick="openClubEdit()" style="display:block">Edytuj</div>` : ''}
+        </div>
+        <div class="club-card-rows">
+            ${c.legalName ? `<div class="club-card-row"><div class="club-card-row-icon">🏛️</div><div class="club-card-row-val">${c.legalName}</div></div>` : ''}
+            ${addrLine   ? `<div class="club-card-row"><div class="club-card-row-icon">📍</div><div class="club-card-row-val">${addrLine}</div></div>` : ''}
+            ${c.nip      ? `<div class="club-card-row"><div class="club-card-row-icon">📄</div><div class="club-card-row-val">NIP: ${c.nip}${c.regon ? '  ·  REGON: '+c.regon : ''}</div></div>` : ''}
+            ${contact.email  ? `<div class="club-card-row"><div class="club-card-row-icon">✉️</div><div class="club-card-row-val">${contact.email}</div></div>` : ''}
+            ${contact.phone  ? `<div class="club-card-row"><div class="club-card-row-icon">📞</div><div class="club-card-row-val">${contact.phone}</div></div>` : ''}
+            ${c.website  ? `<div class="club-card-row"><div class="club-card-row-icon">🌐</div><div class="club-card-row-val">${c.website}</div></div>` : ''}
+            ${c.president ? `<div class="club-card-row"><div class="club-card-row-icon">👤</div><div class="club-card-row-val">Prezes: ${c.president}</div></div>` : ''}
+            ${!c.legalName && !addrLine && !c.nip && !contact.email && !contact.phone && canManage ? `<div class="club-card-row"><div class="club-card-row-val empty">Uzupełnij dane klubu →</div></div>` : ''}
+        </div>
+    `;
+    return div;
+}
+
+function buildTeamCard(team) {
+    const tid = team.id || team.teamId;
+    const stats = teamStats[tid] || { players: 0, trainers: 0 };
+    const card = document.createElement('div');
+    card.className = 'team-card';
+    card.onclick = () => openTeamDetail(team);
+    card.innerHTML = `
+        <div class="team-card-icon">🏟️</div>
+        <div class="team-card-info">
+            <div class="team-card-name">${team.teamName || team.displayName || team.name || team.id}</div>
+            <div style="display:flex;flex-direction:column;gap:2px;margin-top:2px;">
+                ${(window.trainersByTeam[tid] || []).length
+                    ? (window.trainersByTeam[tid])
+                        .sort((a,b) => b.isGlowny - a.isGlowny)
+                        .map(tr => `<div style="font-size:12px;font-weight:600;color:var(--szary-j);">
+                            🎽 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:10px;color:#FBBF24;font-weight:800;">★</span>' : ''}
+                        </div>`).join('')
+                    : `<div style="font-size:12px;color:var(--szary);">Brak trenera</div>`
+                }
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+                <span style="font-size:11px;color:var(--szary);font-weight:600;">👥 ${stats.players} zawodników</span>
+            </div>
+        </div>
+        ${canManage
+            ? `<div class="club-edit-btn" style="display:block" data-teamidx="${tid}" onclick="event.stopPropagation();openEditTeamById(this.dataset.teamidx)">Edytuj</div>`
+            : `<div class="team-card-arrow">›</div>`}
+    `;
+    return card;
+}
+
+function getTrainerName(userId) {
+    if (!userId) return 'Brak trenera';
+    const t = allTrainers.find(u => u.userId === userId);
+    if (!t) return userId;
+    return t.firstName ? `${t.firstName} ${t.lastName || ''}`.trim() : (t.displayName || userId);
+}
+
+/* ── Edycja danych klubu ── */
+function openClubEdit() {
+    const c = clubData || {};
+    const addr = c.address || {};
+    const contact = c.contact || {};
+    const social = c.socialMedia || {};
+
+    document.getElementById('ce-clubName').value      = c.clubName || c.name || '';
+    document.getElementById('ce-legalName').value     = c.legalName || '';
+    document.getElementById('ce-nip').value           = c.nip || '';
+    document.getElementById('ce-regon').value         = c.regon || '';
+    document.getElementById('ce-founded').value       = c.founded ? c.founded.slice(0,10) : '';
+    document.getElementById('ce-president').value     = c.president || '';
+    document.getElementById('ce-street').value        = addr.street || '';
+    document.getElementById('ce-houseNumber').value   = addr.houseNumber || '';
+    document.getElementById('ce-apartmentNumber').value = addr.apartmentNumber || '';
+    document.getElementById('ce-postalCode').value    = addr.postalCode || '';
+    document.getElementById('ce-city').value          = addr.city || '';
+    document.getElementById('ce-district').value      = addr.district || '';
+    document.getElementById('ce-voivodeship').value   = addr.voivodeship || '';
+    document.getElementById('ce-email').value         = contact.email || '';
+    document.getElementById('ce-phone').value         = contact.phone || '';
+    document.getElementById('ce-website').value       = c.website || '';
+    document.getElementById('ce-facebook').value      = social.facebook || '';
+    document.getElementById('ce-instagram').value     = social.instagram || '';
+
+    document.getElementById('club-edit-panel').classList.add('open');
+}
+
+function closeClubEdit() {
+    document.getElementById('club-edit-panel').classList.remove('open');
+}
+
+async function saveClub() {
+    if (!requireWriteAccess()) return;
+    try {
+        const updates = {
+            clubName:   document.getElementById('ce-clubName').value.trim(),
+            legalName:  document.getElementById('ce-legalName').value.trim(),
+            nip:        document.getElementById('ce-nip').value.trim(),
+            regon:      document.getElementById('ce-regon').value.trim(),
+            founded:    document.getElementById('ce-founded').value || null,
+            president:  document.getElementById('ce-president').value.trim(),
+            website:    document.getElementById('ce-website').value.trim(),
+            address: {
+                street:          document.getElementById('ce-street').value.trim(),
+                houseNumber:     document.getElementById('ce-houseNumber').value.trim(),
+                apartmentNumber: document.getElementById('ce-apartmentNumber').value.trim(),
+                postalCode:      document.getElementById('ce-postalCode').value.trim(),
+                city:            document.getElementById('ce-city').value.trim(),
+                district:        document.getElementById('ce-district').value.trim(),
+                voivodeship:     document.getElementById('ce-voivodeship').value.trim(),
+                country:         'Polska'
+            },
+            contact: {
+                email: document.getElementById('ce-email').value.trim(),
+                phone: document.getElementById('ce-phone').value.trim()
+            },
+            socialMedia: {
+                facebook:  document.getElementById('ce-facebook').value.trim(),
+                instagram: document.getElementById('ce-instagram').value.trim()
+            },
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentUserId
+        };
+
+        await db.collection('clubs').doc(currentClubId).set(updates, { merge: true });
+        clubData = { ...clubData, ...updates };
+        closeClubEdit();
+        renderAll();
+        pokazKomunikat('✓ Dane klubu zapisane');
+    } catch (e) {
+        console.error('❌ saveClub:', e);
+        alert('Błąd zapisu: ' + e.message);
+    }
+}
+
+/* ── Detail panel: drużyna ── */
+async function openTeamDetail(team) {
+    selectedTeam = team;
+    document.getElementById('dp-team-name').textContent = team.teamName || team.displayName || team.name || team.id;
+    const _dpTid = team.id || team.teamId;
+    const dpTrainers = window.trainersByTeam[_dpTid] || [];
+    const dpCoachRow = document.getElementById('dp-coach-row');
+    if (dpTrainers.length) {
+        dpCoachRow.innerHTML = dpTrainers
+            .sort((a,b) => b.isGlowny - a.isGlowny)
+            .map(tr => `<span style="margin-right:8px;">🎽 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:10px;color:#FBBF24;font-weight:800;">★</span>' : ''}</span>`)
+            .join('');
+    } else {
+        dpCoachRow.textContent = 'Brak trenera';
+    }
+    document.getElementById('dp-edit-btn').style.display = canManage ? 'block' : 'none';
+    document.getElementById('detail-panel').classList.add('open');
+    await loadTeamPlayers(team.id || team.teamId);
+}
+
+function closeDetailPanel() {
+    document.getElementById('detail-panel').classList.remove('open');
+    selectedTeam = null;
+}
+
+async function loadTeamPlayers(teamId) {
+    const scroll = document.getElementById('dp-scroll');
+    scroll.innerHTML = '<div class="kb-empty">Ładowanie...</div>';
+    try {
+        // Pobierz WSZYSTKICH zawodników (aktywni + zablokowani + usunięci)
+        const snap = await db.collection('players').get();
+        const players = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(p => (p.teams || []).some(t => t.teamId === teamId && t.status !== 'INACTIVE'))
+            .sort((a, b) => {
+                const na = a.firstName || a.name || '';
+                const nb = b.firstName || b.name || '';
+                return na.localeCompare(nb, 'pl');
+            });
+        renderTeamPlayers(players);
+    } catch (e) {
+        scroll.innerHTML = '<div class="kb-empty">Błąd ładowania zawodników.</div>';
+    }
+}
+
+function kbGetInitials(name) {
+    if (!name) return '??';
+    const parts = name.trim().split(' ');
+    return parts.length >= 2 ? (parts[0][0] + parts[parts.length-1][0]).toUpperCase() : name.substring(0,2).toUpperCase();
+}
+function kbAvatarUrl(player) {
+    if (player.photoURL) return player.photoURL;
+    const name = player.firstName ? `${player.firstName} ${player.lastName||''}`.trim() : (player.name || player.playerId || 'x');
+    const colors = ['3B82F6','10B981','F59E0B','EF4444','8B5CF6','EC4899','14B8A6','F97316'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    const bg = colors[Math.abs(hash) % colors.length];
+    return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=${bg}&fontSize=40&fontWeight=800`;
+}
+
+function renderTeamPlayers(players) {
+    const scroll = document.getElementById('dp-scroll');
+    scroll.innerHTML = '';
+
+    // Header row with label + add button
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:4px 0 6px;';
+    hdr.innerHTML = `
+        <div class="dp-section-label" style="margin:0">Zawodnicy (${players.length})</div>
+        ${canManage ? `<button onclick="openAddPlayer()" style="font-size:11px;font-weight:800;color:var(--akcent);background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:999px;padding:4px 12px;cursor:pointer;">+ Dodaj</button>` : ''}
+    `;
+    scroll.appendChild(hdr);
+
+    if (!players.length) {
+        const empty = document.createElement('div');
+        empty.className = 'kb-empty'; empty.style.padding = '16px 0';
+        empty.textContent = 'Brak zawodników — dodaj pierwszego.';
+        scroll.appendChild(empty);
+        return;
+    }
+
+    const otherTeams = allTeams.filter(t => (t.id||t.teamId) !== (selectedTeam?.id||selectedTeam?.teamId));
+    players.forEach(p => {
+        const name = p.firstName ? `${p.firstName} ${p.lastName||''}`.trim() : (p.name || p.playerId);
+        const av   = kbAvatarUrl(p);
+        const initials = kbGetInitials(name);
+        const teamEntry = (p.teams||[]).find(t => t.teamId === (selectedTeam?.id||selectedTeam?.teamId));
+        const playerStatus = teamEntry?.status || 'ACTIVE';
+        const isBlocked  = playerStatus === 'BLOCKED';
+        const isDeleted  = playerStatus === 'DELETE';
+        const statusBadge = isBlocked ? ' <span style="font-size:10px;color:#FBBF24;font-weight:700;">(zablokowany)</span>'
+                          : isDeleted ? ' <span style="font-size:10px;color:var(--szary);font-weight:700;">(usunięty)</span>'
+                          : '';
+        const row  = document.createElement('div');
+        row.className = 'player-row';
+        row.style.cssText = 'flex-wrap:wrap;' + (isDeleted ? 'opacity:.5;' : '');
+        row.innerHTML = `
+            <div class="player-row-av"><img src="${av}" alt="${name}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=\'font-size:12px;font-weight:800;color:var(--bialy);\'>${initials}</span>'"></div>
+            <div class="player-row-info">
+                <div class="player-row-name">${name}${statusBadge}</div>
+                ${p.position ? `<div class="player-row-sub">${p.position}${p.number ? ' · #'+p.number : ''}</div>` : (p.number ? `<div class="player-row-sub">#${p.number}</div>` : '')}
+            </div>
+            ${canManage ? `
+            <div class="player-actions">
+                ${otherTeams.length > 0 && !isDeleted ? `<div class="player-action-btn player-action-edit" onclick="openTransfer(event,'${p.playerId||p.id}','${encodeURIComponent(name)}')">Przenieś</div>` : ''}
+                ${!isDeleted ? `<div class="player-action-btn player-action-edit" onclick="openEditPlayer(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️</div>` : ''}
+                ${!isDeleted ? `<div class="player-action-btn ${isBlocked ? 'player-action-blocked' : 'player-action-block'}" onclick="toggleBlockPlayer('${p.playerId||p.id}','${encodeURIComponent(name)}',${isBlocked})">${isBlocked ? '🔓' : '🔒'}</div>` : ''}
+                ${isDeleted ? `<div class="player-action-btn player-action-edit" onclick="restorePlayer('${p.playerId||p.id}','${encodeURIComponent(name)}')" style="font-weight:900;font-size:13px;">↩</div>` : `<div class="player-action-btn player-action-delete" onclick="deletePlayer('${p.playerId||p.id}','${encodeURIComponent(name)}')" style="font-weight:900;font-size:13px;">✕</div>`}
+            </div>` : ''}
+        `;
+        scroll.appendChild(row);
+    });
+}
+
+/* ── Dodaj/edytuj drużynę ── */
+async function openAddTeam() {
+    editMode = 'add';
+    document.getElementById('team-edit-title').textContent = 'Nowa drużyna';
+    document.getElementById('te-name').value = '';
+    document.getElementById('te-delete-btn').style.display = 'none';
+    await fillTrainersList(null, currentUserId);
+    document.getElementById('team-edit-panel').classList.add('open');
+}
+
+function openEditTeamById(teamId) {
+    const team = allTeams.find(t => (t.id || t.teamId) === teamId);
+    if (!team) return;
+    selectedTeam = team;
+    openEditTeam();
+}
+
+async function openEditTeam() {
+    if (!selectedTeam) return;
+    editMode = 'edit';
+    const teamId = selectedTeam.id || selectedTeam.teamId;
+    document.getElementById('team-edit-title').textContent = 'Edytuj drużynę';
+    document.getElementById('te-name').value = selectedTeam.teamName || selectedTeam.displayName || selectedTeam.name || '';
+    document.getElementById('te-delete-btn').style.display = isAdmin ? 'block' : 'none';
+    await fillTrainersList(teamId, null);
+    document.getElementById('team-edit-panel').classList.add('open');
+}
+
+function closeTeamEdit() {
+    document.getElementById('team-edit-panel').classList.remove('open');
+}
+
+async function fillTrainersList(teamId, preselectedUserId) {
+    const list = document.getElementById('te-trainers-list');
+    list.innerHTML = '<div style="color:var(--szary);font-size:12px;font-weight:600;padding:8px 0;">Ładowanie...</div>';
+
+    // Per-team role z memberships (obie wersje statusu)
+    let teamRoleMap = {};
+    if (teamId) {
+        try {
+            const [snapA, snapB] = await Promise.all([
+                db.collection('memberships').where('teamId','==',teamId).where('status','==','ACTIVE').get(),
+                db.collection('memberships').where('teamId','==',teamId).where('status','==','active').get()
+            ]);
+            const seen = new Set();
+            [...snapA.docs, ...snapB.docs].forEach(d => {
+                if (seen.has(d.id)) return; seen.add(d.id);
+                const data = d.data();
+                if (['TRENER_GLOWNY','TRENER_POMOCNICZY','TRENER'].includes(data.role) && data.userId) {
+                    // Nie nadpisuj TRENER_GLOWNY jeśli już ustawiony
+                    if (!teamRoleMap[data.userId] || data.role === 'TRENER_GLOWNY')
+                        teamRoleMap[data.userId] = data.role;
+                }
+            });
+        } catch (e) {}
+    }
+
+    list.innerHTML = '';
+    const trainers = allTrainers.filter(t => t.userId && t.registrationStatus !== 'PENDING');
+    if (!trainers.length) {
+        list.innerHTML = '<div style="color:var(--szary);font-size:12px;font-weight:600;padding:8px 0;">Brak trenerów w klubie</div>';
+        return;
+    }
+    trainers.forEach(t => {
+        const uid = t.userId;
+        const name = t.displayName || t.firstName || uid;
+        const isAssigned = teamId ? !!teamRoleMap[uid] : (uid === preselectedUserId);
+        const isGlowny   = teamId ? teamRoleMap[uid] === 'TRENER_GLOWNY' : (uid === preselectedUserId);
+
+        const row = document.createElement('div');
+        row.style.cssText = 'background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:12px 14px;';
+        row.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0;">
+                    <input type="checkbox" data-uid="${uid}" class="te-trainer-check" ${isAssigned ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--akcent);cursor:pointer;flex-shrink:0;">
+                    <span style="font-size:14px;font-weight:700;color:var(--bialy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;">
+                    <input type="checkbox" data-uid="${uid}" class="te-glowny-check" ${isGlowny ? 'checked' : ''} ${!isAssigned ? 'disabled' : ''} style="width:16px;height:16px;accent-color:#FBBF24;cursor:pointer;">
+                    <span class="te-glowny-txt-${uid}" style="font-size:11px;font-weight:700;color:${isAssigned ? '#FBBF24' : 'var(--szary)'};">★ Główny</span>
+                </label>
+            </div>
+        `;
+        const cb = row.querySelector('.te-trainer-check');
+        const gc = row.querySelector('.te-glowny-check');
+        const gt = row.querySelector(`.te-glowny-txt-${uid}`);
+        cb.addEventListener('change', () => {
+            gc.disabled = !cb.checked;
+            if (gt) gt.style.color = cb.checked ? '#FBBF24' : 'var(--szary)';
+            if (!cb.checked) gc.checked = false;
+        });
+        list.appendChild(row);
+    });
+}
+
+
+async function saveTeam() {
+    if (!requireWriteAccess()) return;
+    const name = document.getElementById('te-name').value.trim();
+    if (!name) { alert('Podaj nazwę drużyny'); return; }
+
+    // Zbierz zaznaczonych trenerów z checkboxów
+    const selectedTrainers = [];
+    document.querySelectorAll('.te-trainer-check').forEach(cb => {
+        if (cb.checked) {
+            const uid = cb.dataset.uid;
+            const gc  = document.querySelector(`.te-glowny-check[data-uid="${uid}"]`);
+            selectedTrainers.push({ userId: uid, isGlowny: gc?.checked || false });
+        }
+    });
+
+    if (!selectedTrainers.length) { alert('Wybierz co najmniej jednego trenera'); return; }
+    if (!selectedTrainers.some(t => t.isGlowny)) { alert('Zaznacz gwiazdkę (★ Główny) przy jednym z trenerów'); return; }
+
+    try {
+        const now     = new Date().toISOString();
+        const dateStr = now.slice(0,10).replace(/-/g,'');
+
+        if (editMode === 'add') {
+            // ── Nowa drużyna ──
+            const teamId = 'team_' + dateStr + '_' + Math.floor(Math.random() * 9000000 + 1000000);
+            await db.collection('teams').doc(teamId).set({
+                teamId, clubId: currentClubId, clubName: clubData?.clubName || '',
+                teamName: name, displayName: name,
+                createdBy: currentUserId, createdAt: now
+            });
+
+            // Membership dla twórcy (jeśli nie na liście)
+            const creatorInList = selectedTrainers.some(t => t.userId === currentUserId);
+            if (!creatorInList) {
+                const existingMbrId = currentMembership?.membershipId;
+                if (existingMbrId && !currentMembership?.teamId) {
+                    await db.collection('memberships').doc(existingMbrId).update({ teamId });
+                    currentMembership = { ...currentMembership, teamId };
+                    currentTeamId = teamId;
+                    localStorage.setItem('selectedMembershipId', existingMbrId);
+                } else {
+                    const ownerMbrId = makeMbrId('TRENER_GLOWNY');
+                    await db.collection('memberships').doc(ownerMbrId).set({
+                        membershipId: ownerMbrId, userId: currentUserId, teamId, clubId: currentClubId,
+                        role: 'TRENER_GLOWNY', trainerRole: 'TRENER_GLOWNY', status: 'ACTIVE',
+                        displayName: currentMembership?.displayName || '', isClubAdmin,
+                        joinedAt: now, isDemo: false
+                    });
+                }
+            }
+
+            // Memberships dla wybranych trenerów
+            for (const { userId, isGlowny } of selectedTrainers) {
+                const role = isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY';
+                // Jeśli to twórca i miał stary membership bez teamId — już zaktualizowany
+                const isCreatorUpdated = userId === currentUserId && !creatorInList && currentMembership?.teamId === teamId;
+                if (!isCreatorUpdated) {
+                    const mbrId = makeMbrId(role);
+                    await db.collection('memberships').doc(mbrId).set({
+                        membershipId: mbrId, userId, teamId, clubId: currentClubId,
+                        role, trainerRole: role, status: 'ACTIVE',
+                        displayName: getTrainerName(userId), joinedAt: now
+                    });
+                }
+            }
+
+        } else {
+            // ── Edycja istniejącej drużyny ──
+            const teamId = selectedTeam.id || selectedTeam.teamId;
+
+            // Oblicz zmiany trenerów — obie wersje statusu (ACTIVE i active)
+            const [_prevA, _prevB] = await Promise.all([
+                db.collection('memberships').where('teamId','==',teamId).where('clubId','==',currentClubId).where('status','==','ACTIVE').get(),
+                db.collection('memberships').where('teamId','==',teamId).where('clubId','==',currentClubId).where('status','==','active').get()
+            ]);
+            const _prevSeen = new Set();
+            const prevAssigned = [..._prevA.docs, ..._prevB.docs]
+                .filter(d => { if (_prevSeen.has(d.id)) return false; _prevSeen.add(d.id); return true; })
+                .filter(d => ['TRENER_GLOWNY','TRENER_POMOCNICZY','TRENER'].includes(d.data().role) && d.data().userId)
+                .map(d => d.data().userId);
+            const prevSet = new Set(prevAssigned);
+            const newSet  = new Set(selectedTrainers.map(t => t.userId));
+            const toAdd    = selectedTrainers.filter(t => !prevSet.has(t.userId));
+            const toRemove = prevAssigned.filter(uid => !newSet.has(uid));
+            const toUpdate = selectedTrainers.filter(t => prevSet.has(t.userId));
+
+            // Helper: wszystkie aktywne memberships per userId (obie wersje statusu)
+            async function getActiveMbrs(uid) {
+                const [a, b] = await Promise.all([
+                    db.collection('memberships').where('userId','==',uid).where('teamId','==',teamId).where('status','==','ACTIVE').get(),
+                    db.collection('memberships').where('userId','==',uid).where('teamId','==',teamId).where('status','==','active').get()
+                ]);
+                const seen = new Set();
+                return [...a.docs,...b.docs].filter(d => { if(seen.has(d.id))return false; seen.add(d.id); return true; });
+            }
+
+            // Dodaj/reaktywuj — upsert (nie tworzy duplikatu)
+            for (const { userId, isGlowny } of toAdd) {
+                const role = isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY';
+                const existing = await getActiveMbrs(userId);
+                if (existing.length > 0) {
+                    await existing[0].ref.update({ role, trainerRole: role, status: 'ACTIVE' });
+                    for (const dup of existing.slice(1)) await dup.ref.delete();
+                } else {
+                    // Sprawdź też REMOVED — reaktywuj zamiast tworzyć nowe
+                    const removedSnap = await db.collection('memberships')
+                        .where('userId','==',userId).where('teamId','==',teamId).where('status','==','REMOVED').limit(1).get();
+                    if (!removedSnap.empty) {
+                        await removedSnap.docs[0].ref.update({ role, trainerRole: role, status: 'ACTIVE', rejoinedAt: now });
+                    } else {
+                        const mbrId = makeMbrId(role);
+                        await db.collection('memberships').doc(mbrId).set({
+                            membershipId: mbrId, userId, teamId, clubId: currentClubId,
+                            role, trainerRole: role, status: 'ACTIVE',
+                            displayName: getTrainerName(userId), joinedAt: now
+                        });
+                    }
+                }
+            }
+
+            // Usuń przypisania — wszystkie aktywne memberships danego usera
+            for (const userId of toRemove) {
+                const existing = await getActiveMbrs(userId);
+                for (const doc of existing) await doc.ref.update({ status: 'REMOVED', removedAt: now, removedBy: currentUserId });
+
+                // Czy trener ma jeszcze inne aktywne memberships w klubie?
+                const [otherA, otherB] = await Promise.all([
+                    db.collection('memberships').where('userId','==',userId).where('clubId','==',currentClubId).where('status','==','ACTIVE').get(),
+                    db.collection('memberships').where('userId','==',userId).where('clubId','==',currentClubId).where('status','==','active').get()
+                ]);
+                const hasOther = [...otherA.docs, ...otherB.docs].some(d => d.data().teamId && d.data().teamId !== teamId);
+                if (!hasOther) {
+                    // Brak innych drużyn — utwórz club-level membership (teamId: null)
+                    const clubMbrId = 'mbr_' + dateStr + '_' + Math.random().toString(36).slice(2,7).toUpperCase();
+                    await db.collection('memberships').doc(clubMbrId).set({
+                        membershipId: clubMbrId, userId, teamId: null,
+                        clubId: currentClubId, role: 'TRENER_POMOCNICZY', trainerRole: 'TRENER_POMOCNICZY',
+                        status: 'ACTIVE', displayName: getTrainerName(userId), joinedAt: now, isDemo: false
+                    });
+                }
+            }
+
+            // Zaktualizuj rolę — pierwsze aktywne, usuń duplikaty
+            for (const { userId, isGlowny } of toUpdate) {
+                const role = isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY';
+                const existing = await getActiveMbrs(userId);
+                if (existing.length > 0) {
+                    await existing[0].ref.update({ role, trainerRole: role, status: 'ACTIVE' });
+                    for (const dup of existing.slice(1)) await dup.ref.delete();
+                }
+            }
+
+            await db.collection('teams').doc(teamId).update({ teamName: name, displayName: name });
+        }
+
+        closeTeamEdit();
+        if (editMode === 'edit') closeDetailPanel();
+        await loadAll();
+    } catch (e) {
+        console.error('❌ saveTeam:', e);
+        alert('Błąd zapisu: ' + e.message);
+    }
+}
+
+async function deleteTeam() {
+    if (!selectedTeam || !isAdmin) return;
+    const teamId = selectedTeam.id || selectedTeam.teamId;
+    const name   = selectedTeam.teamName || selectedTeam.name || '';
+
+    // Policz zawodników w drużynie
+    let teamPlayers = [];
+    try {
+        const playersSnap = await db.collection('players').get();
+        teamPlayers = playersSnap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(p => (p.teams || []).some(t => t.teamId === teamId));
+    } catch (e) {}
+
+    const msg = teamPlayers.length > 0
+        ? `W drużynie "${name}" są zawodnicy (${teamPlayers.length}).\n\nUsunięcie spowoduje utratę danych — wszyscy zawodnicy, rodzice i kibice tej drużyny utracą dostęp do aplikacji.\n\nCzy na pewno usunąć?`
+        : `Usunąć drużynę "${name}"?`;
+
+    if (!await showConfirmSheet(msg)) return;
+
+    try {
+        const now = new Date().toISOString();
+        const batch = db.batch();
+
+        // 1. Memberships → status DELETE
+        const mbrSnap = await db.collection('memberships').where('teamId', '==', teamId).get();
+        mbrSnap.docs.forEach(d => batch.update(d.ref, {
+            status: 'DELETE', deletedAt: now, deletedBy: currentUserId
+        }));
+
+        // 2. Zawodnicy — oznacz status DELETE na wpisie drużyny
+        for (const player of teamPlayers) {
+            const newTeams = (player.teams || []).map(t =>
+                t.teamId === teamId ? { ...t, status: 'DELETE' } : t
+            );
+            batch.update(db.collection('players').doc(player.id), { teams: newTeams });
+        }
+
+        await batch.commit();
+
+        // 3. Usuń dokument drużyny
+        await db.collection('teams').doc(teamId).delete();
+
+        closeTeamEdit();
+        closeDetailPanel();
+        await loadAll();
+    } catch (e) { alert('Błąd: ' + e.message); }
+}
+
+/* ── Transfer zawodnika ── */
+function openTransfer(evt, playerId, encodedName) {
+    evt.stopPropagation();
+    const name = decodeURIComponent(encodedName);
+    transferPlayer   = { playerId, name };
+    transferFromTeam = selectedTeam;
+    transferToTeamId = null;
+
+    document.getElementById('tp-player-name').textContent = name;
+    document.getElementById('tp-player-from').textContent = `Aktualna drużyna: ${selectedTeam?.teamName || selectedTeam?.name || ''}`;
+
+    const list = document.getElementById('tp-teams-list');
+    list.innerHTML = '';
+    allTeams.filter(t => (t.id||t.teamId) !== (selectedTeam?.id||selectedTeam?.teamId)).forEach(t => {
+        const teamId = t.id || t.teamId;
+        const div = document.createElement('div');
+        div.className = 'tp-team-opt'; div.dataset.teamId = teamId;
+        div.innerHTML = `<div class="tp-team-opt-name">${t.teamName||t.name||teamId}</div><div class="tp-team-opt-coach">🎽 ${getTrainerName(mainTrainerByTeam[teamId])}</div>`;
+        div.onclick = () => {
+            document.querySelectorAll('.tp-team-opt').forEach(el => el.classList.remove('selected'));
+            div.classList.add('selected');
+            transferToTeamId = teamId;
+            document.getElementById('tp-confirm-btn').disabled = false;
+        };
+        list.appendChild(div);
+    });
+
+    document.getElementById('tp-confirm-btn').disabled = true;
+    document.getElementById('transfer-panel').classList.add('open');
+}
+
+function closeTransferPanel() {
+    document.getElementById('transfer-panel').classList.remove('open');
+    transferPlayer = null; transferFromTeam = null; transferToTeamId = null;
+}
+
+async function confirmTransfer() {
+    if (!transferPlayer || !transferFromTeam || !transferToTeamId) return;
+    if (!requireWriteAccess()) return;
+
+    const btn = document.getElementById('tp-confirm-btn');
+    btn.disabled = true; btn.textContent = 'Przenoszę...';
+
+    try {
+        const now        = new Date().toISOString();
+        const dateStr    = now.slice(0,10).replace(/-/g,'');
+        const { playerId, name } = transferPlayer;
+        const fromTeamId = transferFromTeam.id || transferFromTeam.teamId;
+        const toTeam     = allTeams.find(t => (t.id||t.teamId) === transferToTeamId);
+
+        // 1. Dezaktywuj stare membership ZAWODNIKA (precyzyjny filtr na role)
+        const oldSnap = await db.collection('memberships')
+            .where('teamId','==',fromTeamId).where('playerId','==',playerId)
+            .where('role','==','ZAWODNIK').where('status','in',['active','ACTIVE']).limit(1).get();
+
+        let oldUserId = null;
+        if (!oldSnap.empty) {
+            oldUserId = oldSnap.docs[0].data().userId || null;
+            await db.collection('memberships').doc(oldSnap.docs[0].id).update({ status: 'INACTIVE', leftAt: now });
+        }
+
+        // 2. Utwórz nowe membership ZAWODNIKA
+        const newMbrId = makeMbrId('ZAWODNIK');
+        await db.collection('memberships').doc(newMbrId).set({
+            membershipId: newMbrId, userId: oldUserId, teamId: transferToTeamId,
+            clubId: currentClubId, playerId, role: 'ZAWODNIK', status: 'ACTIVE',
+            displayName: name, joinedAt: now, isDemo: false
+        });
+
+        // 3. Przenieś RODZIC i KIBIC
+        // Dwa osobne queries zamiast 'in' (unikamy composite index)
+        const [famSnapA, famSnapB] = await Promise.all([
+            db.collection('memberships').where('teamId','==',fromTeamId).where('playerId','==',playerId).where('status','==','active').get(),
+            db.collection('memberships').where('teamId','==',fromTeamId).where('playerId','==',playerId).where('status','==','ACTIVE').get()
+        ]);
+        const famById = {};
+        [...famSnapA.docs, ...famSnapB.docs].forEach(d => { famById[d.id] = d; });
+        const familyRoles = Object.values(famById).filter(d => ['RODZIC','KIBIC'].includes(d.data().role));
+        console.log(`🔍 family transfer: znaleziono ${famSnapA.size + famSnapB.size} docs (active+ACTIVE), RODZIC/KIBIC: ${familyRoles.length}`);
+
+        const familyUserIds = new Set();
+        for (const doc of familyRoles) {
+            const data = doc.data();
+            const parentUserId = data.userId;
+            console.log(`👪 przetwarzam: ${doc.id} | role: ${data.role} | userId: ${parentUserId}`);
+
+            // Sprawdź czy ten rodzic/kibic ma INNE dzieci nadal w fromTeamId
+            const otherChildrenSnap = await db.collection('memberships')
+                .where('userId','==',parentUserId).where('teamId','==',fromTeamId).get();
+            const hasOtherChildren = otherChildrenSnap.docs.some(d =>
+                d.id !== doc.id &&
+                ['RODZIC','KIBIC'].includes(d.data().role) &&
+                !['INACTIVE','REMOVED','BLOCKED'].includes(d.data().status)
+            );
+            console.log(`   hasOtherChildren: ${hasOtherChildren}`);
+            if (!hasOtherChildren) {
+                await doc.ref.update({ status: 'INACTIVE', leftAt: now });
+                console.log(`   ✓ stare membership → INACTIVE`);
+            } else {
+                console.log(`   ✓ stare membership zostawione ACTIVE (inne dzieci w drużynie)`);
+            }
+
+            // Nie twórz duplikatu jeśli już ma membership dla nowej drużyny
+            const existingNewSnap = await db.collection('memberships')
+                .where('userId','==',parentUserId).where('teamId','==',transferToTeamId)
+                .where('role','==',data.role).get();
+            if (!existingNewSnap.empty) {
+                console.log(`   ⚠️ już ma membership dla nowej drużyny — pomijam`);
+                if (parentUserId) familyUserIds.add(parentUserId);
+                continue;
+            }
+
+            const famMbrId = makeMbrId(data.role);
+            await db.collection('memberships').doc(famMbrId).set({
+                membershipId: famMbrId,
+                userId: parentUserId || null,
+                teamId: transferToTeamId,
+                clubId: currentClubId,
+                playerId,
+                role: data.role,
+                status: 'ACTIVE',
+                displayName: data.displayName || name,
+                joinedAt: now,
+                isDemo: data.isDemo || false
+            });
+            console.log(`   ✓ nowe membership → ${famMbrId} (${data.role} w ${transferToTeamId})`);
+            if (parentUserId) familyUserIds.add(parentUserId);
+        }
+
+        // 3. Zaktualizuj players.teams[]
+        const pDoc = await db.collection('players').doc(playerId).get();
+        if (pDoc.exists) {
+            let teams = (pDoc.data().teams || []).map(t =>
+                t.teamId === fromTeamId ? { ...t, status: 'INACTIVE', leftAt: now } : t
+            );
+            const existingIdx = teams.findIndex(t => t.teamId === transferToTeamId);
+            if (existingIdx >= 0) {
+                teams[existingIdx] = { ...teams[existingIdx], status: 'ACTIVE', joinedAt: now };
+            } else {
+                teams.push({ teamId: transferToTeamId, status: 'ACTIVE', joinedAt: now });
+            }
+            await db.collection('players').doc(playerId).update({ teams, teamId: transferToTeamId });
+        }
+
+        // 4. Powiadomienia
+        const fromName = transferFromTeam.teamName || transferFromTeam.name || fromTeamId;
+        const toName   = toTeam?.teamName || toTeam?.name || transferToTeamId;
+        // Zawodnik (własne konto) — tylko jeśli to nie jest userId rodzica/kibica
+        if (oldUserId && !familyUserIds.has(oldUserId)) {
+            await createNotification({ userId: oldUserId, teamId: transferToTeamId, type: 'INFO', priority: 'HIGH', title: 'Zmiana dru\u017Cyny', body: `Zosta\u0142e\u015B przeniesiony z "${fromName}" do "${toName}".` });
+        }
+        // Rodzic / kibic — osobna treść
+        for (const famUserId of familyUserIds) {
+            await createNotification({ userId: famUserId, teamId: transferToTeamId, type: 'INFO', priority: 'NORMAL', title: 'Zmiana dru\u017Cyny', body: `${name} zosta\u0142 przeniesiony do "${toName}".` });
+        }
+        const oldCoach = mainTrainerByTeam[fromTeamId] || transferFromTeam.coachId;
+        if (oldCoach && oldCoach !== currentUserId) await createNotification({ userId: oldCoach, teamId: fromTeamId, type: 'INFO', priority: 'NORMAL', title: 'Zawodnik zmieni\u0142 dru\u017Cyn\u0119', body: `${name} przeniesiony do "${toName}".` });
+
+        closeTransferPanel();
+        await loadTeamStats();
+        const currentTeamId = selectedTeam?.id || selectedTeam?.teamId;
+        await loadTeamPlayers(currentTeamId);
+        pokazKomunikat(`✓ ${name} przeniesiony do "${toName}"`);
+    } catch (e) {
+        console.error('❌ confirmTransfer:', e);
+        alert('Błąd transferu: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Potwierdź przeniesienie';
+    }
+}
+
+/* ── Zarządzanie zawodnikami ── */
+let playerEditMode = 'add';
+let selectedPlayer = null;
+
+function openAddPlayer() {
+    playerEditMode = 'add';
+    selectedPlayer = null;
+    document.getElementById('player-edit-title').textContent = 'Nowy zawodnik';
+    document.getElementById('ppe-firstname').value = '';
+    document.getElementById('ppe-lastname').value  = '';
+    document.getElementById('ppe-birth').value = '';
+    document.getElementById('ppe-position').value = '';
+    document.getElementById('ppe-number').value = '';
+    document.getElementById('player-edit-panel').classList.add('open');
+}
+
+function openEditPlayer(p) {
+    playerEditMode = 'edit';
+    selectedPlayer = p;
+    document.getElementById('player-edit-title').textContent = 'Edytuj zawodnika';
+    document.getElementById('ppe-firstname').value = p.firstName || (p.name || '').split(' ')[0] || '';
+    document.getElementById('ppe-lastname').value  = p.lastName  || (p.name || '').split(' ').slice(1).join(' ') || '';
+    document.getElementById('ppe-birth').value = p.birthDate || '';
+    document.getElementById('ppe-position').value = p.position || '';
+    document.getElementById('ppe-number').value = p.number || '';
+    document.getElementById('player-edit-panel').classList.add('open');
+}
+
+function closePlayerEdit() {
+    document.getElementById('player-edit-panel').classList.remove('open');
+}
+
+async function savePlayer() {
+    const firstName = document.getElementById('ppe-firstname').value.trim();
+    const lastName  = document.getElementById('ppe-lastname').value.trim();
+    const birth = document.getElementById('ppe-birth').value;
+    const position = document.getElementById('ppe-position').value.trim();
+    const number = parseInt(document.getElementById('ppe-number').value) || null;
+    const fullName = `${firstName} ${lastName}`.trim();
+    if (!firstName) { alert('Podaj imię zawodnika'); return; }
+    if (!lastName)  { alert('Podaj nazwisko zawodnika'); return; }
+    if (!birth)     { alert('Podaj datę urodzenia'); return; }
+
+    const teamId = selectedTeam?.id || selectedTeam?.teamId;
+    const now = new Date().toISOString();
+
+    try {
+        if (playerEditMode === 'edit' && selectedPlayer) {
+            const pid = selectedPlayer.playerId || selectedPlayer.id;
+            await db.collection('players').doc(pid).update({
+                firstName, lastName, name: fullName,
+                birthDate: birth, position: position || '', number
+            });
+        } else {
+            const dateStr = now.slice(0,10).replace(/-/g,'');
+            const pid = 'player_' + dateStr + '_' + Math.floor(Math.random() * 9000000 + 1000000);
+            await db.collection('players').doc(pid).set({
+                playerId: pid, firstName, lastName, name: fullName,
+                birthDate: birth, position: position || '', number,
+                photoURL: '', photoConsent: false,
+                teams: [{ teamId, status: 'ACTIVE', joinedAt: now }],
+                createdAt: now, createdBy: currentUserId
+            });
+        }
+        closePlayerEdit();
+        await loadTeamPlayers(teamId);
+    } catch (e) { alert('Błąd zapisu: ' + e.message); console.error(e); }
+}
+
+async function toggleBlockPlayer(playerId, encodedName, isBlocked) {
+    const name = decodeURIComponent(encodedName);
+    const action = isBlocked ? 'odblokować' : 'zablokować';
+    if (!await showConfirmSheet(`Czy na pewno chcesz ${action} zawodnika ${name}?`)) return;
+    const teamId = selectedTeam?.id || selectedTeam?.teamId;
+    try {
+        const doc = await db.collection('players').doc(playerId).get();
+        if (!doc.exists) return;
+        const teams = (doc.data().teams || []).map(t =>
+            t.teamId === teamId ? { ...t, status: isBlocked ? 'ACTIVE' : 'BLOCKED' } : t
+        );
+        await db.collection('players').doc(playerId).update({ teams });
+        await loadTeamPlayers(teamId);
+    } catch (e) { alert('Błąd: ' + e.message); }
+}
+
+async function deletePlayer(playerId, encodedName) {
+    const name = decodeURIComponent(encodedName);
+    if (!await showConfirmSheet(`Usunąć ${name} z drużyny?\n\nZawodnik straci dostęp. Dane historyczne pozostaną.`)) return;
+    const teamId = selectedTeam?.id || selectedTeam?.teamId;
+    const now = new Date().toISOString();
+    try {
+        const doc = await db.collection('players').doc(playerId).get();
+        if (!doc.exists) return;
+        const teams = (doc.data().teams || []).map(t =>
+            t.teamId === teamId ? { ...t, status: 'DELETE', deletedAt: now } : t
+        );
+        await db.collection('players').doc(playerId).update({ teams });
+        const [snapA, snapB] = await Promise.all([
+            db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','ACTIVE').get(),
+            db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','active').get()
+        ]);
+        for (const d of [...snapA.docs, ...snapB.docs]) await d.ref.update({ status: 'DELETE', deletedAt: now });
+        await loadTeamPlayers(teamId);
+    } catch (e) { alert('Błąd: ' + e.message); }
+}
+
+async function restorePlayer(playerId, encodedName) {
+    const name = decodeURIComponent(encodedName);
+    if (!await showConfirmSheet(`Przywrócić ${name} do drużyny?`)) return;
+    const teamId = selectedTeam?.id || selectedTeam?.teamId;
+    const now = new Date().toISOString();
+    try {
+        const doc = await db.collection('players').doc(playerId).get();
+        if (!doc.exists) return;
+        const teams = (doc.data().teams || []).map(t =>
+            t.teamId === teamId ? { ...t, status: 'ACTIVE', restoredAt: now } : t
+        );
+        await db.collection('players').doc(playerId).update({ teams });
+        const [snapA, snapB] = await Promise.all([
+            db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','DELETE').get(),
+            db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','delete').get()
+        ]);
+        for (const d of [...snapA.docs, ...snapB.docs]) await d.ref.update({ status: 'ACTIVE', restoredAt: now });
+        await loadTeamPlayers(teamId);
+    } catch (e) { alert('Błąd: ' + e.message); }
+}
+</script>
+</body>
+</html>

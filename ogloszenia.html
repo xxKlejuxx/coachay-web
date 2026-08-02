@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Ogłoszenia</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+
+<!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+<style>
+.screen-body { 
+  padding: 0 !important; 
+  gap: 0 !important; 
+  display: flex; 
+  flex-direction: column; 
+}
+
+/* Header z przyciskiem */
+.ann-header {
+  padding: 14px 16px;
+  background: #000;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.ann-title {
+  font-family: var(--font-d);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--bialy);
+}
+.ann-new-btn {
+  padding: 8px 16px;
+  background: var(--bialy);
+  color: #000;
+  border: none;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.ann-new-btn:active {
+  transform: scale(0.95);
+}
+
+/* Filtry */
+.ann-filters {
+  padding: 10px 16px;
+  background: var(--tlo);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ann-filter {
+  padding: 6px 14px;
+  background: var(--tlo-karta);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--szary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ann-filter.active {
+  background: var(--bialy);
+  color: #000;
+  border-color: var(--bialy);
+}
+
+/* Lista ogłoszeń */
+.ann-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: none;
+}
+.ann-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Karta ogłoszenia */
+.ann-card {
+  background: var(--tlo-karta);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  transition: border-color 0.2s;
+}
+.ann-card.pinned {
+  border-color: var(--akcent);
+  background: rgba(59,130,246,0.05);
+}
+
+.ann-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ann-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.ann-content {
+  flex: 1;
+  min-width: 0;
+}
+.ann-type-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.ann-type-info { background: rgba(59,130,246,0.15); color: var(--akcent); border: 1px solid var(--akcent); }
+.ann-type-warning { background: rgba(251,191,36,0.15); color: var(--warn); border: 1px solid var(--warn); }
+.ann-type-match { background: rgba(74,222,128,0.15); color: var(--sukces); border: 1px solid var(--sukces); }
+.ann-type-birthday { background: rgba(251,113,154,0.15); color: #FB7199; border: 1px solid #FB7199; }
+
+.ann-title-text {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--bialy);
+  margin-bottom: 6px;
+}
+.ann-body-text {
+  font-size: 13px;
+  color: var(--szary-j);
+  line-height: 1.5;
+}
+
+.ann-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.ann-author {
+  font-size: 11px;
+  color: var(--szary);
+  font-weight: 600;
+}
+.ann-expires {
+  font-size: 10px;
+  color: var(--warn);
+  font-weight: 700;
+}
+
+/* Akcje (tylko dla trenera) */
+.ann-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+.ann-action-btn {
+  flex: 1;
+  padding: 8px;
+  background: var(--tlo-karta2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--szary-j);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ann-action-btn:active {
+  transform: scale(0.96);
+}
+.ann-action-btn.primary {
+  background: var(--bialy);
+  color: #000;
+  border-color: var(--bialy);
+}
+.ann-action-btn.danger {
+  background: rgba(248,113,113,0.1);
+  color: var(--blad);
+  border-color: var(--blad);
+}
+
+/* Panel przypięte */
+.pinned-section {
+  margin-bottom: 16px;
+}
+.pinned-label {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--szary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Modal ogłoszenia */
+.ann-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.ann-modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.ann-modal {
+  background: var(--tlo-karta);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px 32px;
+  width: 100%;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+  max-height: 85%;
+  overflow-y: auto;
+}
+.ann-modal-overlay.open .ann-modal {
+  transform: translateY(0);
+}
+.ann-modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.ann-modal-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--bialy);
+  margin-bottom: 16px;
+}
+.ann-modal .form-group {
+  margin-bottom: 12px;
+}
+.ann-modal .form-lbl {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--szary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.ann-modal .form-inp,
+.ann-modal .form-textarea {
+  width: 100%;
+  background: var(--tlo);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 14px;
+  color: var(--bialy);
+  box-sizing: border-box;
+  font-family: var(--font);
+  outline: none;
+}
+.ann-modal .form-textarea {
+  resize: none;
+  min-height: 80px;
+}
+.ann-modal-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.ann-modal-check input[type=checkbox] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--akcent);
+  cursor: pointer;
+}
+.ann-modal-check span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--szary-j);
+}
+.ann-modal-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.ann-modal-btn-cancel {
+  flex: 1;
+  padding: 13px;
+  background: var(--tlo);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--szary-j);
+  cursor: pointer;
+}
+.ann-modal-btn-save {
+  flex: 2;
+  padding: 13px;
+  background: var(--bialy);
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #000;
+  cursor: pointer;
+}
+.ann-modal-btn-save:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="ctx-switcher" onclick="toggleCtxOv()">
+      <div class="ctx-dot" id="ctx-dot"></div>
+      <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
+      <span class="ctx-arrow">▾</span>
+    </div>
+    <div class="top-bar-right">
+      <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+      <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+    </div>
+  </div>
+
+  <!-- OVERLAYS -->
+  <div class="ctx-overlay" id="ctx-ov">
+    <div class="ov-label">Wybierz klub i zespół</div>
+    <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
+    <div class="ctx-teams" id="ctx-teams"></div>
+  </div>
+  <div class="notif-overlay" id="notif-ov">
+    <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
+  </div>
+
+  <!-- SCREEN BODY -->
+  <div class="screen-body">
+    
+    <!-- Header -->
+    <div class="ann-header">
+      <div class="ann-title">Ogłoszenia</div>
+      <button class="ann-new-btn" id="new-btn" style="display:none;" onclick="createAnnouncement()">+ Nowe</button>
+    </div>
+
+    <!-- Filtry -->
+    <div class="ann-filters">
+      <button class="ann-filter active" onclick="filterAnnouncements('all', this)">Wszystkie</button>
+      <button class="ann-filter" onclick="filterAnnouncements('active', this)">Aktywne</button>
+      <button class="ann-filter" onclick="filterAnnouncements('pinned', this)">Przypięte</button>
+    </div>
+
+    <!-- Lista -->
+    <div class="ann-list" id="ann-list">
+      <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">
+        Ładowanie ogłoszeń...
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+    <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+    <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+    <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+    <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+  </div>
+
+  <div class="login-overlay" id="login-ov">
+    <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
+    <button class="login-close" onclick="closeLogin()">✕</button>
+    <div class="login-body">
+      <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
+      <div class="auth-tabs"><button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button><button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button></div>
+      <div id="auth-login">
+        <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+        <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
+        <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
+        <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
+        <div class="social-btns"><button class="social-btn"><span style="font-size:17px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size:17px">🍎</span> Apple</button></div>
+      </div>
+      <div id="auth-register" style="display:none">
+        <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size:18px"></div>
+        <div class="form-group"><label class="form-lbl">Imię i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
+        <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+        <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
+        <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj się →</button>
+        <div class="kod-info"><div class="kod-info-txt">🔑 Kod dostępu otrzymasz od trenera lub opiekuna.<br>Jednorazowy · ważny 7 dni</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+  <div class="menu-panel" id="menu-panel">
+    <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
+    <div class="menu-panel-items">
+      <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+      <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+    </div>
+    <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
+  </div>
+
+  <!-- Modal: Nowe / Edytuj ogłoszenie -->
+  <div class="ann-modal-overlay" id="ann-modal-overlay" onclick="closeAnnModal(event)">
+    <div class="ann-modal">
+      <div class="ann-modal-handle"></div>
+      <div class="ann-modal-title" id="ann-modal-title">Nowe ogłoszenie</div>
+
+      <div class="form-group">
+        <label class="form-lbl">Tytuł *</label>
+        <input type="text" class="form-inp" id="ann-inp-title" placeholder="Np. Zmiana terminu treningu" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Treść *</label>
+        <textarea class="form-textarea" id="ann-inp-body" placeholder="Opis ogłoszenia..." maxlength="500"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Wygasa (opcjonalnie)</label>
+        <input type="date" class="form-inp" id="ann-inp-expires">
+      </div>
+      <label class="ann-modal-check">
+        <input type="checkbox" id="ann-inp-pinned">
+        <span>📌 Przypnij ogłoszenie na górze</span>
+      </label>
+
+      <div class="ann-modal-btns">
+        <button class="ann-modal-btn-cancel" onclick="closeAnnModal()">Anuluj</button>
+        <button class="ann-modal-btn-save" id="ann-modal-save-btn" onclick="saveAnnouncement()">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260730a"></script>
+
+<script>
+/* ===================================================
+   FIREBASE - OGŁOSZENIA
+=================================================== */
+
+let allAnnouncements = [];
+let currentRole = '';
+let currentFilter = 'all';
+
+async function loadAnnouncements() {
+  if (!requireAuth()) return;
+  
+  const s = await initSession();
+  if (!s) return;
+  const { team } = s;
+  currentRole = isDemoMode() ? getDemoRole() : getCurrentUserData().role;
+
+  // Pokaż przycisk "Nowe" dla trenera
+  if (currentRole === 'TRENER_GLOWNY' || currentRole === 'TRENER_POMOCNICZY') {
+    document.getElementById('new-btn').style.display = 'block';
+  }
+
+  // Pobierz ogłoszenia
+  allAnnouncements = await getTeamAnnouncements(team.teamId);
+  
+  // Renderuj
+  renderAnnouncements();
+  
+  console.log(`? Załadowano ${allAnnouncements.length} ogłoszeń`);
+}
+
+function renderAnnouncements() {
+  const container = document.getElementById('ann-list');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  // Filtruj
+  let filtered = [...allAnnouncements];
+  const now = new Date();
+  
+  if (currentFilter === 'active') {
+    filtered = filtered.filter(a => !a.expiresAt || a.expiresAt.toDate() > now);
+  } else if (currentFilter === 'pinned') {
+    filtered = filtered.filter(a => a.isPinned);
+  }
+  
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;">
+        <div style="font-size:48px;opacity:0.3;margin-bottom:16px;">??</div>
+        <div style="font-size:18px;font-weight:800;color:var(--bialy);margin-bottom:8px;">Brak ogłoszeń</div>
+        <div style="font-size:13px;color:var(--szary);line-height:1.6;">Nie ma ogłoszeń w tym filtrze.</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const now = new Date();
+
+  function getTime(a) { return a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0); }
+  function getExpiry(a) { return a.expiresAt?.toDate ? a.expiresAt.toDate() : (a.expiresAt ? new Date(a.expiresAt) : null); }
+  function isActive(a) { const exp = getExpiry(a); return !exp || exp > now; }
+
+  // Rozdziel: przypięte aktywne → aktywne → wygasłe
+  const pinned   = filtered.filter(a => a.isPinned && isActive(a));
+  const active   = filtered.filter(a => !a.isPinned && isActive(a));
+  const expired  = filtered.filter(a => !isActive(a));
+
+  // Sortuj aktywne: wygasające najwcześniej na górze, bez terminu na końcu grupy; remis → createdAt malejąco
+  active.sort((a, b) => {
+    const ea = getExpiry(a), eb = getExpiry(b);
+    if (ea && eb) return ea - eb;
+    if (ea) return -1;
+    if (eb) return 1;
+    return getTime(b) - getTime(a);
+  });
+
+  // Sortuj wygasłe: najnowsze na górze
+  expired.sort((a, b) => getTime(b) - getTime(a));
+
+  // Renderuj przypięte
+  if (pinned.length > 0) {
+    const section = document.createElement('div');
+    section.className = 'pinned-section';
+    section.innerHTML = '<div class="pinned-label">📌 Przypięte</div>';
+    pinned.forEach(ann => section.appendChild(createAnnouncementCard(ann)));
+    container.appendChild(section);
+  }
+
+  // Renderuj aktywne
+  active.forEach(ann => container.appendChild(createAnnouncementCard(ann)));
+
+  // Renderuj wygasłe z nagłówkiem
+  if (expired.length > 0) {
+    const sep = document.createElement('div');
+    sep.style.cssText = 'font-size:11px;font-weight:800;color:var(--szary);padding:12px 4px 4px;letter-spacing:0.05em;text-transform:uppercase;';
+    sep.textContent = 'Wygasłe';
+    container.appendChild(sep);
+    expired.forEach(ann => container.appendChild(createAnnouncementCard(ann)));
+  }
+}
+
+function createAnnouncementCard(ann) {
+  const card = document.createElement('div');
+  card.className = 'ann-card' + (ann.isPinned ? ' pinned' : '');
+  
+  // Typ badge
+  const typeMap = {
+    'INFO':        { class: 'ann-type-info',     label: 'Info' },
+    'WARNING':     { class: 'ann-type-warning',  label: 'Ważne' },
+    'MATCH':       { class: 'ann-type-match',    label: 'Mecz' },
+    'BIRTHDAY':    { class: 'ann-type-birthday', label: 'Urodziny' },
+    'ACHIEVEMENT': { class: 'ann-type-match',    label: 'Osiągnięcie' },
+    'TASK':        { class: 'ann-type-info',     label: 'Zadanie' },
+    'BROADCAST':   { class: 'ann-type-info',     label: 'Ogłoszenie' }
+  };
+  const type = typeMap[ann.type] || typeMap['INFO'];
+  
+  // Wygaśnięcie
+  let expiresHTML = '';
+  if (ann.expiresAt) {
+    const expiresDate = ann.expiresAt.toDate();
+    const dateStr = expiresDate.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+    expiresHTML = `<div class="ann-expires">Wygasa: ${dateStr}</div>`;
+  }
+  
+  // Akcje (tylko dla trenera, tylko dla BROADCAST — auto-generated są readonly)
+  let actionsHTML = '';
+  if ((currentRole === 'TRENER_GLOWNY' || currentRole === 'TRENER_POMOCNICZY') && ann.type === 'BROADCAST') {
+    const annId = ann.id;
+    actionsHTML = `
+      <div class="ann-actions">
+        <button class="ann-action-btn" onclick="editAnnouncement('${annId}')">✏️ Edytuj</button>
+        <button class="ann-action-btn" onclick="togglePin('${annId}')">
+          ${ann.isPinned ? '📌 Odepnij' : '📌 Przypnij'}
+        </button>
+        <button class="ann-action-btn danger" onclick="deleteAnnouncement('${annId}')">🗑</button>
+      </div>
+    `;
+  }
+  
+  card.innerHTML = `
+    <div class="ann-card-header">
+      <div class="ann-icon">${ann.icon || '??'}</div>
+      <div class="ann-content">
+        <div class="ann-type-badge ${type.class}">${type.label}</div>
+        <div class="ann-title-text">${ann.title}</div>
+        <div class="ann-body-text">${ann.body}</div>
+      </div>
+    </div>
+    
+    <div class="ann-meta">
+      <div class="ann-author">${ann.type === 'BROADCAST' ? (ann._authorName || 'Trener') : 'System'}</div>
+      ${expiresHTML}
+    </div>
+    
+    ${actionsHTML}
+  `;
+  
+  return card;
+}
+
+function filterAnnouncements(filter, btn) {
+  currentFilter = filter;
+  
+  // Aktualizuj przyciski
+  document.querySelectorAll('.ann-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  // Renderuj
+  renderAnnouncements();
+}
+
+/* ─── Modal obsługa ─── */
+let _annEditId = null; // null = nowe, string = edytowane id
+
+function openAnnModal(editId = null) {
+  _annEditId = editId;
+  document.getElementById('ann-modal-title').textContent = editId ? 'Edytuj ogłoszenie' : 'Nowe ogłoszenie';
+
+  if (editId) {
+    const ann = allAnnouncements.find(a => a.id === editId);
+    if (ann) {
+      document.getElementById('ann-inp-title').value   = ann.title || '';
+      document.getElementById('ann-inp-body').value    = ann.body  || '';
+      document.getElementById('ann-inp-pinned').checked = !!ann.isPinned;
+      if (ann.expiresAt) {
+        const d = ann.expiresAt.toDate ? ann.expiresAt.toDate() : new Date(ann.expiresAt);
+        document.getElementById('ann-inp-expires').value = d.toISOString().slice(0,10);
+      } else {
+        document.getElementById('ann-inp-expires').value = '';
+      }
+    }
+  } else {
+    document.getElementById('ann-inp-title').value    = '';
+    document.getElementById('ann-inp-body').value     = '';
+    document.getElementById('ann-inp-expires').value  = '';
+    document.getElementById('ann-inp-pinned').checked = false;
+  }
+
+  document.getElementById('ann-modal-overlay').classList.add('open');
+}
+
+function closeAnnModal(e) {
+  if (e && e.target !== document.getElementById('ann-modal-overlay')) return;
+  document.getElementById('ann-modal-overlay').classList.remove('open');
+  _annEditId = null;
+}
+
+async function saveAnnouncement() {
+  const title  = document.getElementById('ann-inp-title').value.trim();
+  const body   = document.getElementById('ann-inp-body').value.trim();
+  const pinned = document.getElementById('ann-inp-pinned').checked;
+  const expStr = document.getElementById('ann-inp-expires').value;
+
+  if (!title) {
+    document.getElementById('ann-inp-title').focus();
+    return;
+  }
+  if (!body) {
+    document.getElementById('ann-inp-body').focus();
+    return;
+  }
+
+  const btn = document.getElementById('ann-modal-save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Zapisuję...';
+
+  const s = await initSession();
+  if (!s) { btn.disabled = false; btn.textContent = 'Zapisz'; return; }
+
+  const expiresAt = expStr ? firebase.firestore.Timestamp.fromDate(new Date(expStr + 'T23:59:59')) : null;
+
+  try {
+    if (_annEditId) {
+      // — Edycja —
+      const ref = db.collection('announcements').doc(_annEditId);
+      await ref.update({
+        title,
+        body,
+        isPinned:  pinned,
+        expiresAt: expiresAt,
+        updatedAt: new Date().toISOString(),
+        updatedBy: getCurrentUserId()
+      });
+    } else {
+      // — Nowe —
+      const annId = makeAnnouId();
+      await db.collection('announcements').doc(annId).set({
+        announcementId: annId,
+        teamId:    s.team.teamId,
+        clubId:    s.team.clubId || null,
+        title,
+        body,
+        type:      'BROADCAST',
+        icon:      '📢',
+        isPinned:  pinned,
+        expiresAt: expiresAt,
+        createdAt: new Date().toISOString(),
+        createdBy: getCurrentUserId(),
+        updatedAt: null,
+        updatedBy: null,
+        archived:  false
+      });
+    }
+
+    document.getElementById('ann-modal-overlay').classList.remove('open');
+    _annEditId = null;
+    // Odśwież listę
+    allAnnouncements = await getTeamAnnouncements(s.team.teamId);
+    renderAnnouncements();
+  } catch (err) {
+    console.error('Błąd zapisu ogłoszenia:', err);
+    alert('Błąd zapisu: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Zapisz';
+  }
+}
+
+function createAnnouncement() {
+  openAnnModal(null);
+}
+
+function editAnnouncement(id) {
+  openAnnModal(id);
+}
+
+async function togglePin(id) {
+  const ann = allAnnouncements.find(a => a.id === id);
+  if (!ann) return;
+  const newPinned = !ann.isPinned;
+
+  try {
+    // Ogłoszenia z announcements collection
+    if (!ann._fromMessages) {
+      await db.collection('announcements').doc(id).update({ isPinned: newPinned });
+    } else {
+      await db.collection('messages').doc(id).update({ isPinned: newPinned });
+    }
+    ann.isPinned = newPinned;
+    renderAnnouncements();
+  } catch (err) {
+    console.error('Błąd togglePin:', err);
+    alert('Błąd: ' + err.message);
+  }
+}
+
+async function deleteAnnouncement(id) {
+  if (!await showConfirmSheet('Usunąć to ogłoszenie?')) return;
+  const ann = allAnnouncements.find(a => a.id === id);
+  if (!ann) return;
+
+  try {
+    if (!ann._fromMessages) {
+      await db.collection('announcements').doc(id).update({ archived: true });
+    } else {
+      await db.collection('messages').doc(id).update({ archived: true });
+    }
+    allAnnouncements = allAnnouncements.filter(a => a.id !== id);
+    renderAnnouncements();
+  } catch (err) {
+    console.error('Błąd usuwania ogłoszenia:', err);
+    alert('Błąd: ' + err.message);
+  }
+}
+
+// Inicjalizacja
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof firebase === 'undefined') { console.error('❌ Firebase nie załadował się!'); return; }
+  initFirebase();
+  let _loaded = false;
+  auth.onAuthStateChanged(user => {
+      if (_loaded) return;
+      if (user) {
+          _loaded = true;
+          if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
+          loadDashboard();
+      } else {
+          if (!isDemoMode()) window.location.href = 'login.html';
+      }
+  });
+});
+</script>
+
+</body>
+</html>

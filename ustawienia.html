@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Ustawienia</title>
+<link rel="stylesheet" href="_global.css?v=20260730b">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+.screen-body { padding: 12px 12px 90px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; scrollbar-width: none; }
+.screen-body::-webkit-scrollbar { display: none; }
+
+/* ── Grupy ustawień ── */
+.sg-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); padding: 0 2px; margin-bottom: 6px; }
+.settings-group { display: flex; flex-direction: column; gap: 2px; }
+
+.si { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; margin-bottom: 2px; transition: background 0.15s; }
+.si:active { background: var(--tlo-karta2); }
+.si-icon { font-size: 17px; width: 24px; text-align: center; flex-shrink: 0; }
+.si-body { flex: 1; min-width: 0; }
+.si-text { font-size: 14px; font-weight: 700; color: var(--bialy); }
+.si-desc { font-size: 11px; color: var(--szary); font-weight: 600; margin-top: 2px; }
+.si-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.si-val { font-size: 12px; color: var(--szary); font-weight: 600; }
+.si-arr { color: var(--border2); font-size: 14px; }
+
+/* ── Wyloguj ── */
+.logout-btn { width: 100%; background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.2); border-radius: 14px; padding: 15px; color: var(--blad); font-size: 14px; font-weight: 900; transition: background 0.15s; }
+.logout-btn:active { background: rgba(248,113,113,0.14); }
+
+/* ── Panel szczegółowy (slide z prawej) ── */
+.detail-panel { position: absolute; top: var(--top-h); left: 0; right: 0; bottom: var(--nav-h); background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.detail-panel.open { transform: translateX(0); }
+.dp-header { background: #000; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.dp-back { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--bialy); cursor: pointer; flex-shrink: 0; }
+.dp-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); flex: 1; }
+.dp-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+.dp-scroll::-webkit-scrollbar { display: none; }
+
+/* Formularz w panelu */
+.dp-form-group { display: flex; flex-direction: column; gap: 6px; }
+.dp-form-lbl { font-size: 10px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--szary); }
+.dp-form-inp { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 13px 16px; color: var(--bialy); font-size: 14px; font-weight: 600; font-family: var(--font); transition: border-color 0.2s; outline: none; }
+.dp-form-inp:focus { border-color: var(--akcent); }
+.dp-form-inp::placeholder { color: var(--szary); }
+
+/* Sezon */
+.sezon-row { display: flex; gap: 10px; }
+.sezon-row .dp-form-group { flex: 1; }
+
+/* Pozycje */
+.pozycje-list { display: flex; flex-direction: column; gap: 6px; }
+.poz-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+.poz-name { font-size: 13px; font-weight: 700; color: var(--bialy); }
+
+/* Toggle */
+.si-toggle { width: 38px; height: 22px; border-radius: 11px; background: var(--border2); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+.si-toggle.on { background: var(--akcent); }
+.si-toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.si-toggle.on::after { transform: translateX(16px); }
+
+/* Sheet sezonowy */
+.sezon-sheet-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: none; }
+.sezon-sheet-overlay.open { display: block; }
+.sezon-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: var(--tlo-karta); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 16px 16px 32px; z-index: 201; transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.32,0.72,0,1); }
+.sezon-sheet.open { transform: translateY(0); }
+.sezon-sheet-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 14px; }
+.sezon-sheet-title { font-size: 13px; font-weight: 700; color: var(--szary); text-align: center; margin-bottom: 14px; line-height: 1.5; }
+.sezon-sheet-btn { width: 100%; padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer; margin-bottom: 8px; }
+.sezon-sheet-btn.primary { background: var(--akcent); color: #fff; border: none; }
+.sezon-sheet-btn.secondary { background: var(--tlo-karta2); color: var(--bialy); border: 1px solid var(--border2); }
+.sezon-sheet-btn.cancel { background: none; color: var(--szary); border: 1px solid var(--border); margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+
+    <div class="top-bar">
+        <div class="ctx-switcher" onclick="toggleCtxOv()">
+            <div class="ctx-dot" id="ctx-dot"></div>
+            <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+            <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+        </div>
+    </div>
+
+    <div class="ctx-overlay" id="ctx-ov">
+        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
+        <div class="ctx-teams" id="ctx-teams"></div>
+    </div>
+    <div class="notif-overlay" id="notif-ov">
+        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
+    </div>
+
+    <div class="screen-body">
+
+        <!-- Drużyna — tylko TRENER admin -->
+        <div class="settings-group" id="sg-druzyna" style="display:none;">
+            <div class="sg-label">Drużyna</div>
+            <div class="si" onclick="openPanel('sezon')">
+                <span class="si-icon">📅</span>
+                <div class="si-body">
+                    <div class="si-text">Daty sezonu</div>
+                    <div class="si-desc" id="si-sezon-desc">Okres liczenia statystyk</div>
+                </div>
+                <div class="si-right"><span class="si-arr">›</span></div>
+            </div>
+            <div class="si" onclick="openPanel('pozycje')">
+                <span class="si-icon">🎽</span>
+                <div class="si-body">
+                    <div class="si-text">Pozycje zawodników</div>
+                    <div class="si-desc">Widoczność na profilach i w meczu</div>
+                </div>
+                <div class="si-right"><span class="si-arr">›</span></div>
+            </div>
+            <div class="si" id="si-licencja" style="display:none" onclick="openPanel('licencja')">
+                <span class="si-icon">🏢</span>
+                <div class="si-body">
+                    <div class="si-text">Licencja klubowa</div>
+                    <div class="si-desc" id="si-licencja-desc">Kto korzysta z puli</div>
+                </div>
+                <div class="si-right"><span class="si-arr">›</span></div>
+            </div>
+        </div>
+
+        <!-- Aplikacja — wszyscy -->
+        <div class="settings-group">
+            <div class="sg-label">Aplikacja</div>
+            <div class="si" onclick="openPanel('jezyk')">
+                <span class="si-icon">🌍</span>
+                <div class="si-body"><div class="si-text">Język aplikacji</div></div>
+                <div class="si-right"><span class="si-val" id="si-lang-val">Polski</span><span class="si-arr">›</span></div>
+            </div>
+        </div>
+
+        <!-- Prawne — wszyscy -->
+        <div class="settings-group">
+            <div class="sg-label">Prawne</div>
+            <div class="si" onclick="window.location.href='rodo.html'">
+                <span class="si-icon">📜</span>
+                <div class="si-body"><div class="si-text">Polityka prywatności i RODO</div></div>
+                <div class="si-right"><span class="si-arr">›</span></div>
+            </div>
+        </div>
+
+        <button class="logout-btn" onclick="confirmLogout()">🚪 Wyloguj się</button>
+
+    </div><!-- /screen-body -->
+
+    <!-- Panel: Daty sezonu -->
+    <div class="detail-panel" id="panel-sezon">
+        <div class="dp-header">
+            <button class="dp-back" onclick="closePanel('sezon')">←</button>
+            <div class="dp-title">Daty sezonu</div>
+        </div>
+        <div class="dp-scroll">
+            <div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:14px;">
+                <p style="font-size:12px;font-weight:700;color:rgba(251,191,36,0.9);line-height:1.6;">
+                    ⚠️ Daty sezonu wpływają na liczenie statystyk i raportów obecności.
+                </p>
+            </div>
+            <div class="sezon-row">
+                <div class="dp-form-group">
+                    <label class="dp-form-lbl">Początek sezonu</label>
+                    <input type="date" class="dp-form-inp" id="inp-sezon-start">
+                </div>
+                <div class="dp-form-group">
+                    <label class="dp-form-lbl">Koniec sezonu</label>
+                    <input type="date" class="dp-form-inp" id="inp-sezon-end">
+                </div>
+            </div>
+            <div class="dp-form-group">
+                <label class="dp-form-lbl">Nazwa sezonu</label>
+                <input type="text" class="dp-form-inp" id="inp-sezon-name" placeholder="np. Sezon 2025/2026">
+            </div>
+            <button class="btn-primary" style="width:100%;padding:14px" onclick="saveSezon()">Zapisz daty sezonu</button>
+            <div id="sezon-msg" style="font-size:12px;font-weight:700;text-align:center;min-height:18px;"></div>
+        </div>
+    </div>
+
+    <!-- Panel: Pozycje zawodników -->
+    <div class="detail-panel" id="panel-pozycje">
+        <div class="dp-header">
+            <button class="dp-back" onclick="closePanel('pozycje')">←</button>
+            <div class="dp-title">Pozycje zawodników</div>
+        </div>
+        <div class="dp-scroll">
+            <div class="dp-form-group" style="flex-direction:row;justify-content:space-between;align-items:center;background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">
+                <div>
+                    <div style="font-size:14px;font-weight:800;color:var(--bialy);">Pokazuj pozycje</div>
+                    <div style="font-size:11px;color:var(--szary);font-weight:600;margin-top:2px;">Widoczne na liście drużyny i w meczu</div>
+                </div>
+                <div class="si-toggle" id="tog-show-positions" onclick="toggleSwitch(this)"></div>
+            </div>
+            <div class="dp-form-lbl" style="margin-top:4px;">Dostępne pozycje</div>
+            <div class="pozycje-list" id="pozycje-list"></div>
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="savePozycje()">Zapisz</button>
+            <div id="pozycje-msg" style="font-size:12px;font-weight:700;text-align:center;min-height:18px;"></div>
+        </div>
+    </div>
+
+    <!-- Panel: Licencja klubowa -->
+    <div class="detail-panel" id="panel-licencja">
+        <div class="dp-header">
+            <button class="dp-back" onclick="closePanel('licencja')">←</button>
+            <div class="dp-title">Licencja klubowa</div>
+        </div>
+        <div class="dp-scroll">
+            <div id="licencja-brak" style="display:none;background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:16px;font-size:13px;color:var(--szary);line-height:1.6;">
+                Klub nie ma jeszcze aktywnej licencji klubowej (puli B2B). Skontaktuj się z supportem, żeby ją aktywować.
+            </div>
+            <div id="licencja-form">
+                <div style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div style="font-size:13px;font-weight:700;color:var(--szary);">Wykorzystanie puli</div>
+                        <div style="font-size:15px;font-weight:900;color:var(--bialy);" id="lic-uzycie">— / —</div>
+                    </div>
+                    <div style="height:6px;background:var(--border);border-radius:3px;margin-top:8px;overflow:hidden;">
+                        <div id="lic-uzycie-bar" style="height:100%;background:var(--akcent);border-radius:3px;width:0%;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+                        <div style="font-size:13px;font-weight:700;color:var(--szary);">Ważna do</div>
+                        <div style="font-size:14px;font-weight:800;color:var(--bialy);" id="lic-wazna-do">—</div>
+                    </div>
+                </div>
+
+                <div class="dp-form-lbl">Kto korzysta z puli klubowej</div>
+                <div class="pozycje-list" id="licencja-scope-list">
+                    <div class="poz-item" style="cursor:pointer;" onclick="pickScope('trainers_only')"><span class="poz-name">Trenerzy</span><span id="scope-check-trainers_only" style="color:transparent;font-size:16px;">✓</span></div>
+                    <div class="poz-item" style="cursor:pointer;" onclick="pickScope('all')"><span class="poz-name">Trenerzy i rodzice</span><span id="scope-check-all" style="color:var(--sukces);font-size:16px;">✓</span></div>
+                </div>
+
+                <!-- "Wymuś licencję klubową dla rodziców" (force_club_pool) usunięte 2026-07-28 —
+                     pomijało WAŻNĄ własną licencję rodzica, uznane za niedopuszczalne. Naturalna
+                     kolejność P1→grace→P3 w getAccessStatus() już sama przenosi rodzica na pulę
+                     klubową dopiero gdy jego własna licencja faktycznie wygaśnie. -->
+                <div id="licencja-rodzic-opcje" style="display:none;">
+                    <div class="dp-form-group" style="flex-direction:row;justify-content:space-between;align-items:center;background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:12px;">
+                        <div>
+                            <div style="font-size:14px;font-weight:800;color:var(--bialy);">Max 1 rodzic na dziecko</div>
+                            <div style="font-size:11px;color:var(--szary);font-weight:600;margin-top:2px;">Ogranicz zużycie puli — tylko jeden rodzic na zawodnika może zająć slot klubowy</div>
+                        </div>
+                        <div class="si-toggle" id="tog-max-one-parent" onclick="toggleSwitch(this)"></div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="width:100%;padding:14px;margin-top:14px;" onclick="saveLicencja()">Zapisz</button>
+                <div id="licencja-msg" style="font-size:12px;font-weight:700;text-align:center;min-height:18px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel: Język -->
+    <div class="detail-panel" id="panel-jezyk">
+        <div class="dp-header">
+            <button class="dp-back" onclick="closePanel('jezyk')">←</button>
+            <div class="dp-title">Język aplikacji</div>
+        </div>
+        <div class="dp-scroll">
+            <div class="pozycje-list" id="lang-list">
+                <div class="poz-item" style="cursor:pointer;" onclick="pickLang(this,'Polski 🇵🇱')"><span class="poz-name">Polski 🇵🇱</span><span id="lang-check-pl" style="color:var(--sukces);font-size:16px;">✓</span></div>
+                <div class="poz-item" style="cursor:pointer;" onclick="pickLang(this,'English 🇬🇧')"><span class="poz-name">English 🇬🇧</span><span style="color:transparent;font-size:16px;">✓</span></div>
+                <div class="poz-item" style="cursor:pointer;" onclick="pickLang(this,'Deutsch 🇩🇪')"><span class="poz-name">Deutsch 🇩🇪</span><span style="color:transparent;font-size:16px;">✓</span></div>
+                <div class="poz-item" style="cursor:pointer;" onclick="pickLang(this,'Español 🇪🇸')"><span class="poz-name">Español 🇪🇸</span><span style="color:transparent;font-size:16px;">✓</span></div>
+            </div>
+            <p style="font-size:11px;color:var(--szary);font-weight:600;text-align:center;">Pełna lokalizacja dostępna w kolejnych wersjach.</p>
+        </div>
+    </div>
+
+    <!-- Sheet: Wybór trybu sezonu -->
+    <div class="sezon-sheet-overlay" id="sezon-sheet-overlay" onclick="closeSezonSheet()"></div>
+    <div class="sezon-sheet" id="sezon-sheet">
+        <div class="sezon-sheet-handle"></div>
+        <div class="sezon-sheet-title" id="sezon-sheet-title">Co chcesz zrobić?</div>
+        <button class="sezon-sheet-btn primary" onclick="confirmSezon('update')">Zmień aktualny sezon</button>
+        <button class="sezon-sheet-btn secondary" onclick="confirmSezon('new')">Dodaj nowy sezon</button>
+        <button class="sezon-sheet-btn cancel" onclick="closeSezonSheet()">Anuluj</button>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+    </div>
+
+    <!-- Menu panel -->
+    <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
+        <div class="menu-panel-items">
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+        </div>
+        <div class="menu-panel-bottom">
+            <div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div>
+        </div>
+    </div>
+
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260730b"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   USTAWIENIA.HTML v2.0 | 2026-04-11
+   Drużyna: Daty sezonu, Pozycje zawodników
+   Aplikacja: Język
+   Prawne: Polityka i RODO
+═══════════════════════════════════════════════════ */
+
+let _teamId  = '';
+let _teamDoc = null;
+let _clubId  = '';
+let _licenseDoc = null;
+
+const POZYCJE_DEF = [
+    { id: 'gk',  name: '🥅 Bramkarz' },
+    { id: 'def', name: '🛡️ Obrońca' },
+    { id: 'mid', name: '⚙️ Pomocnik' },
+    { id: 'fwd', name: '⚡ Napastnik' },
+    { id: 'cb',  name: '🔄 Środkowy obrońca' },
+    { id: 'win', name: '📐 Skrzydłowy' },
+];
+
+/* ── Init ── */
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(async user => {
+        if (_loaded || !user) { if (!user) window.location.href = 'login.html'; return; }
+        _loaded = true;
+        const session = await initSession();
+        if (!session) return;
+        const { user: userData, membership, team } = session;
+        _teamId  = team?.id || team?.teamId || '';
+        _teamDoc = team;
+        _clubId  = team?.clubId || membership?.clubId || '';
+        loadCtxOverlay(userData, membership, team);
+        loadMenuPanel(userData, membership, team);
+        // Widoczność sekcji Drużyna — tylko TRENER_GLOWNY lub isClubAdmin
+        const role = membership?.role === 'TRENER' ? (membership.trainerRole || 'TRENER_GLOWNY') : membership?.role;
+        const isAdmin = role === 'TRENER_GLOWNY' || membership?.isClubAdmin === true || userData?.isPlatformAdmin === true;
+        if (isAdmin) {
+            document.getElementById('sg-druzyna').style.display = '';
+            loadSezon(team);
+            loadPozycje(team);
+            loadLicencja();
+        }
+    });
+});
+
+/* ── Panel open/close ── */
+function openPanel(id)  { document.getElementById('panel-' + id).classList.add('open'); }
+function closePanel(id) { document.getElementById('panel-' + id).classList.remove('open'); }
+
+function toggleSwitch(el) { el.classList.toggle('on'); }
+
+function confirmLogout() {
+    // confirm() natywny nie działa w WebView appki Android — bez tego przycisk nic nie robił
+    logout();
+}
+
+/* ══════════════════════════════════════════════════
+   DATY SEZONU
+══════════════════════════════════════════════════ */
+function loadSezon(team) {
+    const s = team?.settings?.season || {};
+    const start = s.start || '';
+    const end   = s.end   || '';
+    const name  = s.name  || '';
+    document.getElementById('inp-sezon-start').value = start;
+    document.getElementById('inp-sezon-end').value   = end;
+    document.getElementById('inp-sezon-name').value  = name;
+    if (start && end) {
+        const fmt = d => d.slice(0,7).replace('-', '/');
+        document.getElementById('si-sezon-desc').textContent = `${fmt(start)} — ${fmt(end)}`;
+    }
+}
+
+// Walidacja przed otwarciem sheetu
+function saveSezon() {
+    const start = document.getElementById('inp-sezon-start').value;
+    const end   = document.getElementById('inp-sezon-end').value;
+    const msg   = document.getElementById('sezon-msg');
+    if (!start || !end) { showMsg(msg, 'Podaj obie daty', false); return; }
+    if (start >= end)   { showMsg(msg, 'Koniec musi być po początku', false); return; }
+
+    const existing = _teamDoc?.settings?.season;
+    const hasCurrent = existing?.start && existing?.end;
+    const title = hasCurrent
+        ? `Aktualny sezon: ${existing.name || existing.start.slice(0,7)} — ${existing.end.slice(0,7)}`
+        : 'Brak aktualnego sezonu';
+    document.getElementById('sezon-sheet-title').textContent = title;
+
+    document.getElementById('sezon-sheet-overlay').classList.add('open');
+    document.getElementById('sezon-sheet').classList.add('open');
+}
+
+function closeSezonSheet() {
+    document.getElementById('sezon-sheet-overlay').classList.remove('open');
+    document.getElementById('sezon-sheet').classList.remove('open');
+}
+
+async function confirmSezon(mode) {
+    closeSezonSheet();
+    const start = document.getElementById('inp-sezon-start').value;
+    const end   = document.getElementById('inp-sezon-end').value;
+    const name  = document.getElementById('inp-sezon-name').value.trim();
+    const msg   = document.getElementById('sezon-msg');
+    const seasonName = name || `Sezon ${start.slice(0,4)}/${end.slice(2,4)}`;
+
+    const updates = {
+        'settings.season': { start, end, name: seasonName },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    // Nowy sezon — archiwizuj poprzedni
+    if (mode === 'new') {
+        const existing = _teamDoc?.settings?.season;
+        if (existing?.start) {
+            updates['settings.seasonHistory'] = firebase.firestore.FieldValue.arrayUnion(existing);
+        }
+    }
+
+    try {
+        await db.collection('teams').doc(_teamId).update(updates);
+        // Odśwież lokalny cache
+        if (!_teamDoc.settings) _teamDoc.settings = {};
+        _teamDoc.settings.season = { start, end, name: seasonName };
+        const fmt = d => d.slice(0,7).replace('-', '/');
+        document.getElementById('si-sezon-desc').textContent = `${fmt(start)} — ${fmt(end)}`;
+        showMsg(msg, 'Zapisano ✓', true);
+        setTimeout(() => closePanel('sezon'), 900);
+    } catch(e) {
+        console.error('confirmSezon:', e);
+        showMsg(msg, 'Błąd zapisu', false);
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   POZYCJE ZAWODNIKÓW
+══════════════════════════════════════════════════ */
+function loadPozycje(team) {
+    const s = team?.settings?.positions || {};
+    const showPos  = s.show !== false; // domyślnie true
+    const enabled  = s.enabled || POZYCJE_DEF.map(p => p.id); // domyślnie wszystkie
+
+    if (showPos) document.getElementById('tog-show-positions').classList.add('on');
+
+    const list = document.getElementById('pozycje-list');
+    list.innerHTML = POZYCJE_DEF.map(p => `
+        <div class="poz-item">
+            <span class="poz-name">${p.name}</span>
+            <div class="si-toggle ${enabled.includes(p.id) ? 'on' : ''}" data-poz="${p.id}" onclick="toggleSwitch(this)"></div>
+        </div>
+    `).join('');
+}
+
+async function savePozycje() {
+    const msg     = document.getElementById('pozycje-msg');
+    const show    = document.getElementById('tog-show-positions').classList.contains('on');
+    const enabled = [...document.querySelectorAll('[data-poz].on')].map(el => el.dataset.poz);
+    if (!_teamId) { showMsg(msg, 'Brak drużyny', false); return; }
+    try {
+        await db.collection('teams').doc(_teamId).update({
+            'settings.positions': { show, enabled },
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showMsg(msg, 'Zapisano ✓', true);
+        setTimeout(() => closePanel('pozycje'), 900);
+    } catch(e) {
+        console.error('savePozycje:', e);
+        showMsg(msg, 'Błąd zapisu', false);
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   JĘZYK
+══════════════════════════════════════════════════ */
+function pickLang(el, lang) {
+    el.parentElement.querySelectorAll('.poz-item span:last-child').forEach(s => s.style.color = 'transparent');
+    el.querySelector('span:last-child').style.color = 'var(--sukces)';
+    document.getElementById('si-lang-val').textContent = lang.split(' ')[0];
+    setTimeout(() => closePanel('jezyk'), 300);
+}
+
+/* ── Helper ── */
+function showMsg(el, txt, ok) {
+    el.textContent = txt;
+    el.style.color = ok ? 'var(--sukces)' : 'var(--blad)';
+}
+
+/* ══════════════════════════════════════════════════
+   LICENCJA KLUBOWA — scope / max 1 rodzic na dziecko
+   (force_club_pool usunięte 2026-07-28 — patrz komentarz przy panel-licencja)
+   Widoczne tylko gdy klub ma aktywną licencję B2B (clubs.license istnieje).
+══════════════════════════════════════════════════ */
+let _licScope = 'all';
+let _licScopeOriginal = 'all';
+
+async function loadLicencja() {
+    if (!_clubId) return;
+    try {
+        const clubDoc = await db.collection('clubs').doc(_clubId).get();
+        const lic = clubDoc.exists ? clubDoc.data().license : null;
+        _licenseDoc = lic;
+
+        const si     = document.getElementById('si-licencja');
+        const brakEl = document.getElementById('licencja-brak');
+        const formEl = document.getElementById('licencja-form');
+
+        if (!lic) {
+            si.style.display = '';
+            brakEl.style.display = '';
+            formEl.style.display = 'none';
+            return;
+        }
+
+        si.style.display = '';
+        brakEl.style.display = 'none';
+        formEl.style.display = '';
+
+        // Wykorzystanie puli + data ważności
+        const total = lic.total || 0;
+        const used  = lic.used  || 0;
+        document.getElementById('lic-uzycie').textContent = `${used} / ${total}`;
+        const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+        document.getElementById('lic-uzycie-bar').style.width = pct + '%';
+        document.getElementById('lic-uzycie-bar').style.background = pct >= 100 ? 'var(--blad)' : (pct >= 80 ? 'var(--warn)' : 'var(--akcent)');
+
+        const validUntil = lic.valid_until?.toDate ? lic.valid_until.toDate() : (lic.valid_until ? new Date(lic.valid_until) : null);
+        document.getElementById('lic-wazna-do').textContent = validUntil
+            ? validUntil.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : '—';
+
+        _licScope = lic.scope || 'all';
+        _licScopeOriginal = _licScope;
+        pickScope(_licScope);
+
+        document.getElementById('tog-max-one-parent').classList.toggle('on', !!lic.maxOneParentPerChild);
+
+        const descMap = { all: 'Trenerzy i rodzice', trainers_only: 'Trenerzy' };
+        document.getElementById('si-licencja-desc').textContent = descMap[_licScope] || _licScope;
+    } catch (e) {
+        console.error('loadLicencja:', e);
+    }
+}
+
+function scopeObejmujeRodzica() {
+    return _licScope === 'all';
+}
+
+function refreshRodzicOpcje() {
+    document.getElementById('licencja-rodzic-opcje').style.display = scopeObejmujeRodzica() ? '' : 'none';
+}
+
+function pickScope(scope) {
+    _licScope = scope;
+    ['all', 'trainers_only'].forEach(s => {
+        document.getElementById('scope-check-' + s).style.color = (s === scope) ? 'var(--sukces)' : 'transparent';
+    });
+    refreshRodzicOpcje();
+}
+
+// Zwraca listę userów z aktywnym slotem klubowym (licenseSource:CLUB, licenseStatus:ACTIVE),
+// zdeduplikowaną po userId (rodzic może mieć kilka dzieci = kilka membershipów, slot jest per-osoba),
+// których rola NIE mieści się w nowym scope.
+async function znajdzTraconyDostepKlubowy(newScope) {
+    if (newScope === 'all') return []; // rozszerzenie scope nigdy nikogo nie wyklucza
+    const slotSnap = await db.collection('memberships')
+        .where('clubId', '==', _clubId)
+        .where('licenseSource', '==', 'CLUB')
+        .where('licenseStatus', '==', 'ACTIVE')
+        .get();
+
+    const byUser = new Map();
+    slotSnap.docs.forEach(d => {
+        const m = d.data();
+        if (!m.userId || byUser.has(m.userId)) return;
+        byUser.set(m.userId, m);
+    });
+
+    const TRENER_ROLES = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER', 'OWNER'];
+    const affected = [];
+    byUser.forEach((m, userId) => {
+        const rola = m.role === 'TRENER' ? (m.trainerRole || 'TRENER_GLOWNY') : m.role;
+        if (TRENER_ROLES.includes(rola)) return; // trenerzy zostają w każdym z 2 scope
+        affected.push({ userId, displayName: m.displayName || userId });
+    });
+    return affected;
+}
+
+// Czy ten user ma własną, ważną licencję (P1) dla tego klubu — jeśli tak, zwolnienie slotu
+// klubowego jest dla niego nieszkodliwe (getAccessStatus i tak spadnie na jego P1).
+async function maWlasnaLicencje(userId) {
+    try {
+        const snap = await db.collection('access_rights')
+            .where('uid', '==', userId)
+            .where('club_id', '==', _clubId)
+            .limit(1).get();
+        if (snap.empty) return false;
+        const ar = snap.docs[0].data();
+        const validUntil = ar.valid_until?.toDate ? ar.valid_until.toDate() : new Date(ar.valid_until);
+        return validUntil > new Date();
+    } catch (e) { return false; }
+}
+
+async function saveLicencja() {
+    const msg = document.getElementById('licencja-msg');
+    if (!_clubId) return;
+    const maxOneParentPerChild = scopeObejmujeRodzica() && document.getElementById('tog-max-one-parent').classList.contains('on');
+
+    try {
+        // Zawężenie scope? Sprawdź kto realnie straci dostęp przez pulę klubową.
+        if (_licScope !== _licScopeOriginal) {
+            const traconyDostep = await znajdzTraconyDostepKlubowy(_licScope);
+
+            const bezpieczni = [];
+            const zagrozeni = [];
+            for (const u of traconyDostep) {
+                if (await maWlasnaLicencje(u.userId)) bezpieczni.push(u);
+                else zagrozeni.push(u);
+            }
+
+            if (zagrozeni.length > 0) {
+                const nazwy = zagrozeni.map(u => u.displayName).join(', ');
+                const ok = await showConfirmSheet(`Ta zmiana odbierze dostęp przez pulę klubową: ${nazwy}. Kontynuować?`);
+                if (!ok) return;
+            }
+
+            for (const u of [...bezpieczni, ...zagrozeni]) {
+                await releaseClubLicenseSlot(u.userId, _clubId);
+            }
+            for (const u of zagrozeni) {
+                try {
+                    await createNotification({
+                        userId: u.userId,
+                        teamId: null,
+                        type: 'INFO',
+                        title: 'Coachay — licencja klubowa',
+                        body: 'Klub zmienił ustawienia licencji — nie masz już dostępu przez pulę klubową. Skontaktuj się z trenerem lub kup własną licencję w Płatnościach.'
+                    });
+                } catch (e) { console.error('Powiadomienie o utracie dostępu:', e); }
+            }
+        }
+
+        await db.collection('clubs').doc(_clubId).update({
+            'license.scope': _licScope,
+            'license.roles': [],
+            'license.force_club_pool': false,
+            'license.maxOneParentPerChild': maxOneParentPerChild
+        });
+        _licScopeOriginal = _licScope;
+        showMsg(msg, 'Zapisano', true);
+        const descMap = { all: 'Trenerzy i rodzice', trainers_only: 'Trenerzy' };
+        document.getElementById('si-licencja-desc').textContent = descMap[_licScope] || _licScope;
+        await loadLicencja(); // odśwież pasek wykorzystania puli (used zmienione przez releaseClubLicenseSlot)
+        setTimeout(() => closePanel('licencja'), 800);
+    } catch (e) {
+        showMsg(msg, 'Błąd: ' + e.message, false);
+    }
+}
+</script>
+</body>
+</html>

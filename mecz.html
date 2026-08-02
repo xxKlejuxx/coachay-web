@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Mecz</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+.screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
+
+/* ── Selektor meczu ── */
+.mecz-selector { padding: 10px 16px; background: #000; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.ms-label { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 6px; }
+.ms-dropdown { display: flex; align-items: center; justify-content: space-between; background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: var(--r-pill); padding: 10px 16px; cursor: pointer; }
+.ms-dropdown:active { background: var(--tlo-karta2); }
+.ms-dropdown > div { overflow: hidden; min-width: 0; flex: 1; }
+.ms-dd-name { font-size: 14px; font-weight: 800; color: var(--bialy); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ms-dd-sub { font-size: 11px; color: var(--szary); font-weight: 600; margin-top: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ms-dd-arrow { color: var(--szary); font-size: 12px; flex-shrink: 0; }
+.ms-dd-status { font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 999px; margin-left: 8px; flex-shrink: 0; }
+.ms-st-upcoming { background: rgba(59,130,246,0.12); color: #3B82F6; }
+.ms-st-live { background: rgba(248,113,113,0.15); color: #DC2626; }
+.ms-st-finished { background: rgba(74,222,128,0.12); color: #16A34A; }
+
+/* ── Lista meczy (overlay) ── */
+.match-list-ov { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 140; opacity: 0; visibility: hidden; transition: opacity 0.25s, visibility 0.25s; display: flex; flex-direction: column; padding: 60px 16px 16px; overflow-y: auto; }
+.match-list-ov.open { opacity: 1; visibility: visible; }
+.match-list-close { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--szary); cursor: pointer; z-index: 5; }
+.match-list-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); margin-bottom: 12px; }
+.match-opt { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: background 0.15s; }
+.match-opt:active { background: var(--tlo-karta2); }
+.match-opt.selected { border-color: var(--akcent); }
+.match-opt-name { font-size: 14px; font-weight: 800; color: var(--bialy); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.match-opt-sub { font-size: 11px; color: var(--szary); font-weight: 600; margin-top: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* ── Status + asystent ── */
+.mecz-status-bar { padding: 8px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.msb-badge { font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
+.msb-upcoming { background: rgba(59,130,246,0.12); color: #3B82F6; }
+.msb-live { background: rgba(248,113,113,0.15); color: #DC2626; }
+.msb-finished { background: rgba(74,222,128,0.12); color: #16A34A; }
+.msb-info { font-size: 10px; font-weight: 700; color: var(--szary); }
+.msb-info strong { color: var(--szary-j); }
+.msb-btn { padding: 5px 14px; border-radius: 999px; font-size: 10px; font-weight: 900; cursor: pointer; border: 1px solid; margin-left: auto; }
+.msb-btn-start { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25); color: #16A34A; }
+.msb-btn-end { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.20); color: #DC2626; }
+.msb-btn-claim { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); color: #3B82F6; }
+
+/* ── Wynik ── */
+.mecz-wynik { background: #000; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.mw-teams { display: flex; align-items: center; gap: 6px; }
+.mw-team { flex: 1; }
+.mw-team-name { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--szary); margin-bottom: 6px; }
+.mw-score-row { display: flex; align-items: center; gap: 6px; }
+.mw-team.away .mw-score-row { justify-content: flex-end; }
+.mw-score-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; color: var(--bialy); cursor: pointer; }
+.mw-score-val { font-family: var(--font-d); font-size: 34px; font-weight: 800; color: var(--bialy); min-width: 40px; text-align: center; }
+.mw-vs { font-family: var(--font-d); font-size: 12px; font-weight: 800; color: var(--border2); padding-top: 20px; }
+.mw-result-badge { font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 999px; text-align: center; margin-top: 8px; }
+
+/* ── Lista zawodników ── */
+.mecz-scroll { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+.mecz-scroll::-webkit-scrollbar { display: none; }
+.player-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; }
+.pc-header { display: flex; align-items: center; gap: 12px; }
+.pc-num { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--bialy); flex-shrink: 0; }
+.pc-info { flex: 1; }
+.pc-name { font-size: 13px; font-weight: 800; color: var(--bialy); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pc-pos { font-size: 11px; color: var(--szary); margin-top: 1px; }
+.pc-stats { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+.pc-stat { flex: 1; }
+.pc-stat-lbl { font-size: 9px; font-weight: 700; color: var(--szary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.pc-stat-ctrl { display: flex; align-items: center; gap: 6px; }
+.pc-btn { width: 28px; height: 28px; border-radius: 8px; background: var(--tlo-karta2); border: 1px solid var(--border); color: var(--bialy); font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.pc-val { font-size: 18px; font-weight: 900; color: var(--warn); min-width: 20px; text-align: center; }
+
+.mecz-empty { padding: 40px 20px; text-align: center; color: var(--szary); font-size: 13px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+    <div class="top-bar">
+        <div class="ctx-switcher" onclick="toggleCtxOv()">
+            <div class="ctx-dot" id="ctx-dot"></div>
+            <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+            <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+        </div>
+    </div>
+    <div class="ctx-overlay" id="ctx-ov">
+        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
+        <div class="ctx-teams" id="ctx-teams"></div>
+    </div>
+    <div class="notif-overlay" id="notif-ov">
+        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
+    </div>
+
+    <div class="screen-body">
+        <!-- Selektor meczu -->
+        <div class="mecz-selector">
+            <div class="ms-label">Mecz</div>
+            <div class="ms-dropdown" id="ms-dropdown" onclick="openMatchList()">
+                <div>
+                    <div class="ms-dd-name" id="ms-name">Ładowanie...</div>
+                    <div class="ms-dd-sub" id="ms-sub"></div>
+                </div>
+                <span class="ms-dd-arrow">▾</span>
+            </div>
+        </div>
+
+        <!-- Status + asystent -->
+        <div class="mecz-status-bar" id="mecz-status-bar"></div>
+
+        <!-- Wynik -->
+        <div class="mecz-wynik" id="mecz-wynik" style="display:none">
+            <div class="mw-teams">
+                <div class="mw-team home">
+                    <div class="mw-team-name" id="mw-home-name">Twój zespół</div>
+                    <div class="mw-score-row">
+                        <button class="mw-score-btn" onclick="changeScore('home',-1)">−</button>
+                        <div class="mw-score-val" id="score-home">0</div>
+                        <button class="mw-score-btn" onclick="changeScore('home',1)">+</button>
+                    </div>
+                </div>
+                <div class="mw-vs">vs</div>
+                <div class="mw-team away">
+                    <div class="mw-team-name" id="mw-away-name">Przeciwnik</div>
+                    <div class="mw-score-row">
+                        <button class="mw-score-btn" onclick="changeScore('away',-1)">−</button>
+                        <div class="mw-score-val" id="score-away">0</div>
+                        <button class="mw-score-btn" onclick="changeScore('away',1)">+</button>
+                    </div>
+                </div>
+            </div>
+            <div id="mw-result-info"></div>
+        </div>
+
+        <!-- Lista zawodników -->
+        <div class="mecz-scroll" id="player-list">
+            <div class="mecz-empty">Wybierz mecz...</div>
+        </div>
+    </div>
+
+    <!-- Overlay — lista meczy -->
+    <div class="match-list-ov" id="match-list-ov">
+        <div class="match-list-close" onclick="closeMatchList()">✕</div>
+        <div class="match-list-title">Wybierz mecz</div>
+        <div id="match-list-body"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+        <a class="nav-item nav-mecz active" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+    </div>
+
+    <div class="login-overlay" id="login-ov">
+        <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
+        <button class="login-close" onclick="closeLogin()">✕</button>
+        <div class="login-body">
+            <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
+            <div class="auth-tabs"><button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button><button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button></div>
+            <div id="auth-login">
+                <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+                <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
+                <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
+                <div class="social-btns"><button class="social-btn"><span style="font-size:17px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size:17px">🍎</span> Apple</button></div>
+            </div>
+            <div id="auth-register" style="display:none">
+                <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size:18px"></div>
+                <div class="form-group"><label class="form-lbl">Imię i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
+                <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+                <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj się →</button>
+                <div class="kod-info"><div class="kod-info-txt">🔑 Kod dostępu otrzymasz od trenera lub opiekuna.<br>Jednorazowy · ważny 7 dni</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
+        <div class="menu-panel-items">
+
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-sep"></div>
+            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-sep"></div>
+        </div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
+    </div>
+</div>
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   MECZ — logika ekranu
+═══════════════════════════════════════════════════ */
+let allMatches = [];
+let todayMatches = [];
+let currentMatch = null;
+let currentRole = '';
+let currentUserId = '';
+let currentTeamId = '';
+let currentTeamName = '';
+let parentsCanAssist = true;
+let _matchUnsub = null;
+let _matchUnsubId = null;
+
+// Live-update dla meczu — nasłuchuje od otwarcia ekranu aż do FINISHED (łapie też start UPCOMING→LIVE),
+// z bezpiecznikiem do północy gdyby ktoś zapomniał oznaczyć mecz jako zakończony.
+function subscribeToMatchLive(matchId, matchStatus) {
+    const shouldListen = !!matchId && matchStatus !== 'FINISHED' && matchStatus !== 'DELETE';
+    if (!shouldListen) {
+        if (_matchUnsub) { _matchUnsub(); _matchUnsub = null; _matchUnsubId = null; }
+        return;
+    }
+    if (_matchUnsubId === matchId) return; // już nasłuchujemy ten sam mecz
+    if (_matchUnsub) { _matchUnsub(); _matchUnsub = null; }
+    _matchUnsubId = matchId;
+
+    let firstSnapshot = true;
+    _matchUnsub = db.collection('events').doc(matchId).onSnapshot(doc => {
+        if (firstSnapshot) { firstSnapshot = false; return; } // pokrywa się z danymi już wczytanymi wcześniej
+        if (!doc.exists) return;
+        if (!currentMatch || (currentMatch.eventId || currentMatch.id) !== matchId) return; // user zmienił mecz w międzyczasie
+        currentMatch = { id: doc.id, ...doc.data() };
+        renderMatch();
+    }, err => console.error('❌ onSnapshot mecz:', err));
+
+    // Bezpiecznik — nasłuch do północy, gdyby mecz nigdy nie został oznaczony jako zakończony
+    const now = new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+    setTimeout(() => {
+        if (_matchUnsubId === matchId && _matchUnsub) { _matchUnsub(); _matchUnsub = null; _matchUnsubId = null; }
+    }, midnight - now);
+}
+
+function getLocalDateStr(date) {
+    const d = date || new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* ── Inicjalizacja ── */
+async function initMecz() {
+    if (!requireAuth()) return;
+
+    currentUserId = getCurrentUserId();
+
+    const s = await initSession();
+    if (!s) return;
+    const { user, team, membership } = s;
+    currentRole = isDemoMode() ? getDemoRole() : getCurrentUserData().role;
+
+    currentTeamId = team.teamId || team.id;
+    currentTeamName = team.teamName || team.displayName || '';
+
+    // Pobierz ustawienia drużyny
+    try {
+        const teamDoc = await db.collection('teams').doc(currentTeamId).get();
+        if (teamDoc.exists) {
+            const ml = teamDoc.data().settings?.matchLive;
+            if (ml && ml.parentsCanAssist === false) parentsCanAssist = false;
+        }
+    } catch (e) { }
+
+    loadCtxOverlay(user, membership, team);
+    loadMenuPanel(user, membership, team);
+
+    // Pobierz wszystkie mecze drużyny z events
+    const allEv = await getTeamEvents(currentTeamId);
+    allMatches = allEv
+        .filter(e => e.type === 'MECZ')
+        .map(e => { if (!e.matchData) e.matchData = { matchStatus: 'UPCOMING' }; return e; })
+        .filter(e => isVisible(e)) // filtruj per rola — rodzic/kibic widzi tylko mecze swojego dziecka
+        .sort((a, b) => b.date.localeCompare(a.date) || (b.timeFrom || '').localeCompare(a.timeFrom || ''));
+
+    // Mecze na dziś — do selektora
+    const todayStr = getLocalDateStr();
+    todayMatches = allMatches.filter(m => m.date === todayStr);
+
+    // Wybierz mecz — z sessionStorage lub najbliższy z dziś
+    const activeId = sessionStorage.getItem('activeMatch');
+    if (activeId) {
+        currentMatch = allMatches.find(m => (m.eventId || m.id) === activeId) || null;
+        sessionStorage.removeItem('activeMatch');
+    }
+    if (!currentMatch) {
+        // Najbliższy z dziś (live > upcoming > finished)
+        currentMatch = todayMatches.find(m => m.matchData.matchStatus === 'LIVE')
+            || todayMatches.find(m => m.matchData.matchStatus === 'UPCOMING')
+            || todayMatches[0] || null;
+    }
+
+    if (currentMatch) {
+        renderMatch();
+    } else {
+        document.getElementById('ms-name').textContent = 'Brak meczy na dziś';
+        document.getElementById('ms-sub').textContent = 'Sprawdź kalendarz drużyny';
+        document.getElementById('player-list').innerHTML = '<div class="mecz-empty">Brak meczy w kalendarzu drużyny na dziś</div>';
+    }
+
+    console.log('✅ Mecz załadowany:', allMatches.length, 'meczy');
+}
+
+/* ── Selektor meczy ── */
+function openMatchList() {
+    const ov = document.getElementById('match-list-ov');
+    const body = document.getElementById('match-list-body');
+    body.innerHTML = '';
+
+    if (todayMatches.length === 0) {
+        body.innerHTML = '<div class="mecz-empty">Brak meczy na dziś</div>';
+        ov.classList.add('open');
+        return;
+    }
+
+    todayMatches.forEach(m => {
+        const md = m.matchData || {};
+        const isSelected = currentMatch && (m.eventId || m.id) === (currentMatch.eventId || currentMatch.id);
+        const statusBadge = md.matchStatus === 'LIVE'
+            ? '<span class="ms-dd-status ms-st-live">🔴 Na żywo</span>'
+            : md.matchStatus === 'FINISHED'
+            ? '<span class="ms-dd-status ms-st-finished">✅ Zakończony</span>'
+            : '<span class="ms-dd-status ms-st-upcoming">⏳ Oczekuje</span>';
+        const resultText = (md.matchStatus === 'FINISHED' && md.result) ? ` · ${md.result.our}:${md.result.opponent}` : '';
+        const opt = document.createElement('div');
+        opt.className = 'match-opt' + (isSelected ? ' selected' : '');
+        opt.innerHTML = `
+            <div class="match-opt-name">${m.title || md.opponent || 'Mecz'} ${statusBadge}</div>
+            <div class="match-opt-sub">${m.timeFrom || ''} · 📍 ${m.location?.venueName || ''}${resultText}</div>
+        `;
+        opt.onclick = () => {
+            currentMatch = m;
+            closeMatchList();
+            renderMatch();
+        };
+        body.appendChild(opt);
+    });
+
+    ov.classList.add('open');
+}
+
+function closeMatchList() {
+    document.getElementById('match-list-ov').classList.remove('open');
+}
+
+/* ── Renderowanie meczu ── */
+function renderMatch() {
+    if (!currentMatch) return;
+    const md = currentMatch.matchData || {};
+    const matchId = currentMatch.eventId || currentMatch.id;
+
+    subscribeToMatchLive(matchId, md.matchStatus);
+
+    // Selektor — nagłówek
+    document.getElementById('ms-name').textContent = currentMatch.title || `vs ${md.opponent || '?'}`;
+    document.getElementById('ms-sub').textContent = `${formatDateDisplay(currentMatch.date)} · ${currentMatch.timeFrom || ''} · ${currentMatch.location?.venueName || ''}`;
+
+    // Status bar
+    renderStatusBar(md, matchId);
+
+    // Wynik
+    renderScoreSection(md);
+
+    // Zawodnicy
+    renderPlayerList();
+}
+
+function renderStatusBar(md, matchId) {
+    const bar = document.getElementById('mecz-status-bar');
+    const isCoach = currentRole === 'TRENER_GLOWNY' || currentRole === 'TRENER_POMOCNICZY';
+    const isParent = currentRole === 'RODZIC';
+    const la = md.liveAssistant;
+    const isLiveAssistant = la && la.userId === currentUserId;
+    const canManage = isCoach || isLiveAssistant;
+
+    let html = '';
+
+    // Badge statusu
+    if (md.matchStatus === 'LIVE') {
+        html += '<span class="msb-badge msb-live">🔴 Na żywo</span>';
+    } else if (md.matchStatus === 'FINISHED') {
+        html += '<span class="msb-badge msb-finished">✅ Zakończony</span>';
+    } else {
+        html += '<span class="msb-badge msb-upcoming">⏳ Przed meczem</span>';
+    }
+
+    // Asystent info
+    if (la && la.userId) {
+        html += `<span class="msb-info">📋 <strong>${la.displayName || la.userId}</strong></span>`;
+    } else if (md.matchStatus !== 'FINISHED') {
+        html += '<span class="msb-info" style="color:var(--warn);">📋 Brak obsługi</span>';
+    }
+
+    // Przyciski
+    if (md.matchStatus === 'FINISHED') {
+        // Cofnij zakoñczenie - trener g³ówny lub asystent który przejà³ mecz
+        if (isCoach || isLiveAssistant) {
+            html += `<button class="msb-btn" style="margin-left:auto;border-color:rgba(251,191,36,0.4);color:var(--warn);background:rgba(251,191,36,0.08);" onclick="revertMatchFromScreen('${matchId}')">Cofnij zakoñczenie</button>`;
+        }
+    } else {
+        // Trener / asystent meczowy — zawsze może rozpocząć/zakończyć
+        if (canManage) {
+            if (md.matchStatus === 'LIVE') {
+                html += `<button class="msb-btn msb-btn-end" onclick="endMatchFromScreen('${matchId}')">⏹ Zakończ</button>`;
+            } else {
+                html += `<button class="msb-btn msb-btn-start" onclick="startMatchFromScreen('${matchId}')">▶ Rozpocznij</button>`;
+            }
+        }
+        // Trener może przejąć od rodzica
+        if (isCoach && la && la.userId && la.userId !== currentUserId) {
+            html += `<button class="msb-btn msb-btn-start" onclick="takeoverFromScreen('${matchId}')" style="margin-left:4px;">🔄 Przejmij</button>`;
+        }
+        // Wolny mecz — trener zawsze, rodzic jeśli parentsCanAssist
+        if (!la?.userId) {
+            if (isCoach) {
+                html += `<button class="msb-btn msb-btn-claim" onclick="claimFromScreen('${matchId}')">📋 Obsługuję mecz</button>`;
+            } else if (isParent && parentsCanAssist) {
+                html += `<button class="msb-btn msb-btn-claim" onclick="claimFromScreen('${matchId}')">📋 Obsługuję mecz</button>`;
+            }
+        }
+        // Rodzic może poprosić o przejęcie gdy ktoś inny obsługuje
+        if (isParent && parentsCanAssist && la?.userId && la.userId !== currentUserId) {
+            html += `<button class="msb-btn msb-btn-claim" onclick="requestTakeoverFromScreen('${matchId}')" style="margin-left:4px;">🔄 Poproś o przejęcie</button>`;
+        }
+    }
+
+    bar.innerHTML = html;
+}
+
+function renderScoreSection(md) {
+    const wynikEl = document.getElementById('mecz-wynik');
+    const resultInfo = document.getElementById('mw-result-info');
+    const isCoach = currentRole === 'TRENER_GLOWNY' || currentRole === 'TRENER_POMOCNICZY';
+    const isLiveAssistant = md.liveAssistant && md.liveAssistant.userId === currentUserId;
+    const canManage = isCoach || isLiveAssistant;
+
+    // Pokaż wynik dla LIVE lub FINISHED
+    if (md.matchStatus === 'LIVE' || md.matchStatus === 'FINISHED') {
+        wynikEl.style.display = '';
+
+        document.getElementById('mw-home-name').textContent = currentTeamName || 'Twój zespół';
+        document.getElementById('mw-away-name').textContent = md.opponent || 'Przeciwnik';
+
+        const our = md.result?.our ?? 0;
+        const opp = md.result?.opponent ?? 0;
+        document.getElementById('score-home').textContent = our;
+        document.getElementById('score-away').textContent = opp;
+
+        // Ukryj/pokaż przyciski zmiany wyniku
+        document.querySelectorAll('.mw-score-btn').forEach(btn => {
+            btn.style.display = (canManage && md.matchStatus === 'LIVE') ? '' : 'none';
+        });
+
+        // Badge wyniku dla FINISHED
+        if (md.matchStatus === 'FINISHED' && md.result?.outcome) {
+            const o = md.result.outcome;
+            const label = o === 'WIN' ? 'Wygrana' : o === 'LOSS' ? 'Przegrana' : 'Remis';
+            const cls = o === 'WIN' ? 'mc-result-win' : o === 'LOSS' ? 'mc-result-loss' : 'mc-result-draw';
+            resultInfo.innerHTML = `<div class="mw-result-badge ${cls}">${label}</div>`;
+        } else {
+            resultInfo.innerHTML = '';
+        }
+    } else {
+        wynikEl.style.display = 'none';
+    }
+}
+
+/* ── Zawodnicy ── */
+async function renderPlayerList() {
+    const container = document.getElementById('player-list');
+    if (!currentMatch) return;
+
+    container.innerHTML = '<div class="mecz-empty">Ładowanie zawodników...</div>';
+
+    const att = currentMatch.attendance || {};
+    const invited = att.invited || [];
+
+    const md = currentMatch.matchData || {};
+    const isCoach = currentRole === 'TRENER_GLOWNY' || currentRole === 'TRENER_POMOCNICZY';
+    const isLiveAssistant = md.liveAssistant && md.liveAssistant.userId === currentUserId;
+    const canManage = isCoach || isLiveAssistant;
+    const isLive = md.matchStatus === 'LIVE';
+
+    // Pobierz dane zawodników
+    const players = await getTeamPlayers(currentTeamId);
+    const playerMap = {};
+    players.forEach(p => { playerMap[p.playerId] = p; });
+
+    // Obsługa __TEAM__ — scala zawodników drużyny z dodatkowo zaproszonymi (np. z innych drużyn)
+    const invitedPlayerIds = invited.filter(id => id.includes('player_'));
+    let playerIds;
+    if (invited.includes('__TEAM__')) {
+        const teamPlayerIds = players.map(p => p.playerId);
+        playerIds = [...new Set([...teamPlayerIds, ...invitedPlayerIds])];
+    } else {
+        playerIds = invitedPlayerIds;
+    }
+
+    // Kibic widzi tylko swoich zawodników (może śledzić kilku)
+    if (currentRole === 'KIBIC' || currentRole === 'OBSERWATOR') {
+        const myPlayerIds = getCurrentUserData()?.childrenIds || [];
+        playerIds = myPlayerIds.length ? playerIds.filter(id => myPlayerIds.includes(id)) : [];
+    }
+
+    if (playerIds.length === 0) {
+        container.innerHTML = '<div class="mecz-empty">Brak powołanych zawodników</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    // Sortuj: gole malejąco, potem imię rosnąco
+    const sortedPlayers = playerIds
+        .map(pid => ({
+            pid,
+            player: playerMap[pid],
+            goals: (md.playerEvents || []).filter(e => e.type === 'GOAL' && e.playerId === pid).length
+        }))
+        .filter(x => x.player)
+        .sort((a, b) => b.goals - a.goals || (a.player.firstName || a.player.name || '').localeCompare(b.player.firstName || b.player.name || '', 'pl'));
+
+    sortedPlayers.forEach(({ pid, player: p, goals }) => {
+
+        const card = document.createElement('div');
+        card.className = 'player-card';
+
+        let statsHtml = '';
+        const showGoals = isLive || md.matchStatus === 'FINISHED' || goals > 0;
+        if (showGoals) {
+            if (canManage && isLive) {
+                statsHtml = `
+                    <div class="pc-stats">
+                        <div class="pc-stat">
+                            <div class="pc-stat-lbl">Gole</div>
+                            <div class="pc-stat-ctrl">
+                                <button class="pc-btn" onclick="removeGoal('${pid}')">−</button>
+                                <span id="goals-${pid}" class="pc-val">${goals}</span>
+                                <button class="pc-btn" onclick="addGoal('${pid}')">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statsHtml = `
+                    <div class="pc-stats">
+                        <div class="pc-stat">
+                            <div class="pc-stat-lbl">Gole</div>
+                            <div class="pc-stat-ctrl">
+                                <span class="pc-val">${goals}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Status obecności
+        const confirmed = (att.confirmed || []).includes(pid);
+        const declined = (att.declined || []).includes(pid);
+        let statusDot = '';
+        if (confirmed) statusDot = '<span style="color:#16A34A;font-size:10px;font-weight:900;">● Obecny</span>';
+        else if (declined) statusDot = '<span style="color:#DC2626;font-size:10px;font-weight:900;">● Nieobecny</span>';
+        else statusDot = '<span style="color:var(--szary);font-size:10px;font-weight:900;">● Brak odp.</span>';
+
+        card.innerHTML = `
+            <div class="pc-header">
+                <div class="pc-info">
+                    <div class="pc-name">${p.firstName || p.name || pid} ${statusDot}</div>
+                </div>
+            </div>
+            ${statsHtml}
+        `;
+        container.appendChild(card);
+    });
+}
+
+/* ── Akcje meczu ── */
+async function changeScore(side, delta) {
+    if (!currentMatch || !db) return;
+    const md = currentMatch.matchData || {};
+    if (md.matchStatus !== 'LIVE') return;
+
+    if (!md.result) md.result = { our: 0, opponent: 0, outcome: null };
+    if (side === 'home') {
+        md.result.our = Math.max(0, (md.result.our || 0) + delta);
+    } else {
+        md.result.opponent = Math.max(0, (md.result.opponent || 0) + delta);
+    }
+
+    document.getElementById('score-home').textContent = md.result.our;
+    document.getElementById('score-away').textContent = md.result.opponent;
+
+    const matchId = currentMatch.eventId || currentMatch.id;
+    try {
+        await db.collection('events').doc(matchId).update({
+            'matchData.result.our': md.result.our,
+            'matchData.result.opponent': md.result.opponent,
+            'matchData.result.updatedBy': currentUserId,
+            'matchData.result.updatedAt': new Date().toISOString()
+        });
+    } catch (e) { console.error('❌ Błąd zapisu wyniku:', e); }
+}
+
+async function addGoal(playerId) {
+    if (!currentMatch || !db) return;
+    const md = currentMatch.matchData;
+    if (md.matchStatus !== 'LIVE') return;
+
+    const event = { type: 'GOAL', playerId, minute: null, addedBy: currentUserId, addedAt: new Date().toISOString() };
+    if (!md.playerEvents) md.playerEvents = [];
+    md.playerEvents.push(event);
+
+    // Aktualizuj wynik
+    if (!md.result) md.result = { our: 0, opponent: 0 };
+    md.result.our = md.playerEvents.filter(e => e.type === 'GOAL').length;
+
+    const matchId = currentMatch.eventId || currentMatch.id;
+    try {
+        await db.collection('events').doc(matchId).update({
+            'matchData.playerEvents': md.playerEvents,
+            'matchData.result.our': md.result.our,
+            'matchData.result.updatedBy': currentUserId,
+            'matchData.result.updatedAt': new Date().toISOString()
+        });
+        document.getElementById('score-home').textContent = md.result.our;
+        const el = document.getElementById(`goals-${playerId}`);
+        if (el) el.textContent = md.playerEvents.filter(e => e.type === 'GOAL' && e.playerId === playerId).length;
+    } catch (e) { console.error('❌ Błąd:', e); }
+}
+
+async function removeGoal(playerId) {
+    if (!currentMatch || !db) return;
+    const md = currentMatch.matchData;
+    if (md.matchStatus !== 'LIVE') return;
+
+    const idx = (md.playerEvents || []).findLastIndex(e => e.type === 'GOAL' && e.playerId === playerId);
+    if (idx === -1) return;
+    md.playerEvents.splice(idx, 1);
+
+    if (!md.result) md.result = { our: 0, opponent: 0 };
+    md.result.our = md.playerEvents.filter(e => e.type === 'GOAL').length;
+
+    const matchId = currentMatch.eventId || currentMatch.id;
+    try {
+        await db.collection('events').doc(matchId).update({
+            'matchData.playerEvents': md.playerEvents,
+            'matchData.result.our': md.result.our,
+            'matchData.result.updatedBy': currentUserId,
+            'matchData.result.updatedAt': new Date().toISOString()
+        });
+        document.getElementById('score-home').textContent = md.result.our;
+        const el = document.getElementById(`goals-${playerId}`);
+        if (el) el.textContent = md.playerEvents.filter(e => e.type === 'GOAL' && e.playerId === playerId).length;
+    } catch (e) { console.error('❌ Błąd:', e); }
+}
+
+/* ── Status meczu ── */
+async function startMatchFromScreen(matchId) {
+    if (!db) return;
+    try {
+        await db.collection('events').doc(matchId).update({ 'matchData.matchStatus': 'LIVE' });
+        currentMatch.matchData.matchStatus = 'LIVE';
+        renderMatch();
+        console.log('✅ Mecz rozpoczęty');
+    } catch (e) { console.error('❌ Błąd:', e); }
+}
+
+async function endMatchFromScreen(matchId) {
+    const md = currentMatch.matchData || {};
+    const our = md.result?.our ?? 0;
+    const opp = md.result?.opponent ?? 0;
+    const outcome = our > opp ? 'WIN' : our < opp ? 'LOSS' : 'DRAW';
+
+    if (!await showConfirmSheet(`Zakończyć mecz z wynikiem ${our}:${opp}?`)) return;
+    if (!db) return;
+    try {
+        await db.collection('events').doc(matchId).update({
+            'matchData.matchStatus': 'FINISHED',
+            'matchData.endedAt': new Date().toISOString(),
+            'matchData.endedBy': currentUserId,
+            'matchData.result.our': our,
+            'matchData.result.opponent': opp,
+            'matchData.result.outcome': outcome,
+            'matchData.result.updatedBy': currentUserId,
+            'matchData.result.updatedAt': new Date().toISOString()
+        });
+        md.matchStatus = 'FINISHED';
+        md.result = { ...md.result, our, opponent: opp, outcome };
+        renderMatch();
+        console.log(`✅ Mecz zakończony: ${our}:${opp} (${outcome})`);
+    } catch (e) { console.error('❌ Błąd:', e); }
+}
+
+async function revertMatchFromScreen(matchId) {
+    if (!db) return;
+    if (!await showConfirmSheet('Cofnąć zakończenie meczu? Mecz wróci do statusu Na żywo i będzie można kontynuować wpisywanie wyników.')) return;
+    try {
+        await db.collection('events').doc(matchId).update({
+            'matchData.matchStatus': 'LIVE',
+            'matchData.endedAt': null,
+            'matchData.endedBy': null,
+            'matchData.revertedAt': new Date().toISOString(),
+            'matchData.revertedBy': currentUserId
+        });
+        const md = currentMatch.matchData;
+        md.matchStatus = 'LIVE';
+        md.endedAt = null;
+        renderMatch();
+        console.log('✅ Cofnięto zakończenie meczu');
+    } catch (e) { console.error('❌ Błąd:', e); alert('Błąd: ' + e.message); }
+}
+
+async function takeoverFromScreen(matchId) {
+    if (!db) return;
+    try {
+        const user = await getCurrentUser();
+        await db.collection('events').doc(matchId).update({
+            'matchData.liveAssistant': { userId: currentUserId, displayName: user?.displayName || currentUserId, claimedAt: new Date().toISOString() },
+            'matchData.takeoverRequest': null
+        });
+        currentMatch.matchData.liveAssistant = { userId: currentUserId, displayName: user?.displayName || currentUserId };
+        renderMatch();
+        console.log('✅ Przejęto obsługę meczu');
+    } catch (e) { console.error('❌ Błąd:', e); }
+}
+
+async function claimFromScreen(matchId) {
+    if (!db) return;
+    try {
+        const user = await getCurrentUser();
+        await db.collection('events').doc(matchId).update({
+            'matchData.liveAssistant': { userId: currentUserId, displayName: user?.displayName || currentUserId, claimedAt: new Date().toISOString() }
+        });
+        currentMatch.matchData.liveAssistant = { userId: currentUserId, displayName: user?.displayName || currentUserId };
+        renderMatch();
+        console.log('✅ Przejąłem obsługę meczu');
+    } catch (e) { console.error('❌ Błąd:', e); }
+}
+
+async function requestTakeoverFromScreen(matchId) {
+    if (!db) return;
+    try {
+        const doc = await db.collection('events').doc(matchId).get();
+        if (!doc.exists) return;
+        const md = doc.data().matchData || {};
+
+        // Sprawdź czy nie ma już oczekującej prośby
+        if (md.takeoverRequest && md.takeoverRequest.userId) {
+            alert('Inna prośba o przejęcie już oczekuje.');
+            return;
+        }
+
+        const user = await getCurrentUser();
+        await db.collection('events').doc(matchId).update({
+            'matchData.takeoverRequest': {
+                userId: currentUserId,
+                displayName: user?.displayName || currentUserId,
+                requestedAt: new Date().toISOString()
+            }
+        });
+
+        // Powiadomienie do aktualnego asystenta
+        if (md.liveAssistant && md.liveAssistant.userId) {
+            await createNotification({
+                userId: md.liveAssistant.userId,
+                teamId: doc.data().teamId,
+                type: 'MATCH_TAKEOVER_REQUEST',
+                title: `${user?.displayName || currentUserId} prosi o przejęcie meczu`,
+                body: `${doc.data().title || ''} · ${formatDateDisplay(doc.data().date)}`,
+                referenceId: matchId,
+                referenceType: 'event',
+                requiresAction: true,
+                actionType: 'TAKEOVER',
+                priority: 'HIGH'
+            });
+        }
+
+        alert('Prośba o przejęcie wysłana!');
+        renderMatch();
+        console.log('✅ Prośba o przejęcie wysłana');
+    } catch (e) { console.error('❌ Błąd:', e); }
+}
+
+/* ── Start ── */
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(user => {
+        if (_loaded) return;
+        if (user) {
+            _loaded = true;
+            if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
+            initMecz();
+        } else {
+            if (!isDemoMode()) window.location.href = 'login.html';
+        }
+    });
+});
+</script>
+</body>
+</html>

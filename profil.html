@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Mój profil</title>
+<link rel="stylesheet" href="_global.css?v=20260802d">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+.screen-body { padding: 0 !important; gap: 0 !important; }
+
+/* ── Hero sekcja ── */
+.pr-hero { background: #000; padding: 20px 16px 24px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.pr-av-wrap { position: relative; width: 80px; height: 80px; cursor: pointer; }
+.pr-av { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2.5px solid var(--border2); background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; }
+.pr-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pr-av-initials { font-family: var(--font-d); font-size: 28px; font-weight: 800; color: var(--bialy); }
+.pr-av-edit { position: absolute; bottom: 0; right: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--akcent); border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.pr-hero-name { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); text-align: center; }
+.pr-hero-role { font-size: 12px; color: var(--szary); font-weight: 600; }
+
+/* ── Zawartość pod hero ── */
+.pr-scroll { padding: 16px 16px 90px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Karty ── */
+.pr-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 0; overflow: hidden; }
+.pr-card-title { font-size: 10px; font-weight: 800; color: var(--szary); text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
+.pr-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; border-bottom: 1px solid var(--border); }
+.pr-row:last-child { border-bottom: none; }
+.pr-row-label { font-size: 12px; color: var(--szary); font-weight: 600; flex-shrink: 0; width: 90px; }
+.pr-row-value { font-size: 13px; color: var(--bialy); font-weight: 700; flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-row-input { flex: 1; background: none; border: none; outline: none; color: var(--bialy); font-size: 13px; font-weight: 700; text-align: right; font-family: inherit; }
+.pr-row-input::placeholder { color: var(--szary); }
+.pr-row-input:disabled { color: var(--szary); cursor: not-allowed; }
+.pr-row-btn { font-size: 11px; font-weight: 800; color: var(--akcent); cursor: pointer; margin-left: 10px; flex-shrink: 0; }
+.pr-title-btn { font-size: 11px; font-weight: 800; color: var(--akcent); background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; cursor: pointer; padding: 4px 10px; }
+.pr-title-btn:active { opacity: 0.7; }
+
+/* ── Subskrypcja chip ── */
+.sub-chip { font-size: 10px; font-weight: 800; border-radius: 999px; padding: 3px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sub-chip.active  { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+.sub-chip.trial   { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+.sub-chip.expired { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+.sub-chip.free    { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+
+/* ── Sub info wiersze ── */
+.sub-info-row { padding: 10px 14px 0; display: flex; flex-direction: column; gap: 4px; }
+.sub-info-line { font-size: 11px; color: var(--szary); font-weight: 600; }
+.sub-info-line span { color: var(--bialy); }
+
+/* ── Family slots pasek ── */
+.sub-slots { display: flex; align-items: center; gap: 10px; padding: 8px 14px 12px; }
+.sub-slots-bar { flex: 1; height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+.sub-slots-fill { height: 100%; background: var(--akcent); border-radius: 2px; transition: width 0.3s; }
+.sub-slots-txt { font-size: 11px; font-weight: 800; color: var(--szary-j); flex-shrink: 0; white-space: nowrap; }
+
+/* ── Zarejestrowany kibic ── */
+.pr-kibic-member { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--tlo-karta2); border-radius: 10px; }
+.pr-kibic-member-name { font-size: 12px; font-weight: 700; color: var(--bialy); }
+.pr-kibic-block-btn { font-size: 10px; font-weight: 800; color: var(--blad); background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+.pr-kibic-block-btn:active { background: rgba(239,68,68,0.15); }
+.pr-kibic-section-lbl { font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--szary); padding: 0 2px 6px; }
+
+
+/* ── PIN sheet ── */
+.pin-sheet-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: none; }
+.pin-sheet-overlay.open { display: block; }
+.pin-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: var(--tlo-karta); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 16px 16px 32px; z-index: 301; transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.32,0.72,0,1); }
+.pin-sheet.open { transform: translateY(0); }
+.pin-sheet-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 14px; }
+.pin-sheet-title { font-size: 14px; font-weight: 800; color: var(--bialy); margin-bottom: 16px; }
+.pin-field { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.pin-field:last-of-type { border-bottom: none; }
+.pin-field-label { font-size: 12px; color: var(--szary); font-weight: 600; }
+.pin-field-dots { display: flex; gap: 6px; }
+.pin-field-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border2); background: transparent; transition: background 0.1s; }
+.pin-field-dot.filled { background: var(--akcent); border-color: var(--akcent); }
+.pin-sheet-btn { width: 100%; margin-top: 16px; padding: 12px; background: var(--akcent); border: none; border-radius: 12px; color: #fff; font-size: 13px; font-weight: 900; cursor: pointer; }
+.pin-sheet-btn:disabled { background: var(--tlo-karta2); color: var(--szary); cursor: not-allowed; }
+.pin-sheet-msg { font-size: 11px; font-weight: 700; text-align: center; margin-top: 8px; min-height: 16px; }
+.pin-sheet-msg.ok  { color: #34d399; }
+.pin-sheet-msg.err { color: #ef4444; }
+/* Klawiatura w sheet */
+.pin-sheet-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.psk { aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--border); background: var(--tlo-karta2); color: var(--bialy); font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-tap-highlight-color: transparent; }
+.psk:active { opacity: 0.6; }
+.psk.empty { border: none; background: none; pointer-events: none; }
+.psk.back { font-size: 14px; color: var(--szary); }
+
+/* ── Wyloguj ── */
+.pr-logout-btn { width: 100%; padding: 14px; background: none; border: 1px solid rgba(239,68,68,0.25); border-radius: 16px; color: #ef4444; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.pr-logout-btn:active { background: rgba(239,68,68,0.06); }
+
+/* ── Dzieci — kody dostępu (jak w druzyna.html, bez zakładki Rodzic) ── */
+.pr-child-block { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.pr-child-block:last-child { border-bottom: none; }
+.pr-child-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.pr-child-name { font-size: 13px; font-weight: 800; color: var(--bialy); }
+.pr-kod-empty { font-size: 12px; color: var(--szary); }
+
+.dp-section-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
+.sort-btn { border-radius: var(--r-pill); padding: 5px 12px; font-size: 11px; font-weight: 800; background: var(--tlo-karta); border: 1px solid var(--border); color: var(--szary); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.sort-btn.active { background: var(--bialy); color: #000; border-color: var(--bialy); }
+.pow-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pow-filter-row label { font-size: 11px; font-weight: 700; color: var(--szary); cursor: pointer; user-select: none; }
+.pow-filter-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--akcent); }
+.kod-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.kod-item:last-child { margin-bottom: 0; }
+.kod-item.kod-aktywny { border-color: rgba(59,130,246,0.4); }
+.kod-item.kod-uzyty { border-color: rgba(74,222,128,0.3); }
+.kod-item.kod-wygasly { opacity: 0.5; }
+.kod-item.kod-nieaktywny { opacity: 0.5; }
+.kod-item-top { display: flex; align-items: center; justify-content: space-between; }
+.kod-val-big { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
+.kod-status-badge { font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 1px; }
+.kod-status-aktywny { background: rgba(59,130,246,0.15); color: #3B82F6; }
+.kod-status-uzyty { background: rgba(74,222,128,0.12); color: var(--sukces); }
+.kod-status-wygasly { background: var(--tlo-karta2); color: var(--szary); }
+.kod-status-nieaktywny { background: rgba(251,191,36,0.12); color: var(--warn); }
+.kod-meta { font-size: 11px; color: var(--szary); font-weight: 600; line-height: 1.6; }
+.kod-meta strong { color: var(--szary-j); }
+.kod-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+
+/* ── Kod zaproszenia ── */
+.pr-kod-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.pr-kod-input { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 22px; font-weight: 900; font-family: var(--font-d); letter-spacing: 6px; text-transform: uppercase; text-align: center; box-sizing: border-box; outline: none; }
+.pr-kod-input:focus { border-color: var(--akcent); }
+.pr-kod-input::placeholder { font-size: 13px; font-weight: 600; letter-spacing: 0; color: var(--szary); text-transform: none; font-family: inherit; }
+.pr-kod-submit { width: 100%; padding: 13px; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: var(--r-pill); color: var(--szary-j); font-size: 14px; font-weight: 800; cursor: pointer; }
+.pr-kod-submit:active { border-color: var(--bialy); color: var(--bialy); }
+.pr-kod-msg { font-size: 12px; font-weight: 700; display: none; text-align: center; }
+.pr-kod-msg.ok  { color: #34d399; display: block; }
+.pr-kod-msg.err { color: #ef4444; display: block; }
+
+/* ── Panel awatara (slide-up) ── */
+.av-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--tlo-karta); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 16px; z-index: 200; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); max-height: 75%; display: flex; flex-direction: column; gap: 12px; }
+.av-panel.open { transform: translateY(0); }
+.av-panel-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto -4px; }
+.av-panel-title { font-size: 13px; font-weight: 800; color: var(--bialy); text-align: center; }
+.av-gender-row { display: flex; gap: 8px; }
+.av-gender-btn { flex: 1; padding: 8px; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--szary); font-size: 12px; font-weight: 700; cursor: pointer; }
+.av-gender-btn.selected { background: rgba(59,130,246,0.15); border-color: var(--akcent); color: var(--akcent); }
+.av-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; overflow-y: auto; }
+.av-thumb { border-radius: 12px; overflow: hidden; border: 2px solid var(--border); cursor: pointer; aspect-ratio: 1; background: var(--tlo-karta2); }
+.av-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.av-thumb.selected { border-color: var(--akcent); }
+.av-regen-btn { padding: 9px; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--szary); font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
+.av-save-btn { padding: 11px; background: var(--akcent); border: none; border-radius: 10px; color: #fff; font-size: 13px; font-weight: 900; cursor: pointer; }
+.av-save-btn:active { opacity: 0.8; }
+.av-panel-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 199; display: none; }
+.av-panel-overlay.open { display: block; }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+
+    <div class="top-bar">
+        <div class="ctx-switcher" onclick="toggleCtxOv()">
+            <div class="ctx-dot" id="ctx-dot"></div>
+            <div class="ctx-text">
+                <span class="ctx-klub" id="ctx-klub"></span>
+                <span class="ctx-team" id="ctx-team"></span>
+            </div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+            <div class="menu-btn" id="menu-btn" onclick="toggleMenu()">
+                <div class="menu-btn-lines"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ctx-overlay" id="ctx-ov">
+        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ctx-klub-row" id="ctx-klub-row">
+            <div class="ctx-klub-dot" id="ctx-ov-dot"></div>
+            <span class="ctx-klub-name" id="ctx-ov-klub-name"></span>
+            <span class="ctx-klub-role" id="ctx-ov-klub-role"></span>
+        </div>
+        <div class="ctx-teams" id="ctx-teams"></div>
+    </div>
+    <div class="notif-overlay" id="notif-ov">
+        <div class="notif-hdr">
+            <span class="notif-tytul">Powiadomienia</span>
+            <span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span>
+        </div>
+    </div>
+
+    <div class="screen-body">
+
+        <!-- ── Hero ── -->
+        <div class="pr-hero">
+            <div class="pr-av-wrap" onclick="openAvPanel()">
+                <div class="pr-av" id="pr-av">
+                    <div class="pr-av-initials" id="pr-av-initials">?</div>
+                </div>
+                <div class="pr-av-edit">✏️</div>
+            </div>
+            <div class="pr-hero-name" id="pr-hero-name">Ładowanie...</div>
+            <div class="pr-hero-role" id="pr-hero-role"></div>
+        </div>
+
+        <!-- ── Scroll ── -->
+        <div class="pr-scroll" id="pr-scroll">
+
+            <!-- Dane konta -->
+            <div class="pr-card" id="pr-card-dane">
+                <div class="pr-card-title" style="display:flex;align-items:center;justify-content:space-between;">Dane konta<button class="pr-title-btn" onclick="saveName()">Zapisz</button></div>
+                <div class="pr-row">
+                    <span class="pr-row-label">Imię</span>
+                    <input class="pr-row-input" id="pr-input-fname" type="text" placeholder="np. Jan" autocomplete="off">
+                </div>
+                <div class="pr-row">
+                    <span class="pr-row-label">Nazwisko</span>
+                    <input class="pr-row-input" id="pr-input-lname" type="text" placeholder="np. Kowalski" autocomplete="off">
+                </div>
+                <div class="pr-row">
+                    <span class="pr-row-label">Email</span>
+                    <span class="pr-row-value" id="pr-email-val" style="color:var(--szary);">—</span>
+                </div>
+                <div class="pr-row">
+                    <span class="pr-row-label">Rola</span>
+                    <span class="pr-row-value" id="pr-role-val">—</span>
+                </div>
+            </div>
+
+            <!-- Subskrypcja -->
+            <div class="pr-card" id="pr-card-sub">
+                <div class="pr-card-title">Subskrypcja</div>
+                <div class="pr-row" style="border-bottom:none;">
+                    <span class="pr-row-label" id="pr-sub-date" style="color:var(--szary);font-size:12px;font-weight:600;">—</span>
+                    <span id="pr-sub-chip" class="sub-chip trial">Ładowanie</span>
+                </div>
+            </div>
+
+
+            <!-- PIN -->
+            <div class="pr-card" id="pr-card-pin">
+                <div class="pr-card-title" style="display:flex;align-items:center;justify-content:space-between;">PIN<button class="pr-title-btn" onclick="openPinSheet()">Zmień PIN</button></div>
+                <div class="pr-row" style="border-bottom:none;">
+                    <span class="pr-row-label" style="width:auto;">Blokada</span>
+                    <span class="pr-row-value" style="font-size:12px;color:var(--szary);">po 5 min nieaktywności</span>
+                </div>
+            </div>
+
+            <!-- Kibice — widoczne tylko dla RODZIC -->
+            <div class="pr-card" id="pr-card-kibice" style="display:none;">
+                <div class="pr-card-title">Dzieci — kody zaproszeń</div>
+                <div id="pr-kibice-body"><div style="padding:12px 14px;font-size:12px;color:var(--szary);">Ładowanie...</div></div>
+            </div>
+
+            <!-- Masz kod zaproszenia? — widoczne dla wszystkich -->
+            <div class="pr-card" id="pr-card-kod">
+                <div class="pr-card-title">Masz kod zaproszenia?</div>
+                <div class="pr-kod-body">
+                    <input class="pr-kod-input" id="pr-kod-input" type="text" maxlength="6" placeholder="np. ABC123" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); if(this.value.length===6) redeemInviteCode()">
+                    <div class="pr-kod-msg" id="pr-kod-msg"></div>
+                </div>
+            </div>
+
+            <!-- Wyloguj -->
+            <button class="pr-logout-btn" onclick="confirmLogout()">🚪 Wyloguj się</button>
+
+        </div><!-- /pr-scroll -->
+
+    </div><!-- /screen-body -->
+
+    <!-- ── Overlay + Panel awatara ── -->
+    <div class="av-panel-overlay" id="av-overlay" onclick="closeAvPanel()"></div>
+    <div class="av-panel" id="av-panel">
+        <div class="av-panel-handle"></div>
+        <div class="av-panel-title">Wybierz awatar</div>
+        <div class="av-gender-row">
+            <button class="av-gender-btn selected" id="av-btn-m" onclick="selectGender('mezczyzna', this)">♂ Mężczyzna</button>
+            <button class="av-gender-btn" id="av-btn-k" onclick="selectGender('kobieta', this)">♀ Kobieta</button>
+        </div>
+        <div class="av-grid" id="av-grid"></div>
+        <button type="button" class="av-regen-btn" onclick="regenAvatarGrid()">↺ Inne awatary</button>
+        <button type="button" class="av-save-btn" onclick="saveAvatar()">Zapisz awatar</button>
+    </div>
+
+    <!-- ── PIN sheet ── -->
+    <div class="pin-sheet-overlay" id="pin-sheet-overlay" onclick="closePinSheet()"></div>
+    <div class="pin-sheet" id="pin-sheet">
+        <div class="pin-sheet-handle"></div>
+        <div class="pin-sheet-title">Zmień PIN</div>
+        <!-- Pola z kropkami (aktywne pole podświetlone) -->
+        <div class="pin-field" id="psf-old">
+            <span class="pin-field-label">Aktualny PIN</span>
+            <div class="pin-field-dots" id="psd-old">
+                <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
+                <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
+            </div>
+        </div>
+        <div class="pin-field" id="psf-new">
+            <span class="pin-field-label">Nowy PIN</span>
+            <div class="pin-field-dots" id="psd-new">
+                <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
+                <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
+            </div>
+        </div>
+        <div class="pin-field" id="psf-conf">
+            <span class="pin-field-label">Potwierdź PIN</span>
+            <div class="pin-field-dots" id="psd-conf">
+                <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
+                <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
+            </div>
+        </div>
+        <div class="pin-sheet-keypad">
+            <div class="psk" onclick="psKey('1')">1</div><div class="psk" onclick="psKey('2')">2</div><div class="psk" onclick="psKey('3')">3</div>
+            <div class="psk" onclick="psKey('4')">4</div><div class="psk" onclick="psKey('5')">5</div><div class="psk" onclick="psKey('6')">6</div>
+            <div class="psk" onclick="psKey('7')">7</div><div class="psk" onclick="psKey('8')">8</div><div class="psk" onclick="psKey('9')">9</div>
+            <div class="psk empty"></div><div class="psk" onclick="psKey('0')">0</div><div class="psk back" onclick="psBack()">⌫</div>
+        </div>
+        <button class="pin-sheet-btn" id="pin-sheet-save" onclick="savePinSheet()" disabled>Zmień PIN</button>
+        <div class="pin-sheet-msg" id="pin-sheet-msg"></div>
+    </div>
+
+    <!-- ── Bottom nav ── -->
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+    </div>
+
+    <!-- ── Menu panel ── -->
+    <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-panel-top">
+            <div class="menu-panel-avatar" id="menu-avatar"></div>
+            <div class="menu-panel-name" id="menu-name"></div>
+            <div class="menu-panel-role" id="menu-role"></div>
+        </div>
+        <div class="menu-panel-items">
+            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+        </div>
+        <div class="menu-panel-bottom">
+            <div class="menu-logout" onclick="logout()">
+                <span class="menu-logout-icon">🚪</span>
+                <span class="menu-logout-txt">Wyloguj się</span>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260802d"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   PROFIL.HTML — Mój profil (wszystkie role)
+   v1.0 | 2026-03-27
+═══════════════════════════════════════════════════ */
+
+// ── Zmienne globalne ──
+let currentUserId  = '';
+let currentUserRole = '';
+let currentTeamId  = '';
+let currentClubId  = '';
+let currentUserDoc = null;   // pełny dokument users/{uid}
+let currentTrainerId = null; // jeśli rola TRENER — dla syncu awatara
+
+let selectedAvatarUrl = '';
+let selectedGender    = 'mezczyzna';
+
+// ── DiceBear — stałe (identyczne jak trenerzy.html / druzyna.html) ──
+const DICEBEAR_BASE  = 'https://api.dicebear.com/9.x';
+const HAIR_M = ['short01','short02','short03','short04','short05','short06','short07','short08','short09','short10','short11','short12','short13','short14','short15','short16','short17','short19','short20'];
+const HAIR_K = ['long01','long02','long03','long04','long05','long06','long07','long08','long09','long10','long11','long12','long13','long14','long15','long16','long17','long18','long19','long20'];
+const HAIR_COLORS = ['0e0e0e','6a4e35','562306','ac6511','cb6820','b9a05f','e5d7a3','afafaf'];
+const SKIN_COLORS = ['ecad80','d4956a','c68642','9e5622','763900','fde68a'];
+const BG_COLORS   = ['b6e3f4','c0aede','d1d4f9','ffd5dc','ffdfbf','d4f7c5'];
+
+function losuj(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+const ROLE_LABELS = {
+    'TRENER_GLOWNY':    'Trener Główny',
+    'TRENER_POMOCNICZY':'Trener Pomocniczy',
+    'TRENER_ASYSTENT':  'Trener Asystent',
+    'OWNER':            'Właściciel',
+    'RODZIC':           'Rodzic',
+    'ZAWODNIK':         'Zawodnik',
+    'KIBIC':            'Kibic'
+};
+
+/* ── Inicjalizacja ── */
+async function initProfil() {
+
+    currentUserId = getCurrentUserId();
+
+    const s = await initSession();
+    if (!s) return;
+    const { user, team, membership } = s;
+    currentUserDoc = user;
+
+    currentUserRole = isDemoMode() ? getDemoRole() : getCurrentUserData().role;
+    currentTeamId   = team?.teamId || team?.id || '';
+    currentClubId   = membership?.clubId || team?.clubId || '';
+
+    loadCtxOverlay(user, membership, team);
+    loadMenuPanel(user, membership, team);
+
+    // Trener — pobierz trainerId dla syncu awatara
+    if (currentUserRole.startsWith('TRENER') || currentUserRole === 'OWNER') {
+        if (user.trainerId) {
+            currentTrainerId = user.trainerId;
+        } else {
+            // Wyszukaj po userId w trainers
+            try {
+                const snap = await db.collection('trainers')
+                    .where('clubId', '==', currentClubId)
+                    .where('userId', '==', currentUserId)
+                    .limit(1).get();
+                if (!snap.empty) currentTrainerId = snap.docs[0].id;
+            } catch(e) { console.warn('Nie znaleziono trainerId:', e); }
+        }
+    }
+
+    renderProfile(user);
+    renderSubscription();
+
+    // Kibice — tylko dla RODZIC
+    const allMemberships = await getUserMemberships(currentUserId);
+    if (currentUserRole === 'RODZIC') {
+        await renderKibiceSection(allMemberships);
+    }
+}
+
+/* ── Render główny ── */
+function renderProfile(user) {
+    const name = user.displayName || '—';
+    const email = user.email || null;
+    const hasEmail = user.hasEmail !== false && !!email;
+    const avatarUrl = user.avatarUrl || null;
+    const gender = user.avatarGender || 'mezczyzna';
+
+    selectedGender = gender;
+    if (gender === 'kobieta') {
+        document.getElementById('av-btn-m').classList.remove('selected');
+        document.getElementById('av-btn-k').classList.add('selected');
+    }
+
+    // Hero
+    document.getElementById('pr-hero-name').textContent = name;
+    document.getElementById('pr-hero-role').textContent = ROLE_LABELS[currentUserRole] || currentUserRole;
+    renderAvatar(avatarUrl, name);
+
+    // Dane konta — osobne pola imię/nazwisko z fallback na split displayName
+    const fName = user.firstName || (name !== '—' ? name.split(' ')[0] : '');
+    const lName = user.lastName  || (name !== '—' ? name.split(' ').slice(1).join(' ') : '');
+    document.getElementById('pr-input-fname').value = fName;
+    document.getElementById('pr-input-lname').value = lName;
+    document.getElementById('pr-email-val').textContent = hasEmail ? email : 'Brak (konto bez emaila)';
+    document.getElementById('pr-role-val').textContent = ROLE_LABELS[currentUserRole] || currentUserRole;
+
+    // Awatar zapamiętany
+    if (avatarUrl) selectedAvatarUrl = avatarUrl;
+
+    // PIN — ukryj dla ról bez konta (TODO: zawodnik może nie mieć PIN)
+    // Na razie pokazujemy dla wszystkich (Firestore Auth MVP)
+}
+
+/* ── Awatar ── */
+function renderAvatar(url, name) {
+    const avEl = document.getElementById('pr-av');
+    if (url) {
+        avEl.innerHTML = `<img src="${url}" alt="Awatar">`;
+    } else {
+        const initials = (name || '?').split(' ').map(p => p[0]).slice(0,2).join('').toUpperCase();
+        avEl.innerHTML = `<div class="pr-av-initials">${initials}</div>`;
+    }
+}
+
+/* ── Panel awatara ── */
+function buildAvatarUrl(hair, hc, sc, bg) {
+    const seed = `${hair}_${hc}_${sc}_${bg}_${Math.random().toString(36).slice(2,6)}`;
+    const p = new URLSearchParams({ seed, hair, hairColor: hc, skinColor: sc, backgroundColor: bg, backgroundType: 'solid', radius: '50' });
+    return `${DICEBEAR_BASE}/adventurer/svg?${p}`;
+}
+
+function buildAvatarGrid() {
+    const grid = document.getElementById('av-grid');
+    if (!grid) return;
+    const hairs = selectedGender === 'mezczyzna' ? HAIR_M : HAIR_K;
+    const urls = [];
+    for (let i = 0; i < 8; i++) {
+        urls.push(buildAvatarUrl(losuj(hairs), losuj(HAIR_COLORS), losuj(SKIN_COLORS), losuj(BG_COLORS)));
+    }
+    grid.innerHTML = '';
+    urls.forEach(url => {
+        const div = document.createElement('div');
+        div.className = 'av-thumb' + (url === selectedAvatarUrl ? ' selected' : '');
+        div.dataset.url = url;
+        div.innerHTML = `<img src="${url}" loading="lazy">`;
+        div.onclick = () => {
+            selectedAvatarUrl = url;
+            document.querySelectorAll('.av-thumb').forEach(t => t.classList.remove('selected'));
+            div.classList.add('selected');
+        };
+        grid.appendChild(div);
+    });
+}
+
+function regenAvatarGrid() { buildAvatarGrid(); }
+
+function selectGender(gender, btn) {
+    selectedGender = gender;
+    document.querySelectorAll('.av-gender-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    buildAvatarGrid();
+}
+
+function openAvPanel() {
+    buildAvatarGrid();
+    document.getElementById('av-panel').classList.add('open');
+    document.getElementById('av-overlay').classList.add('open');
+}
+
+function closeAvPanel() {
+    document.getElementById('av-panel').classList.remove('open');
+    document.getElementById('av-overlay').classList.remove('open');
+}
+
+async function saveAvatar() {
+    if (!selectedAvatarUrl) { closeAvPanel(); return; }
+
+    try {
+        const updates = {
+            avatarUrl:    selectedAvatarUrl,
+            avatarGender: selectedGender,
+            updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Zapisz na users
+        await db.collection('users').doc(currentUserId).update(updates);
+
+        // Sync na trainers (jeśli trener)
+        if (currentTrainerId) {
+            await db.collection('trainers').doc(currentTrainerId).update({
+                'coachProfile.avatarUrl':    selectedAvatarUrl,
+                'coachProfile.avatarGender': selectedGender,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        // Odśwież hero
+        renderAvatar(selectedAvatarUrl, document.getElementById('pr-hero-name').textContent);
+        closeAvPanel();
+        showToast('Awatar zapisany ✓');
+    } catch(e) {
+        console.error('Błąd zapisu awatara:', e);
+        showToast('Błąd zapisu. Spróbuj ponownie.', true);
+    }
+}
+
+/* ── Zapis imienia i nazwiska ── */
+async function saveName() {
+    const firstName = document.getElementById('pr-input-fname').value.trim();
+    const lastName  = document.getElementById('pr-input-lname').value.trim();
+    if (!firstName && !lastName) return;
+    const displayName = (firstName + ' ' + lastName).trim();
+    const ts = firebase.firestore.FieldValue.serverTimestamp();
+
+    try {
+        const batch = db.batch();
+
+        // users
+        batch.update(db.collection('users').doc(currentUserId), { firstName, lastName, displayName, updatedAt: ts });
+
+        // trainers (jeśli trener/owner)
+        if (currentTrainerId) {
+            batch.update(db.collection('trainers').doc(currentTrainerId), { firstName, lastName, displayName, updatedAt: ts });
+        }
+
+        await batch.commit();
+        document.getElementById('pr-hero-name').textContent = displayName;
+        showToast('Dane zapisane ✓');
+    } catch(e) {
+        console.error('Błąd zapisu nazwy:', e);
+        showToast('Błąd zapisu.', true);
+        return;
+    }
+
+    // memberships
+    try {
+        const mbrSnap = await db.collection('memberships')
+            .where('userId', '==', currentUserId)
+            .where('status', '==', 'ACTIVE')
+            .get();
+        const updates = [];
+        mbrSnap.forEach(doc => {
+            updates.push(doc.ref.update({ displayName }));
+            if (currentUserRole === 'ZAWODNIK' && doc.data().playerId) {
+                updates.push(db.collection('players').doc(doc.data().playerId).update({
+                    name: displayName, firstname: firstName, lastname: lastName
+                }));
+            }
+        });
+        await Promise.all(updates);
+    } catch(e) {
+        console.error('[saveName] Błąd aktualizacji memberships:', e);
+    }
+}
+
+/* ── Subskrypcja ── */
+async function renderSubscription() {
+    const chip    = document.getElementById('pr-sub-chip');
+    const dateEl  = document.getElementById('pr-sub-date');
+
+    if (currentUserRole === 'ZAWODNIK') {
+        chip.textContent = 'Bezpłatny';
+        chip.className = 'sub-chip free';
+        dateEl.textContent = '';
+        return;
+    }
+
+    if (!currentClubId) {
+        chip.textContent = 'Brak klubu';
+        chip.className = 'sub-chip expired';
+        dateEl.textContent = '';
+        return;
+    }
+
+    let access;
+    try {
+        access = await getAccessStatus(currentUserId, currentClubId);
+    } catch(e) {
+        chip.textContent = 'Błąd';
+        chip.className = 'sub-chip expired';
+        dateEl.textContent = '';
+        return;
+    }
+
+    const STATUS_MAP = {
+        ACTIVE:  { txt: 'Aktywna',        cls: 'active' },
+        TRIAL:   { txt: 'Okres próbny',   cls: 'trial' },
+        GRACE:   { txt: 'Okres karencji', cls: 'trial' },
+        EXPIRED: { txt: 'Wygasła',        cls: 'expired' }
+    };
+    const s = STATUS_MAP[access.status] || { txt: access.status, cls: 'expired' };
+    chip.textContent = s.txt;
+    chip.className = `sub-chip ${s.cls}`;
+
+    const SOURCE_MAP = {
+        individual: 'Własna licencja',
+        trial: 'Okres próbny',
+        club_license: 'Licencja klubowa',
+        family_license: 'Pakiet rodzinny',
+        admin_personal: 'Własna licencja (admina)'
+    };
+    const fmtDate = d => d ? d.toISOString().slice(0, 10) : '';
+    const sourceLabel = SOURCE_MAP[access.source] || '';
+    dateEl.textContent = [sourceLabel, fmtDate(access.expiryDate)].filter(Boolean).join(' · ');
+
+    // Family slots bar
+    try {
+        const fs = await getFamilySlots(currentUserId, currentClubId);
+        if (fs) {
+            // Odejmujemy 1 — rodzic zajmuje 1 slot przy zakupie, pasek pokazuje tylko kibiców
+            const total = fs.slotsTotal - 1;
+            const used  = Math.max(0, fs.slotsUsed - 1);
+            const pct   = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+            const card  = document.getElementById('pr-card-sub');
+            card.insertAdjacentHTML('beforeend', `
+                <div class="sub-slots" id="sub-slots-sub">
+                    <div class="sub-slots-bar"><div class="sub-slots-fill" style="width:${pct}%"></div></div>
+                    <span class="sub-slots-txt">${used}/${total} kibiców</span>
+                </div>`);
+        }
+    } catch(e) {}
+}
+
+
+/* ── PIN sheet ── */
+const _ps = { old: '', new: '', conf: '', active: 'old' };
+
+function openPinSheet() {
+    _ps.old = ''; _ps.new = ''; _ps.conf = ''; _ps.active = 'old';
+    _psUpdateAll();
+    document.getElementById('pin-sheet-msg').textContent = '';
+    document.getElementById('pin-sheet-save').disabled = true;
+    document.getElementById('pin-sheet-overlay').classList.add('open');
+    document.getElementById('pin-sheet').classList.add('open');
+}
+
+function closePinSheet() {
+    document.getElementById('pin-sheet-overlay').classList.remove('open');
+    document.getElementById('pin-sheet').classList.remove('open');
+}
+
+function _psDots(id, val) {
+    const dots = document.getElementById(id).querySelectorAll('.pin-field-dot');
+    dots.forEach((d, i) => d.classList.toggle('filled', i < val.length));
+}
+
+function _psUpdateAll() {
+    _psDots('psd-old',  _ps.old);
+    _psDots('psd-new',  _ps.new);
+    _psDots('psd-conf', _ps.conf);
+    // Enable save when all 3 filled
+    document.getElementById('pin-sheet-save').disabled =
+        !(_ps.old.length === 4 && _ps.new.length === 4 && _ps.conf.length === 4);
+}
+
+function psKey(d) {
+    const cur = _ps[_ps.active];
+    if (cur.length >= 4) return;
+    _ps[_ps.active] += d;
+    // Auto-advance to next field
+    if (_ps[_ps.active].length === 4) {
+        if (_ps.active === 'old')  _ps.active = 'new';
+        else if (_ps.active === 'new') _ps.active = 'conf';
+    }
+    _psUpdateAll();
+}
+
+function psBack() {
+    if (_ps[_ps.active].length > 0) {
+        _ps[_ps.active] = _ps[_ps.active].slice(0, -1);
+    } else {
+        // Cofnij do poprzedniego pola
+        if (_ps.active === 'conf') _ps.active = 'new';
+        else if (_ps.active === 'new') _ps.active = 'old';
+        if (_ps[_ps.active].length > 0)
+            _ps[_ps.active] = _ps[_ps.active].slice(0, -1);
+    }
+    _psUpdateAll();
+}
+
+async function savePinSheet() {
+    const msgEl = document.getElementById('pin-sheet-msg');
+    msgEl.textContent = '';
+
+    if (_ps.new !== _ps.conf) {
+        msgEl.textContent = 'Nowy PIN i potwierdzenie nie są zgodne';
+        msgEl.className = 'pin-sheet-msg err';
+        _ps.new = ''; _ps.conf = ''; _ps.active = 'new'; _psUpdateAll();
+        return;
+    }
+
+    try {
+        // Weryfikuj stary PIN
+        const userDoc = await db.collection('users').doc(currentUserId).get();
+        const storedHash = userDoc.data()?.pinHash;
+        const oldHash = await sha256(_ps.old);
+        if (oldHash !== storedHash) {
+            msgEl.textContent = 'Aktualny PIN jest nieprawidłowy';
+            msgEl.className = 'pin-sheet-msg err';
+            _ps.old = ''; _ps.active = 'old'; _psUpdateAll();
+            return;
+        }
+        // Zapisz nowy hash
+        const newHash = await sha256(_ps.new);
+        await db.collection('users').doc(currentUserId).update({ pinHash: newHash });
+        msgEl.textContent = 'PIN zmieniony ✓';
+        msgEl.className = 'pin-sheet-msg ok';
+        setTimeout(closePinSheet, 1200);
+    } catch(e) {
+        console.error('Błąd zmiany PIN:', e);
+        msgEl.textContent = 'Błąd zapisu — spróbuj ponownie';
+        msgEl.className = 'pin-sheet-msg err';
+    }
+}
+
+/* ── Wyloguj ── */
+function confirmLogout() {
+    // confirm() natywny nie działa w WebView appki Android — bez tego przycisk nic nie robił
+    logout();
+}
+
+/* ── Kibice — sekcja dla RODZIC (kod per dziecko, zgodnie z wzorcem druzyna.html) ── */
+async function renderKibiceSection(allMemberships) {
+    const card = document.getElementById('pr-card-kibice');
+    const body = document.getElementById('pr-kibice-body');
+    card.style.display = '';
+
+    const dzieci = allMemberships.filter(m => m.role === 'RODZIC' && m.playerId);
+    if (dzieci.length === 0) {
+        body.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:var(--szary);">Brak przypisanych zawodników.</div>';
+        return;
+    }
+
+    // Nazwa + klub/drużyna per dziecko — każde dziecko dostaje własny blok generowania kodu
+    const dzieciInfo = [];
+    for (const mbr of dzieci) {
+        let nazwa = mbr.playerId;
+        try {
+            const pDoc = await db.collection('players').doc(mbr.playerId).get();
+            if (pDoc.exists) nazwa = pDoc.data().name || mbr.playerId;
+        } catch(e) {}
+        dzieciInfo.push({ playerId: mbr.playerId, clubId: mbr.clubId || '', teamId: mbr.teamId || '', nazwa });
+    }
+
+    // Pobierz slots (helper enkapsuluje pola uid/club_id)
+    let _fs = null;
+    try { _fs = await getFamilySlots(currentUserId, currentClubId); } catch(e) {}
+    // Odejmujemy 1 — rodzic zajmuje 1 slot, pasek pokazuje tylko kibiców
+    const slotsTotal    = _fs ? _fs.slotsTotal - 1 : 0;
+    const slotsUsed     = _fs ? Math.max(0, _fs.slotsUsed - 1) : 0;
+    const hasSlotsBar   = slotsTotal > 0;
+    const pct           = hasSlotsBar ? Math.min(100, Math.round((slotsUsed / slotsTotal) * 100)) : 0;
+
+    body.innerHTML = `
+        ${dzieciInfo.map(d => `
+        <div class="pr-child-block">
+            <div class="pr-child-header">
+                <span class="pr-child-name">⚽ ${d.nazwa}</span>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <div class="dp-section-label" style="margin-bottom:0;">Kody dostępu</div>
+                <div class="pow-filter-row" style="margin-bottom:0;">
+                    <input type="checkbox" id="kod-show-inactive-${d.playerId}" onchange="zaladujKodyP('${d.playerId}')">
+                    <label for="kod-show-inactive-${d.playerId}">Pokaż nieaktywne</label>
+                </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="kod-typ-row-${d.playerId}">
+                <button class="sort-btn active" data-typ="ZAWODNIK" onclick="wybierzTypKoduP('${d.playerId}',this,'ZAWODNIK')">⚽ Zawodnik</button>
+                <button class="sort-btn" data-typ="KIBIC" onclick="wybierzTypKoduP('${d.playerId}',this,'KIBIC')">👴 Kibic</button>
+            </div>
+            <div id="kod-typ-info-${d.playerId}" style="font-size:11px;color:var(--szary);margin-bottom:10px;line-height:1.5;">${KOD_OPISY_P.ZAWODNIK}</div>
+            <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size:12px;" onclick="generujKodP('${d.playerId}','${d.clubId}','${d.teamId}',this)">🔑 Wygeneruj nowy kod</button>
+            <div id="kod-content-${d.playerId}"><div class="pr-kod-empty">Ładowanie...</div></div>
+
+            <div class="pr-kibic-section-lbl" style="margin-top:12px;">Zarejestrowani kibice</div>
+            <div id="pr-kibice-registered-${d.playerId}"><div style="font-size:12px;color:var(--szary);">Ładowanie...</div></div>
+        </div>`).join('')}
+        ${hasSlotsBar ? `
+        <div class="sub-slots" id="sub-slots-kibic" style="padding:2px 14px 8px;">
+            <div class="sub-slots-bar"><div class="sub-slots-fill" style="width:${pct}%"></div></div>
+            <span class="sub-slots-txt">${slotsUsed}/${slotsTotal} kibiców</span>
+        </div>` : ''}
+    `;
+
+    await Promise.all([
+        ...dzieciInfo.map(d => zaladujKodyP(d.playerId)),
+        ...dzieciInfo.map(d => loadRegisteredKibice(document.getElementById(`pr-kibice-registered-${d.playerId}`), [d.playerId]))
+    ]);
+}
+
+/* ── Kody dostępu per dziecko — zakładki Zawodnik/Kibic, wzorzec zgodny z druzyna.html (bez zakładki Rodzic) ── */
+const stanKoduDzieci = {}; // playerId -> { typ: 'ZAWODNIK'|'KIBIC' }
+let _kodLoadSeqP = 0;
+
+const KOD_OPISY_P = {
+    ZAWODNIK: '⚽ Zawodnik otrzymuje własne konto do potwierdzania obecności i widoku swojej drużyny.',
+    KIBIC:    '👴 Kibic widzi wyniki i statystyki wskazanego zawodnika. Kod jednorazowy — babcia z dwójką wnuków potrzebuje 2 kodów.',
+};
+
+function wybierzTypKoduP(playerId, btn, typ) {
+    const row = document.getElementById(`kod-typ-row-${playerId}`);
+    if (row) row.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    stanKoduDzieci[playerId] = { ...(stanKoduDzieci[playerId] || {}), typ };
+    const info = document.getElementById(`kod-typ-info-${playerId}`);
+    if (info) info.textContent = KOD_OPISY_P[typ] || '';
+    zaladujKodyP(playerId);
+}
+
+function budujTrescKoduP(kod) {
+    return `Twój kod dostępu do Coachay: *${kod}*\n\nWejdź na https://coachay.com i kliknij "Mam kod".`;
+}
+
+function kopiujKodP(kod) {
+    navigator.clipboard?.writeText(budujTrescKoduP(kod)).then(() => showToast('Skopiowano!'));
+}
+
+function wyslijWhatsAppBtnP(kod) {
+    const msg = encodeURIComponent(budujTrescKoduP(kod));
+    return `<a href="https://wa.me/?text=${msg}" target="_blank" class="btn-ghost" style="font-size:10px;padding:4px 10px;color:#25D366;text-decoration:none;">💬 WhatsApp</a>`;
+}
+
+// Sheet z 3 opcjami (anuluj/dezaktywuj/zachowaj) — analogiczny do pokazModalKodu() w druzyna.html
+function pokazModalKoduP(liczba, typ) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+        const sheet = document.createElement('div');
+        sheet.style.cssText = 'background:var(--tlo-karta,#161616);border:1px solid var(--border,#272727);border-radius:20px 20px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-width:480px;box-shadow:0 -10px 40px rgba(0,0,0,0.5);';
+        const msgEl = document.createElement('div');
+        msgEl.style.cssText = 'color:var(--bialy,#fff);font-size:15px;font-weight:600;line-height:1.5;margin-bottom:20px;';
+        msgEl.textContent = `Dla tego zawodnika istnieje już ${liczba} aktywny kod (typ: ${typ}). Co chcesz zrobić?`;
+        const btns = document.createElement('div');
+        btns.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+
+        function mkBtn(label, primary, val) {
+            const b = document.createElement('button');
+            b.textContent = label;
+            b.style.cssText = `padding:14px;border-radius:12px;font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:inherit;background:${primary ? 'var(--akcent,#3B82F6)' : 'var(--tlo-karta2,#1E1E1E)'};color:${primary ? '#fff' : 'var(--szary-j,#AAAAAA)'};`;
+            b.onclick = () => { overlay.remove(); resolve(val); };
+            return b;
+        }
+
+        btns.appendChild(mkBtn('Dezaktywuj stary · wygeneruj nowy', true, 'dezaktywuj'));
+        btns.appendChild(mkBtn('Zachowaj stary · wygeneruj drugi', false, 'zachowaj'));
+        btns.appendChild(mkBtn('Anuluj', false, 'anuluj'));
+
+        sheet.appendChild(msgEl);
+        sheet.appendChild(btns);
+        overlay.appendChild(sheet);
+        document.body.appendChild(overlay);
+        overlay.onclick = (e) => { if (e.target === overlay) { overlay.remove(); resolve('anuluj'); } };
+    });
+}
+
+async function zaladujKodyP(playerId) {
+    const el = document.getElementById(`kod-content-${playerId}`);
+    if (!el) return;
+    const seq = ++_kodLoadSeqP;
+    const typ = (stanKoduDzieci[playerId] && stanKoduDzieci[playerId].typ) || 'ZAWODNIK';
+    const pokazNieaktywne = document.getElementById(`kod-show-inactive-${playerId}`)?.checked || false;
+    el.innerHTML = '<div class="pr-kod-empty">Ładowanie...</div>';
+
+    let kody = [];
+    try {
+        const snap = await db.collection('inviteCodes')
+            .where('playerId', '==', playerId)
+            .where('type', '==', typ)
+            .get();
+        kody = snap.docs.map(d => d.data()).sort((a, b) => {
+            if (!a.isUsed && b.isUsed) return -1;
+            if (a.isUsed && !b.isUsed) return 1;
+            const ta = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+            const tb = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+            return tb - ta;
+        });
+    } catch(e) {
+        if (seq === _kodLoadSeqP) el.innerHTML = '<div class="pr-kod-empty">Błąd ładowania.</div>';
+        return;
+    }
+    if (seq !== _kodLoadSeqP) return;
+
+    const now = new Date();
+    if (!pokazNieaktywne) {
+        kody = kody.filter(k => {
+            const exp = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
+            return !k.isUsed && exp >= now;
+        });
+    }
+
+    if (kody.length === 0) {
+        el.innerHTML = `<div class="pr-kod-empty">Brak ${pokazNieaktywne ? 'wygenerowanych' : 'aktywnych'} kodów.</div>`;
+        return;
+    }
+
+    el.innerHTML = '';
+    for (const k of kody) {
+        if (seq !== _kodLoadSeqP) return;
+        const expiresDate = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
+        const createdDate = k.createdAt?.toDate?.() || new Date(k.createdAt || 0);
+        const createdDateStr = `${createdDate.getFullYear()}-${String(createdDate.getMonth()+1).padStart(2,'0')}-${String(createdDate.getDate()).padStart(2,'0')}`;
+        const createdTimeStr = `${String(createdDate.getHours()).padStart(2,'0')}:${String(createdDate.getMinutes()).padStart(2,'0')}`;
+        const wygasly = !k.isUsed && expiresDate < now;
+        const dniDo = !k.isUsed && !wygasly ? Math.ceil((expiresDate - now) / 86400000) : null;
+
+        let rodziData = '';
+        if (k.isUsed && k.usedBy && k.usedBy !== 'DEZAKTYWOWANY_PRZEZ_RODZICA' && k.usedBy !== 'DEZAKTYWOWANY_PRZEZ_TRENERA') {
+            try {
+                const uDoc = await db.collection('users').doc(k.usedBy).get();
+                if (uDoc.exists) {
+                    rodziData = `<div class="kod-meta">👤 <strong>${uDoc.data().displayName || k.usedBy}</strong></div>`;
+                }
+            } catch(e) {}
+        }
+
+        const isDeactivated = k.isUsed && (k.usedBy === 'DEZAKTYWOWANY_PRZEZ_RODZICA' || k.usedBy === 'DEZAKTYWOWANY_PRZEZ_TRENERA');
+        const isNaprawdeUzyty = k.isUsed && !isDeactivated;
+        const statusClass = isDeactivated ? 'kod-nieaktywny' : isNaprawdeUzyty ? 'kod-uzyty' : wygasly ? 'kod-wygasly' : 'kod-aktywny';
+        const statusBadge = isDeactivated
+            ? '<span class="kod-status-badge kod-status-nieaktywny">🚫 Dezaktywowany</span>'
+            : isNaprawdeUzyty
+            ? '<span class="kod-status-badge kod-status-uzyty">✅ Użyty</span>'
+            : wygasly
+            ? '<span class="kod-status-badge kod-status-wygasly">⏰ Wygasły</span>'
+            : `<span class="kod-status-badge kod-status-aktywny">🔵 ${dniDo}d</span>`;
+
+        const div = document.createElement('div');
+        div.className = `kod-item ${statusClass}`;
+        div.innerHTML = `
+            <div class="kod-item-top">
+                <span class="kod-val-big">${k.code}</span>
+                ${statusBadge}
+            </div>
+            <div class="kod-meta">📅 Wygenerowany: <strong>${createdDateStr} ${createdTimeStr}</strong></div>
+            ${rodziData}
+            <div class="kod-actions">
+                ${!k.isUsed && !wygasly ? `<button class="btn-ghost" style="font-size:10px;padding:4px 10px;" onclick="kopiujKodP('${k.code}')">📋 Kopiuj</button>` : ''}
+                ${!k.isUsed && !wygasly ? wyslijWhatsAppBtnP(k.code) : ''}
+            </div>
+        `;
+        el.appendChild(div);
+    }
+}
+
+async function generujKodP(playerId, clubId, teamId, btnEl) {
+    const typ = (stanKoduDzieci[playerId] && stanKoduDzieci[playerId].typ) || 'ZAWODNIK';
+    btnEl.disabled = true;
+    const prevLabel = btnEl.textContent;
+    btnEl.textContent = '...';
+
+    // Limit slotów licencji rodzinnej — dotyczy tylko KIBIC (ZAWODNIK jest zawsze bezpłatny)
+    if (typ === 'KIBIC' && currentClubId) {
+        try {
+            const fs = await getFamilySlots(currentUserId, currentClubId);
+            if (fs && fs.slotsUsed >= fs.slotsTotal) {
+                showToast('Wszystkie sloty licencji są zajęte.', true);
+                btnEl.disabled = false;
+                btnEl.textContent = prevLabel;
+                return;
+            }
+        } catch(e) {}
+    }
+
+    try {
+        const snap = await db.collection('inviteCodes')
+            .where('playerId', '==', playerId)
+            .where('type', '==', typ)
+            .where('isUsed', '==', false)
+            .get();
+        const now0 = new Date();
+        const aktywne = snap.docs.filter(d => {
+            const exp = d.data().expiresAt?.toDate?.() || new Date(0);
+            return exp > now0;
+        });
+        if (aktywne.length > 0) {
+            const akcja = await pokazModalKoduP(aktywne.length, typ);
+            if (akcja === 'anuluj') {
+                btnEl.disabled = false;
+                btnEl.textContent = prevLabel;
+                return;
+            }
+            if (akcja === 'dezaktywuj') {
+                for (const d of aktywne) {
+                    await d.ref.update({ isUsed: true, usedAt: new Date().toISOString(), usedBy: 'DEZAKTYWOWANY_PRZEZ_RODZICA' });
+                }
+            }
+        }
+    } catch(e) {}
+
+    const znaki = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let kod = '';
+    for (let i = 0; i < 6; i++) kod += znaki[Math.floor(Math.random() * znaki.length)];
+
+    const now = new Date();
+    const expires = new Date(now.getTime() + 30 * 24 * 3600000);
+    const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
+    const rand = Math.floor(Math.random() * 9000000 + 1000000);
+
+    const codeDoc = {
+        codeId: `code_${dateStr}_${rand}`,
+        code: kod,
+        pin: '',
+        pinHash: '',
+        type: typ,
+        playerId: playerId,
+        teamId: teamId || currentTeamId || null,
+        clubId: clubId || currentClubId || null,
+        createdBy: currentUserId,
+        createdAt: firebase.firestore.Timestamp.now(),
+        expiresAt: firebase.firestore.Timestamp.fromDate(expires),
+        isUsed: false,
+        usedAt: null,
+        usedBy: null,
+        emailsSent: [],
+        transferTo: null,
+        observedPlayerId: null,
+        observerName: null,
+        isDemo: false,
+        demoSetId: ''
+    };
+
+    try {
+        await db.collection('inviteCodes').doc(codeDoc.codeId).set(codeDoc);
+        await zaladujKodyP(playerId);
+        try { await navigator.clipboard?.writeText(budujTrescKoduP(kod)); } catch(e) {}
+        showToast(`Kod ${kod} skopiowany do schowka`);
+    } catch(e) {
+        showToast('Błąd generowania kodu.', true);
+    }
+
+    btnEl.disabled = false;
+    btnEl.textContent = prevLabel;
+}
+
+async function loadRegisteredKibice(el, dzieciPlayerIds) {
+    if (!dzieciPlayerIds || dzieciPlayerIds.length === 0) {
+        el.innerHTML = '<div style="font-size:12px;color:var(--szary);">Brak.</div>';
+        return;
+    }
+    try {
+        const chunks = [];
+        for (let i = 0; i < dzieciPlayerIds.length; i += 10) chunks.push(dzieciPlayerIds.slice(i, i + 10));
+        let docs = [];
+        for (const chunk of chunks) {
+            const snap = await db.collection('memberships')
+                .where('role', '==', 'KIBIC')
+                .where('playerId', 'in', chunk)
+                .where('status', '==', 'ACTIVE')
+                .get();
+            docs = docs.concat(snap.docs);
+        }
+        if (docs.length === 0) {
+            el.innerHTML = '<div style="font-size:12px;color:var(--szary);">Brak zarejestrowanych kibiców.</div>';
+            return;
+        }
+        // Nazwa z users.displayName (aktualna), nie z membership.displayName (denormalizacja,
+        // bywa nieaktualna — ten sam bug co dziś znaleziony na przykładzie "Babcia"/"Maria Kowalska")
+        const userIds = [...new Set(docs.map(d => d.data().userId).filter(Boolean))];
+        const userMap = {};
+        await Promise.all(userIds.map(async uid => {
+            try {
+                const uDoc = await db.collection('users').doc(uid).get();
+                if (uDoc.exists) userMap[uid] = uDoc.data();
+            } catch (e) {}
+        }));
+
+        let html = '<div style="display:flex;flex-direction:column;gap:6px;">';
+        for (const d of docs) {
+            const data = d.data();
+            const name = (userMap[data.userId]?.displayName || data.displayName || data.userId || '—').replace(/'/g, '&#39;');
+            html += `<div class="pr-kibic-member">
+                <span class="pr-kibic-member-name">${name}</span>
+                <button class="pr-kibic-block-btn" onclick="blockKibic('${data.userId}','${d.id}','${name}',this)">Blokuj</button>
+            </div>`;
+        }
+        html += '</div>';
+        el.innerHTML = html;
+    } catch(e) {
+        el.innerHTML = '<div style="font-size:12px;color:var(--szary);">Błąd ładowania.</div>';
+    }
+}
+
+async function blockKibic(userId, membershipId, name, btn) {
+    if (!await showConfirmSheet(`Zablokować kibica "${name}"? Zwolni to slot licencji.`)) return;
+    btn.disabled = true;
+    try {
+        // Zablokuj WSZYSTKIE membership kibica w tym klubie (może mieć 2+ jeśli 2 dzieci)
+        const snap = await db.collection('memberships')
+            .where('userId', '==', userId)
+            .where('clubId', '==', currentClubId)
+            .where('role', '==', 'KIBIC')
+            .get();
+        const batch = db.batch();
+        snap.forEach(d => batch.update(d.ref, {
+            status:    'BLOCKED',
+            blockedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            blockedBy: currentUserId
+        }));
+        await batch.commit();
+
+        // Zwolnij 1 slot (kibic to 1 osoba, nie per membership)
+        await releaseFamilySlot(currentUserId, currentClubId);
+        showToast(`Kibic ${name} zablokowany ✓`);
+        await refreshSlotsBar();
+
+        const allMbr = await getUserMemberships(currentUserId);
+        const dzieci = allMbr.filter(m => m.role === 'RODZIC' && m.playerId);
+        await Promise.all(dzieci.map(m => {
+            const regEl = document.getElementById(`pr-kibice-registered-${m.playerId}`);
+            return regEl ? loadRegisteredKibice(regEl, [m.playerId]) : Promise.resolve();
+        }));
+    } catch(e) {
+        console.error('blockKibic:', e);
+        showToast('Błąd blokowania kibica.', true);
+        btn.disabled = false;
+    }
+}
+
+// releaseFamilySlot — deleguje do coachay-core.js (enkapsuluje uid/club_id)
+
+async function refreshSlotsBar() {
+    try {
+        const fs = await getFamilySlots(currentUserId, currentClubId);
+        if (!fs) return;
+        const total = fs.slotsTotal - 1;
+        const used  = Math.max(0, fs.slotsUsed - 1);
+        if (total <= 0) return;
+        const pct = Math.min(100, Math.round((used / total) * 100));
+        document.querySelectorAll('.sub-slots-fill').forEach(el => { el.style.width = pct + '%'; });
+        document.querySelectorAll('.sub-slots-txt').forEach(el => { el.textContent = `${used}/${total} kibiców`; });
+    } catch(e) {}
+}
+
+/* ── Wpisanie kodu zaproszenia (dla zalogowanego usera) ── */
+async function redeemInviteCode() {
+    const code = document.getElementById('pr-kod-input').value.trim().toUpperCase();
+    const msgEl = document.getElementById('pr-kod-msg');
+    msgEl.style.display = 'none';
+    msgEl.className = 'pr-kod-msg';
+
+    if (code.length < 5) {
+        msgEl.textContent = 'Wpisz pełny kod zaproszenia.';
+        msgEl.className = 'pr-kod-msg err';
+        msgEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const snap = await db.collection('inviteCodes')
+            .where('code', '==', code).where('isUsed', '==', false).limit(1).get();
+
+        if (snap.empty) {
+            msgEl.textContent = 'Nieprawidłowy lub wygasły kod.';
+            msgEl.className = 'pr-kod-msg err';
+            msgEl.style.display = 'block';
+            return;
+        }
+
+        const codeDoc  = snap.docs[0];
+        const codeData = codeDoc.data();
+
+        if (codeData.expiresAt && codeData.expiresAt.toDate() < new Date()) {
+            msgEl.textContent = 'Ten kod wygasł.';
+            msgEl.className = 'pr-kod-msg err';
+            msgEl.style.display = 'block';
+            return;
+        }
+
+        const userDoc = await db.collection('users').doc(currentUserId).get();
+        const displayName = userDoc.exists ? (userDoc.data().displayName || '') : '';
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
+
+        if (codeData.type === 'KIBIC' && codeData.playerId) {
+            // Kod przypisany do konkretnego dziecka — wzorzec zgodny z druzyna.html (2026-08-02)
+            let clubId = codeData.clubId || null;
+            let teamId = codeData.teamId || null;
+            if (!clubId || !teamId) {
+                try {
+                    const parentSnap = await db.collection('memberships')
+                        .where('playerId', '==', codeData.playerId)
+                        .where('role', '==', 'RODZIC')
+                        .limit(1).get();
+                    if (!parentSnap.empty) {
+                        clubId = clubId || parentSnap.docs[0].data().clubId || null;
+                        teamId = teamId || parentSnap.docs[0].data().teamId || null;
+                    }
+                } catch(e) {}
+            }
+
+            const mbrId = makeMbrId(codeData.type);
+            await db.collection('memberships').doc(mbrId).set({
+                membershipId: mbrId,
+                userId:       currentUserId,
+                clubId,
+                teamId,
+                playerId:     codeData.playerId,
+                role:         'KIBIC',
+                trainerRole:  null,
+                status:       'ACTIVE',
+                displayName,
+                createdAt:    firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await codeDoc.ref.update({ isUsed: true, usedBy: currentUserId, usedAt: now.toISOString() });
+            localStorage.setItem('selectedMembershipId', mbrId);
+            try { await db.collection('users').doc(currentUserId).update({ selectedMembershipId: mbrId }); } catch(e) {}
+        } else if (codeData.type === 'KIBIC' && codeData.createdBy) {
+            // Legacy: stare kody KIBIC bez playerId (sprzed przebudowy 2026-08-02) — obejmują wszystkie dzieci rodzica
+            const parentSnap = await db.collection('memberships')
+                .where('userId', '==', codeData.createdBy)
+                .where('role', '==', 'RODZIC')
+                .get();
+
+            const dzieci = parentSnap.docs.map(d => d.data()).filter(m => m.playerId);
+            if (dzieci.length === 0) {
+                msgEl.textContent = 'Brak zawodników powiązanych z tym kodem.';
+                msgEl.className = 'pr-kod-msg err';
+                msgEl.style.display = 'block';
+                return;
+            }
+
+            let lastMbrId = null;
+            for (const parentMbr of dzieci) {
+                const mbrId = makeMbrId(codeData.type);
+                await db.collection('memberships').doc(mbrId).set({
+                    membershipId: mbrId,
+                    userId:       currentUserId,
+                    clubId:       parentMbr.clubId || codeData.clubId || null,
+                    teamId:       parentMbr.teamId || codeData.teamId || null,
+                    playerId:     parentMbr.playerId,
+                    role:         'KIBIC',
+                    trainerRole:  null,
+                    status:       'ACTIVE',
+                    displayName,
+                    createdAt:    firebase.firestore.FieldValue.serverTimestamp()
+                });
+                lastMbrId = mbrId;
+            }
+            await codeDoc.ref.update({ isUsed: true, usedBy: currentUserId, usedAt: now.toISOString() });
+            if (lastMbrId) {
+                localStorage.setItem('selectedMembershipId', lastMbrId);
+                try { await db.collection('users').doc(currentUserId).update({ selectedMembershipId: lastMbrId }); } catch(e) {}
+            }
+        } else {
+            // Standardowe membership (1 kod = 1 membership)
+            const mbrId = makeMbrId(codeData.type);
+            await db.collection('memberships').doc(mbrId).set({
+                membershipId: mbrId,
+                userId: currentUserId,
+                clubId: codeData.clubId || null,
+                teamId: codeData.teamId || null,
+                playerId: codeData.playerId || null,
+                role: codeData.type,
+                trainerRole: codeData.type === 'TRENER' ? 'TRENER_POMOCNICZY' : null,
+                status: 'ACTIVE',
+                displayName,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await codeDoc.ref.update({ isUsed: true, usedBy: currentUserId, usedAt: now.toISOString() });
+            localStorage.setItem('selectedMembershipId', mbrId);
+            try { await db.collection('users').doc(currentUserId).update({ selectedMembershipId: mbrId }); } catch(e) {}
+        }
+
+        document.getElementById('pr-kod-input').value = '';
+        msgEl.textContent = 'Dodano! Odświeżam...';
+        msgEl.className = 'pr-kod-msg ok';
+        msgEl.style.display = 'block';
+        setTimeout(() => window.location.reload(), 1200);
+
+    } catch(e) {
+        console.error('❌ redeemInviteCode:', e);
+        msgEl.textContent = 'Błąd połączenia. Spróbuj ponownie.';
+        msgEl.className = 'pr-kod-msg err';
+        msgEl.style.display = 'block';
+    }
+}
+
+/* ── Toast helper ── */
+function showToast(msg, isError = false) {
+    const existing = document.getElementById('pr-toast');
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.id = 'pr-toast';
+    el.style.cssText = `position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:${isError ? '#ef4444' : '#34d399'};color:#000;font-size:12px;font-weight:800;padding:8px 18px;border-radius:999px;z-index:999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.3);`;
+    el.textContent = msg;
+    document.querySelector('.phone').appendChild(el);
+    setTimeout(() => el.remove(), 2800);
+}
+
+/* ── Start ── */
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase nie załadowany'); return; }
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(user => {
+        if (_loaded) return;
+        if (user) {
+            _loaded = true;
+            if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
+            initProfil();
+        } else {
+            if (!isDemoMode()) window.location.href = 'login.html';
+        }
+    });
+});
+</script>
+</body>
+</html>

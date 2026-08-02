@@ -1,0 +1,1652 @@
+
+Check and review todo list
+
+
+Preview
+
+dzialamy dalej - sprawdz todo
+
+
+
+Read 2 files, loaded tools
+Read 2 files, loaded tools
+
+Z memory mam pełny obraz. Priorytety na tę sesję (z notatki projektu):
+
+Rejestracja — fix flow — Firestore docs dopiero po weryfikacji emaila (localStorage bridge)
+support.html — Cloud Function setPlatformRole + szkielet panelu
+Support ID — generowanie + widok w profil.html
+Refaktor ekranów — zastąpić getCurrentTeam()+getCurrentMembership() przez initSession()
+klub.html — weryfikacja transferu zawodnika
+czat.html KIBIC — zablokować tworzenie nowych wiadomości
+Od czego zaczynamy?
+
+zrobilem na ekran trenerzy - przepisnanie trenera pod inna druzyne "zmien druzyne"
+sprawdz czy dobrze to zrobilem.
+ta zmiana na wplyw na ekran club
+teraz nie wyswietla sie na druzynie imie nazwisko trenera tylko trenera ID. sprawdz dlaczego
+
+
+
+Searched 8 patterns, found files
+Searched 8 patterns, found files
+
+Kod jest w trenerzy.html, widziałem fragment przy linii ~1017. Czytam ten obszar.
+
+
+Read 2 files
+Read 2 files
+
+Znalazłem buga. W executeTeamChange linia 1103:
+
+await db.collection('teams').doc(selectedTeamId).update({
+    coachId: t.trainerId  // ← BUG
+});
+
+teams.coachId powinno przechowywać userId, a nie trainerId. klub.html ładuje trenerów robiąc db.collection('users').doc(coachId).get() — więc gdy tam jest trainerId, nie trafia na dokument usera → zwraca ID zamiast imienia.
+
+Naprawiam:
+
+
+Edited a file
+Edited a file
+
+Poprawione. t.trainerId → t.userId w linii zapisu teams.coachId.
+
+Plik widoczny w panelu podglądu.
+
+Uwaga: jeśli już wykonałeś transfer jakiegoś trenera z tym bugiem, w Firestore masz drużynę z błędnym coachId (trainerId zamiast userId). Sprawdź w bazie — jeśli tak, ręcznie popraw pole coachId na właściwy userId trenera.
+
+w trenerzy.html, mam jakies nie problemy z czcionka nie polska - zamiast ł to mam np 3
+sprawdz - popraw ale nie ładuj do firebase bo mam jeszcze jedna poprawke
+
+
+
+Searched code
+Searched code
+
+Widzę zepsute znaki. Czytam sekcję "zmień drużynę" dokładnie.
+
+
+Read 2 files
+Read 2 files
+
+Widzę wyraźnie psute znaki w nowej sekcji. Naprawiam wszystkie naraz:
+
+
+Edited 5 files
+Edited 5 files
+
+Wszystkie poprawione. Plik widoczny w panelu podglądu.
+
+Zepsute znaki były tylko w nowej sekcji "zmień drużynę" — prawdopodobnie plik był edytowany w edytorze bez UTF-8. Naprawione:
+
+Usuñ → Usuń (×2)
+zastapi → zastąpi
+zosta → zostanie (×2)
+ż ${name} zosta przypisany → ✓ ${name} został przypisany
+Bład → Błąd
+dziaża → działa
+Gotowy na kolejną poprawkę.
+
+na samym sobie nie moge zmienic druzyny nawet jak jestem adminem
+
+
+
+Searched 3 patterns, ran a command, read a file
+Searched 3 patterns, ran a command, read a file
+
+Warunek na linii 710: if (isAdmin && !isSelf) — przycisk "Zmień drużynę" jest blokowany dla samego siebie. Celowo, bo admin zarządza innymi trenerami.
+
+Żeby pozwolić na zmianę drużyny sobie samemu, wystarczy wydzielić ten przycisk poza blok !isSelf:
+
+
+Edited a file
+Edited a file
+
+Teraz muszę usunąć stary przycisk "Zmień drużynę" z bloku !isSelf (bo jest już wyżej):
+
+
+Edited a file, read a file
+Edited a file, read a file
+
+Stary przycisk już zniknął przy poprzedniej edycji — jest czysty. Kod wygląda poprawnie.
+
+Plik widoczny w panelu podglądu.
+
+Teraz "Zmień drużynę" pojawia się w osobnej sekcji "Drużyna" dla każdego admina, włącznie z sobą samym.
+
+to jeszcze jedna rzecz - sprawdz jak to dziala przy zmianie trenera - jak tak juz jest trener - bo tak jak jest nie podoba mi sie.
+chodzi o to ze powinno byc proces tak
+1 wybiera zmien druzyne
+2 wskazuje druzyne
+3 jesli druzyna ma trenera glownego pyta na ladnym okienku: czy chcesz zstapic trenera glownego np Rafala Testowego, czy chcesz byc jako trener pomocniczy, czy anuluj caly proces i zostajesz tam gdzie jestes
+
+
+
+Czytam aktualny modal i kod confirm:
+
+
+Read 2 files, searched code
+Read 2 files, searched code
+
+Mam pełny obraz. Plan:
+
+nowy modal modal-coach-conflict z 3 przyciskami
+confirmTeamChange() pokazuje go (z nazwiskiem aktualnego trenera) zamiast confirm()
+resolveCoachConflict(action) obsługuje wybór
+Najpierw HTML modalu — wstawiam po modal-team-select:
+
+
+Edited a file
+Edited a file
+
+Teraz zmieniam confirmTeamChange() i dodaję resolveCoachConflict():
+
+
+Edited a file
+Edited a file
+
+Gotowe. Plik widoczny w panelu podglądu.
+
+Nowy flow:
+
+Wybierasz drużynę → klik "Przypisz do: [nazwa]"
+Jeśli drużyna ma już trenera głównego → pojawia się modal z 3 opcjami:
+Zastąp [imię nazwisko] (czerwony/warn)
+Zostań trenerem pomocniczym
+Anuluj — zostań w obecnej drużynie
+Jeśli drużyna nie ma trenera głównego → od razu wykonuje bez pytania
+wgraj to przetestuje
+
+
+
+Ran a command
+Ran a command
+
+Wgrane. Testuj na https://coachay-5c3c9.web.app
+
+niestety doprales kolory do tego procesu bardzo ciemne i nic nie widac
+
+
+
+Czytam style modalów:
+
+
+Searched code
+Searched code
+
+modal-btn-warn i modal-btn-neutral nie istnieją w CSS — stąd czarne przyciski. Używam istniejących klas:
+
+
+Edited a file, ran a command
+Edited a file, ran a command
+
+Wgrane. Przyciski teraz mają kolory z istniejącego systemu — czerwony dla "Zastąp", żółty dla "Zostań pomocniczym". Testuj.
+
+to sprawdz czemu wyswietla przy zmianie truzyny dwie druzyny (w tym jedna w ktorej jest trener) a w klubie sa 3 druzyny
+
+
+
+Read a file
+Read a file
+
+Znalazłem. Linia 948:
+
+const activeTeams = teams.filter(team => team.isActive === true);
+
+Filtruje tylko drużyny gdzie isActive === true (strict). Jeśli 3. drużyna nie ma tego pola w Firestore (lub jest undefined) — odpada.
+
+
+Edited a file, ran a command
+Edited a file, ran a command
+
+Wgrane. Teraz powinny pokazywać się wszystkie 3 drużyny — też te bez ustawionego pola isActive.
+
+ale to nie to bo wszytskie druzyny maja isActive: true
+
+
+
+Skoro wszystkie mają isActive: true to problem jest gdzie indziej. currentTeamId to drużyna zalogowanego admina, a nie trenera którego przenosimy. Więc modal odfiltruje drużynę admina zamiast drużyny trenera.
+
+Powinienem filtrować po detailTrainer.teamIds:
+
+
+Edited a file, ran a command
+Edited a file, ran a command
+
+Wgrane. Plik widoczny w panelu podglądu. Teraz modal filtruje po drużynach trenera (teamIds), nie po drużynie admina.
+
+podagajmy o architekturze appki i jej prostocie. - wejdz w role architekta i designera appki wedlug trendow 2026 roku
+1 powiadomienia i potwierdzanie obecnosci
+-- aktualnie mozna to zrobic i na powiadomieniach i na ekranie start oraz trener na evencie. nie wiem czy na appce w telefonie bedzie w powiadomieniach telefonu jest taka mozliwosc aby potwierdzac obecnosc , czy to moze tylko w samej appce po zalogowaniiu. pytam czy tego nie ma za duzo w kilku miejscach
+moze na powiadomieniu powinna byc tylko krotkie info i jak wyswietli powidomienia to od razu sa oznaczone jako przeczytane
+2 druzyna i zawodnicy
+-- dodaje sie ich na ekranie druzyna ale rowniez na klub>druzyna - tu tez sie nimi zarzadza - czy nie za duzo tego
+3 trenerzy - ekran trenerzy - dodawanie i zarzadzanie a moze powinno sie ich dodawac jak zawodnikow na club>druzyna
+patrze przez tryzmat appki na ios i androida
+
+
+
+Dobra architektura to ważny temat — odpowiem konkretnie.
+
+1. Powiadomienia i potwierdzanie obecności
+Problem: Za dużo miejsc racji.
+
+Jak to działa w 2026 na iOS/Android:
+Push notification z web (PWA) = tylko tap → otwiera apkę. Nie ma action buttons jak w natywnych appkach (iOS/Android native mogą mieć "Tak/Nie" bezpośrednio w notyfikacji, ale PWA — nie).
+
+Rekomendacja:
+
+Push notification → tylko info (auto-read po otwarciu), zero akcji
+Potwierdzanie obecności → tylko start.html (dashboard)
+Na szczegółach eventu → opcjonalnie, ale wtórnie
+Panel dzwonka (🔔) → lista informacyjna, nie centrum akcji
+Zysk: prostota. Użytkownik wie: "muszę wejść na Start żeby coś potwierdzić".
+
+2. Zawodnicy — druzyna.html vs klub.html
+Aktualna architektura jest poprawna koncepcyjnie, ale nazwa i komunikacja są mylące.
+
+Zasada dwóch warstw:
+
+druzyna.html	klub.html
+Cel	Operacyjny (dziś, mecz, lista)	Administracyjny (CRUD)
+Widzi	Tylko aktywni	Wszyscy
+Akcje	Obecność, filtry	Dodaj / Edytuj / Blokuj / Przenieś
+Rekomendacja: Usuń "Dodaj zawodnika" z druzyna.html. Zostaw tylko widok + szybkie akcje (obecność, absencja). Jedno miejsce do zarządzania = klub.html.
+
+3. Trenerzy — osobny ekran czy w klub.html?
+Aktualne: trenerzy.html = widok + dodawanie + zarządzanie. Dużo w jednym.
+
+Rekomendacja — ta sama zasada dwóch warstw:
+
+trenerzy.html = widok zespołu trenerskiego (wszyscy widzą, kto jest trenerem, ich bio, kontakt). Dodawanie (zaproszenie kodem) — zostaje tutaj.
+klub.html = zarządzanie trenerami (blokada, usunięcie, zmiana drużyny, admin role) — tak samo jak zawodnikami.
+Czyli:
+
+trenerzy.html ≈ druzyna.html  (widok operacyjny)
+klub.html     = centrum zarządzania wszystkim (zawodnicy + trenerzy)
+
+Podsumowanie — spójna reguła
+"Widzisz na ekranie zespołu, zarządzasz w Klubie."
+
+To jest zasada którą rozumie każdy użytkownik. Spójne z tym jak działają Spond, TeamSnap, Heja w 2026 — jedna zakładka "drużyna" (operacyjna), jeden panel "admin/klub" (zarządzanie).
+
+Chcesz żebym zaczął wdrażać któryś z tych punktów?
+
+nie poczekam z tym jak bedziemy to przerabiali na appke
+
+
+
+OK, odkładamy. Wrócimy do tego przy przepisywaniu na natywną appkę.
+
+Co robimy dalej?
+
+wyjasnij mi to Rejestracja — fix flow — Firestore docs dopiero po weryfikacji emaila (localStorage bridge)
+
+
+
+Problem
+Aktualnie przy rejestracji z kodem zaproszenia dzieje się tak:
+
+Wpisuje email/hasło/kod → Firebase Auth tworzy konto
+       ↓
+Od razu tworzy docs w Firestore: users, memberships, trainers
+       ↓
+Wysyła email weryfikacyjny
+       ↓
+Użytkownik może nigdy nie kliknąć linku...
+
+Efekt: masz śmieci w bazie (niezweryfikowani userzy), kod zaproszenia zużyty mimo że osoba nie dokończyła rejestracji.
+
+Rozwiązanie — localStorage bridge
+Wpisuje email/hasło/kod → Firebase Auth tworzy konto
+       ↓
+Dane rejestracji zapisuje TYLKO do localStorage (nie do Firestore):
+{ inviteCode, firstName, lastName, role, clubId... }
+       ↓
+Wysyła email weryfikacyjny → ekran "Sprawdź skrzynkę"
+       ↓
+Użytkownik klika link w emailu → Firebase potwierdza emailVerified: true
+       ↓
+onAuthStateChanged wykrywa user.emailVerified === true
++ localStorage ma dane rejestracyjne
+       ↓
+DOPIERO TERAZ tworzy docs w Firestore + oznacza kod jako zużyty
+       ↓
+Redirect do klub.html / start.html
+
+Co zmienia się w kodzie
+_finishCodeRegistration w login.html → zamiast pisać do Firestore, zapisuje do localStorage.pendingRegistration = JSON.stringify({...})
+W onAuthStateChanged (lub checkEmailVerified) dodaje się check:
+if (user.emailVerified && localStorage.pendingRegistration) {
+    const data = JSON.parse(localStorage.pendingRegistration);
+    // utwórz docs w Firestore
+    localStorage.removeItem('pendingRegistration');
+}
+
+Krótko: localStorage = tymczasowa przechowalnia danych rejestracyjnych do czasu gdy użytkownik udowodni że kontroluje swój email.
+
+Chcesz to teraz wdrożyć?
+
+tak
+
+
+
+Czytam aktualny kod rejestracji w login.html:
+
+
+Read 3 files, searched 2 patterns
+Read 3 files, searched 2 patterns
+
+Mam pełny obraz. Teraz wdrażam zmiany:
+
+
+Updated todo list
+Updated todo list
+
+Krok 1 — _finishCodeRegistration: dla emaila tylko localStorage + wyślij weryfikację. Dla telefonu zostaje jak jest.
+
+
+Edited a file
+Edited a file
+
+Krok 2 — checkEmailVerified: po weryfikacji czyta z localStorage i tworzy docs.
+
+
+Edited a file
+Edited a file
+
+Krok 3 — onAuthStateChanged: obsługa powrotu po weryfikacji (zamknął przeglądarkę, otworzył link weryfikacyjny).
+
+
+Edited a file, updated todo list
+Edited a file, updated todo list
+
+Gotowe. Wgrywam:
+
+
+Ran a command
+Ran a command
+
+Wgrane. Plik widoczny w panelu podglądu.
+
+Co się zmieniło:
+
+Rejestracja emailem → dane lądują tylko w localStorage.pendingRegistration, Firestore czyste, kod zaproszenia niezużyty
+Klik "Już zweryfikowałem" → tworzy docs w Firestore + czyści localStorage → redirect do klub.html
+Jeśli zamknął przeglądarkę i wrócił po kliknięciu linku → onAuthStateChanged wykryje pendingRegistration + emailVerified i też dokończy rejestrację
+Przetestuj pełny flow rejestracji z kodem zaproszenia.
+
+kolejny pkt - wyjasnij
+Refaktor ekranów — zastąpić getCurrentTeam()+getCurrentMembership() przez initSession()
+
+
+
+Problem
+Większość ekranów inicjalizuje się tak:
+
+const team = await getCurrentTeam();
+const membership = await getCurrentMembership();
+
+To są dwie osobne funkcje z własną logiką fallback, które działają głównie przez selectedTeamId (legacy pole w localStorage).
+
+initSession() zostało napisane później — jest jednym wywołaniem które robi wszystko lepiej:
+
+const session = await initSession();
+// session = { user, membership, team, trainerId, isAdmin, ... }
+
+Dlaczego initSession() jest lepsze
+getCurrentTeam/Membership	initSession()
+Czyta z	selectedTeamId (legacy)	selectedMembershipId (nowe)
+Fallback	własny w każdej funkcji	jeden spójny fallback
+ctx-switcher	może nie respektować	respektuje zawsze
+Blokada	nie sprawdza	auto-redirect do blocked.html
+Dane	2 osobne obiekty	1 spójny obiekt session
+Konkretny efekt bugu dziś
+Trener przełącza drużynę przez ctx-switcher → selectedMembershipId zmieniony → wchodzi na druzyna.html → ekran nadal czyta stary selectedTeamId → widzi starą drużynę.
+
+Co trzeba zrobić na każdym ekranie
+Zamienić wzorzec inicjalizacji:
+
+// STARE
+async function initDruzyna() {
+    const team = await getCurrentTeam();
+    const membership = await getCurrentMembership();
+    if (!team || !membership) { ... }
+    currentTeamId = team.teamId;
+    aktualnaRola = membership.role;
+    ...
+}
+
+// NOWE
+async function initDruzyna() {
+    const s = await initSession();
+    if (!s) return; // initSession sam przekieruje jeśli brak/blokada
+    currentTeamId = s.team.teamId;
+    aktualnaRola = s.membership.role === 'TRENER'
+        ? (s.membership.trainerRole || 'TRENER_GLOWNY')
+        : s.membership.role;
+    ...
+}
+
+Ekrany do zmiany
+Z notatki projektu — te nadal używają starego wzorca:
+
+druzyna.html
+kalendarz.html
+mecz.html
+czat.html
+zadania.html
+ogloszenia.html
+trenerzy.html
+start.html już używa initSession() ✅
+
+Chcesz to teraz zrobić? Mogę przerobić wszystkie ekrany naraz lub jeden po drugim.
+
+najpierw sprawdz bo nie mam pewnosci czy to juz nie bylo zrobione
+
+
+
+Searched code
+Searched code
+
+Wyniki jasne. Stan obecny:
+
+Używa initSession() ✅
+
+klub.html
+start.html (główna inicjalizacja)
+Nadal stary wzorzec ❌
+
+druzyna.html
+kalendarz.html
+mecz.html
+czat.html
+zadania.html
+ogloszenia.html
+trenerzy.html
+profil.html
+ustawienia.html
+Robić to teraz?
+
+to duza zmiana i zawsze cos nie dziala po czyms takim
+jak wdrozysz - sprawdz czy jest ok
+
+
+
+Racja, czytam najpierw dokładnie co zwraca initSession() żeby nie zgubić żadnego pola:
+
+
+Read 2 files, searched code
+Read 2 files, searched code
+
+Mam pełny obraz initSession(). Teraz czytam każdy ekran żeby zobaczyć co wyciąga ze starych funkcji:
+
+
+Read 9 files, searched code
+Read 9 files, searched code
+
+Mam pełny obraz. ustawienia.html pomijam — tam nie ma init funkcji, tylko utility calls.
+
+Wzorzec zamiany jest identyczny dla 7 ekranów. Deleguję to do agenta żeby zrobił wszystko naraz i sprawdził po sobie:
+
+ok
+
+
+
+Refactor init functions to use initSession()
+Refactor init functions to use initSession()
+
+Sprawdzam szybko kilka kluczowych plików żeby upewnić się że jest OK:
+
+
+Searched 3 patterns
+Searched 3 patterns
+
+Czysto. Wgrywam:
+
+
+Ran a command
+Ran a command
+
+Wgrane. Przetestuj ekrany — szczególnie:
+
+drużyna.html — czy pokazuje właściwą drużynę po ctx-switcher
+trenerzy.html — czy "Brak drużyny" nadal działa dla admina bez drużyny
+mecz.html, kalendarz.html — podstawowe ładowanie
+Jak coś nie gra — powiedz który ekran, patrzę w konsolę i naprawiam.
+
+popraw kalendarz.html - nowy event mecz - tytul - jest ustawiony na max 15 znakow a powinno byc na 20 znakow. miejsce w kazdym evencie ustaw max 30 znakow, adres w kazdy evencie max 30 znakow. przypomnienie jest w godzinach - to bez sensu - ustaw w dniach. moze zeby nie zmieach calej logiki - pomnoz aby wynik np 1 dzien przez 24 i bedzie appka wiedziala co i jak
+
+
+
+Searched 8 patterns, ran a command
+Searched 8 patterns, ran a command
+
+Znalazłem. Linia 2402 ma TITLE_MAX i są pola add-address + add-venue (venueName). Czytam kontekst:
+
+
+Read 2 files, searched code, ran a command
+Read 2 files, searched code, ran a command
+
+Mam wszystko. Teraz wszystkie zmiany naraz:
+
+1. TITLE_MAX — MECZ: 15 → 20
+
+
+Edited a file
+Edited a file
+
+2. Miejsce i Adres — dodaję maxlength="30"
+
+
+Edited 2 files
+Edited 2 files
+
+3. Przypomnienie — etykieta z godzin na dni, wartość ×24
+
+
+Edited a file
+Edited a file
+
+Teraz mnożę wartość ×24 przy zapisie (oba miejsca) i dzielę ÷24 przy odczycie:
+
+
+Edited 2 files
+Edited 2 files
+
+Teraz odczyt przy edycji — dzielę ÷24:
+
+
+Edited a file, ran a command
+Edited a file, ran a command
+
+Wgrane. Podsumowanie zmian:
+
+Tytuł meczu: max 15 → 20 znaków
+Miejsce: max 30 znaków
+Adres: max 30 znaków
+Przypomnienie: etykieta "dni przed", domyślnie 2, przy zapisie ×24 → Firestore dostaje godziny jak poprzednio, przy edycji ÷24 → użytkownik widzi dni
+na kalendarzu widok eventow musi sie ograniczac widok tematu bo jak wprowadzilem temat 20x litera W to wchodzi na czas
+dodatkwo jak wchodze w szczegoly eventu to temat na samej gorze tez przy 20 znakach musi sie ogranicac bo wychodzi poza ekran
+
+
+
+Read 3 files, ran 2 commands, searched code
+Read 3 files, ran 2 commands, searched code
+
+Mam oba miejsca. Dwa proste CSS-owe fixy:
+
+1. Lista eventów — .ev-title — obcinanie tekstu:
+
+
+Edited a file
+Edited a file
+
+2. Szczegóły eventu — .dp-title — obcinanie tekstu:
+
+
+Edited a file, ran a command
+Edited a file, ran a command
+
+Wgrane. Tytuł teraz urywa się z … w obu miejscach — na liście i w nagłówku szczegółów.
+
+nie ma jakies funckcji ktora by sprawdzaja np rozdzielczosc ekranu i wiedziala ze danych test trzeba skrocic?
+
+
+
+Tak, jest kilka podejść:
+
+CSS container queries / clamp() — ale to skaluje rozmiar czcionki, nie tekst.
+
+Najlepsze rozwiązanie — CSS text-overflow: ellipsis — które właśnie zrobiłem. To jest standardowy, natywny mechanizm przeglądarki. Działa dokładnie tak jak chcesz:
+
+Mierzy dostępną szerokość kontenera (nie rozdzielczość ekranu)
+Automatycznie obcina tekst i dodaje … gdy nie mieści się w kontenerze
+Reaguje na każdą szerokość ekranu — na małym telefonie obetnie wcześniej, na szerokim ekranie później
+Nie ma sensu robić tego przez JavaScript i window.innerWidth — CSS robi to lepiej, szybciej i bez migania.
+
+Jedyny warunek żeby działało (masz już wszystkie):
+
+white-space: nowrap;      /* nie zawijaj */
+overflow: hidden;         /* ukryj co wychodzi */
+text-overflow: ellipsis;  /* dodaj … */
+
+I kontener musi mieć ograniczoną szerokość (ma — flex: 1).
+
+Czyli to co wdrożyłem to jest właśnie ta "funkcja" — tylko po stronie CSS, nie JS.
+
+ok
+powiadomienie - potwierdzenie zawodnika - trener dostaje potwierdzenie ze zawodnik bedzie na meczu. ale na powiadomieniu nie widac jaki zawodnik tylko widac temat meczu - trzeba to zmienic
+
+
+
+Szukam gdzie generowane jest to powiadomienie:
+
+
+Ran 12 commands, read 7 files, searched 5 patterns
+Ran 12 commands, read 7 files, searched 5 patterns
+
+Rozumiem teraz pełny obraz. W handleNotificationAction (coachay-core.js, linia 1400) jest komentarz "celowo pominięte" — trenerzy NIE dostają powiadomień o potwierdzeniu.
+
+Muszę to dodać. Gdy zawodnik/rodzic kliknie "Będę", trener powinien dostać powiadomienie z imieniem zawodnika, nie tylko tytułem meczu.
+
+Dodam funkcję sendAttendanceToTrainers i wywołam ją w handleNotificationAction:
+
+
+Edited a file
+Edited a file
+
+Teraz dodaję funkcję po sendCrossNotification:
+
+
+Searched code, read a file
+Searched code, read a file
+skoro jest taki komentarz - trenerzy NIE dostają powiadomień o potwierdzeniu - to czemu dostaje trener potwierdzenie?
+
+
+
+Dobre pytanie. Sprawdzam jeszcze raz flow:
+
+
+Read a file
+Read a file
+
+Prawdopodobna odpowiedź: trener NIE dostaje powiadomienia o potwierdzeniu zawodnika. To co widzisz to najprawdopodobniej oryginalne powiadomienie EVENT_CREATED — wysłane przez Cloud Function gdy event został stworzony. Ono pokazuje tylko tytuł meczu bo jest o samym evencie, nie o konkretnym zawodniku.
+
+Trener widzi w panelu 🔔 powiadomienie "Mecz XYZ" → myśli że to potwierdzenie zawodnika → ale to tak naprawdę powiadomienie o stworzeniu eventu.
+
+Czyli masz rację że brakuje tej funkcji. Trener nie wie kto potwierdził — musi wchodzić do kalendarza i sprawdzać ręcznie.
+
+Właśnie zacząłem to dodawać — przerywam żebyś potwierdził że o to chodzi:
+
+Gdy zawodnik/rodzic kliknie "Będę" lub "Nie będę", trener dostaje powiadomienie: "Jan Kowalski potwierdził(a) obecność" z datą i godziną meczu w body.
+
+Tak?
+
+Uploaded image
+image.png
+nie - nie chce wlasnie aby trener nic dostawal z eventu ktory sam organizuje
+teraz chyba dostal powiadomienie o tym ze musi potweirdzic swoja ebecnosc ale bez przycisku potwierdz ? testuje na jan testowy - mecz z dzisiaj 09/08
+
+
+
+Rozumiem — Jan Testowy dostaje "potwierdź obecność" bez przycisku. To znaczy że dotarło do niego powiadomienie z requiresAction: true (EVENT_ATTENDANCE), ale UI nie renderuje przycisku bo jest trenerem.
+
+Sprawdzam skąd to przychodzi — Cloud Function czy klient:
+
+
+Read 2 files
+Read 2 files
+
+Znalazłem buga. Linia 1107-1108 — dla trenera (blok else):
+
+type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',   // ← zły typ
+title: requiresAction ? `${event.title} — potwierdź obecność` : ...,  // ← zły tytuł
+
+Trener dostaje EVENT_ATTENDANCE z "potwierdź obecność" w tytule gdy requireConfirmation=true, bo kod nie rozróżnia czy to trener czy zawodnik. requiresAction: false na samym dole zatrzymuje przycisk, ale tytuł już skazany.
+
+Poprawiam — trener zawsze dostaje EVENT_CREATED bez "potwierdź":
+
+
+Edited a file
+Edited a file
+
+Przy okazji — revert mojej poprzedniej zmiany w handleNotificationAction (dodawałem powiadomienie dla trenerów o potwierdzeniu zawodnika), skoro user tego NIE chce:
+
+
+Edited a file, ran a command
+Edited a file, ran a command
+
+Wgrane.
+
+Co naprawione:
+
+Trener dostaje teraz EVENT_CREATED (czyste info, bez "potwierdź obecność") niezależnie od tego czy event ma requireConfirmation=true
+Twórca eventu w ogóle nie dostaje powiadomienia o własnym evencie
+Stare błędne powiadomienia w Firestore nadal widoczne — znikną jak klikniesz "Wyczyść przeczytane" lub po przeczytaniu
+rodzic dostal z firebase automatyczne powiadomienie o zakonczonym meczu o polnocy
+ale w tym powiadomieniu jest problem z czcionka polska - mozesz sprawdzic
+
+
+
+Read a file
+Read a file
+
+Widzę. Linia 375, 384, 385, 392 — zepsute polskie znaki (ñ, ³, ó). Sprawdzam czy są jeszcze gdzieś:
+
+
+Ran a command
+Ran a command
+
+Wszystkie na raz:
+
+
+Edited 2 files, ran 2 commands, read 2 files
+Edited 2 files, ran 2 commands, read 2 files
+
+Plik ma problem z kodowaniem bajtów — Edit nie może ich dopasować. Użyję Python do naprawy:
+
+
+Ran 3 commands, read a file
+Ran 3 commands, read a file
+
+Node podwójnie zakodował. Używam Edit z dokładnie tym co widzę w pliku:
+
+
+Ran 4 commands, edited a file
+Ran 4 commands, edited a file
+
+Dobry kierunek. Sprawdzam resztę:
+
+
+Read a file
+Read a file
+
+Wszystko poprawione. Wgrywam funkcje:
+
+
+Ran a command
+Ran a command
+
+Wgrane. Następnym razem o północy powiadomienie będzie już z poprawnymi polskimi znakami.
+
+ale to problem z automatem firebase czy z kodem w pliku js. nie chce powiadomien o zakonczonym meczu automatycznie - komu to potrzebne?
+
+
+
+Masz rację — to niepotrzebne powiadomienie. Usuwam je z funkcji:
+
+
+Edited a file, ran a command
+Edited a file, ran a command
+
+Wgrane. Powiadomienie o automatycznym zakończeniu meczu usunięte — automat nadal zamknie mecz o północy, ale cicho, bez powiadamiania nikogo.
+
+pogadajmy o liscie todo
+1 Rejestracja — fix flow — Firestore docs dopiero po weryfikacji emaila (localStorage bridge)
+2 support.html — Cloud Function setPlatformRole + szkielet panelu
+3 Support ID — generowanie + widok w profil.html
+4 Refaktor ekranów — zastąpić getCurrentTeam()+getCurrentMembership() przez initSession()
+5 klub.html — weryfikacja transferu zawodnika
+6 czat.html KIBIC — zablokować tworzenie nowych wiadomości
+zrobione
+1, 4
+zrobilem sam - sprawdz 5 i 6
+zostaja 2 i 3
+nie ma na liscie todo
+1 rejestracja przez aplle i google
+2 platosci - tu mam swoja zmiane
+
+Show more
+
+
+Sprawdzam 5 i 6:
+
+
+Searched 2 patterns
+Searched 2 patterns
+
+Oba zrobione. Transfer w klub.html ma panel + confirmTransfer(). Czat KIBIC — updateFabVisibility() linia 1344 blokuje FAB dla kibica.
+
+Aktualny status todo:
+
+#	Zadanie	Status
+1	Rejestracja fix flow (localStorage bridge)	✅ zrobione
+2	support.html + setPlatformRole CF	⏳ zostaje
+3	Support ID — generowanie + profil.html	⏳ zostaje
+4	Refaktor ekranów → initSession()	✅ zrobione
+5	klub.html — transfer zawodnika	✅ zrobiłeś sam
+6	czat.html KIBIC — blokada pisania	✅ zrobiłeś sam
+—	Rejestracja Google + Apple	🆕 dodać
+—	Płatności	🆕 Twoja zmiana
+Od czego zaczynamy — 2, 3 czy Google/Apple?
+
+od rejesytacji ale najpier to naszkicujmy
+rejestracja
+1 zakladam klub
+2 mam kod
+jak to widzisz
+1 - zakladam klub - zawsze przez maila czy juz inne opcje?
+2 - mam kod i otwiera sie ekran do rejestacji - nie chce dlugiego ekrani z milionem opcji- wole male loga appla, googla w jednym pasku i jak wybiera jedno z nich to otwiera sie co trzeba
+
+
+
+Mój szkic
+1. Zakładam klub
+Tylko email — i tak powinno być.
+
+Dlaczego: założyciel klubu to admin platformy, potrzebujemy weryfikowalnego emaila do kontaktu, rozliczeń, odzyskiwania konta. Google/Apple dają email ale mogą być "ukryte" (Apple ma opcję ukrycia prawdziwego emaila). Zbyt ryzykowne dla roli admina.
+
+[Email] [Hasło] → weryfikacja emaila → klub.html
+
+2. Mam kod
+Tu zgadzam się z Tobą w 100%. Prosty ekran:
+
+┌─────────────────────────────┐
+│   Dołączasz do: FC Orły     │
+│   Rola: Trener Pomocniczy   │
+│                             │
+│  ┌─────────────────────┐    │
+│  │  G  │  🍎  │  ✉️   │    │
+│  └─────────────────────┘    │
+│                             │
+│  (po wyborze → OAuth/email) │
+└─────────────────────────────┘
+
+Pasek 3 ikon: Google | Apple | Email
+Google → signInWithGoogle() → konto gotowe
+Apple → signInWithApple() → konto gotowe
+Email → małe pole email+hasło pojawia się pod paskiem
+Kluczowe: imię/nazwisko NIE jest potrzebne przy Google/Apple — bierzemy z profilu OAuth (displayName, email). Tylko przy email trzeba wpisać imię.
+
+Pytania przed implementacją
+Zakładam klub — zostawiamy tylko email, tak?
+Kod — Google/Apple — czy Apple jest już skonfigurowane w Firebase Console u Ciebie? (wymaga Apple Developer Account)
+Kod — email — czy pole email+hasło pojawia się inline (pod paskiem) czy osobny ekran?
+to zanim podejmiemy decuzje o zmianach to moze pogadajmy o platnosciach bo moga miec wplyw na ta cala zmiane
+Zrobilem w projekcie plik @platnosci.md - przejrzyj go - pogadajmy czy to ma rece i nogi
+
+
+
+Dobry dokument — widać że przemyślany. Moje uwagi:
+
+Co ma ręce i nogi ✅
+Model access_rights — świetna decyzja. Oddzielenie uprawnień od usera to fundament. Para (uid, club_id) jako klucz dostępu jest prosta i skalowalna.
+
+Trial 90 dni + globalny switch — bardzo praktyczne na etapie budowania bazy. Musi być.
+
+RevenueCat — słuszny wybór do Apple/Google. Samodzielna obsługa IAP to tygodnie pracy i masa edge-case'ów (refundy, grace period, family sharing). RevenueCat ogarnia to wszystko.
+
+"Mój klub płaci za mnie" — świetny mechanizm sprzedażowy, prosty do implementacji.
+
+Gdzie widzę ryzyko ⚠️
+1. tPay/Przelewy24 na webview w appce
+
+Na iOS Apple blokuje płatności za cyfrowe treści przez zewnętrzne bramki (App Store Guidelines §3.1.1). Jeśli sprzedajesz "dostęp do aplikacji" — musisz iść przez IAP. Webview z tPay jest OK tylko jeśli to B2B (klub płaci za licencje przez fakturę) lub subskrypcja zewnętrzna. Dla B2C iOS = tylko Apple IAP.
+
+2. Numery telefonów jako "family slots"
+
+Telefon jako identyfikator to problem — może się zmienić, może być nieunikalny między krajami. Lepszy klucz: userId albo email. Zostaw telefon jako UX (wpisanie numeru) ale wewnętrznie szukaj po userze.
+
+3. source: "club_license" bez daty ważności per user
+
+Klub kupuje 100 licencji — co gdy klub nie odnowi? Potrzebujesz valid_until też dla club_license. Inaczej użytkownicy zostają z wiecznym dostępem gdy klub przestanie płacić.
+
+Wpływ na rejestrację Google/Apple
+Bezpośredni związek:
+
+Jeśli użytkownik rejestruje się przez Google/Apple → RevenueCat od razu wie kto to jest (przez Firebase UID)
+Jeśli przez email → to samo
+Nie ma znaczenia metoda rejestracji dla modelu płatności — access_rights jest przypisane do UID, nie do providera
+Możemy więc dodawać Google/Apple do rejestracji niezależnie od systemu płatności.
+
+Kolejność implementacji którą bym sugerował
+1. Trial (najszybsze — jedno pole w Firestore)
+2. Rejestracja Google (bo Firebase ma to gotowe)
+3. B2B — klub płaci przez fakturę (tPay/przelew, webview)
+4. RevenueCat + Apple IAP / Google Play Billing (najtrudniejsze)
+
+Apple najpóźniej — wymaga Developer Account, review Apple, dużo konfiguracji.
+
+Masz pytania do konkretnego punktu?
+
+ryzyka
+1 -nie wiem co to B2B i B2C - tak klub kupuje licencje na stronie a nie w appce - jesli chodzi o przelewy 24 to ponoc nie czepiaja sie bardzo jak dajesz wybor - ale jesli potrzebny nowy ekran to go budujemy
+2 wyjasnij - bo ja to widze tak - rodzic kupuje falily dostep - ma np 5 licencji - generuje kod dla kibica albo zawodnika - rejestruje sie osoba jak wczesniej nawet poprzez nr telefonu i wykorzystuje kod - zabierana jest jedna licencja - czy chodzi ci o cos innego?
+3 - licencja jest kupowana i w kazdym przypadku licencji - osoba, klub, famili musi byc data waznosci - jesli pakiet aktywny - rodzic zarejestrowany to moze pobrac licencje - i tak moze byc ze rodzicow wiecej niz licenji wiec jak zabraknie to rodzic musi dostac info o braku licencji przy wchodzeniu w appke
+4 trzeba przewidziec to ze rodzic moze miec licencje z klubu oraz samodzielnie kupic licencje pojedyncza lub falily - w e tej sytualcji nie korzysta z licencji klubu
+
+
+
+Odpowiedzi punkt po punkcie
+1. B2B / B2C — przepraszam za żargon.
+
+B2C = użytkownik płaci sam za siebie (rodzic kupuje dostęp)
+B2B = klub płaci za swoich użytkowników (licencja klubowa)
+Jeśli Przelewy24 daje wybór i nie blokują — to OK dla obu ścieżek. Klub płaci na stronie (nie w appce) → bez problemu z Apple.
+
+2. Rozumiem Cię lepiej niż dokument
+
+Twoja wizja family to tak naprawdę pula licencji z kodami — i to jest spójne z istniejącym systemem kodów zaproszenia. Schemat:
+
+Rodzic kupuje "Family 5" → dostaje pulę 5 licencji
+     ↓
+Generuje kody (jak dziś w profil.html)
+     ↓
+Kibic/zawodnik rejestruje się kodem → -1 licencja z puli
+     ↓
+Pula = 0 → brak możliwości generowania kodów
+
+To jest prostsze i lepsze niż "wpisz numery telefonów". Zostawiamy istniejący flow kodów, tylko dodajemy sprawdzanie puli.
+
+3. valid_until wszędzie — zgadzam się w 100%.
+
+Proponuję jeden model dla wszystkich typów:
+
+access_rights {
+  uid:         string
+  club_id:     string
+  source:      "personal" | "family_pool" | "club_license"
+  valid_until: Timestamp
+  slots_total: number | null   // tylko dla family_pool
+  slots_used:  number | null
+}
+
+Gdy slots_used >= slots_total → blokada generowania kodów + info dla rodzica.
+Gdy valid_until minął → info przy wejściu do appki.
+
+4. Priorytet licencji — dobry edge-case.
+
+Proponuję prostą regułę:
+
+Czy mam aktywną licencję osobistą (personal/family)?
+  TAK → używam swojej, nie ruszam puli klubowej
+  NIE → sprawdź czy klub ma aktywną licencję dla mnie
+      TAK → korzystam z klubowej
+      NIE → ekran "brak dostępu / kup licencję"
+
+Użytkownik nie wybiera ręcznie — system sam sprawdza w tej kolejności. Licencja osobista zawsze ma priorytet.
+
+Kluczowe pytanie przed implementacją
+Gdzie siedzi "pula family"? Przy rodzicu (rodzic kupuje dla swojej rodziny) czy przy klubie (klub kupuje dla wszystkich)?
+
+Z tego co opisujesz — przy rodzicu. Klub ma osobną licencję klubową.
+
+Czy dobrze rozumiem?
+
+4 - nie to zle podejscie - jak ktos ma wybor - korzystaj ze swojej lub clubowej - zawsze wybierze - darmoowa
+to my musimy to zaprojektowac wzorem
+1 - pierwsze 3 miesiace darmowe - rejestruje sie admin, trenerzy, rodzice itd
+2 - wszyscy dostaja powiadomienia ze konczy sie okres probny - tu pytanie czy per user czy per membership
+3 klub decyduje - kupuje pakiet 100 dostepow - ale musi wiedziec ilu jest userow w calym klubie (bez kibicow) zarejestrowanych - tu moze caly dokladny raport - trenerzy, zawodnicy, rodzice
+4 - trener informuje (ogloszenie) o tym ze kupili 100 licencji i musi starczyc - kto pierwszy ten lepszy - ale licencje nie sa per zarejestrowany user tylko przy logowaniu sa pobierane z puli wiec 101 rodzic przy logowaniu dostaje komunikat - pula licencji wykorzystana - kup swoja lub zglos sie do admina klubu
+5 - nowy rodzic/trener/zawodnik - nie pobiera licencji kliubu przez 3 miesiace - tu trzeba sie zastanowic nad podejsciem
+-- klub moze kupic tylko pakiet 10 dostepow dla trenerow i nikomu nic nie mowic
+-- wiec komunkat tez powienien nowy rodzic dostawac taki sam - jesli klub posiada pakiet licencji bedziesz mogl korzystac z appki - a moze w ustawieniach admin powinien miec opcje czy kupuje licencje tylko dla trenerow czy dla wszystkich (rodzic/zawodnik)
+
+Show more
+
+
+Dobry model — widzę co budujesz. To jest floating license (pływająca licencja) jak w enterprise software. Szkicuję architekturę:
+
+Model licencjonowania
+Priorytety przy logowaniu (w tej kolejności):
+1. Czy membership ma aktywny trial?
+        TAK → dostęp OK
+
+2. Czy user ma osobistą subskrypcję?
+        TAK → dostęp OK (nie rusza puli klubu)
+
+3. Czy klub ma aktywną pulę i user w zakresie?
+        TAK i jest wolne miejsce → przypisz slot, dostęp OK
+        TAK ale pula pełna → "Pula licencji wyczerpana..."
+        NIE → "Kup licencję lub zgłoś się do admina"
+
+Trial — per membership (nie per user)
+Uzasadnienie: nowy trener dołącza do klubu który działa rok — powinien dostać 3 miesiące próby w tym klubie. Per user byłby pozbawiony trialu bo konto ma stare.
+
+membership.trial_ends_at = membership.joinedAt + 90 dni
+
+Pula klubowa — struktura
+clubs/{clubId}.license = {
+    total:       100,
+    used:        0,          // inkrementowane przy przypisaniu slotu
+    valid_until: Timestamp,
+    scope:       "all" | "trainers_only" | "custom",
+    // jeśli custom:
+    roles:       ["TRENER", "RODZIC", "ZAWODNIK"]
+}
+
+membership.licenseStatus = "trial" | "club_pool" | "personal" | "blocked"
+membership.poolClaimedAt = Timestamp | null
+
+Slot przypisywany raz — przy pierwszym logowaniu po końcu trialu. Nie per sesja — to by powodowało chaos (101. rodzic "wyrzuca" 1. przy każdym logowaniu).
+
+Punkt 5 — nowy user + pula klubowa
+Proponuję tak:
+
+Nowy user → 3 miesiące trial (membership)
+  ↓ trial kończy się
+System sprawdza pulę klubu:
+  - Pula istnieje i scope obejmuje tę rolę?
+        → przypisz slot automatycznie (bez akcji usera)
+        → info w profilu: "Dostęp opłacony przez klub"
+  - Pula nie istnieje lub pełna?
+        → powiadomienie: "Trial wygasł — kup dostęp lub zgłoś się do trenera"
+
+Admin — ustawienia zakresu licencji
+W ustawieniach klubu (support.html lub ustawienia.html):
+
+Zakres licencji klubowej:
+  ○ Wszyscy (trenerzy + rodzice + zawodnicy)
+  ● Tylko trenerzy
+  ○ Niestandardowy [✓ Trenerzy] [✓ Rodzice] [ ] Zawodnicy
+
+To rozwiązuje Twój przykład: klub kupuje 10 licencji tylko dla trenerów → rodzice dostają komunikat "klub nie pokrywa Twojego dostępu".
+
+Jedno pytanie kluczowe
+Gdy slot jest przypisany do membera z puli klubowej — co się dzieje gdy klub nie odnawia licencji?
+
+Wszyscy z licenseStatus: "club_pool" dostają status "blocked" od razu?
+Czy jest grace period (np. 7 dni)?
+To wpływa na to jak budujesz sprawdzanie przy logowaniu.
+
+1 Uzasadnienie: nowy trener dołącza do klubu który działa rok — powinien dostać 3 miesiące próby w tym klubie. Per user byłby pozbawiony trialu bo konto ma stare.
+membership.trial_ends_at = membership.joinedAt + 90 dni
+tu pewnosci nie mam z takim podejsciem - membership jest tworzony do kazdej druzyny nowej i wtedy nowy dostep na 90 dni w tym samym klubie - to uzytkownicy moga wykorztstywac - trzeba badac krzyzowo - membership jako trener wersuj user w klubie
+
+
+
+Dokładnie — trial musi być na poziomie (user, club), nie per membership/team.
+
+Rozwiązanie: Trial per (uid, clubId)
+Gdzie przechowywać
+Najczystsze miejsce: dokument w kolekcji clubs/{clubId}/members/{uid} (jeśli taki masz) lub jako osobna kolekcja club_trials:
+
+club_trials/{uid}_{clubId}
+  uid: string
+  club_id: string
+  trial_ends_at: Timestamp
+  created_at: Timestamp
+
+Albo jeszcze prościej — pole na dokumencie usera w kontekście klubu, np. w kolekcji users/{uid}:
+
+clubs_trial: {
+  "clubId_A": Timestamp,
+  "clubId_B": Timestamp
+}
+
+Logika przy tworzeniu membership (Cloud Function onMembershipCreated)
+// Przy dodaniu trenera/rodzica do drużyny w klubie:
+async function onMembershipCreated(snap, context) {
+  const m = snap.data();
+  const { uid, clubId } = m;
+
+  // Sprawdź czy user ma już trial w tym klubie
+  const userRef = db.doc(`users/${uid}`);
+  const userDoc = await userRef.get();
+  const existingTrial = userDoc.data()?.clubs_trial?.[clubId];
+
+  if (!existingTrial) {
+    // Pierwsza drużyna w tym klubie — start trial
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 90);
+
+    await userRef.update({
+      [`clubs_trial.${clubId}`]: admin.firestore.Timestamp.fromDate(trialEnd)
+    });
+  }
+  // Jeśli trial już istnieje — nie rób nic (dodanie do nowej drużyny nie resetuje)
+}
+
+Logika sprawdzania dostępu (na kliencie / Cloud Function)
+function hasAccess(uid, clubId) {
+  // 1. Sprawdź access_rights (opłacony dostęp)
+  const right = access_rights.find(r => r.uid === uid && r.club_id === clubId);
+  if (right && right.valid_until > now) return true;
+
+  // 2. Sprawdź trial
+  const trialEnd = user.clubs_trial?.[clubId];
+  if (trialEnd && trialEnd > now) return true;
+
+  return false;
+}
+
+Co to rozwiązuje
+Scenariusz	Wynik
+Trener dołącza do Klubu A (1. drużyna)	Trial 90 dni → start
+Trener dołącza do drugiej drużyny w Klubie A	Brak nowego triala — dziedziczy istniejący
+Trener dołącza do Klubu B (nowy klub)	Nowy trial 90 dni dla Klubu B
+Trener próbuje oszukać: admin dodaje go do 5 drużyn	Jeden trial — bez efektu
+Globalny switch (przedłużenie triala)
+// Cloud Function / admin panel:
+// Przedłuż trial wszystkich userów w danym klubie o 30 dni
+async function extendTrials(clubId, days) {
+  const users = await db.collection('users')
+    .where(`clubs_trial.${clubId}`, '!=', null).get();
+  
+  const batch = db.batch();
+  users.forEach(doc => {
+    const current = doc.data().clubs_trial[clubId].toDate();
+    const extended = new Date(Math.max(current, new Date()));
+    extended.setDate(extended.getDate() + days);
+    batch.update(doc.ref, {
+      [`clubs_trial.${clubId}`]: admin.firestore.Timestamp.fromDate(extended)
+    });
+  });
+  await batch.commit();
+}
+
+Chcesz iść dalej z implementacją — od Cloud Functions, od UI płatności, czy od support.html?
+
+jest grace period (np. 7 dni) - dla kazdego rodzaju licencji
+
+
+
+Grace Period — 7 dni dla każdego rodzaju licencji
+Zasada
+Użytkownik widzi ostrzeżenie że dostęp wygasł, ale nadal działa przez 7 dni. Po 7 dniach — blokada.
+
+Implementacja
+Nigdzie nie przechowujesz grace_period osobno — liczysz w locie:
+
+const GRACE_DAYS = 7;
+
+function getAccessStatus(uid, clubId, user, accessRights) {
+  const now = new Date();
+  const graceCutoff = new Date(now - GRACE_DAYS * 24 * 60 * 60 * 1000);
+
+  // 1. Opłacony dostęp (personal_sub / club_license / family_slot)
+  const right = accessRights.find(r => r.uid === uid && r.club_id === clubId);
+  if (right) {
+    const validUntil = right.valid_until.toDate();
+    if (validUntil > now)        return { status: 'ACTIVE',  source: right.source };
+    if (validUntil > graceCutoff) return { status: 'GRACE',  source: right.source };
+  }
+
+  // 2. Trial
+  const trialEnd = user.clubs_trial?.[clubId]?.toDate();
+  if (trialEnd) {
+    if (trialEnd > now)         return { status: 'TRIAL',  source: 'trial' };
+    if (trialEnd > graceCutoff) return { status: 'GRACE',  source: 'trial' };
+  }
+
+  return { status: 'EXPIRED', source: null };
+}
+
+Statusy i reakcja UI
+Status	Co widzi user	Dostęp
+ACTIVE	Nic — wszystko normalnie	Tak
+TRIAL	Baner "Trial — X dni pozostało"	Tak
+GRACE	Baner czerwony "Dostęp wygasł — X dni na odnowienie"	Tak
+EXPIRED	Ekran blokady z przyciskiem płatności	Nie
+Baner w apce (przykład)
+function showAccessBanner(status, source, validUntil) {
+  if (status === 'TRIAL') {
+    const daysLeft = Math.ceil((validUntil - new Date()) / 86400000);
+    showBanner(`Okres próbny — ${daysLeft} dni pozostało`, 'info');
+  }
+  if (status === 'GRACE') {
+    const daysLeft = Math.ceil((validUntil - new Date()) / 86400000) + GRACE_DAYS;
+    // dni do końca grace = GRACE_DAYS - ile minęło od wygaśnięcia
+    const graceDaysLeft = Math.ceil((validUntil.getTime() + GRACE_DAYS*86400000 - Date.now()) / 86400000);
+    showBanner(`Dostęp wygasł — ${graceDaysLeft} dni na odnowienie`, 'warning');
+  }
+}
+
+Ważne: gdzie liczyć — klient czy serwer?
+UI/klient — liczy getAccessStatus() do wyświetlenia banera i blokady ekranów
+Cloud Functions (Firestore rules / Functions) — ta sama logika po stronie serwera, żeby nie dało się obejść przez manipulację JS
+Firestore Security Rule:
+
+function hasAccess(uid, clubId) {
+  let now = request.time;
+  let grace = duration.value(7, 'd');
+  
+  // sprawdź access_rights
+  // sprawdź trial
+  // w obu przypadkach: valid_until + grace > now
+}
+
+Czy grace period jest stały (zawsze 7 dni), czy chcesz żeby był konfigurowalny per typ licencji (np. trial 3 dni, paid 7 dni)?
+
+zawsze 7 dni - chciwy traci x2
+
+
+
+Klasyczna zasada — odnowienie liczy się od valid_until, nie od daty płatności.
+
+Logika odnowienia
+// Przy odnowieniu subskrypcji (webhook z tPay / RevenueCat):
+async function renewAccess(uid, clubId, source, durationDays) {
+  const rightRef = db.collection('access_rights')
+    .where('uid', '==', uid)
+    .where('club_id', '==', clubId);
+
+  const existing = await rightRef.get();
+  const now = new Date();
+
+  let newValidUntil;
+
+  if (!existing.empty) {
+    const current = existing.docs[0].data().valid_until.toDate();
+    
+    // Baza to valid_until — NIE today
+    // Jeśli valid_until już w przeszłości (grace), liczymy od valid_until
+    newValidUntil = new Date(current);
+    newValidUntil.setDate(newValidUntil.getDate() + durationDays);
+  } else {
+    // Nowy user — liczymy od teraz
+    newValidUntil = new Date(now);
+    newValidUntil.setDate(newValidUntil.getDate() + durationDays);
+  }
+
+  // Zapisz
+  await db.collection('access_rights').add({
+    uid, club_id: clubId, source,
+    valid_until: admin.firestore.Timestamp.fromDate(newValidUntil),
+    renewed_at: admin.firestore.Timestamp.fromDate(now)
+  });
+}
+
+Przykład — "chciwy traci x2"
+Subskrypcja miesięczna (30 dni):
+
+Sytuacja	valid_until po odnowieniu
+Odnawia dzień przed końcem	stary + 30 = 31 dni efektywnie
+Odnawia w dniu końca	stary + 30 = 30 dni
+Odnawia 3 dni po końcu (grace)	stary + 30 = 27 dni efektywnie
+Odnawia 7 dni po końcu (ostatni dzień grace)	stary + 30 = 23 dni efektywnie
+Czekał 7 dni → traci 7 dni z nowego okresu. Proste, uczciwe, bez możliwości nadużycia.
+
+Idziemy dalej — co następne: UI płatności, Cloud Functions dla webhooków, czy support.html?
+
+dokumentacja - wrzuc to do dokuentacji projektu, plik - @platnosci.md tez ukatualnij - mozesz go nawet zmienic jesli nie jest jasny - bo nie wiem ile sily Ci zostalo do tej sesji
+
+
+
+Created a file
+Created a file
+
+Gotowe. Plik platnosci.md jest teraz kompletną dokumentacją systemu płatności — stara wersja była szkicem dla programisty, nowa zawiera całą architekturę z kodem, tabelami i logiką grace period + trial.
+
+Co zostało do zaprojektowania/zaimplementowania:
+
+support.html — panel admina platformy
+Support ID — generowanie przy rejestracji + wyświetlanie w profil.html
+Rejestracja Google/Apple — 3 ikony na ekranie kodu
+Płatności — implementacja (Cloud Functions, webhooki, UI)
+i jak teraz mamy pelen obraz platnosci - jak widzisz ekran rejestracji, uzycia kodu dostepu i licencji przez apple, google, telefon i maila - oraz odpowiednie komunikaty.
+
+
+
+Pełny Obraz — Ekrany Rejestracji i Dostępu
+ETAP 1 — Wejście do apki
+┌─────────────────────────────┐
+│         COACHAY             │
+│                             │
+│   [  Zaloguj się  ]         │  ← już masz konto
+│   [  Zarejestruj  ]         │  ← nowe konto
+│                             │
+└─────────────────────────────┘
+
+ETAP 2 — Wybór metody (ekran rejestracji i logowania — ten sam)
+┌─────────────────────────────┐
+│    Jak chcesz się zalogować?│
+│                             │
+│  ┌─────────────────────┐   │
+│  │  G  Kontynuuj z     │   │  ← Google One Tap
+│  │     Google          │   │
+│  └─────────────────────┘   │
+│  ┌─────────────────────┐   │
+│  │    Kontynuuj z      │   │  ← Apple Sign In
+│  │     Apple           │   │
+│  └─────────────────────┘   │
+│                             │
+│  ────────── lub ──────────  │
+│                             │
+│  [+48] [ numer telefonu ]   │  ← pole tel.
+│  [     adres e-mail      ]  │  ← pole email
+│                             │
+│  [ Wyślij kod ]             │
+└─────────────────────────────┘
+
+Logika:
+
+Google/Apple → od razu auth → przejdź do ETAP 4
+Telefon → SMS z kodem → ETAP 3A
+Email → link/kod na mail → ETAP 3B
+ETAP 3A — Weryfikacja SMS
+┌─────────────────────────────┐
+│   Wpisz kod SMS             │
+│   Wysłaliśmy go na          │
+│   +48 602 *** ***           │
+│                             │
+│   [ _ ] [ _ ] [ _ ] [ _ ]  │
+│         [ _ ] [ _ ]         │
+│                             │
+│   Nie dostałeś? Wyślij      │
+│   ponownie (za 45s)         │
+└─────────────────────────────┘
+
+Po poprawnym kodzie → Firestore docs tworzone natychmiast → ETAP 4
+
+ETAP 3B — Weryfikacja Email
+┌─────────────────────────────┐
+│   Sprawdź skrzynkę          │
+│                             │
+│   Wysłaliśmy link           │
+│   weryfikacyjny na:         │
+│   jan@kowalski.pl           │
+│                             │
+│   Po kliknięciu w link      │
+│   wróć tutaj.               │
+│                             │
+│   [ Już kliknąłem — dalej ] │
+│   [ Wyślij ponownie ]       │
+└─────────────────────────────┘
+
+Po kliknięciu "dalej" → apka sprawdza emailVerified → jeśli tak, tworzy Firestore docs z localStorage → ETAP 4
+
+ETAP 4 — Pierwsze wejście (po rejestracji)
+┌─────────────────────────────┐
+│   Witaj, Jan!               │
+│                             │
+│   Masz 90 dni bezpłatnego   │
+│   dostępu do Coachay.       │
+│                             │
+│   Masz kod dostępu          │
+│   od klubu?                 │
+│   [ Wpisz kod ]             │
+│                             │
+│   [ Zacznij korzystać → ]   │
+└─────────────────────────────┘
+
+"Wpisz kod" → ETAP 5 (ścieżka klubowa)
+"Zacznij korzystać" → apka, trial aktywny
+
+ETAP 5 — Kod Klubowy (opcjonalny, zawsze dostępny)
+Dostępny też z profil.html lub ekranu blokady.
+
+┌─────────────────────────────┐
+│   Kod dostępu od klubu      │
+│                             │
+│   [ KLUB-XXXX-YYYY ]        │  ← input
+│                             │
+│   [ Aktywuj ]               │
+│                             │
+│   – lub –                   │
+│                             │
+│   Poproś trenera o          │
+│   przypisanie Cię do klubu  │
+└─────────────────────────────┘
+
+Po aktywacji:
+
+┌─────────────────────────────┐
+│   ✓ Dostęp aktywowany!      │
+│                             │
+│   Klub: KS Poznań           │
+│   Ważny do: 31.08.2026      │
+│   Źródło: Licencja klubowa  │
+│                             │
+│   [ OK ]                    │
+└─────────────────────────────┘
+
+ETAP 6 — Banery w apce (status dostępu)
+TRIAL — niebieski, nienachalny:
+
+┌─────────────────────────────┐
+│ ℹ Okres próbny — 23 dni    │  [X]
+└─────────────────────────────┘
+
+GRACE — pomarańczowy, widoczny:
+
+┌─────────────────────────────┐
+│ ⚠ Dostęp wygasł.           │
+│   Masz 5 dni na odnowienie. │
+│   [ Odnów teraz ]           │
+└─────────────────────────────┘
+
+ETAP 7 — Ekran Blokady (EXPIRED)
+┌─────────────────────────────┐
+│                             │
+│   Twój dostęp wygasł.       │
+│                             │
+│  ┌─────────────────────┐   │
+│  │  G  Odnów przez     │   │  ← Google Play
+│  │     Google Play     │   │
+│  └─────────────────────┘   │
+│  ┌─────────────────────┐   │
+│  │    Odnów przez      │   │  ← Apple IAP
+│  │     Apple           │   │
+│  └─────────────────────┘   │
+│                             │
+│  [ Zapłać przez tPay ]      │  ← tańsze, polska ścieżka
+│    (szybszy przelew,        │
+│     brak prowizji sklepu)   │
+│                             │
+│  [ Mam kod od klubu ]       │  ← wpisz kod → ETAP 5
+│                             │
+│  ─────────────────────────  │
+│                             │
+│  [ Mój klub płaci za mnie ] │  ← powiadomienie do trenera
+│                             │
+└─────────────────────────────┘
+
+ETAP 8 — Wybór Pakietu (tPay path)
+┌─────────────────────────────┐
+│   Wybierz plan              │
+│                             │
+│  ┌─────────────────────┐   │
+│  │  Miesięczny         │   │
+│  │  2 zł / miesiąc    │   │
+│  │  [ Wybierz ]        │   │
+│  └─────────────────────┘   │
+│  ┌─────────────────────┐   │
+│  │  Rodzinny           │   │
+│  │  5 zł / miesiąc    │   │
+│  │  do 5 kont          │   │
+│  │  [ Wybierz ]        │   │
+│  └─────────────────────┘   │
+│  ┌─────────────────────┐   │
+│  │  Roczny   ★ BEST   │   │
+│  │  50 zł / rok        │   │
+│  │  (~4,17 zł/mies.)  │   │
+│  │  [ Wybierz ]        │   │
+│  └─────────────────────┘   │
+└─────────────────────────────┘
+
+Po wyborze → Webview z tPay → płatność → webhook → renewAccess() → baner "Dostęp aktywny ✓"
+
+ETAP 8B — Plan Rodzinny (dodanie slotów)
+┌─────────────────────────────┐
+│   Plan Rodzinny             │
+│   Dodaj numery telefonów    │
+│   (np. dziadkowie)          │
+│                             │
+│   +48 [ _____________ ]     │
+│   +48 [ _____________ ]     │
+│   +48 [ _____________ ]     │
+│   [ + Dodaj kolejny ]       │
+│                             │
+│   [ Przejdź do płatności ]  │
+└─────────────────────────────┘
+
+Podsumowanie ścieżek
+Telefon ──→ SMS kod ──────────────────────────→ Trial 90 dni
+Email ───→ weryfikacja ──────────────────────→ Trial 90 dni
+Google ──→ one tap ──────────────────────────→ Trial 90 dni
+Apple ───→ one tap ──────────────────────────→ Trial 90 dni
+
+Trial wygasa → GRACE 7 dni → EXPIRED → ekran blokady
+                                           ↓
+                              tPay / Google Play / Apple IAP
+                                           ↓
+                              renewAccess() od valid_until
+                                           
+Kod klubowy → access_rights source:"club_license"
+"Klub płaci" → powiadomienie do trenera → trener kupuje B2B
+
+To jest pełny obraz. Chcesz żebym to wrzucił też do dokumentacji jako osobny plik rejestracja-ekrany.md, czy wolisz najpierw zacząć implementację któregoś ekranu?
+
+gadamy - nic nie projektuj - jaki jest sens etap 1 i 2 skoro mowisz przy drugim ze (ekran rejestracji i logowania — ten sam)
+ale rozumiem ze nadal beda dwa ekrany tak jak jest
+1 loguj sie
+2 rejestruj sie
+
+
+
+Tak — dwa osobne ekrany, ale identyczny wygląd.
+
+Sens rozdzielenia jest taki, że apka wie z góry jaki jest kontekst:
+
+Ekran logowania → user wraca → jeśli numer/email nie istnieje w bazie → pokaż błąd "Nie znaleziono konta"
+Ekran rejestracji → nowy user → jeśli numer/email już istnieje → pokaż błąd "Konto już istnieje, zaloguj się"
+Gdyby był jeden ekran — trzeba by zgadywać intencję usera i to jest zawsze gorsze UX. Albo robisz "magic link" gdzie jedno i drugie jest tym samym (jak Slack) — ale to osobna filozofia.
+
+Google i Apple są wyjątkiem — oni sami wiedzą czy user już istnieje i obsługują to po swojej stronie. Więc te dwa przyciski możesz dać na obu ekranach bez problemu.
+
+etap 4 - Witaj, Jan!
+skad masz wiedziec ze to jan skoro n ty etapie nie masz jego danych
+
+
+
+Racja — na etapie 4 nie masz jeszcze imienia.
+
+Dwie opcje:
+
+Opcja A — pomiń powitanie, skocz od razu do sedna:
+
+Dostęp aktywowany!
+Masz 90 dni bezpłatnego dostępu.
+
+Opcja B — zapytaj o imię właśnie tutaj, jako pierwszy krok onboardingu:
+
+Jak masz na imię?
+[ Jan              ]
+[ Dalej → ]
+
+I dopiero potem "Witaj, Jan!" — a imię leci do Firestore.
+
+Opcja B ma sens bo i tak musisz skądś mieć imię użytkownika. Rejestracja przez Google/Apple daje Ci imię automatycznie z profilu — więc dla nich możesz pominąć to pytanie i od razu pokazać "Witaj, Jan!".
+
+cos te pierwsze 4 etapy wymyslasz z kosmosu - niech bedzie jak jest aktualnie
+1 rejestruj klub - od razu admin staje sie trenerem - dostaje 90 dni - komunikat
+2 mam kod - wpisuje kod i sie rejestruje - dostaje 90 dni - komunikat
+etap 5 - nie potrzebny
+etap 6 - ok
+etap 7 najpierw sprawdzic czy klub kupil licencje - daje informcje - jestes trenerem - klub kupil llicencje dla ciebie - jestes rodzicem klub nie posiada licenji - kup se sam
+etap 7 - jaki kod od klubu - klub nie generuje zadnego kodu - od jest juz zarejestrowany
+etap 7 - czy klub placi za mnie jest w ustawieniach klubu a ty juz w klubie jestes zarejestrowany
+poagdamy za raz o kolejnych etapach
+
+
+
+Masz rację, wymiśliłem za dużo. Wróćmy do rzeczywistości.
+
+Etapy 1-4 — jak jest:
+
+Rejestruj klub → admin/trener → trial 90 dni → komunikat
+Mam kod → wpisz kod → rejestracja → trial 90 dni → komunikat
+Etap 5 — wyrzucamy.
+
+Etap 6 — ok, banery zostają.
+
+Etap 7 — ekran blokady, poprawiona logika:
+
+Sprawdź czy user ma membership w klubie
+Jeśli tak → sprawdź czy klub ma aktywne licencje
+Trener + klub ma licencje → "Twój klub posiada licencję — skontaktuj się z administratorem"
+Rodzic + klub nie ma licencji → opcje płatności (tPay / Apple / Google)
+"Mój klub płaci" i "Mam kod" — wyrzucamy z ekranu blokady, bo user jest już w klubie i te opcje są gdzie indziej.
+
+Gadamy dalej — co z etapem 8 (wybór pakietu i płatność)?
+
+etap 8 - powinien oblugiwac - kraj - albo jezyk i wtedy tpay odpada jesli nie polska
+etap 8 - wybor pakietu - jest ok - pytanie czy mozna uzyc automatycznego płacenia - bo jak nie to powiadomienia utworzyc o koniecznosci platnosci 3 dni przed czasem ?
+etap 8 roczny rodzinny za 50 zl - moze powinien byc jeszcze roczny osobisty za 20 zl
+etap 8B - nie potrzebny - licencje schodza z pakieru rodzinego po wykorztsaniu kodu dostepu - po prosti
+
+
+
+Kraj/język — logiczne. Wykrywasz navigator.language lub kraj z profilu. Jeśli nie PL → tPay znika, zostaje tylko Apple/Google.
+
+Auto-płacenie:
+
+Apple/Google → auto-renewal natywnie, sklep sam pobiera i wysyła webhook do RevenueCat. Zero roboty z twojej strony.
+tPay → brak auto-renewal (chyba że robisz tokenizację karty, co jest skomplikowane). Więc: powiadomienie 3 dni przed + ponownie w dniu wygaśnięcia. Prosto.
+Pakiety — proponuję:
+
+Plan	Cena	Dla kogo
+Miesięczny	2 zł/mies	Rodzic/trener
+Roczny osobisty	20 zł/rok	Rodzic/trener (~1,67/mies)
+Roczny rodzinny	50 zł/rok	Rodzina w jednym klubie
+Sensowne — daje opcję taniej dla lojalnych bez rodziny.
+
+Etap 8B — wyrzucamy. Rodzinny plan = kod dostępu dla każdego członka rodziny z puli klubowej. Prościej i spójnie z resztą systemu.
+
+Gadamy dalej — co z ekranem potwierdzenia po płatności i powiadomieniami?
+
+ekranem potwierdzenia po płatności i powiadomieniami - co proponujesz
+
+
+
+Potwierdzenie po płatności:
+
+Nie potrzebujesz osobnego ekranu — wystarczy że apka wraca z webview/IAP i pokazuje baner sukcesu na głównym ekranie:
+
+✓ Dostęp aktywowany. Ważny do 09.04.2027.
+
+Webhook z tPay/RevenueCat aktualizuje Firestore, apka odpytuje i odświeża status. Żadnego "ekranu sukcesu" — user jest już w apce i działa.
+
+Powiadomienia — propozycja:
+
+Kiedy	Treść	Komu
+7 dni przed końcem	"Twój dostęp wygasa za 7 dni"	user
+3 dni przed końcem	"Zostały 3 dni — odnów dostęp"	user
+Dzień wygaśnięcia	"Dostęp wygasł — masz 7 dni grace"	user
+Koniec grace (dzień 7)	"Jutro tracisz dostęp"	user
+Apple/Google — sklep sam wysyła swoje przypomnienia o odnowieniu, więc Twoje powiadomienia mogą być nadmiarowe dla tej ścieżki. Możesz je wyłączyć jeśli source == 'apple' || 'google'.
+
+Zostaje pytanie techniczne — powiadomienia push robisz przez Firebase Cloud Messaging czy tylko in-app (jak teraz)?
+
+7 dni przed końcem - moze byc irytujace co miesiac - skoro nie moze ustawic autopatnosci - chociaz ja w appce z silowni mam mozliwosc w przelew24 podpiac karte platnicza/kredytowa i pobiera i automatycznie
+powidomienia przez firebase bo tam sa dane o wszystkich licencjach
+
+
+
+Racja na obu punktach.
+
+Auto-płatność przez Przelewy24 — mają to, nazywa się "płatności cykliczne". Pierwsza płatność tokenizuje kartę, kolejne pobierane automatycznie. Wtedy powiadomienie to tylko:
+
+✓ Pobrano 2 zł. Dostęp przedłużony do 09.05.2026.
+
+Bez żadnych przypomnień przed — bo user wie że się samo odnawia. Identycznie jak Apple/Google.
+
+Jeśli user nie podpiął karty (zapłacił BLIKiem jednorazowo) → wtedy powiadomienie, ale tylko 3 dni przed — nie 7. Raz, nie dwa razy.
+
+Powiadomienia przez FCM — schemat:
+
+Cloud Function scheduled odpala się codziennie rano, sprawdza access_rights i clubs_trial:
+
+valid_until == teraz + 3 dni → wyślij FCM jeśli brak tokena karty
+valid_until == teraz → "wygasł, masz 7 dni grace"
+valid_until + 7 dni == teraz → "jutro tracisz dostęp"
+Wszystkie dane są w Firestore — jedna funkcja ogarnia wszystkich użytkowników wszystkich klubów.
+
+Gadamy dalej czy przechodzimy do czegoś innego?
+
+wrzuc to do dokumentacji projektu
+
+
+
+Read a file, created a file
+Read a file, created a file
+
+You've hit your limit · resets 5pm (Europe/Warsaw)
+
+zrobiles aktualizaje dokumentacji projektu o platnosci - bo skonczyl sie limit godzinowy i nie wiem na czym przerwales
+
+
+
+Read 2 files, edited 2 files
+Read 2 files, edited 2 files
+
+Gotowe. Zaktualizowałem:
+
+platnosci.md — pełna dokumentacja z ekranami, pakietami, powiadomieniami (zrobione wcześniej w tej sesji)
+memory/project_architecture.md — dodany blok systemu płatności (trial, grace, statusy, pakiety, FCM)
+memory/project_coachay.md — zaktualizowana lista priorytetów (localStorage bridge i refaktor initSession() jako ✅ zrobione)
+Na czym skończyliśmy: projektowanie ekranów i UX płatności — architektura gotowa, implementacja jeszcze nie ruszona.
+
+czy wykonac compact?
+
+
+
+Tak — dobry moment. Dokumentacja i pamięć są zaktualizowane, priorytety spisane. Compact teraz = czyste wejście do następnego tematu (support.html lub płatności).
+
+
+

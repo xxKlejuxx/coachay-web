@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COACHAY — Zadania</title>
+    <link rel="stylesheet" href="_global.css?v=20260730a">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <style>
+        .screen-body {
+            padding: 0 !important;
+            gap: 0 !important;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden !important
+        }
+
+        .zad-header {
+            padding: 14px 16px 12px;
+            background: #000;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0
+        }
+
+        .zad-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px
+        }
+
+        .zad-title {
+            font-family: var(--font-d);
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--bialy)
+        }
+
+        .zad-clear {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--akcent);
+            cursor: pointer
+        }
+
+        .zad-stats {
+            display: flex;
+            gap: 12px
+        }
+
+        .zad-stat {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--szary)
+        }
+
+        .zad-stat-val {
+            color: var(--bialy);
+            font-family: var(--font-d)
+        }
+
+        .zad-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scrollbar-width: none
+        }
+
+            .zad-list::-webkit-scrollbar {
+                display: none
+            }
+
+        .zad-empty {
+            padding: 40px;
+            text-align: center;
+            color: var(--szary);
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        .zad-item {
+            background: var(--tlo-karta);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            cursor: pointer;
+            transition: background .15s;
+            position: relative
+        }
+
+            .zad-item:active {
+                background: var(--tlo-karta2)
+            }
+
+            .zad-item.po-terminie {
+                border-color: rgba(239,68,68,.3)
+            }
+
+            .zad-item.wykonane {
+                opacity: .5
+            }
+
+            .zad-item.odrzucone {
+                opacity: .5;
+                border-color: rgba(239,68,68,.15)
+            }
+
+        .zad-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 4px
+        }
+
+        .zad-item-tytul {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--bialy);
+            flex: 1
+        }
+
+        .zad-item-badges {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0
+        }
+
+        .zad-item-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: var(--r-pill);
+            flex-shrink: 0
+        }
+
+        .badge-nowe {
+            background: rgba(59,130,246,.15);
+            color: #60A5FA;
+            border: 1px solid rgba(59,130,246,.3)
+        }
+
+        .badge-wyk {
+            background: rgba(34,197,94,.15);
+            color: #4ADE80;
+            border: 1px solid rgba(34,197,94,.3)
+        }
+
+        .badge-termin {
+            background: rgba(239,68,68,.15);
+            color: #F87171;
+            border: 1px solid rgba(239,68,68,.3)
+        }
+
+        .badge-oczek {
+            background: rgba(234,179,8,.15);
+            color: #FACC15;
+            border: 1px solid rgba(234,179,8,.3)
+        }
+
+        .badge-odrz {
+            background: rgba(239,68,68,.10);
+            color: #F87171;
+            border: 1px solid rgba(239,68,68,.2)
+        }
+
+        .badge-sent {
+            background: rgba(59,130,246,.10);
+            color: #60A5FA;
+            border: 1px solid rgba(59,130,246,.2)
+        }
+
+        .badge-recv {
+            background: rgba(168,85,247,.10);
+            color: #C084FC;
+            border: 1px solid rgba(168,85,247,.2)
+        }
+
+        .zad-item-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 4px
+        }
+
+        .zad-meta-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--szary)
+        }
+
+            .zad-meta-chip span {
+                font-size: 12px
+            }
+
+            .zad-meta-chip.overdue {
+                color: var(--blad)
+            }
+
+        .zad-progress {
+            margin-top: 10px
+        }
+
+        .zad-progress-bar {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden
+        }
+
+        .zad-progress-fill {
+            height: 100%;
+            background: var(--akcent);
+            border-radius: 2px;
+            transition: width .3s
+        }
+
+        .zad-progress-lbl {
+            font-size: 10px;
+            color: var(--szary);
+            font-weight: 700;
+            margin-top: 4px
+        }
+
+        .zad-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px
+        }
+
+        .zad-act-btn {
+            flex: 1;
+            padding: 9px;
+            border-radius: var(--r-pill);
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all .15s;
+            text-align: center
+        }
+
+            .zad-act-btn:active {
+                transform: scale(.97)
+            }
+
+        .zad-act-done {
+            background: var(--tlo-karta2);
+            border: 1px solid var(--border);
+            color: var(--bialy)
+        }
+
+            .zad-act-done.is-done {
+                background: rgba(34,197,94,.15);
+                border-color: rgba(34,197,94,.3);
+                color: #4ADE80
+            }
+
+        .zad-act-reject {
+            background: rgba(248,113,113,.06);
+            border: 1px solid rgba(248,113,113,.15);
+            color: var(--szary)
+        }
+
+            .zad-act-reject.is-rejected {
+                background: rgba(248,113,113,.12);
+                border-color: rgba(248,113,113,.3);
+                color: #F87171
+            }
+
+        .fab-add {
+            position: absolute;
+            bottom: 86px;
+            right: 16px;
+            width: 52px;
+            height: 52px;
+            background: var(--akcent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 300;
+            color: #fff;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(59,130,246,.4);
+            cursor: pointer;
+            transition: transform .15s
+        }
+
+            .fab-add:active {
+                transform: scale(.92)
+            }
+
+        .detail-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--tlo);
+            z-index: 130;
+            transform: translateX(100%);
+            transition: transform .35s cubic-bezier(.32,.72,0,1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+            .detail-panel.open {
+                transform: translateX(0)
+            }
+
+        .dp-header {
+            background: #000;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0
+        }
+
+        .dp-back {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--tlo-karta);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--bialy);
+            cursor: pointer
+        }
+
+        .dp-title {
+            font-family: var(--font-d);
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--bialy);
+            flex: 1
+        }
+
+        .dp-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scrollbar-width: none
+        }
+
+            .dp-scroll::-webkit-scrollbar {
+                display: none
+            }
+
+        .det-karta {
+            background: var(--tlo-karta);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px
+        }
+
+        .det-karta-lbl {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--szary);
+            margin-bottom: 6px
+        }
+
+        .det-karta-val {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--bialy);
+            line-height: 1.4
+        }
+
+        .det-odbiorca {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 10px;
+            background: var(--tlo-karta);
+            border: 1px solid var(--border);
+            border-radius: 10px
+        }
+
+        .det-odb-av {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--tlo-karta2);
+            border: 1px solid var(--border2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-d);
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--szary-j);
+            flex-shrink: 0
+        }
+
+        .det-odb-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .det-odb-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--bialy)
+        }
+
+        .det-odb-role {
+            font-size: 10px;
+            color: var(--szary);
+            font-weight: 700;
+            margin-top: 1px
+        }
+
+        .det-odb-reason {
+            font-size: 11px;
+            color: var(--szary);
+            font-weight: 600;
+            font-style: italic;
+            margin-top: 2px
+        }
+
+        .det-odb-status {
+            font-size: 10px;
+            font-weight: 900;
+            padding: 3px 10px;
+            border-radius: var(--r-pill);
+            flex-shrink: 0
+        }
+
+            .det-odb-status.done {
+                background: rgba(74,222,128,.12);
+                color: var(--sukces)
+            }
+
+            .det-odb-status.pending {
+                background: rgba(107,114,128,.12);
+                color: var(--szary)
+            }
+
+            .det-odb-status.overdue {
+                background: rgba(248,113,113,.10);
+                color: var(--blad)
+            }
+
+            .det-odb-status.rejected {
+                background: rgba(248,113,113,.10);
+                color: var(--blad)
+            }
+
+        .add-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--tlo);
+            z-index: 135;
+            transform: translateY(100%);
+            transition: transform .4s cubic-bezier(.32,.72,0,1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+            .add-panel.open {
+                transform: translateY(0)
+            }
+
+        .add-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scrollbar-width: none
+        }
+
+            .add-scroll::-webkit-scrollbar {
+                display: none
+            }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px
+        }
+
+        .form-lbl {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--szary)
+        }
+
+        .form-inp {
+            width: 100%;
+            background: var(--tlo-karta);
+            border: 1.5px solid var(--border2);
+            border-radius: 12px;
+            padding: 10px 12px;
+            color: var(--bialy);
+            font-size: 13px;
+            font-weight: 600
+        }
+
+            .form-inp:focus {
+                border-color: var(--akcent);
+                outline: none
+            }
+
+            .form-inp::placeholder {
+                color: var(--szary)
+            }
+
+        .form-textarea {
+            min-height: 60px;
+            resize: none;
+            font-family: var(--font)
+        }
+
+        .vis-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .vis-chip {
+            padding: 8px 14px;
+            border-radius: var(--r-pill);
+            background: var(--tlo-karta);
+            border: 1.5px solid var(--border2);
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--szary);
+            cursor: pointer;
+            transition: all .15s
+        }
+
+            .vis-chip.selected {
+                border-color: var(--akcent);
+                color: var(--akcent);
+                background: rgba(59,130,246,.08)
+            }
+
+        .person-list-wrap {
+            margin-top: 8px;
+            background: var(--tlo-karta);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-height: 220px;
+            overflow-y: auto;
+            scrollbar-width: none
+        }
+
+            .person-list-wrap::-webkit-scrollbar {
+                display: none
+            }
+
+        .person-list-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .person-list-btn {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--akcent);
+            cursor: pointer;
+            padding: 2px 0
+        }
+
+        .person-list-count {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--szary)
+        }
+
+        .person-check-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: background .1s
+        }
+
+            .person-check-row:active {
+                background: var(--tlo-karta2)
+            }
+
+        .person-cb {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            border: 1.5px solid var(--border2);
+            background: var(--tlo-karta2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: transparent;
+            flex-shrink: 0;
+            transition: all .15s
+        }
+
+        .person-check-row.checked .person-cb {
+            background: var(--akcent);
+            border-color: var(--akcent);
+            color: #fff
+        }
+
+        .person-check-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--bialy);
+            flex: 1
+        }
+
+        .person-check-role {
+            font-size: 10px;
+            color: var(--szary);
+            font-weight: 600
+        }
+
+        .drum-wrap {
+            background: var(--tlo-karta);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative
+        }
+
+        .drum-label-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            padding: 8px 0 0
+        }
+
+        .drum-col-lbl {
+            text-align: center;
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--szary);
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .drum-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            height: 160px;
+            position: relative
+        }
+
+            .drum-cols::before, .drum-cols::after {
+                content: '';
+                position: absolute;
+                left: 12px;
+                right: 12px;
+                z-index: 2;
+                pointer-events: none
+            }
+
+            .drum-cols::before {
+                top: 54px;
+                height: 1px;
+                background: var(--border)
+            }
+
+            .drum-cols::after {
+                top: 104px;
+                height: 1px;
+                background: var(--border)
+            }
+
+        .drum-highlight {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 57px;
+            height: 46px;
+            background: rgba(255,255,255,.05);
+            pointer-events: none;
+            z-index: 1
+        }
+
+        .drum-col {
+            overflow: hidden;
+            position: relative
+        }
+
+        .drum-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform .15s ease-out;
+            padding: 57px 0
+        }
+
+        .drum-item {
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--szary);
+            font-family: var(--font-d);
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0;
+            transition: color .15s,font-size .15s
+        }
+
+            .drum-item.active {
+                color: var(--bialy);
+                font-size: 20px
+            }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="notch"></div>
+        <div class="top-bar">
+            <div class="ctx-switcher" onclick="toggleCtxOv()">
+                <div class="ctx-dot" id="ctx-dot"></div>
+                <div class="ctx-text">
+                    <span class="ctx-klub" id="ctx-klub"></span>
+                    <span class="ctx-team" id="ctx-team"></span>
+                </div>
+                <span class="ctx-arrow">▾</span>
+            </div>
+            <div class="top-bar-right">
+                <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+                <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+            </div>
+        </div>
+        <div class="ctx-overlay" id="ctx-ov">
+            <div class="ov-label">Wybierz klub i zespół</div>
+            <div class="ctx-klub-row">
+                <div class="ctx-klub-dot" id="ctx-klub-dot"></div>
+                <span class="ctx-klub-name" id="ctx-klub-name"></span>
+                <span class="ctx-klub-role" id="ctx-klub-role"></span>
+            </div>
+            <div class="ctx-teams" id="ctx-teams"></div>
+        </div>
+        <div class="notif-overlay" id="notif-ov">
+            <div class="notif-hdr">
+                <span class="notif-tytul">Powiadomienia</span>
+                <span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span>
+            </div>
+        </div>
+        <div class="screen-body">
+            <div class="zad-header">
+                <div class="zad-header-top">
+                    <div class="zad-title">Zadania</div>
+                    <div class="zad-clear" onclick="clearDoneTasks()">Wyczyść wykonane</div>
+                </div>
+                <div class="zad-stats" id="zad-stats"></div>
+            </div>
+            <div class="zad-list" id="zad-lista"><div class="zad-empty">Ładowanie...</div></div>
+        </div>
+        <div class="fab-add" id="fab-add" onclick="openAddPanel()" style="display:none">+</div>
+        <div class="detail-panel" id="panel-detail">
+            <div class="dp-header">
+                <button class="dp-back" onclick="closeDetailPanel()">←</button>
+                <div class="dp-title" id="detail-title">Szczegóły</div>
+            </div>
+            <div class="dp-scroll" id="detail-body"></div>
+        </div>
+        <div class="add-panel" id="panel-add">
+            <div class="dp-header">
+                <button class="dp-back" onclick="closeAddPanel()">←</button>
+                <div class="dp-title">Nowe zadanie</div>
+            </div>
+            <div class="add-scroll">
+                <div class="form-group">
+                    <div class="form-lbl">Tytuł zadania</div>
+                    <input type="text" class="form-inp" id="add-title" placeholder="np. Przynieś zaświadczenie lekarskie">
+                </div>
+                <div class="form-group">
+                    <div class="form-lbl">Opis (opcjonalnie)</div>
+                    <textarea class="form-inp form-textarea" id="add-desc" placeholder="Dodatkowe informacje..."></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="form-lbl">Termin wykonania</div>
+                    <div class="drum-wrap">
+                        <div class="drum-label-row">
+                            <div class="drum-col-lbl">Dzień</div>
+                            <div class="drum-col-lbl">Miesiąc</div>
+                            <div class="drum-col-lbl">Rok</div>
+                        </div>
+                        <div class="drum-cols">
+                            <div class="drum-highlight"></div>
+                            <div class="drum-col" id="drum-dzien"></div>
+                            <div class="drum-col" id="drum-miesiac"></div>
+                            <div class="drum-col" id="drum-rok"></div>
+                        </div>
+                    </div>
+                    <div id="drum-err" style="display:none;text-align:center;font-size:12px;font-weight:800;color:#F87171;padding:4px 0">⚠ Termin nie może być w przeszłości</div>
+                </div>
+                <div class="form-group">
+                    <div class="form-lbl">Przypisz do</div>
+                    <div class="vis-grid" id="vis-grid">
+                        <div class="vis-chip" data-vis="DRUZYNA" onclick="toggleVisAndRefresh(this)">Drużyna</div>
+                        <div class="vis-chip" data-vis="RODZICE" onclick="toggleVisAndRefresh(this)">Rodzice</div>
+                        <div class="vis-chip" data-vis="TRENERZY" onclick="toggleVisAndRefresh(this)">Trenerzy</div>
+                        <div class="vis-chip" data-vis="KIBICE" onclick="toggleVisAndRefresh(this)">Kibice</div>
+                    </div>
+                    <div class="person-list-wrap" id="person-list-wrap">
+                        <div class="person-list-toolbar">
+                            <div class="person-list-btn" onclick="selectAllPersons()">Zaznacz wszystkich</div>
+                            <div class="person-list-btn" onclick="deselectAllPersons()">Odznacz</div>
+                            <div class="person-list-count" id="person-count">0 wybranych</div>
+                        </div>
+                        <div id="person-list"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:10px 16px 14px;border-top:1px solid var(--border);flex-shrink:0">
+                <button class="btn-primary" style="width:100%;padding:14px" onclick="saveTask()">Wyślij zadanie →</button>
+            </div>
+        </div>
+        <div class="bottom-nav">
+            <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+            <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+            <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+            <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+            <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+        </div>
+        <div class="login-overlay" id="login-ov">
+            <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
+            <button class="login-close" onclick="closeLogin()">✕</button>
+            <div class="login-body">
+                <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button>
+                    <button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button>
+                </div>
+                <div id="auth-login">
+                    <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+                    <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
+                    <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
+                    <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
+                    <div class="social-btns"><button class="social-btn"><span style="font-size:17px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size:17px">🍎</span> Apple</button></div>
+                </div>
+                <div id="auth-register" style="display:none">
+                    <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size:18px"></div>
+                    <div class="form-group"><label class="form-lbl">Imię i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
+                    <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+                    <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
+                    <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj się →</button>
+                    <div class="kod-info"><div class="kod-info-txt">🔑 Kod dostępu otrzymasz od trenera lub opiekuna.<br>Jednorazowy · ważny 7 dni</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+        <div class="menu-panel" id="menu-panel">
+            <div class="menu-panel-top">
+                <div class="menu-panel-avatar" id="menu-avatar"></div>
+                <div class="menu-panel-name" id="menu-name"></div>
+                <div class="menu-panel-role" id="menu-role"></div>
+            </div>
+            <div class="menu-panel-items">
+
+                <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+                <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+                <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+                <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+                <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+                <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+                <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+            </div>
+            <div class="menu-panel-bottom">
+                <div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div>
+            </div>
+        </div>
+    </div>
+    <script src="coachay-core.js?v=20260730a"></script>
+    <script>
+        /* ═══════════════════════════════════════════════════
+           ZADANIA — LOGIKA v2 (clean rebuild)
+        ═══════════════════════════════════════════════════ */
+        let allTasks = [], allMembers = { users: [], players: [] };
+        let currentTeamId = null, currentClubId = null, currentUserId = null, detailTask = null;
+        let editMode = false;
+        let currentRole = '';
+
+        const ROLE_LABELS = { 'TRENER_GLOWNY': 'Trener główny', 'TRENER_POMOCNICZY': 'Trener pomocniczy', 'RODZIC': 'Rodzic', 'ZAWODNIK': 'Zawodnik', 'KIBIC': 'Kibic' };
+
+        /* ── Init ── */
+        async function initZadania() {
+            if (!requireAuth()) return;
+            currentUserId = getCurrentUserId();
+
+            const s = await initSession();
+            if (!s) return;
+            const { user, team, membership } = s;
+            currentRole = isDemoMode() ? getDemoRole() : getCurrentUserData().role;
+
+            currentTeamId = team.teamId || team.id;
+            currentClubId = team.clubId;
+
+            loadCtxOverlay(user, membership, team);
+            loadMenuPanel(user, membership, team);
+            document.getElementById('fab-add').style.display = (currentRole === 'TRENER_GLOWNY' || currentRole === 'TRENER_POMOCNICZY') ? 'flex' : 'none';
+
+            await Promise.all([loadTasks(), loadMembers()]);
+            await autoCleanupTasks();
+            renderTaskList();
+            initDrums();
+            await loadAndRenderNotifications();
+            console.log('✅ Zadania załadowane');
+        }
+
+        /* ── Ładowanie danych ── */
+        async function loadTasks() {
+            if (!db || !currentTeamId) return;
+            try {
+                const snap = await db.collection('tasks').where('teamId', '==', currentTeamId).get();
+                allTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .filter(t => t.status !== 'DELETE');
+                allTasks.sort((a, b) => { if (a.status !== b.status) return a.status === 'PENDING' ? -1 : 1; return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+            } catch (e) { console.error('❌', e); }
+        }
+
+        async function loadMembers() {
+            if (!db) return;
+            try {
+                // Tylko użytkownicy z kontem (membership z userId) — zawodnicy bez konta są wykluczeni
+                const members = await getTeamMembers(currentTeamId);
+                allMembers = { users: members, players: [] };
+            } catch (e) { console.error('❌', e); }
+        }
+
+        async function autoCleanupTasks() {
+            const now = new Date(), D14 = 14 * 864e5, D60 = 60 * 864e5, toArchive = [];
+            allTasks = allTasks.filter(t => {
+                const age = now - new Date(t.createdAt || 0);
+                const archive = (t.status === 'DONE' && age > D14) || (t.status === 'PENDING' && age > D60);
+                if (archive) toArchive.push(t);
+                return !archive;
+            });
+            for (const t of toArchive) {
+                try { await db.collection('tasks').doc(t.taskId || t.id).update({ status: 'DELETE' }); } catch (e) {}
+            }
+            if (toArchive.length) console.log(`📦 Auto-archiwizacja: ${toArchive.length} zadań`);
+        }
+
+        /* ── Helpery ── */
+        function getInitials(n) { if (!n) return '?'; const p = n.split(' '); return p.length >= 2 ? (p[0][0] + p[1][0]).toUpperCase() : n.substring(0, 2).toUpperCase(); }
+
+        function formatDueDate(s) {
+            if (!s) return '—';
+            try { const d = new Date(s + 'T00:00:00'); if (isNaN(d.getTime())) return s; return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' }); }
+            catch (e) { return s; }
+        }
+
+        function isOverdue(s) { if (!s) return false; try { const t = new Date(); t.setHours(0, 0, 0, 0); return new Date(s + 'T00:00:00') < t; } catch (e) { return false; } }
+
+        function getPersonName(id) {
+            const u = allMembers.users?.find(x => x.userId === id); if (u) return u.displayName || id;
+            const p = allMembers.players?.find(x => x.playerId === id); if (p) return p.name || id;
+            return id.replace(/^demo_(player|trener|rodzic|zawodnik|obserwator)_/, '').replace(/^./, c => c.toUpperCase());
+        }
+
+        function getPersonRole(id) {
+            const u = allMembers.users?.find(x => x.userId === id);
+            if (u) { return ROLE_LABELS[u.role] || u.role || '—'; }
+            if (allMembers.players?.find(x => x.playerId === id)) return 'Zawodnik'; return '—';
+        }
+
+        function getVisibleTasks() {
+            const r = currentRole;
+            if (r === 'TRENER_GLOWNY' || r === 'TRENER_POMOCNICZY') return allTasks;
+            return allTasks.filter(t => (t.assignedTo || []).includes(currentUserId));
+        }
+
+        /* ── Render listy ── */
+        function renderTaskList() {
+            const lista = document.getElementById('zad-lista'), stats = document.getElementById('zad-stats');
+            const tasks = getVisibleTasks();
+            const pending = tasks.filter(t => t.status === 'PENDING').length;
+            const done = tasks.filter(t => t.status === 'DONE').length;
+            const odc = tasks.filter(t => t.status === 'PENDING' && isOverdue(t.dueDate)).length;
+            stats.innerHTML = `<div class="zad-stat">Oczekujące: <span class="zad-stat-val">${pending}</span></div><div class="zad-stat">Wykonane: <span class="zad-stat-val">${done}</span></div>${odc ? `<div class="zad-stat" style="color:var(--blad)">Po terminie: <span class="zad-stat-val">${odc}</span></div>` : ''}`;
+
+            if (!tasks.length) { lista.innerHTML = '<div class="zad-empty">Brak zadań</div>'; return; }
+            lista.innerHTML = '';
+
+            // Sortuj: PENDING najpierw (po dueDate rosnąco), DONE na dole (po createdAt malejąco)
+            const sorted = [...tasks].sort((a, b) => {
+                const aDone = a.status === 'DONE', bDone = b.status === 'DONE';
+                if (aDone !== bDone) return aDone ? 1 : -1;
+                if (!aDone) {
+                    // PENDING — po terminie rosnąco, brak terminu na końcu
+                    if (a.dueDate && b.dueDate) return a.dueDate < b.dueDate ? -1 : 1;
+                    if (a.dueDate) return -1;
+                    if (b.dueDate) return 1;
+                }
+                // DONE — po createdAt malejąco
+                return (b.createdAt || '').localeCompare(a.createdAt || '');
+            });
+
+            // Separator między PENDING i DONE
+            let shownDoneSep = false;
+
+            sorted.forEach(task => {
+                const card = document.createElement('div');
+                const assigned = task.assignedTo || [], completed = task.completedBy || [], rejected = task.rejectedBy || [];
+                const total = assigned.length, doneCount = completed.length;
+                const pct = total ? Math.round(doneCount / total * 100) : 0;
+                const allDone = task.status === 'DONE';
+                const overdue = !allDone && isOverdue(task.dueDate);
+                const sentByMe = task.createdBy === currentUserId;
+                const amRecipient = assigned.includes(currentUserId);
+                const myDone = completed.includes(currentUserId);
+                const myRejected = rejected.includes(currentUserId);
+
+                let cls = ''; if (allDone) cls = 'wykonane'; else if (myRejected) cls = 'odrzucone'; else if (overdue) cls = 'po-terminie';
+                card.className = 'zad-item ' + cls;
+                card.onclick = () => openDetailPanel(task);
+
+                let statusBadge = '';
+                if (allDone) statusBadge = '<span class="zad-item-badge badge-wyk">✓ Wykonane</span>';
+                else if (myRejected && !sentByMe) statusBadge = '<span class="zad-item-badge badge-odrz">✕ Odrzucone</span>';
+                else if (overdue) statusBadge = '<span class="zad-item-badge badge-termin">⚠ Po terminie</span>';
+                else if (total > 1 && doneCount > 0) statusBadge = `<span class="zad-item-badge badge-oczek">${doneCount}/${total}</span>`;
+                else statusBadge = '<span class="zad-item-badge badge-nowe">Oczekuje</span>';
+
+                const dirBadge = sentByMe && amRecipient
+                    ? '<span class="zad-item-badge badge-sent">↑↓ Własne</span>'
+                    : sentByMe ? '<span class="zad-item-badge badge-sent">↑ Wysłane</span>'
+                    : '<span class="zad-item-badge badge-recv">↓ Odebrane</span>';
+
+                let recipientText = total === 1 ? getPersonName(assigned[0]) : total + ' odbiorców';
+                let progressHtml = '';
+                if (total > 1) progressHtml = `<div class="zad-progress"><div class="zad-progress-bar"><div class="zad-progress-fill" style="width:${pct}%"></div></div><div class="zad-progress-lbl">${doneCount} z ${total} wykonało · ${pct}%</div></div>`;
+
+                let actionsHtml = '';
+                if (amRecipient) {
+                    actionsHtml = `<div class="zad-actions" onclick="event.stopPropagation()"><button class="zad-act-btn zad-act-done ${myDone ? 'is-done' : ''}" onclick="toggleMyCompletion('${task.taskId || task.id}')">${myDone ? '✓ Wykonane' : 'Oznacz jako wykonane'}</button><button class="zad-act-btn zad-act-reject ${myRejected ? 'is-rejected' : ''}" onclick="toggleMyRejection('${task.taskId || task.id}')">${myRejected ? '✕ Odrzucone' : 'Odrzuć'}</button></div>`;
+                }
+
+                card.innerHTML = `<div class="zad-item-top"><div class="zad-item-tytul">${task.title || 'Zadanie'}</div><div class="zad-item-badges">${dirBadge}${statusBadge}</div></div><div class="zad-item-meta"><div class="zad-meta-chip ${overdue ? 'overdue' : ''}"><span>📅</span> ${formatDueDate(task.dueDate)}${overdue ? ' ⚠' : ''}</div><div class="zad-meta-chip"><span>${sentByMe ? '👤' : '📤'}</span> ${sentByMe ? recipientText : getPersonName(task.createdBy)}</div></div>${progressHtml}${actionsHtml}`;
+                if (task.status === 'DONE' && !shownDoneSep) {
+                    shownDoneSep = true;
+                    const sep = document.createElement('div');
+                    sep.style.cssText = 'font-size:11px;font-weight:800;color:var(--szary);padding:12px 4px 4px;letter-spacing:0.05em;text-transform:uppercase;';
+                    sep.textContent = 'Wykonane';
+                    lista.appendChild(sep);
+                }
+                lista.appendChild(card);
+            });
+        }
+
+        /* ── Panel szczegółów ── */
+        function openDetailPanel(task) {
+            detailTask = task;
+            document.getElementById('detail-title').textContent = task.title || 'Zadanie';
+            const body = document.getElementById('detail-body');
+            const assigned = task.assignedTo || [], completed = task.completedBy || [], rejected = task.rejectedBy || [], reasons = task.rejectReasons || {};
+            const total = assigned.length, doneCount = completed.length, pct = total ? Math.round(doneCount / total * 100) : 0;
+            const allDone = task.status === 'DONE', overdue = !allDone && isOverdue(task.dueDate);
+            const isCoach = currentRole === 'TRENER_GLOWNY' || currentRole === 'TRENER_POMOCNICZY';
+
+            let h = `<div class="det-karta"><div class="det-karta-lbl">Termin</div><div class="det-karta-val" ${overdue ? 'style="color:var(--blad)"' : ''}>${formatDueDate(task.dueDate)}${overdue ? ' — po terminie!' : ''}</div></div>`;
+            h += `<div class="det-karta"><div class="det-karta-lbl">Utworzone przez</div><div class="det-karta-val">${getPersonName(task.createdBy)}</div></div>`;
+            if (task.description) h += `<div class="det-karta"><div class="det-karta-lbl">Opis</div><div class="det-karta-val" style="color:var(--szary-j);font-weight:600;line-height:1.5">${task.description}</div></div>`;
+            h += `<div class="det-karta"><div class="det-karta-lbl">Postęp</div><div class="zad-progress"><div class="zad-progress-bar"><div class="zad-progress-fill" style="width:${pct}%"></div></div><div class="zad-progress-lbl" style="margin-top:6px;font-size:12px;color:var(--bialy)">${doneCount} z ${total} oznaczyło jako wykonane</div></div></div>`;
+            h += '<div class="det-karta-lbl" style="margin-top:8px">Przypisani</div>';
+
+            assigned.forEach(pid => {
+                const name = getPersonName(pid), role = getPersonRole(pid), ini = getInitials(name);
+                const isDone = completed.includes(pid), isRej = rejected.includes(pid), reason = reasons[pid];
+                let sc, st;
+                if (isDone) { sc = 'done'; st = '✓ Wykonane'; }
+                else if (isRej) { sc = 'rejected'; st = '✕ Odrzucone'; }
+                else if (overdue) { sc = 'overdue'; st = '⚠ Po terminie'; }
+                else { sc = 'pending'; st = 'Oczekuje'; }
+                h += `<div class="det-odbiorca"><div class="det-odb-av">${ini}</div><div class="det-odb-info"><div class="det-odb-name">${name}</div><div class="det-odb-role">${role}</div>${reason ? `<div class="det-odb-reason">„${reason}"</div>` : ''}</div><div class="det-odb-status ${sc}">${st}</div></div>`;
+            });
+
+            if (isCoach) h += `<div style="display:flex;gap:8px;margin-top:12px"><button style="flex:1;padding:12px;font-size:13px;font-weight:900;background:var(--bialy);border:none;border-radius:var(--r-pill);color:#000;cursor:pointer" onclick="openEditTask()">✏️ Edytuj</button><button style="flex:0;padding:12px 18px;font-size:13px;font-weight:900;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:var(--r-pill);color:var(--blad);cursor:pointer" onclick="deleteTask()">🗑️ Usuń</button></div>`;
+
+            body.innerHTML = h;
+            document.getElementById('panel-detail').classList.add('open');
+        }
+
+        function closeDetailPanel(keepTask = false) { document.getElementById('panel-detail').classList.remove('open'); if (!keepTask) detailTask = null; }
+
+        /* ── Oznacz jako wykonane ── */
+        async function toggleMyCompletion(taskId) {
+            const task = allTasks.find(t => (t.taskId || t.id) === taskId); if (!task) return;
+            const completed = task.completedBy || [], assigned = task.assignedTo || [], rejected = task.rejectedBy || [];
+            const wasDone = completed.includes(currentUserId);
+            if (rejected.includes(currentUserId)) { task.rejectedBy = rejected.filter(id => id !== currentUserId); if (task.rejectReasons) delete task.rejectReasons[currentUserId]; }
+            if (wasDone) { task.completedBy = completed.filter(id => id !== currentUserId); task.completedAt = null; }
+            else { if (!task.completedBy) task.completedBy = []; task.completedBy.push(currentUserId); task.completedAt = new Date().toISOString(); }
+            const active = assigned.filter(id => !(task.rejectedBy || []).includes(id));
+            task.status = (task.completedBy.length >= active.length && active.length > 0) ? 'DONE' : 'PENDING';
+            try {
+                const docId = task.taskId || task.id;
+                await db.collection('tasks').doc(docId).update({ completedBy: task.completedBy, completedAt: task.completedAt, rejectedBy: task.rejectedBy || [], rejectReasons: task.rejectReasons || {}, status: task.status });
+                if (!wasDone && task.createdBy && task.createdBy !== currentUserId)
+                    await createNotification({ userId: task.createdBy, teamId: currentTeamId, type: 'TASK_COMPLETED', title: `${getPersonName(currentUserId)} — zadanie wykonane`, body: `${task.title} · termin: ${formatDueDate(task.dueDate)}`, referenceId: docId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });
+
+                if (wasDone && task.createdBy && task.createdBy !== currentUserId)
+                    await createNotification({ userId: task.createdBy, teamId: currentTeamId, type: 'TASK_UPDATED', title: `${getPersonName(currentUserId)} — cofnął(ęła) wykonanie`, body: `${task.title} · termin: ${formatDueDate(task.dueDate)}`, referenceId: docId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });                
+                renderTaskList();
+            } catch (e) { console.error('❌', e); }
+        }
+
+        /* ── Odrzuć zadanie ── */
+        async function toggleMyRejection(taskId) {
+            const task = allTasks.find(t => (t.taskId || t.id) === taskId); if (!task) return;
+            const rejected = task.rejectedBy || [], completed = task.completedBy || [];
+            const wasRejected = rejected.includes(currentUserId);
+            if (wasRejected) { task.rejectedBy = rejected.filter(id => id !== currentUserId); if (task.rejectReasons) delete task.rejectReasons[currentUserId]; }
+            else {
+                const reason = prompt('Podaj powód odrzucenia (opcjonalnie):');
+                if (completed.includes(currentUserId)) task.completedBy = completed.filter(id => id !== currentUserId);
+                if (!task.rejectedBy) task.rejectedBy = []; task.rejectedBy.push(currentUserId);
+                if (!task.rejectReasons) task.rejectReasons = {}; if (reason) task.rejectReasons[currentUserId] = reason;
+            }
+            const assigned = task.assignedTo || [], active = assigned.filter(id => !(task.rejectedBy || []).includes(id));
+            task.status = ((task.completedBy || []).length >= active.length && active.length > 0) ? 'DONE' : 'PENDING';
+            try {
+                const docId = task.taskId || task.id;
+                await db.collection('tasks').doc(docId).update({ completedBy: task.completedBy || [], rejectedBy: task.rejectedBy || [], rejectReasons: task.rejectReasons || {}, status: task.status });
+                if (!wasRejected && task.createdBy && task.createdBy !== currentUserId) {
+                    const r = (task.rejectReasons || {})[currentUserId] || '';
+                    await createNotification({ userId: task.createdBy, teamId: currentTeamId, type: 'TASK_REJECTED', title: `${getPersonName(currentUserId)} — zadanie odrzucone`, body: `${task.title} · termin: ${formatDueDate(task.dueDate)}${r ? ' · Powód: ' + r : ''}`, referenceId: docId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });
+                }
+                renderTaskList();
+            } catch (e) { console.error('❌', e); }
+        }
+
+        /* ── Usuwanie ── */
+        async function deleteTask() {
+            if (!detailTask) return;
+            if (!await showConfirmSheet('Czy na pewno usunąć to zadanie?')) return;
+            try {
+                const docId = detailTask.taskId || detailTask.id;
+                await db.collection('tasks').doc(docId).update({ status: 'DELETE' });
+                await manageNotifications('delete', 'task', docId);
+                const idx = allTasks.indexOf(detailTask); if (idx > -1) allTasks.splice(idx, 1);
+                closeDetailPanel(); renderTaskList();
+            } catch (e) { console.error('❌', e); alert('Błąd: ' + e.message); }
+        }
+
+        async function clearDoneTasks() {
+            const done = allTasks.filter(t => t.status === 'DONE');
+            if (!done.length) { alert('Brak wykonanych zadań'); return; }
+            if (!await showConfirmSheet(`Zarchiwizować ${done.length} wykonanych zadań?`)) return;
+            let d = 0; for (const t of done) { try { await db.collection('tasks').doc(t.taskId || t.id).update({ status: 'DELETE' }); const i = allTasks.indexOf(t); if (i > -1) allTasks.splice(i, 1); d++; } catch (e) {} }
+            console.log(`📦 Zarchiwizowano ${d} zadań`); renderTaskList();
+        }
+
+        /* ── Panel dodawania / edycji ── */
+        function openAddPanel() { document.getElementById('panel-add').classList.add('open'); }
+
+        function closeAddPanel() {
+            document.getElementById('panel-add').classList.remove('open');
+            editMode = false;
+            document.getElementById('add-title').value = '';
+            document.getElementById('add-desc').value = '';
+            document.querySelectorAll('#vis-grid .vis-chip').forEach(c => c.classList.remove('selected'));
+            document.getElementById('person-list').innerHTML = '';
+            document.getElementById('person-count').textContent = '0 wybranych';
+            document.getElementById('drum-err').style.display = 'none';
+            const sb = document.querySelector('#panel-add .btn-primary'); if (sb) sb.textContent = 'Wyślij zadanie →';
+        }
+
+        /* ── Edycja zadania ── */
+        function openEditTask() {
+            if (!detailTask) return;
+            editMode = true;
+            const t = detailTask;
+
+            document.getElementById('add-title').value = t.title || '';
+            document.getElementById('add-desc').value = t.description || '';
+
+            if (t.dueDate) {
+                const parts = t.dueDate.split('-');
+                if (parts.length === 3) {
+                    drumState.rok = parseInt(parts[0]); drumState.miesiac = parseInt(parts[1]); drumState.dzien = parseInt(parts[2]);
+                    initDrums();
+                }
+            }
+
+            const assigned = t.assignedTo || [];
+            const druzChip = document.querySelector('#vis-grid .vis-chip[data-vis="DRUZYNA"]');
+            if (druzChip) { druzChip.classList.add('selected'); renderPersonList(); }
+            setTimeout(() => {
+                document.querySelectorAll('#person-list .person-check-row').forEach(r => {
+                    if (assigned.includes(r.dataset.personId)) { r.classList.add('checked'); r.querySelector('.person-cb').textContent = '✓'; }
+                });
+                updatePersonCount();
+            }, 50);
+
+            const sb = document.querySelector('#panel-add .btn-primary'); if (sb) sb.textContent = 'Zapisz zmiany →';
+            closeDetailPanel(true); // zachowaj detailTask dla saveTaskEdit
+            openAddPanel();
+        }
+
+        async function saveTaskEdit() {
+            if (!detailTask) return;
+            const title = document.getElementById('add-title').value.trim();
+            const desc = document.getElementById('add-desc').value.trim();
+            if (!title) { alert('Podaj tytuł zadania'); return; }
+
+            const d = drumState.dzien, m = drumState.miesiac, r = drumState.rok;
+            const dueDate = `${r}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const wybrana = new Date(r, m - 1, d), dzis = new Date(); dzis.setHours(0, 0, 0, 0);
+            if (wybrana < dzis) { document.getElementById('drum-err').style.display = 'block'; setTimeout(() => document.getElementById('drum-err').style.display = 'none', 3000); return; }
+            const newAssigned = getSelectedPersonIds();
+            if (!newAssigned.length) { alert('Wybierz co najmniej jedną osobę'); return; }
+
+            const oldAssigned = detailTask.assignedTo || [];
+            const updates = { title: title, description: desc || null, dueDate: dueDate, assignedTo: newAssigned };
+
+            try {
+                const docId = detailTask.taskId || detailTask.id;
+                await db.collection('tasks').doc(docId).update(updates);
+                Object.assign(detailTask, updates);
+
+                // Wygaś stare + wyślij nowe do wszystkich przypisanych
+                await manageNotifications('edit', 'task', docId, {
+                    teamId: currentTeamId, assignees: newAssigned, title, dueDate: formatDueDate(dueDate)
+                });
+
+                closeAddPanel();
+                allTasks.sort((a, b) => { if (a.status !== b.status) return a.status === 'PENDING' ? -1 : 1; return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+                renderTaskList();
+                console.log('✅ Zadanie zaktualizowane');
+            } catch (e) { console.error('❌', e); alert('Błąd: ' + e.message); }
+        }
+
+        function toggleVisAndRefresh(el) { el.classList.toggle('selected'); renderPersonList(); }
+
+        /* ── Lista osób ── */
+        function renderPersonList() {
+            const container = document.getElementById('person-list'); if (!container) return;
+            const sel = Array.from(document.querySelectorAll('#vis-grid .vis-chip.selected')).map(c => c.dataset.vis);
+            const persons = [], added = new Set();
+            function add(id, name, role, rk) { if (added.has(id)) return; added.add(id); persons.push({ id, name, role, rk }); }
+
+            // Wszyscy po userId — tylko użytkownicy z kontem (players bez konta są wykluczeni)
+            allMembers.users?.forEach(u => {
+                const r = u.role || '';
+                if (sel.includes('TRENERZY') && (r === 'TRENER_GLOWNY' || r === 'TRENER_POMOCNICZY'))
+                    add(u.userId, u.displayName || u.userId, ROLE_LABELS[r] || r, 'TRENER');
+                if (sel.includes('DRUZYNA') && r === 'ZAWODNIK')
+                    add(u.userId, u.displayName || u.userId, 'Zawodnik', 'ZAWODNIK');
+                if (sel.includes('RODZICE') && r === 'RODZIC')
+                    add(u.userId, u.displayName || u.userId, ROLE_LABELS[r] || r, 'RODZIC');
+                if (sel.includes('KIBICE') && r === 'KIBIC')
+                    add(u.userId, u.displayName || u.userId, ROLE_LABELS[r] || r, 'KIBIC');
+            });
+
+            const order = { 'TRENER': 0, 'ZAWODNIK': 1, 'RODZIC': 2, 'KIBIC': 3 };
+            persons.sort((a, b) => (order[a.rk] || 9) - (order[b.rk] || 9) || a.name.localeCompare(b.name));
+            container.innerHTML = '';
+            persons.forEach(p => {
+                const row = document.createElement('div'); row.className = 'person-check-row'; row.dataset.personId = p.id;
+                row.onclick = () => { row.classList.toggle('checked'); row.querySelector('.person-cb').textContent = row.classList.contains('checked') ? '✓' : ''; updatePersonCount(); };
+                row.innerHTML = `<div class="person-cb"></div><div class="person-check-name">${p.name}</div><div class="person-check-role">${p.role}</div>`;
+                container.appendChild(row);
+            });
+            updatePersonCount();
+        }
+
+        function updatePersonCount() {
+            const c = document.querySelectorAll('#person-list .person-check-row.checked').length;
+            const t = document.querySelectorAll('#person-list .person-check-row').length;
+            const el = document.getElementById('person-count'); if (el) el.textContent = `${c}/${t} wybranych`;
+        }
+        function selectAllPersons() { document.querySelectorAll('#person-list .person-check-row').forEach(r => { r.classList.add('checked'); r.querySelector('.person-cb').textContent = '✓'; }); updatePersonCount(); }
+        function deselectAllPersons() { document.querySelectorAll('#person-list .person-check-row').forEach(r => { r.classList.remove('checked'); r.querySelector('.person-cb').textContent = ''; }); updatePersonCount(); }
+        function getSelectedPersonIds() { return Array.from(document.querySelectorAll('#person-list .person-check-row.checked')).map(r => r.dataset.personId); }
+
+        /* ── Zapis zadania ── */
+        async function saveTask() {
+            if (editMode && detailTask) { await saveTaskEdit(); return; }
+
+            const title = document.getElementById('add-title').value.trim();
+            const desc = document.getElementById('add-desc').value.trim();
+            if (!title) { alert('Podaj tytuł zadania'); return; }
+            const d = drumState.dzien, m = drumState.miesiac, r = drumState.rok;
+            const dueDate = `${r}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const wybrana = new Date(r, m - 1, d), dzis = new Date(); dzis.setHours(0, 0, 0, 0);
+            if (wybrana < dzis) { document.getElementById('drum-err').style.display = 'block'; setTimeout(() => document.getElementById('drum-err').style.display = 'none', 3000); return; }
+            const assignedTo = getSelectedPersonIds();
+            if (!assignedTo.length) { alert('Wybierz co najmniej jedną osobę'); return; }
+
+            const taskData = {
+                taskId: 'task_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '_' + Date.now().toString().slice(-5),
+                teamId: currentTeamId, title: title, description: desc || null, createdBy: currentUserId,
+                assignedTo: assignedTo, completedBy: [], rejectedBy: [], rejectReasons: {},
+                status: 'PENDING', dueDate: dueDate, completedAt: null,
+                createdAt: new Date().toISOString(), isDemo: false, demoSetId: null
+            };
+            try {
+                await db.collection('tasks').doc(taskData.taskId).set(taskData);
+                allTasks.unshift(taskData);
+                await manageNotifications('create', 'task', taskData.taskId, {
+                    teamId: currentTeamId, assignees: assignedTo, title, dueDate: formatDueDate(dueDate)
+                });
+                closeAddPanel();
+                allTasks.sort((a, b) => { if (a.status !== b.status) return a.status === 'PENDING' ? -1 : 1; return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+                renderTaskList();
+            } catch (e) { console.error('❌', e); alert('Błąd: ' + e.message); }
+        }
+
+        /* ═══ DRUM PICKER ═══ */
+        const MIESIACE_FULL = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+        const today = new Date();
+        const drumState = { dzien: today.getDate(), miesiac: today.getMonth() + 1, rok: today.getFullYear() };
+        function getDniWMiesiacu(m, r) { return new Date(r, m, 0).getDate(); }
+
+        function buildDrum(colId, items, si) {
+            const col = document.getElementById(colId);
+            col.innerHTML = `<div class="drum-inner" id="${colId}-inner">${items.map((item, i) => `<div class="drum-item ${i === si ? 'active' : ''}" data-index="${i}">${item}</div>`).join('')}</div>`;
+            document.getElementById(`${colId}-inner`).style.transform = `translateY(${-si * 46}px)`;
+            let sy = 0, sIdx = si, drag = false;
+            const onS = y => { sy = y; sIdx = si; drag = true; };
+            const onM = y => { if (!drag) return; const diff = Math.round((sy - y) / 46); const ni = Math.max(0, Math.min(items.length - 1, sIdx + diff)); if (ni !== si) { si = ni; updateDrum(colId, items, si); } };
+            const onE = () => { drag = false; };
+            col.addEventListener('touchstart', e => onS(e.touches[0].clientY), { passive: true });
+            col.addEventListener('touchmove', e => onM(e.touches[0].clientY), { passive: true });
+            col.addEventListener('touchend', onE);
+            col.addEventListener('mousedown', e => onS(e.clientY));
+            col.addEventListener('mousemove', e => onM(e.clientY));
+            col.addEventListener('mouseup', onE); col.addEventListener('mouseleave', onE);
+            col.addEventListener('click', e => { const it = e.target.closest('.drum-item'); if (!it) return; si = parseInt(it.dataset.index); updateDrum(colId, items, si); });
+        }
+
+        function updateDrum(colId, items, si) {
+            const inner = document.getElementById(`${colId}-inner`); if (!inner) return;
+            inner.style.transform = `translateY(${-si * 46}px)`;
+            inner.querySelectorAll('.drum-item').forEach((el, i) => el.classList.toggle('active', i === si));
+            if (colId === 'drum-dzien') drumState.dzien = parseInt(items[si]);
+            else if (colId === 'drum-miesiac') { drumState.miesiac = si + 1; const dn = getDniWMiesiacu(drumState.miesiac, drumState.rok); buildDrum('drum-dzien', Array.from({ length: dn }, (_, i) => String(i + 1).padStart(2, '0')), Math.min(drumState.dzien, dn) - 1); }
+            else if (colId === 'drum-rok') drumState.rok = parseInt(items[si]);
+        }
+
+        function initDrums() {
+            const dn = getDniWMiesiacu(drumState.miesiac, drumState.rok);
+            buildDrum('drum-dzien', Array.from({ length: dn }, (_, i) => String(i + 1).padStart(2, '0')), drumState.dzien - 1);
+            buildDrum('drum-miesiac', MIESIACE_FULL, drumState.miesiac - 1);
+            buildDrum('drum-rok', Array.from({ length: 5 }, (_, i) => String(today.getFullYear() + i)), 0);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof firebase === 'undefined') { console.error('❌ Firebase nie załadował się!'); return; }
+            initFirebase();
+            let _loaded = false;
+            auth.onAuthStateChanged(user => {
+                if (_loaded) return;
+                if (user) {
+                    _loaded = true;
+                    if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
+                    initZadania();
+                } else {
+                    if (!isDemoMode()) window.location.href = 'login.html';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

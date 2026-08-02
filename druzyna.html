@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Drużyna</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+.screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
+
+/* ── Sort bar ── */
+.sort-bar { padding: 10px 16px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
+.sort-bar::-webkit-scrollbar { display: none; }
+.sort-lbl { font-size: 10px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; flex-shrink: 0; }
+.sort-btn { border-radius: var(--r-pill); padding: 5px 12px; font-size: 11px; font-weight: 800; background: var(--tlo-karta); border: 1px solid var(--border); color: var(--szary); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.sort-btn.active { background: var(--bialy); color: #000; border-color: var(--bialy); }
+
+/* ── Lista zawodników ── */
+.zaw-scroll { flex: 1; overflow-y: auto; padding: 10px 16px 80px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+.zaw-scroll::-webkit-scrollbar { display: none; }
+
+.zaw-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.15s; }
+.zaw-item:active { background: var(--tlo-karta2); }
+
+.zaw-av-wrap { position: relative; flex-shrink: 0; width: 46px; height: 46px; }
+.zaw-av { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border2); flex-shrink: 0; background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; }
+.zaw-av-dot { position: absolute; bottom: 1px; right: 1px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--tlo-karta); }
+.zaw-av-dot.has-account { background: #22c55e; }
+.zaw-av-dot.no-account  { background: var(--szary); }
+.zaw-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.zaw-av-initials { font-family: var(--font-d); font-size: 14px; font-weight: 800; color: var(--bialy); }
+
+.zaw-info { flex: 1; min-width: 0; }
+.zaw-nazwa { font-size: 14px; font-weight: 800; color: var(--bialy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zaw-sub { font-size: 11px; color: var(--szary); margin-top: 2px; font-weight: 600; }
+
+.zaw-meta { text-align: right; flex-shrink: 0; }
+.zaw-liga { font-size: 11px; font-weight: 900; color: var(--warn); white-space: nowrap; }
+.zaw-liga-lbl { font-size: 9px; color: var(--szary); font-weight: 700; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── FAB — dodaj zawodnika ── */
+.fab { position: absolute; bottom: calc(var(--nav-h) + 12px); right: 18px; width: 52px; height: 52px; border-radius: 50%; background: var(--akcent); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 300; color: #fff; box-shadow: 0 4px 20px rgba(59,130,246,0.4); cursor: pointer; z-index: 10; transition: transform 0.15s; border: none; }
+.fab:active { transform: scale(0.92); }
+
+/* ── Panel zawodnika (slide z prawej) ── */
+.detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.detail-panel.open { transform: translateX(0); }
+
+.dp-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-back { display: flex; align-items: center; gap: 8px; color: var(--bialy); font-size: 13px; font-weight: 800; cursor: pointer; }
+.dp-back-icon { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.dp-edit-btn { font-size: 12px; font-weight: 800; color: var(--akcent); cursor: pointer; padding: 4px 0; }
+
+.dp-hero { background: #000; padding: 16px 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-hero-main { display: flex; align-items: center; gap: 16px; }
+.dp-av { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border2); flex-shrink: 0; background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; }
+.dp-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dp-av-initials { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
+.dp-info { flex: 1; min-width: 0; }
+.dp-nazwa { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); line-height: 1.1; }
+.dp-sub { font-size: 12px; color: var(--szary); margin-top: 4px; font-weight: 600; line-height: 1.5; }
+.dp-badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+.dp-stats { display: flex; background: var(--tlo-karta); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-stat { flex: 1; text-align: center; padding: 14px 8px; }
+.dp-stat + .dp-stat { border-left: 1px solid var(--border); }
+.dp-stat-n { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); line-height: 1; }
+.dp-stat-l { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: var(--szary); margin-top: 4px; }
+
+.dp-scroll { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+.dp-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Frekwencja ── */
+.freq-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.freq-label { font-size: 12px; font-weight: 700; color: var(--szary-j); width: 70px; flex-shrink: 0; }
+.freq-bar-wrap { flex: 1; height: 8px; background: var(--tlo-karta2); border-radius: 999px; overflow: hidden; }
+.freq-bar { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+.freq-bar-trening { background: #3B82F6; }
+.freq-bar-mecz { background: #10B981; }
+.freq-bar-wyjazd { background: #F59E0B; }
+.freq-bar-inne { background: #6B7280; }
+.freq-pct { font-size: 12px; font-weight: 900; color: var(--bialy); width: 36px; text-align: right; flex-shrink: 0; }
+
+/* ── Absencje ── */
+.abs-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.abs-item:last-child { border-bottom: none; }
+.abs-dates { flex: 1; }
+.abs-dates-main { font-size: 12px; font-weight: 800; color: var(--bialy); }
+.abs-dates-comment { font-size: 11px; color: var(--szary); margin-top: 2px; }
+.abs-del { font-size: 16px; color: var(--szary); cursor: pointer; padding: 4px; }
+
+/* ── Panel absencji (slide-in nad profilem) ── */
+.abs-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.abs-panel.open { transform: translateY(0); }
+.abs-panel-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.abs-panel-tytul { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+.abs-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Panel dodaj zawodnika ── */
+.add-player-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.add-player-panel.open { transform: translateY(0); }
+.add-player-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.add-player-tytul { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+.add-player-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── Statystyki hero — 4 pola z zapisem X/Y ── */
+.dp-stat-sub { font-size: 9px; font-weight: 700; color: var(--szary); margin-top: 3px; }
+
+/* ── Sekcja w panelu ── */
+.dp-section { display: flex; flex-direction: column; gap: 8px; }
+.dp-section-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
+
+/* ── Picker awatara (slide-in z dołu) ── */
+.avatar-picker-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 150; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.avatar-picker-panel.open { transform: translateY(0); }
+.avatar-picker-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.avatar-picker-tytul { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+
+/* Wybór stylu + przycisk generuj */
+.av-styl-row { display: flex; gap: 8px; padding: 12px 16px; background: #000; border-bottom: 1px solid var(--border); flex-shrink: 0; align-items: center; }
+.av-styl-btn { padding: 7px 16px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1px solid var(--border); font-size: 12px; font-weight: 800; color: var(--szary-j); cursor: pointer; transition: all 0.15s; }
+.av-styl-btn.selected { background: var(--bialy); color: #000; border-color: var(--bialy); }
+.av-generuj-btn { margin-left: auto; padding: 7px 14px; border-radius: var(--r-pill); background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); font-size: 12px; font-weight: 900; color: var(--akcent); cursor: pointer; flex-shrink: 0; }
+.av-generuj-btn:active { background: rgba(59,130,246,0.25); }
+
+/* Grid miniaturek */
+.av-grid-scroll { flex: 1; overflow-y: auto; padding: 12px; scrollbar-width: none; }
+.av-grid-scroll::-webkit-scrollbar { display: none; }
+.av-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.av-thumb { width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; cursor: pointer; border: 3px solid transparent; transition: border-color 0.15s, transform 0.15s; background: var(--tlo-karta2); }
+.av-thumb:active { transform: scale(0.92); }
+.av-thumb.selected { border-color: var(--akcent); transform: scale(1.05); }
+.av-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Modal potwierdzenia kodu */
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
+.modal-overlay.open { opacity: 1; visibility: visible; }
+.modal-box { background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: 20px 20px 0 0; padding: 20px 20px 32px; width: 100%; }
+.modal-title { font-family: var(--font-d); font-size: 16px; font-weight: 800; color: var(--bialy); margin-bottom: 8px; }
+.modal-body { font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.6; margin-bottom: 18px; }
+.modal-btns { display: flex; flex-direction: column; gap: 8px; }
+.modal-btn { width: 100%; padding: 14px; border-radius: var(--r-pill); font-size: 13px; font-weight: 900; cursor: pointer; border: none; transition: opacity 0.15s; }
+.modal-btn-primary { background: var(--bialy); color: #000; }
+.modal-btn-secondary { background: var(--tlo-karta2); color: var(--szary-j); border: 1px solid var(--border2); }
+.modal-btn-cancel { background: transparent; color: var(--szary); font-size: 12px; }
+
+/* ── Notatki trenera ── */
+.coach-notes { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 12px 14px; color: var(--bialy); font-size: 13px; font-weight: 600; font-family: var(--font); resize: none; min-height: 80px; }
+.coach-notes::placeholder { color: var(--szary); }
+.coach-notes:focus { border-color: var(--akcent); outline: none; }
+
+/* ── Kody dostępu — lista ── */
+.kod-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.kod-item.kod-aktywny { border-color: rgba(59,130,246,0.4); }
+.kod-item.kod-uzyty { border-color: rgba(74,222,128,0.3); }
+.kod-item.kod-wygasly { opacity: 0.5; }
+.kod-item.kod-nieaktywny { opacity: 0.5; }
+.kod-item-top { display: flex; align-items: center; justify-content: space-between; }
+.kod-val-big { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
+.kod-status-badge { font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 1px; }
+.kod-status-aktywny { background: rgba(59,130,246,0.15); color: #3B82F6; }
+.kod-status-uzyty { background: rgba(74,222,128,0.12); color: var(--sukces); }
+.kod-status-wygasly { background: var(--tlo-karta2); color: var(--szary); }
+.kod-status-nieaktywny { background: rgba(251,191,36,0.12); color: var(--warn); }
+.kod-meta { font-size: 11px; color: var(--szary); font-weight: 600; line-height: 1.6; }
+.kod-meta strong { color: var(--szary-j); }
+.kod-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+
+/* ── Sticky save btn ── */
+.sticky-save { position: sticky; bottom: 0; padding: 14px 16px; background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
+
+/* ── Kod dostępu ── */
+.kod-box { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; }
+.kod-val { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
+.kod-copy { font-size: 11px; font-weight: 900; color: var(--akcent); cursor: pointer; }
+
+/* ── Select custom ── */
+.form-select { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 15px; font-weight: 600; font-family: var(--font); appearance: none; cursor: pointer; }
+.form-select:focus { border-color: var(--akcent); outline: none; }
+.form-select option { background: #1a1a1a; }
+
+/* ── Empty state ── */
+.zaw-empty { padding: 60px 20px; text-align: center; color: var(--szary); font-size: 13px; font-weight: 600; line-height: 1.6; }
+
+/* ── Powiązane konta ── */
+.pow-group-label { font-size: 10px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; margin-top: 4px; }
+.pow-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
+.pow-item:last-child { margin-bottom: 0; }
+.pow-item:hover { border-color: var(--akcent); }
+.pow-chevron { color: var(--szary); font-size: 12px; flex-shrink: 0; }
+/* Modal danych powiązanego */
+.pow-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 9000; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.pow-modal-overlay.open { opacity: 1; pointer-events: all; }
+.pow-modal { background: var(--tlo-karta); border-radius: 20px 20px 0 0; padding: 20px 20px 36px; width: 100%; max-height: 80vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.25s cubic-bezier(.32,.72,0,1); }
+.pow-modal-overlay.open .pow-modal { transform: translateY(0); }
+.pow-modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.pow-modal-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.pow-modal-title { font-size: 16px; font-weight: 900; color: var(--bialy); flex: 1; }
+.pow-modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: var(--szary); }
+.pow-modal-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.pow-modal-row:last-child { border-bottom: none; }
+.pow-modal-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; margin-top: 1px; }
+.pow-modal-label { font-size: 10px; font-weight: 700; color: var(--szary); text-transform: uppercase; letter-spacing: 0.5px; }
+.pow-modal-val { font-size: 13px; font-weight: 700; color: var(--bialy); margin-top: 2px; line-height: 1.4; }
+.pow-item-top { display: flex; align-items: center; gap: 10px; }
+.pow-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.pow-name { font-size: 13px; font-weight: 800; color: var(--bialy); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pow-status { font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
+.pow-status-active  { background: rgba(16,185,129,0.15); color: var(--sukces); }
+.pow-status-pending { background: rgba(107,114,128,0.15); color: var(--szary); }
+.pow-status-expired { background: rgba(248,113,113,0.15); color: var(--blad); }
+.pow-code-row { display: flex; align-items: center; gap: 8px; }
+.pow-code { font-size: 12px; font-weight: 800; color: var(--bialy); font-family: monospace; background: var(--tlo-karta2); border: 1px solid var(--border); padding: 3px 10px; border-radius: 6px; letter-spacing: 2px; }
+.pow-exp { font-size: 10px; color: var(--szary); font-weight: 600; }
+.pow-actions { display: flex; gap: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+.pow-action-btn { flex: 1; padding: 6px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); background: var(--tlo-karta2); color: var(--szary-j); text-align: center; transition: opacity 0.15s; }
+.pow-action-btn:active { opacity: 0.6; }
+.pow-empty { font-size: 12px; color: var(--szary); text-align: center; padding: 10px 0; }
+.pow-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pow-filter-row label { font-size: 11px; font-weight: 700; color: var(--szary); cursor: pointer; user-select: none; }
+.pow-filter-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--akcent); }
+/* Phone prefix row */
+.phone-row { display: flex; gap: 6px; align-items: center; }
+.phone-prefix-select { width: 90px; flex-shrink: 0; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--bialy); font-size: 13px; font-weight: 700; padding: 10px 8px; -webkit-appearance: none; }
+.phone-num-inp { flex: 1; }
+.phone-error { font-size: 11px; color: var(--blad); margin-top: 4px; font-weight: 700; display: none; }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+
+    <!-- Top bar -->
+    <div class="top-bar">
+        <div class="ctx-switcher" onclick="toggleCtxOv()">
+            <div class="ctx-dot" id="ctx-dot"></div>
+            <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+            <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+        </div>
+    </div>
+
+    <!-- Overlaye globalne -->
+    <div class="ctx-overlay" id="ctx-ov">
+        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
+        <div class="ctx-teams" id="ctx-teams"></div>
+    </div>
+    <div class="notif-overlay" id="notif-ov">
+        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
+    </div>
+
+    <!-- Główna zawartość -->
+    <div class="screen-body">
+
+        <!-- Sort bar -->
+        <div class="sort-bar">
+            <span class="sort-lbl">Sortuj:</span>
+            <button class="sort-btn active" data-sort="numer" onclick="sortujZawodnikow(this,'numer')">Numer</button>
+            <button class="sort-btn" data-sort="imie" onclick="sortujZawodnikow(this,'imie')">Imię</button>
+            <button class="sort-btn" data-sort="pozycja" onclick="sortujZawodnikow(this,'pozycja')">Pozycja</button>
+            <button class="sort-btn" data-sort="grupa" onclick="sortujZawodnikow(this,'grupa')">Grupa</button>
+        </div>
+
+        <div class="pow-filter-row" id="zaw-show-deleted-row" style="display:none;padding:0 16px 8px;">
+            <input type="checkbox" id="zaw-show-deleted" onchange="renderujListe()">
+            <label for="zaw-show-deleted">Pokaż usuniętych</label>
+        </div>
+
+        <!-- Lista zawodników -->
+        <div class="zaw-scroll" id="zaw-lista">
+            <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">Ładowanie...</div>
+        </div>
+
+    </div><!-- /screen-body -->
+
+    <!-- FAB — dodaj zawodnika (tylko trener) -->
+    <div class="fab" id="fab-dodaj" style="display:none" onclick="otworzDodajZawodnika()">+</div>
+
+    <!-- ═══ PANEL ZAWODNIKA ═══ -->
+    <div class="detail-panel" id="detail-panel">
+        <div class="dp-topbar">
+            <div class="dp-back" onclick="zamknijProfil()">
+                <div class="dp-back-icon">‹</div>
+                Drużyna
+            </div>
+            <span class="dp-edit-btn" id="dp-edit-btn" style="display:none" onclick="edytujZawodnika()">Edytuj</span>
+        </div>
+
+        <!-- Hero -->
+        <div class="dp-hero">
+            <div class="dp-hero-main">
+                <div style="position:relative;flex-shrink:0;">
+                    <div class="dp-av" id="dp-av"><span class="dp-av-initials" id="dp-av-initials"></span></div>
+                    <div id="dp-av-edit-btn" style="display:none;position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--akcent);border:2px solid var(--tlo);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;" onclick="otworzPickerAwatara()">✏️</div>
+                </div>
+                <div class="dp-info">
+                    <div class="dp-nazwa" id="dp-nazwa"></div>
+                    <div class="dp-sub" id="dp-sub"></div>
+                    <div class="dp-badges" id="dp-badges"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statystyki — X/Y z okresu -->
+        <div class="dp-stats">
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-mecze">—</div><div class="dp-stat-sub" id="dp-mecze-sub"></div><div class="dp-stat-l">Mecze</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-treningi">—</div><div class="dp-stat-sub" id="dp-treningi-sub"></div><div class="dp-stat-l">Treningi</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-wyjazdy">—</div><div class="dp-stat-sub" id="dp-wyjazdy-sub"></div><div class="dp-stat-l">Wyjazdy</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-inne">—</div><div class="dp-stat-sub" id="dp-inne-sub"></div><div class="dp-stat-l">Inne</div></div>
+        </div>
+
+        <!-- Treść profilu -->
+        <div class="dp-scroll">
+
+            <!-- Frekwencja -->
+            <div class="dp-section">
+                <div class="dp-section-label">Frekwencja</div>
+                <select id="dp-sezon-select" onchange="zmienSezonFrekwencji()" style="font-size:11px;font-weight:700;margin-bottom:8px;background:transparent;border:none;color:var(--szary-j);padding:0;cursor:pointer;max-width:100%;"></select>
+                <div id="dp-frekwencja">
+                    <div style="color:var(--szary);font-size:12px;">Ładowanie...</div>
+                </div>
+            </div>
+
+            <!-- Absencje -->
+            <div class="dp-section">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div class="dp-section-label">Absencje</div>
+                    <button class="btn-ghost" id="dp-btn-abs" style="display:none;font-size:11px;padding:4px 12px;" onclick="otworzAbsencje()">+ Zgłoś</button>
+                </div>
+                <div id="dp-absencje">
+                    <div style="color:var(--szary);font-size:12px;">Ładowanie...</div>
+                </div>
+            </div>
+
+            <!-- Notatki trenera (tylko trener) -->
+            <div class="dp-section" id="dp-notatki-section" style="display:none">
+                <div class="dp-section-label">Notatki trenera</div>
+                <textarea class="coach-notes" id="dp-notatki" placeholder="Notatki widoczne tylko dla trenerów..." rows="3"></textarea>
+                <button class="btn-ghost" style="align-self:flex-end;font-size:11px;" onclick="zapiszNotatki()">Zapisz notatki</button>
+            </div>
+
+            <!-- Kody dostępu (tylko trener) -->
+            <div class="dp-section" id="dp-kod-section" style="display:none">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div class="dp-section-label" style="margin-bottom:0">Kody dostępu</div>
+                    <div class="pow-filter-row" style="margin-bottom:0;">
+                        <input type="checkbox" id="kod-show-inactive" onchange="aktualnyZawodnik && zaladujKody(aktualnyZawodnik)">
+                        <label for="kod-show-inactive">Pokaż nieaktywne kody</label>
+                    </div>
+                </div>
+                <!-- Wybór typu kodu -->
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="dp-typ-kodu-row">
+                    <button class="sort-btn active" data-typ="RODZIC" onclick="wybierzTypKodu(this,'RODZIC')">👨‍👦 Rodzic</button>
+                    <button class="sort-btn" data-typ="ZAWODNIK" onclick="wybierzTypKodu(this,'ZAWODNIK')">⚽ Zawodnik</button>
+                    <button class="sort-btn" data-typ="KIBIC" onclick="wybierzTypKodu(this,'KIBIC')">👴 Kibic</button>
+                </div>
+                <div id="dp-typ-kodu-info" style="font-size:11px;color:var(--szary);margin-bottom:10px;line-height:1.5;"></div>
+                <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size:12px;" onclick="generujKod()">🔑 Wygeneruj nowy kod</button>
+                <div id="dp-kod-content">
+                    <div style="color:var(--szary);font-size:12px;">Ładowanie...</div>
+                </div>
+            </div>
+
+            <!-- Powiązane konta (tylko trener) -->
+            <div class="dp-section" id="dp-powiazane-section" style="display:none">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div class="dp-section-label" style="margin-bottom:0;">Powiązane konta</div>
+                    <div class="pow-filter-row" style="margin-bottom:0;">
+                        <input type="checkbox" id="pow-show-inactive" onchange="toggleNieaktywnePowiazania()">
+                        <label for="pow-show-inactive">Pokaż nieaktywne</label>
+                    </div>
+                </div>
+                <div id="dp-powiazane-content">
+                    <div style="color:var(--szary);font-size:12px;">Ładowanie...</div>
+                </div>
+            </div>
+
+            <!-- Przejmij zawodnika z powrotem (tylko trener) -->
+            <div class="dp-section" id="dp-przejmij-section" style="display:none">
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size:13px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()">↩ Przejmij zawodnika z powrotem</button>
+            </div>
+
+            <!-- Usuń zawodnika (tylko TRENER_GLOWNY) -->
+            <div class="dp-section" id="dp-usun-section" style="display:none">
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size:13px;font-weight:800;color:#fff;border:1px solid #EF4444;background:#EF4444;border-radius:12px;" onclick="usunZawodnika()">🗑️ Usuń zawodnika</button>
+            </div>
+
+        </div><!-- /dp-scroll -->
+
+        <!-- Modal danych powiązanego -->
+        <div class="pow-modal-overlay" id="pow-modal-overlay" onclick="zamknijPowModal()">
+            <div class="pow-modal" onclick="event.stopPropagation()">
+                <div class="pow-modal-header">
+                    <div class="pow-modal-avatar" id="pow-modal-avatar">👤</div>
+                    <div style="flex:1;min-width:0">
+                        <div class="pow-modal-title" id="pow-modal-title">—</div>
+                        <div style="font-size:11px;color:var(--szary);font-weight:600;margin-top:2px" id="pow-modal-subtitle">—</div>
+                    </div>
+                    <div class="pow-modal-close" onclick="zamknijPowModal()">✕</div>
+                </div>
+                <div id="pow-modal-rows"></div>
+            </div>
+        </div>
+
+    </div><!-- /detail-panel -->
+
+    <!-- ═══ PANEL ABSENCJI ═══ -->
+    <div class="abs-panel" id="abs-panel">
+        <div class="abs-panel-hdr">
+            <div class="dp-back" onclick="zamknijAbsencje()">
+                <div class="dp-back-icon">‹</div>
+                Profil
+            </div>
+            <span class="abs-panel-tytul">Zgłoś absencję</span>
+        </div>
+        <div class="abs-panel-body">
+            <div class="dp-section-label">Zawodnik</div>
+            <div style="font-size:14px;font-weight:800;color:var(--bialy);" id="abs-player-name">—</div>
+
+            <div class="form-group">
+                <label class="form-lbl">Data od *</label>
+                <input type="date" class="form-inp" id="abs-date-from">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Data do *</label>
+                <input type="date" class="form-inp" id="abs-date-to">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Komentarz</label>
+                <input type="text" class="form-inp" id="abs-comment" placeholder="np. Złamanie ręki, Choroba...">
+            </div>
+        </div>
+        <div class="sticky-save">
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()">Zapisz absencję</button>
+        </div>
+    </div><!-- /abs-panel -->
+
+    <!-- ═══ PANEL DODAJ ZAWODNIKA ═══ -->
+    <div class="add-player-panel" id="add-player-panel">
+        <div class="add-player-hdr">
+            <div class="dp-back" onclick="zamknijDodajZawodnika()">
+                <div class="dp-back-icon">‹</div>
+                Drużyna
+            </div>
+            <span class="add-player-tytul" id="add-player-tytul">Nowy zawodnik</span>
+        </div>
+        <div class="add-player-body">
+            <div class="form-group">
+                <label class="form-lbl">Imię *</label>
+                <input type="text" class="form-inp" id="ap-firstname" placeholder="Jan">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Nazwisko *</label>
+                <input type="text" class="form-inp" id="ap-lastname" placeholder="Kowalski">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Data urodzenia *</label>
+                <input type="date" class="form-inp" id="ap-urodziny">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Grupa *</label>
+                <select class="form-select" id="ap-grupa">
+                    <option value="FIRST">Pierwsza</option>
+                    <option value="SECOND">Druga</option>
+                    <option value="THIRD">Trzecia</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Pozycja <span style="color:var(--szary);font-weight:600;">(opcjonalna)</span></label>
+                <input type="text" class="form-inp" id="ap-pozycja" placeholder="np. Napastnik, Bramkarz...">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Numer koszulki <span style="color:var(--szary);font-weight:600;">(opcjonalny)</span></label>
+                <input type="number" class="form-inp" id="ap-numer" placeholder="np. 10" min="1" max="99">
+            </div>
+            <!-- TODO: Pole "Liga" konfigurowalne w Ustawieniach (nazwa i wartości) — do zaimplementowania w Priorytecie 4 (Ustawienia) -->
+            <div class="form-group">
+                <label class="form-lbl">Liga <span style="color:var(--szary);font-weight:600;">(widoczna tylko dla trenera)</span></label>
+                <input type="text" class="form-inp" id="ap-liga" placeholder="np. Liga A, Liga B...">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Tel. rodzica 1 <span style="color:var(--szary);font-weight:600;">(do WhatsApp)</span></label>
+                <div class="phone-row">
+                    <select class="phone-prefix-select" id="ap-guardian-prefix1">
+                        <option value="+48">🇵🇱 +48</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+380">🇺🇦 +380</option>
+                        <option value="+420">🇨🇿 +420</option>
+                        <option value="+421">🇸🇰 +421</option>
+                    </select>
+                    <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone1" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
+                </div>
+                <div class="phone-error" id="ap-guardian-phone1-error">Nieprawidłowy numer (7–12 cyfr)</div>
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Tel. rodzica 2 <span style="color:var(--szary);font-weight:600;">(opcjonalny)</span></label>
+                <div class="phone-row">
+                    <select class="phone-prefix-select" id="ap-guardian-prefix2">
+                        <option value="+48">🇵🇱 +48</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+380">🇺🇦 +380</option>
+                        <option value="+420">🇨🇿 +420</option>
+                        <option value="+421">🇸🇰 +421</option>
+                    </select>
+                    <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone2" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
+                </div>
+                <div class="phone-error" id="ap-guardian-phone2-error">Nieprawidłowy numer (7–12 cyfr)</div>
+            </div>
+        </div>
+        <div class="sticky-save">
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszZawodnika()">Zapisz zawodnika</button>
+        </div>
+    </div><!-- /add-player-panel -->
+
+    <!-- ═══ PANEL PICKERA AWATARA ═══ -->
+    <div class="avatar-picker-panel" id="avatar-picker-panel">
+        <div class="avatar-picker-hdr">
+            <div class="dp-back" onclick="zamknijPickerAwatara()">
+                <div class="dp-back-icon">‹</div>
+                Profil
+            </div>
+            <span class="avatar-picker-tytul">Wybierz awatar</span>
+        </div>
+
+        <!-- Styl + przycisk generuj -->
+        <div class="av-styl-row">
+            <button class="av-styl-btn selected" onclick="wybierzStylGrid(this,'chlopiec')">⚽ Chłopiec</button>
+            <button class="av-styl-btn" onclick="wybierzStylGrid(this,'dziewczynka')">🌟 Dziewczynka</button>
+            <button class="av-generuj-btn" onclick="generujGrid()">🔀 Generuj ponownie</button>
+        </div>
+
+        <!-- Grid 20 miniaturek -->
+        <div class="av-grid-scroll">
+            <div class="av-grid" id="av-grid">
+                <div style="grid-column:1/-1;padding:30px 0;text-align:center;color:var(--szary);font-size:12px;">Generowanie...</div>
+            </div>
+        </div>
+
+        <div class="sticky-save">
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAwatar()" id="av-save-btn">Zapisz awatar</button>
+        </div>
+    </div><!-- /avatar-picker-panel -->
+
+    <!-- ═══ MODAL POTWIERDZENIA KODU ═══ -->
+    <div class="modal-overlay" id="modal-kod">
+        <div class="modal-box">
+            <div class="modal-title">Aktywny kod istnieje</div>
+            <div class="modal-body" id="modal-kod-body">Dla tego zawodnika istnieje już aktywny kod dostępu. Co chcesz zrobić?</div>
+            <div class="modal-btns">
+                <button class="modal-btn modal-btn-primary" onclick="modalKodAkcja('dezaktywuj')">Dezaktywuj stary · wygeneruj nowy</button>
+                <button class="modal-btn modal-btn-secondary" onclick="modalKodAkcja('zachowaj')">Zachowaj stary · wygeneruj drugi</button>
+                <button class="modal-btn modal-btn-cancel" onclick="modalKodAkcja('anuluj')">Anuluj</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+        <a class="nav-item active" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+    </div>
+
+    <!-- Login overlay -->
+    <div class="login-overlay" id="login-ov">
+        <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
+        <button class="login-close" onclick="closeLogin()">✕</button>
+        <div class="login-body">
+            <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
+            <div class="auth-tabs"><button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button><button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button></div>
+            <div id="auth-login">
+                <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+                <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
+                <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
+                <div class="social-btns"><button class="social-btn"><span style="font-size:17px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size:17px">🍎</span> Apple</button></div>
+            </div>
+            <div id="auth-register" style="display:none">
+                <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size:18px"></div>
+                <div class="form-group"><label class="form-lbl">Imię i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
+                <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+                <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj się →</button>
+                <div class="kod-info"><div class="kod-info-txt">🔑 Kod dostępu otrzymasz od trenera lub opiekuna.<br>Jednorazowy · ważny 7 dni</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu panel -->
+    <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
+        <div class="menu-panel-items">
+
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+        </div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
+    </div>
+
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   DRUŻYNA — logika ekranu
+═══════════════════════════════════════════════════ */
+
+// Stałe
+const SQUAD_LABELS = { FIRST: 'Pierwsza', SECOND: 'Druga', THIRD: 'Trzecia' };
+const TYPE_LABELS_HERO = { TRENING: 'Treningi', MECZ: 'Mecze', WYJAZD: 'Wyjazdy', INNE: 'Inne' };
+const TYPE_LABELS = { TRENING: 'Treningi', MECZ: 'Mecze', WYJAZD: 'Wyjazdy', INNE: 'Inne' };
+const TYPE_COLORS = { TRENING: 'freq-bar-trening', MECZ: 'freq-bar-mecz', WYJAZD: 'freq-bar-wyjazd', INNE: 'freq-bar-inne' };
+const TYPE_IDS = { TRENING: 'treningi', MECZ: 'mecze', WYJAZD: 'wyjazdy', INNE: 'inne' };
+// DiceBear — inicjały (fallback bez photoURL)
+const DICEBEAR_INITIALS_URL = 'https://api.dicebear.com/9.x/initials/svg?seed=';
+// DiceBear — adventurer (picker) — kolorowy, kreskówkowy, dla dzieci
+const DICEBEAR_BASE_URL = 'https://api.dicebear.com/9.x';
+
+// RoboHash - nowa alternatywa dla awatarów sportowych
+const ROBOHASH_BASE_URL = 'https://robohash.org';
+const ROBOHASH_STYLES = {
+    ROBOT: 'set1',      // Roboty
+    MONSTER: 'set2',    // Potwory  
+    HUMAN: 'set3',      // Ludzie
+    CAT: 'set4',        // Koty
+    ALIEN: 'set5'       // Obcy
+};
+
+// Style RoboHash dla zawodników (picker)
+const ROBOHASH_PLAYER_STYLES = ['ROBOT', 'MONSTER', 'HUMAN', 'CAT', 'ALIEN'];
+
+// FRYZURY przeniesione do HAIR_CHLOPIEC i HAIR_DZIEWCZYNKA (tablice losowania)
+
+// Stan globalny ekranu
+let wszyscyZawodnicy = [];
+let aktualnaRola = '';
+let aktualnyUserId = '';
+let aktualnyTeamId = '';
+let aktualnyClubId = null;
+let aktualnyZawodnik = null; // zawodnik otwarty w panelu
+let aktualneAbsencje = []; // absencje pobranego zawodnika
+let sezonStart = null; // string YYYY-MM-DD z teams.settings.season.start
+let sezonEnd   = null; // string YYYY-MM-DD z teams.settings.season.end
+let dostepneSezony = []; // [{start,end,name}] — aktualny sezon + seasonHistory, najnowszy pierwszy
+let aktualnySortKey = 'numer';
+let edycjaTryb = false; // czy edytujemy istniejącego vs dodajemy nowego
+
+// Aktualny typ kodu do wygenerowania
+let aktualnyTypKodu = 'RODZIC';
+
+// Licznik zapytań o kody — chroni przed nadpisaniem widoku przez spóźnioną odpowiedź
+// z poprzedniej zakładki/zawodnika (race condition przy szybkim przełączaniu)
+let _kodLoadSeq = 0;
+
+const KOD_OPISY = {
+    RODZIC:   '👨‍👦 Rodzic przejmuje opiekę nad zawodnikiem. Może potwierdzać obecność i komunikować się z trenerem. Jeden kod = jeden rodzic (dziecko może mieć 2 rodziców).',
+    ZAWODNIK: '⚽ Zawodnik otrzymuje własne konto. Trener powinien mieć zgodę rodzica przed wygenerowaniem kodu.',
+    KIBIC:    '👴 Kibic widzi wyniki i statystyki wskazanego zawodnika. Może być wygenerowany przez trenera lub rodzica. Kod jednorazowy — babcia z dwójką wnuków potrzebuje 2 kodów.',
+    // TRENER: generowane w Ustawieniach → Dostęp do klubu (Priorytet 4)
+};
+
+// Krótkie etykiety typu do wyświetlenia na pojedynczym kodzie (niezależnie od aktywnej zakładki)
+const KOD_TYP_LABEL = {
+    RODZIC:   '👨‍👦 Rodzic',
+    ZAWODNIK: '⚽ Zawodnik',
+    KIBIC:    '👴 Kibic',
+};
+
+// Stan pickera awatara (zachowany dla kompatybilności wstecznej)
+let pickerStan = { styl: 'chlopiec' };
+
+/* ── Pomocnicze ── */
+function getLocalDateStr(date) {
+    const d = date || new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function obliczWiek(birthDate) {
+    if (!birthDate) return '?';
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
+    return age;
+}
+
+function getInitials(name) {
+    if (!name) return '??';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+}
+
+// Kolor tła awatara DiceBear — deterministyczny z nazwy
+function getAvatarBgColor(name) {
+    const colors = ['3B82F6','10B981','F59E0B','EF4444','8B5CF6','EC4899','14B8A6','F97316'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+}
+
+// Buduj URL awatara RoboHash - sportowe, dynamiczne
+function buildRoboHashUrl(seed, style = 'ROBOT', size = 128) {
+    const styleParam = ROBOHASH_STYLES[style] || ROBOHASH_STYLES.ROBOT;
+    return `${ROBOHASH_BASE_URL}/${seed}?set=${styleParam}&size=${size}x${size}&bgset=bg1`;
+}
+
+// Buduj URL awatara RoboHash z parametrami zawodnika
+function buildPlayerAvatarUrl(player, style = 'ROBOT') {
+    const seed = `${player.name || player.playerId || 'unknown'}_${player.birthDate || '2000'}_${player.position || 'player'}`;
+    return buildRoboHashUrl(seed, style);
+}
+
+// Buduj element awatara - DiceBear initials (domylnie) lub wlasne zdjecie
+function buildAvatarEl(player, size = 'small') {
+    const container = document.createElement('div');
+    container.className = size === 'small' ? 'zaw-av' : 'dp-av';
+    
+    const avatarSize = size === 'small' ? 46 : 80;
+    const initialsClass = size === 'small' ? 'zaw-av-initials' : 'dp-av-initials';
+    
+    if (player.photoURL) {
+        const img = document.createElement('img');
+        img.src = player.photoURL;
+        img.alt = player.name;
+        img.loading = 'lazy';
+        img.onerror = () => { container.innerHTML = `<span class="${initialsClass}">${getInitials(player.name)}</span>`; };
+        container.appendChild(img);
+    } else {
+        // DiceBear initials - domyslnie gdy brak photoURL
+        const bg = getAvatarBgColor(player.name || player.playerId || 'x');
+        const seed = encodeURIComponent(player.name || player.playerId || 'x');
+        const avatarUrl = `${DICEBEAR_INITIALS_URL}${seed}&backgroundColor=${bg}&fontSize=40&fontWeight=800`;
+        const img = document.createElement('img');
+        img.src = avatarUrl;
+        img.alt = player.name;
+        img.loading = 'lazy';
+        img.onerror = () => { container.innerHTML = `<span class="${initialsClass}">${getInitials(player.name)}</span>`; };
+        container.appendChild(img);
+    }
+    
+    return container;
+}
+
+/* ── Inicjalizacja ── */
+async function initDruzyna() {
+    if (!requireAuth()) return;
+
+    aktualnyUserId = getCurrentUserId();
+
+    const s = await initSession();
+    if (!s) return;
+    const { user, team, membership } = s;
+    aktualnaRola = isDemoMode() ? getDemoRole() : getCurrentUserData().role;
+
+    aktualnyTeamId = team.teamId || team.id;
+    aktualnyClubId = team.clubId || membership?.clubId || null;
+
+    // Pobierz daty sezonu z ustawień drużyny
+    try {
+        const teamDoc = await db.collection('teams').doc(aktualnyTeamId).get();
+        if (teamDoc.exists) {
+            const settings = teamDoc.data().settings || {};
+            const s = settings.season;
+            if (s?.start) sezonStart = s.start;
+            if (s?.end)   sezonEnd   = s.end;
+
+            dostepneSezony = [];
+            if (s?.start && s?.end) dostepneSezony.push(s);
+            dostepneSezony = dostepneSezony.concat(settings.seasonHistory || []);
+            dostepneSezony.sort((a, b) => (b.start || '').localeCompare(a.start || ''));
+        }
+    } catch (e) { }
+
+    loadCtxOverlay(user, membership, team);
+    loadMenuPanel(user, membership, team);
+
+    // Pokaż FAB tylko trenerom
+    const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
+    const fab = document.getElementById('fab-dodaj');
+    if (fab) fab.style.display = isCoach ? '' : 'none';
+    const showDeletedRow = document.getElementById('zaw-show-deleted-row');
+    if (showDeletedRow) showDeletedRow.style.display = isCoach ? '' : 'none';
+
+    await zaladujZawodnikow();
+
+    // Powiadomienia
+    window.onNotifAction = () => {};
+    loadAndRenderNotifications();
+}
+
+
+/* ── Ładowanie zawodników ── */
+async function zaladujZawodnikow() {
+    const lista = document.getElementById('zaw-lista');
+    lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">Ładowanie...</div>';
+
+    try {
+        const snap = await db.collection('players').get();
+        const isKibic = aktualnaRola === 'KIBIC';
+        const myPlayerIds = getMyPlayerIds();
+        wszyscyZawodnicy = snap.docs
+            .map(d => {
+                const data = d.data();
+                // Normalizuj stare pole guardianId (string) → guardianIds (array) — migracja v2.8
+                if (!data.guardianIds) data.guardianIds = data.guardianId ? [data.guardianId] : [];
+                return { id: d.id, ...data };
+            })
+            .filter(p => p.teams && p.teams.some(t => t.teamId === aktualnyTeamId && t.status === 'ACTIVE'))
+            .filter(p => !isKibic || myPlayerIds.includes(p.playerId || p.id));
+    } catch (e) {
+        console.error('Błąd ładowania zawodników:', e);
+        lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">Błąd ładowania danych.</div>';
+        return;
+    }
+
+    renderujListe();
+    console.log(`✅ Załadowano ${wszyscyZawodnicy.length} zawodników`);
+}
+
+/* ── Renderowanie listy ── */
+function renderujListe() {
+    const lista = document.getElementById('zaw-lista');
+    lista.innerHTML = '';
+
+    const pokazUsunietych = document.getElementById('zaw-show-deleted')?.checked || false;
+    const widoczni = pokazUsunietych ? wszyscyZawodnicy : wszyscyZawodnicy.filter(p => p.isActive !== false);
+
+    if (widoczni.length === 0) {
+        lista.innerHTML = wszyscyZawodnicy.length === 0
+            ? '<div class="zaw-empty">Brak zawodników w drużynie.<br>Trener może dodać pierwszego zawodnika.</div>'
+            : '<div class="zaw-empty">Brak aktywnych zawodników.</div>';
+        return;
+    }
+
+    const posortowani = sortujArray([...widoczni], aktualnySortKey);
+    posortowani.forEach(p => lista.appendChild(tworzKarteZawodnika(p)));
+}
+
+function sortujArray(arr, key) {
+    return arr.sort((a, b) => {
+        if (key === 'numer') return (a.number || 999) - (b.number || 999);
+        if (key === 'imie') return (a.name || '').localeCompare(b.name || '', 'pl');
+        if (key === 'pozycja') return (a.position || '').localeCompare(b.position || '', 'pl');
+        if (key === 'grupa') {
+            const gOrder = { FIRST: 0, SECOND: 1, THIRD: 2 };
+            return (gOrder[a.squad] ?? 9) - (gOrder[b.squad] ?? 9);
+        }
+        return 0;
+    });
+}
+
+function sortujZawodnikow(btn, key) {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    aktualnySortKey = key;
+    renderujListe();
+}
+
+function tworzKarteZawodnika(player) {
+    const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
+    const card = document.createElement('div');
+    card.className = 'zaw-item';
+
+    const avatarEl = buildAvatarEl(player, 'small');
+    const hasAccount = !!player.userAccountId;
+    const wrap = document.createElement('div');
+    wrap.className = 'zaw-av-wrap';
+    wrap.appendChild(avatarEl);
+    const dot = document.createElement('div');
+    dot.className = 'zaw-av-dot ' + (hasAccount ? 'has-account' : 'no-account');
+    dot.title = hasAccount ? 'Ma konto' : 'Brak konta';
+    wrap.appendChild(dot);
+
+    const wiek = obliczWiek(player.birthDate);
+    const pozycja = player.position || '—';
+    const sub = `${pozycja} · ${wiek} lat`;
+
+    let metaHtml = '';
+    if (isCoach && player.coachOnlyData?.level) {
+        // Pole "Liga" widoczne tylko dla trenera
+        metaHtml = `<div class="zaw-meta">
+            <div class="zaw-liga">${player.coachOnlyData.level}</div>
+            <div class="zaw-liga-lbl">Liga</div>
+        </div>`;
+    }
+
+    const usunietyBadge = player.isActive === false
+        ? `<div class="badge" style="background:rgba(239,68,68,0.15);color:#F87171;">Usunięty</div>` : '';
+
+    card.appendChild(wrap);
+    card.innerHTML += `
+        <div class="zaw-info">
+            <div class="zaw-nazwa">${player.name}</div>
+            <div class="zaw-sub">${sub}</div>
+        </div>
+        ${usunietyBadge}
+        ${metaHtml}
+    `;
+
+    card.onclick = () => otworzProfil(player);
+    return card;
+}
+
+/* ── Profil zawodnika ── */
+async function otworzProfil(player) {
+    aktualnyZawodnik = player;
+    const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
+    const isParent = aktualnaRola === 'RODZIC';
+    const isKibic = aktualnaRola === 'KIBIC';
+    const isMyChild = (isParent || isKibic) && currentUserData?.childrenIds?.includes(player.playerId || player.id);
+
+    // Awatar
+    const dpAv = document.getElementById('dp-av');
+    dpAv.innerHTML = '';
+    const avEl = buildAvatarEl(player, 'large');
+    dpAv.appendChild(avEl.firstChild || avEl);
+    // Rebuild poprawnie
+    dpAv.innerHTML = '';
+    const avBuilt = buildAvatarEl(player, 'large');
+    while (avBuilt.firstChild) dpAv.appendChild(avBuilt.firstChild);
+
+    // Dane podstawowe
+    document.getElementById('dp-nazwa').textContent = player.name;
+    const wiek = obliczWiek(player.birthDate);
+    const nr = player.number ? ` · #${player.number}` : '';
+    const poz = player.position || '';
+    document.getElementById('dp-sub').textContent = `${poz}${poz && wiek ? ' · ' : ''}${wiek} lat${nr}`;
+
+    // Badges
+    const badgesEl = document.getElementById('dp-badges');
+    badgesEl.innerHTML = '';
+    const squad = player.squad || 'FIRST';
+    if (isCoach) {
+        // Trener widzi grupę + ligę
+        badgesEl.innerHTML = `<span class="badge badge-dark">${SQUAD_LABELS[squad] || squad}</span>`;
+        if (player.coachOnlyData?.level) {
+            badgesEl.innerHTML += `<span class="badge badge-warn" style="background:rgba(251,191,36,0.12);color:var(--warn);">${player.coachOnlyData.level}</span>`;
+        }
+    }
+    // Pozostałe role nie widzą grupy ani ligi
+
+    // Statystyki — zostaną uzupełnione po załadowaniu frekwencji (X/Y z okresu)
+    ['mecze','treningi','wyjazdy','inne'].forEach(id => {
+        document.getElementById(`dp-${id}`).textContent = '—';
+        document.getElementById(`dp-${id}-sub`).textContent = '';
+    });
+
+    // Przycisk edycji awatara — trener lub właściciel (zawodnik)
+    const avEditBtn = document.getElementById('dp-av-edit-btn');
+    if (avEditBtn) {
+        const isOwner = aktualnaRola === 'ZAWODNIK' && currentUserData?.playerId === (player.playerId || player.id);
+        avEditBtn.style.display = (isCoach || isOwner) ? 'flex' : 'none';
+    }
+
+    // Przycisk edycji danych — tylko trener
+    const editBtn = document.getElementById('dp-edit-btn');
+    if (editBtn) editBtn.style.display = isCoach ? '' : 'none';
+
+    // Sekcje tylko dla trenera
+    document.getElementById('dp-notatki-section').style.display = isCoach ? '' : 'none';
+    document.getElementById('dp-kod-section').style.display = isCoach ? '' : 'none';
+    document.getElementById('dp-powiazane-section').style.display = (isCoach || isMyChild) ? '' : 'none';
+    document.getElementById('dp-przejmij-section').style.display = isCoach ? '' : 'none';
+    document.getElementById('dp-usun-section').style.display = (aktualnaRola === 'TRENER_GLOWNY') ? '' : 'none';
+    if (isCoach) {
+        document.getElementById('dp-notatki').value = player.coachOnlyData?.coachNotes || '';
+        // Reset wyboru typu kodu do RODZIC
+        aktualnyTypKodu = 'RODZIC';
+        document.querySelectorAll('#dp-typ-kodu-row .sort-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+        const infoEl = document.getElementById('dp-typ-kodu-info');
+        if (infoEl) infoEl.textContent = KOD_OPISY['RODZIC'];
+        const kodShowInactiveCb = document.getElementById('kod-show-inactive');
+        if (kodShowInactiveCb) kodShowInactiveCb.checked = false;
+    }
+
+    // Selector sezonu — wypełnij listą, domyślnie aktualny (pierwszy po sortowaniu)
+    const sezonSelectEl = document.getElementById('dp-sezon-select');
+    if (sezonSelectEl) {
+        if (dostepneSezony.length > 0) {
+            sezonSelectEl.innerHTML = dostepneSezony.map((s, i) =>
+                `<option value="${i}">${s.name || s.start.slice(0,7)}: ${s.start} — ${s.end}</option>`
+            ).join('');
+            sezonSelectEl.selectedIndex = 0;
+        } else {
+            sezonSelectEl.innerHTML = '<option>Brak ustawionego okresu sezonu</option>';
+        }
+    }
+
+    // Przycisk absencji — trener lub rodzic swojego dziecka (nie kibic)
+    const btnAbs = document.getElementById('dp-btn-abs');
+    if (btnAbs) btnAbs.style.display = (isCoach || (isMyChild && !isKibic)) ? '' : 'none';
+
+    // Ładuj frekwencję, absencje i kody asynchronicznie
+    const promises = [
+        zaladujFrekwencje(player, dostepneSezony[0]),
+        zaladujAbsencje(player)
+    ];
+    if (isCoach) promises.push(zaladujKody(player));
+    if (isCoach || isMyChild) promises.push(zaladujPowiazaneKonta(player));
+    await Promise.all(promises);
+
+    document.getElementById('detail-panel').classList.add('open');
+}
+
+function zamknijProfil() {
+    document.getElementById('detail-panel').classList.remove('open');
+    aktualnyZawodnik = null;
+}
+
+/* ── Frekwencja — ładuje dane, aktualizuje hero stats I paski ── */
+// sezon: opcjonalnie {start,end,name} wybrany z selectora; domyślnie aktualny sezon drużyny
+async function zaladujFrekwencje(player, sezon) {
+    const el = document.getElementById('dp-frekwencja');
+    el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Liczenie...</div>';
+
+    const pid = player.playerId || player.id;
+    const todayStr = getLocalDateStr(new Date());
+    const sStart = sezon?.start || sezonStart;
+    const sEnd   = sezon?.end   || sezonEnd;
+
+    if (!sStart) {
+        el.innerHTML = '';
+        return;
+    }
+
+    const fromStr = sStart;
+    const toStr = sEnd && sEnd < todayStr ? sEnd : todayStr;
+
+    // Pobierz eventy drużyny z okresu (tylko przeszłe — do dziś lub końca sezonu)
+    let events = [];
+    try {
+        const snap = await db.collection('events')
+            .where('teamId', '==', aktualnyTeamId)
+            .get();
+        events = snap.docs.map(d => d.data())
+            .filter(e => e.status !== 'DELETE' && e.date >= fromStr && e.date <= toStr);
+    } catch (e) {
+        el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Brak danych.</div>';
+        return;
+    }
+
+    // Grupuj per typ i licz frekwencję
+    const typy = ['TRENING', 'MECZ', 'WYJAZD', 'INNE'];
+    const stats = {};
+    for (const typ of typy) {
+        const evTypu = events.filter(e => e.type === typ);
+        const zaproszony = evTypu.filter(e => (e.attendance?.invited || []).includes(pid));
+        const potwierdzone = zaproszony.filter(e => (e.attendance?.confirmed || []).includes(pid));
+        if (zaproszony.length > 0) {
+            stats[typ] = { invited: zaproszony.length, confirmed: potwierdzone.length };
+        }
+    }
+
+    // ── Aktualizuj hero statystyki (X/Y) ──
+    const typToId = { TRENING: 'treningi', MECZ: 'mecze', WYJAZD: 'wyjazdy', INNE: 'inne' };
+    for (const typ of typy) {
+        const elN = document.getElementById(`dp-${typToId[typ]}`);
+        const elSub = document.getElementById(`dp-${typToId[typ]}-sub`);
+        if (stats[typ]) {
+            const s = stats[typ];
+            elN.textContent = `${s.confirmed}/${s.invited}`;
+            const pct = Math.round((s.confirmed / s.invited) * 100);
+            const col = pct >= 80 ? 'var(--sukces)' : pct >= 60 ? 'var(--warn)' : 'var(--blad)';
+            elN.style.color = col;
+            elSub.textContent = `${pct}%`;
+        } else {
+            elN.textContent = '—';
+            elN.style.color = '';
+            elSub.textContent = '';
+        }
+    }
+
+    // ── Paski frekwencji ──
+    if (Object.keys(stats).length === 0) {
+        el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Brak eventów z udziałem zawodnika w tym okresie.</div>';
+        return;
+    }
+
+    let html = '';
+    for (const [typ, s] of Object.entries(stats)) {
+        const pct = Math.round((s.confirmed / s.invited) * 100);
+        const colorClass = TYPE_COLORS[typ] || 'freq-bar-inne';
+        const pctColor = pct >= 80 ? 'var(--sukces)' : pct >= 60 ? 'var(--warn)' : 'var(--blad)';
+        html += `
+            <div class="freq-row">
+                <span class="freq-label">${TYPE_LABELS[typ]}</span>
+                <div class="freq-bar-wrap"><div class="freq-bar ${colorClass}" style="width:${pct}%"></div></div>
+                <span class="freq-pct" style="color:${pctColor}">${pct}%</span>
+            </div>
+            <div style="font-size:10px;color:var(--szary);padding-left:80px;margin-top:-4px;margin-bottom:8px;">${s.confirmed}/${s.invited} eventów</div>
+        `;
+    }
+    el.innerHTML = html;
+}
+
+function zmienSezonFrekwencji() {
+    if (!aktualnyZawodnik) return;
+    const sel = document.getElementById('dp-sezon-select');
+    const idx = parseInt(sel.value, 10);
+    const sezon = dostepneSezony[idx];
+    if (sezon) zaladujFrekwencje(aktualnyZawodnik, sezon);
+}
+
+/* ── Absencje ── */
+async function zaladujAbsencje(player) {
+    const el = document.getElementById('dp-absencje');
+    el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Ładowanie...</div>';
+
+    const pid = player.playerId || player.id;
+    const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
+
+    try {
+        const snap = await db.collection('absences')
+            .where('playerId', '==', pid)
+            .where('isActive', '==', true)
+            .get();
+        aktualneAbsencje = snap.docs.map(d => ({ absenceId: d.id, ...d.data() }));
+
+        // Pokaż tylko absencje nachodzące na bieżący miesiąc
+        const now = new Date();
+        const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const monthEnd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+        aktualneAbsencje = aktualneAbsencje.filter(abs => abs.dateFrom <= monthEnd && abs.dateTo >= monthStart);
+    } catch (e) { el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Brak danych.</div>'; return; }
+
+    if (aktualneAbsencje.length === 0) {
+        el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Brak aktywnych absencji.</div>';
+        return;
+    }
+
+    el.innerHTML = '';
+    aktualneAbsencje.forEach(abs => {
+        const od = abs.dateFrom ? formatDateDisplay(abs.dateFrom) : '?';
+        const do_ = abs.dateTo ? formatDateDisplay(abs.dateTo) : '?';
+        const div = document.createElement('div');
+        div.className = 'abs-item';
+        div.innerHTML = `
+            <div class="abs-dates">
+                <div class="abs-dates-main">📅 ${od} — ${do_}</div>
+                ${abs.reason ? `<div class="abs-dates-comment">${abs.reason}</div>` : ''}
+            </div>
+            ${isCoach ? `<span class="abs-del" onclick="usunAbsencje('${abs.absenceId}')" title="Usuń">✕</span>` : ''}
+        `;
+        el.appendChild(div);
+    });
+}
+
+async function usunAbsencje(absenceId) {
+    if (!await showConfirmSheet('Usunąć tę absencję?')) return;
+    try {
+        await db.collection('absences').doc(absenceId).update({ isActive: false });
+        await zaladujAbsencje(aktualnyZawodnik);
+        console.log('✅ Absencja usunięta:', absenceId);
+    } catch (e) { alert('Błąd usuwania absencji.'); }
+}
+
+/* ── Panel absencji ── */
+function otworzAbsencje() {
+    if (!aktualnyZawodnik) return;
+    document.getElementById('abs-player-name').textContent = aktualnyZawodnik.name;
+    // Domyślnie: od dziś do +7 dni
+    const todayStr = getLocalDateStr();
+    const plusTydzien = getLocalDateStr(new Date(Date.now() + 7 * 86400000));
+    document.getElementById('abs-date-from').value = todayStr;
+    document.getElementById('abs-date-to').value = plusTydzien;
+    document.getElementById('abs-comment').value = '';
+    document.getElementById('abs-panel').classList.add('open');
+}
+
+function zamknijAbsencje() {
+    document.getElementById('abs-panel').classList.remove('open');
+}
+
+async function zapiszAbsencje() {
+    const dateFrom = document.getElementById('abs-date-from').value;
+    const dateTo = document.getElementById('abs-date-to').value;
+    const reason = document.getElementById('abs-comment').value.trim();
+
+    if (!dateFrom || !dateTo) { alert('Podaj datę od i datę do.'); return; }
+    if (dateTo < dateFrom) { alert('Data do musi być późniejsza niż data od.'); return; }
+    if (!aktualnyZawodnik) return;
+
+    const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
+    const now = new Date().toISOString();
+    const dateStr = now.slice(0,10).replace(/-/g,'');
+    const rand = Math.floor(Math.random() * 9000000 + 1000000);
+
+    const absDoc = {
+        absenceId: `absence_${dateStr}_${rand}`,
+        playerId: pid,
+        teamId: aktualnyTeamId,
+        clubId: aktualnyZawodnik.teams?.[0]?.clubId || '',
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        reason: reason || '',
+        type: 'OTHER',
+        isActive: true,
+        createdAt: now,
+        createdBy: aktualnyUserId,
+        approvedBy: null,
+        userId: null,
+        isDemo: false,
+        demoSetId: ''
+    };
+
+    try {
+        await db.collection('absences').doc(absDoc.absenceId).set(absDoc);
+        zamknijAbsencje();
+        await zaladujAbsencje(aktualnyZawodnik);
+        console.log('✅ Absencja zapisana:', absDoc.absenceId);
+    } catch (e) { alert('Błąd zapisu absencji.'); console.error(e); }
+}
+
+/* ── Notatki trenera ── */
+async function zapiszNotatki() {
+    if (!aktualnyZawodnik) return;
+    const notes = document.getElementById('dp-notatki').value.trim();
+    const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
+    try {
+        await db.collection('players').doc(pid).update({ 'coachOnlyData.coachNotes': notes });
+        aktualnyZawodnik.coachOnlyData = { ...(aktualnyZawodnik.coachOnlyData || {}), coachNotes: notes };
+        console.log('✅ Notatki zapisane');
+        // Krótki feedback
+        const btn = event.target;
+        const prev = btn.textContent;
+        btn.textContent = '✅ Zapisano';
+        setTimeout(() => { btn.textContent = prev; }, 1500);
+    } catch (e) { alert('Błąd zapisu notatek.'); }
+}
+
+/* ── Kod dostępu dla rodzica ── */
+/* ── Kody dostępu ── */
+
+function wybierzTypKodu(btn, typ) {
+    document.querySelectorAll('#dp-typ-kodu-row .sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    aktualnyTypKodu = typ;
+    const info = document.getElementById('dp-typ-kodu-info');
+    if (info) info.textContent = KOD_OPISY[typ] || '';
+    // Przeładuj listę kodów dla nowego typu
+    if (aktualnyZawodnik) zaladujKody(aktualnyZawodnik);
+}
+
+// Załaduj i wyrenderuj listę kodów dla zawodnika
+async function zaladujKody(player) {
+    const el = document.getElementById('dp-kod-content');
+    if (!el) return;
+    const seq = ++_kodLoadSeq;
+    const typRequest = aktualnyTypKodu;
+    const pokazNieaktywne = document.getElementById('kod-show-inactive')?.checked || false;
+    el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Ładowanie...</div>';
+
+    const pid = player.playerId || player.id;
+    let kody = [];
+    try {
+        const snap = await db.collection('inviteCodes')
+            .where('playerId', '==', pid)
+            .where('type', '==', typRequest)
+            .get();
+        kody = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+        // Sortuj: aktywne na górze, potem po dacie utworzenia
+        kody.sort((a, b) => {
+            if (!a.isUsed && b.isUsed) return -1;
+            if (a.isUsed && !b.isUsed) return 1;
+            const ta = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+            const tb = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+            return tb - ta;
+        });
+    } catch (e) {
+        if (seq === _kodLoadSeq) el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Błąd ładowania.</div>';
+        return;
+    }
+
+    // Odpowiedź spóźniona względem nowszego zapytania (zmieniona zakładka/zawodnik) — porzuć wynik
+    if (seq !== _kodLoadSeq) return;
+
+    const now = new Date();
+
+    // Domyślnie ukryj użyte i wygasłe kody, chyba że zaznaczono "Pokaż nieaktywne"
+    if (!pokazNieaktywne) {
+        kody = kody.filter(k => {
+            const exp = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
+            return !k.isUsed && exp >= now;
+        });
+    }
+
+    if (kody.length === 0) {
+        el.innerHTML = `<div style="color:var(--szary);font-size:12px;">Brak ${pokazNieaktywne ? 'wygenerowanych' : 'aktywnych'} kodów.</div>`;
+        return;
+    }
+
+    el.innerHTML = '';
+
+    for (const k of kody) {
+        if (seq !== _kodLoadSeq) return; // przełączono zakładkę w trakcie renderowania
+        const expiresDate = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
+        const createdDate = k.createdAt?.toDate?.() || new Date(k.createdAt || 0);
+        const createdDateStr = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}-${String(createdDate.getDate()).padStart(2, '0')}`;
+        const createdTimeStr = `${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}:${String(createdDate.getSeconds()).padStart(2, '0')}`;
+        const createdDayName = createdDate.toLocaleDateString('pl-PL', { weekday: 'long' });
+        const createdDisplay = `${createdDateStr} ${createdTimeStr} (${createdDayName})`;
+        const wygasly = !k.isUsed && expiresDate < now;
+        const dniDo = !k.isUsed && !wygasly
+            ? Math.ceil((expiresDate - now) / 86400000)
+            : null;
+
+        // Dane rodzica jeśli użyty (pomijamy dezaktywowane — usedBy to tylko znacznik, nie realny user)
+        let rodziData = '';
+        if (k.isUsed && k.usedBy && k.usedBy !== 'DEZAKTYWOWANY_PRZEZ_TRENERA') {
+            try {
+                const uDoc = await db.collection('users').doc(k.usedBy).get();
+                if (uDoc.exists) {
+                    const u = uDoc.data();
+                    const usedDate = k.usedAt?.toDate?.() || new Date(k.usedAt || 0);
+                    rodziData = `<div class="kod-meta">👤 <strong>${u.displayName || k.usedBy}</strong></div>
+                        <div class="kod-meta">📅 Użyty: <strong>${formatDateDisplay(usedDate.toISOString().slice(0,10))}</strong></div>`;
+                }
+            } catch (e) { }
+        }
+
+        const isDeactivated = k.isUsed && k.usedBy === 'DEZAKTYWOWANY_PRZEZ_TRENERA';
+        const isNaprawdeUzyty = k.isUsed && !isDeactivated;
+
+        const statusClass = isDeactivated ? 'kod-nieaktywny' : isNaprawdeUzyty ? 'kod-uzyty' : wygasly ? 'kod-wygasly' : 'kod-aktywny';
+        const statusBadge = isDeactivated
+            ? '<span class="kod-status-badge kod-status-nieaktywny">🚫 Dezaktywowany</span>'
+            : isNaprawdeUzyty
+            ? '<span class="kod-status-badge kod-status-uzyty">✅ Użyty</span>'
+            : wygasly
+            ? '<span class="kod-status-badge kod-status-wygasly">⏰ Wygasły</span>'
+            : `<span class="kod-status-badge kod-status-aktywny">🔵 Aktywny</span>`;
+
+        const div = document.createElement('div');
+        div.className = `kod-item ${statusClass}`;
+        div.innerHTML = `
+            <div class="kod-item-top">
+                <span class="kod-val-big">${k.code}</span>
+                ${statusBadge}
+            </div>
+            <div class="kod-meta">${KOD_TYP_LABEL[k.type] || k.type || '—'}</div>
+            <div class="kod-meta">📅 Wygenerowany: <strong>${createdDisplay}</strong></div>
+            ${dniDo !== null ? `<div class="kod-meta">⏳ Ważny jeszcze: <strong>${dniDo} dni</strong></div>` : ''}
+            ${rodziData}
+            <div class="kod-actions">
+                ${!k.isUsed && !wygasly ? `<button class="btn-ghost" style="font-size:10px;padding:4px 10px;" onclick="kopiujKod('${k.code}')">📋 Kopiuj</button>` : ''}
+                ${!k.isUsed && !wygasly ? wyslijWhatsAppBtn(k.code, player) : ''}
+            </div>
+        `;
+        el.appendChild(div);
+    }
+}
+
+// Wspólna treść wiadomości z kodem — używana i przy Kopiuj, i przy WhatsApp
+function budujTrescKodu(kod) {
+    return `Twój kod dostępu do Coachay: *${kod}*\n\nWejdź na https://coachay.com i kliknij "Mam kod".`;
+}
+
+async function generujKod() {
+    if (!aktualnyZawodnik) return;
+    const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
+    // Deklarowane na poziomie funkcji — używane też w drugim bloku try (dialog WhatsApp)
+    let dlaRodzica2 = false;
+
+    // Sprawdź czy istnieje aktywny nieużyty kod — jeśli tak, pokaż modal
+    try {
+        const snap = await db.collection('inviteCodes')
+            .where('playerId', '==', pid)
+            .where('type', '==', aktualnyTypKodu)
+            .where('isUsed', '==', false)
+            .get();
+
+        const now = new Date();
+        const aktywne = snap.docs.filter(d => {
+            const exp = d.data().expiresAt?.toDate?.() || new Date(0);
+            return exp > now;
+        });
+
+        if (aktywne.length > 0) {
+            // Pokaż modal z 3 opcjami
+            const akcja = await pokazModalKodu(aktywne.length);
+            if (akcja === 'anuluj') return;
+            if (akcja === 'dezaktywuj') {
+                for (const doc of aktywne) {
+                    await db.collection('inviteCodes').doc(doc.id).update({
+                        isUsed: true,
+                        usedAt: new Date().toISOString(),
+                        usedBy: 'DEZAKTYWOWANY_PRZEZ_TRENERA'
+                    });
+                }
+            }
+            if (akcja === 'zachowaj') dlaRodzica2 = true; // nowy kod = drugi rodzic
+        }
+    } catch (e) { console.error('Błąd sprawdzania kodów:', e); }
+
+    // Generuj nowy kod
+    const znaki = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let kod = '';
+    for (let i = 0; i < 6; i++) kod += znaki[Math.floor(Math.random() * znaki.length)];
+
+    const now = new Date();
+    const expires = new Date(now.getTime() + 30 * 24 * 3600000); // 30 dni
+    const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
+    const rand = Math.floor(Math.random() * 9000000 + 1000000);
+
+    const codeDoc = {
+        codeId: `code_${dateStr}_${rand}`,
+        code: kod,
+        pin: '',
+        pinHash: '',
+        type: aktualnyTypKodu,
+        playerId: pid,
+        teamId: aktualnyTeamId,
+        clubId: aktualnyClubId || null,
+        createdBy: aktualnyUserId,
+        createdAt: firebase.firestore.Timestamp.now(),
+        expiresAt: firebase.firestore.Timestamp.fromDate(expires),
+        isUsed: false,
+        usedAt: null,
+        usedBy: null,
+        emailsSent: [],
+        transferTo: null,
+        observedPlayerId: null,
+        observerName: null,
+        isDemo: false,
+        demoSetId: ''
+    };
+
+    try {
+        await db.collection('inviteCodes').doc(codeDoc.codeId).set(codeDoc);
+        await zaladujKody(aktualnyZawodnik);
+        console.log('✅ Kod wygenerowany:', kod);
+
+        // Wiadomość z kodem od razu w schowku — zamiast dialogu WhatsApp
+        try { await navigator.clipboard?.writeText(budujTrescKodu(kod)); } catch (e) {}
+        if (typeof pokazKomunikat === 'function') {
+            pokazKomunikat(`Kod ${kod} skopiowany do schowka`, 'sukces');
+        }
+    } catch (e) { alert('Błąd generowania kodu.'); console.error(e); }
+}
+
+function wyslijWhatsAppBtn(kod, player) {
+    // Bez numeru — WhatsApp sam pozwala wybrać kontakt/czat, nie zgadujemy który rodzic
+    const msg = encodeURIComponent(budujTrescKodu(kod));
+    return `<a href="https://wa.me/?text=${msg}" target="_blank" class="btn-ghost" style="font-size:10px;padding:4px 10px;color:#25D366;text-decoration:none;">💬 WhatsApp</a>`;
+}
+
+function kopiujKod(kod) {
+    const tresc = budujTrescKodu(kod);
+    navigator.clipboard?.writeText(tresc).then(() => {
+        // Krótki feedback zamiast alert
+        const btn = event.target;
+        const prev = btn.textContent;
+        btn.textContent = '✅ Skopiowano';
+        setTimeout(() => { btn.textContent = prev; }, 1500);
+    }).catch(() => {
+        prompt('Skopiuj wiadomość:', tresc);
+    });
+}
+
+/* ── Edycja zawodnika ── */
+function edytujZawodnika() {
+    if (!aktualnyZawodnik) return;
+    edycjaTryb = true;
+    document.getElementById('add-player-tytul').textContent = 'Edytuj zawodnika';
+
+    // Wypełnij formularz aktualnymi danymi
+    document.getElementById('ap-firstname').value = aktualnyZawodnik.firstName || (aktualnyZawodnik.name || '').split(' ')[0] || '';
+    document.getElementById('ap-lastname').value  = aktualnyZawodnik.lastName  || (aktualnyZawodnik.name || '').split(' ').slice(1).join(' ') || '';
+    document.getElementById('ap-urodziny').value = aktualnyZawodnik.birthDate || '';
+    document.getElementById('ap-grupa').value = aktualnyZawodnik.squad || 'FIRST';
+    document.getElementById('ap-pozycja').value = aktualnyZawodnik.position || '';
+    document.getElementById('ap-numer').value = aktualnyZawodnik.number || '';
+    document.getElementById('ap-liga').value = aktualnyZawodnik.coachOnlyData?.level || '';
+    const phones = aktualnyZawodnik.guardianPhones || [];
+    wypelnijPoleTelefonu(1, phones[0] || aktualnyZawodnik.guardianData?.guardianPhone || '');
+    wypelnijPoleTelefonu(2, phones[1] || '');
+
+    document.getElementById('add-player-panel').classList.add('open');
+}
+
+/* ── Dodaj zawodnika ── */
+function otworzDodajZawodnika() {
+    edycjaTryb = false;
+    document.getElementById('add-player-tytul').textContent = 'Nowy zawodnik';
+    document.getElementById('ap-firstname').value = '';
+    document.getElementById('ap-lastname').value  = '';
+    document.getElementById('ap-urodziny').value = '';
+    document.getElementById('ap-grupa').value = 'FIRST';
+    document.getElementById('ap-pozycja').value = '';
+    document.getElementById('ap-numer').value = '';
+    document.getElementById('ap-liga').value = '';
+    wypelnijPoleTelefonu(1, '');
+    wypelnijPoleTelefonu(2, '');
+    document.getElementById('add-player-panel').classList.add('open');
+}
+
+function zamknijDodajZawodnika() {
+    document.getElementById('add-player-panel').classList.remove('open');
+}
+
+const PHONE_PREFIXES = ['+48','+380','+420','+421','+49','+44'];
+function wypelnijPoleTelefonu(n, e164) {
+    const prefixSel = document.getElementById(`ap-guardian-prefix${n}`);
+    const numInp    = document.getElementById(`ap-guardian-phone${n}`);
+    const errEl     = document.getElementById(`ap-guardian-phone${n}-error`);
+    if (errEl) errEl.style.display = 'none';
+    if (!e164) { prefixSel.value = '+48'; numInp.value = ''; return; }
+    const found = PHONE_PREFIXES.find(p => e164.startsWith(p));
+    if (found) { prefixSel.value = found; numInp.value = e164.slice(found.length); }
+    else { prefixSel.value = '+48'; numInp.value = e164.replace(/^\+/, ''); }
+}
+
+async function zapiszZawodnika() {
+    const firstName = document.getElementById('ap-firstname').value.trim();
+    const lastName  = document.getElementById('ap-lastname').value.trim();
+    const urodziny = document.getElementById('ap-urodziny').value;
+    const grupa = document.getElementById('ap-grupa').value;
+    const pozycja = document.getElementById('ap-pozycja').value.trim();
+    const numer = parseInt(document.getElementById('ap-numer').value) || null;
+    const liga = document.getElementById('ap-liga').value.trim();
+    const fullName = `${firstName} ${lastName}`.trim();
+    const guardianPhones = [];
+    let phoneError = false;
+    for (const n of [1, 2]) {
+        const prefix = document.getElementById(`ap-guardian-prefix${n}`).value;
+        const raw = document.getElementById(`ap-guardian-phone${n}`).value.trim().replace(/[\s\-().]/g, '');
+        const errEl = document.getElementById(`ap-guardian-phone${n}-error`);
+        if (!raw) { errEl.style.display = 'none'; continue; }
+        if (!/^\d{7,12}$/.test(raw)) {
+            errEl.style.display = 'block';
+            phoneError = true;
+        } else {
+            errEl.style.display = 'none';
+            guardianPhones.push(prefix + raw);
+        }
+    }
+    if (phoneError) return;
+
+    if (!firstName) { alert('Podaj imię zawodnika.'); return; }
+    if (!lastName)  { alert('Podaj nazwisko zawodnika.'); return; }
+    if (!urodziny)  { alert('Podaj datę urodzenia.'); return; }
+
+    if (edycjaTryb && aktualnyZawodnik) {
+        // Edycja istniejącego
+        const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
+        const updates = {
+            firstName, lastName, name: fullName,
+            birthDate: urodziny,
+            squad: grupa,
+            position: pozycja || '',
+            number: numer,
+            'coachOnlyData.level': liga || '',
+            guardianPhones
+        };
+        try {
+            await db.collection('players').doc(pid).update(updates);
+            zamknijDodajZawodnika();
+            await zaladujZawodnikow();
+            // Odśwież z bazy — żeby guardianPhones i inne pola były aktualne
+            const fresh = await db.collection('players').doc(pid).get();
+            if (fresh.exists) {
+                aktualnyZawodnik = { id: pid, ...fresh.data() };
+                if (!aktualnyZawodnik.guardianIds) aktualnyZawodnik.guardianIds = [];
+            }
+            otworzProfil(aktualnyZawodnik);
+            console.log('✅ Zawodnik zaktualizowany:', pid);
+        } catch (e) { alert('Błąd zapisu.'); console.error(e); }
+    } else {
+        // Nowy zawodnik
+        const now = new Date().toISOString();
+        const dateStr = now.slice(0,10).replace(/-/g,'');
+        const rand = Math.floor(Math.random() * 9000000 + 1000000);
+        const pid = `player_${dateStr}_${rand}`;
+
+        const playerDoc = {
+            playerId: pid,
+            firstName, lastName, name: fullName,
+            birthDate: urodziny,
+            squad: grupa,
+            position: pozycja || '',
+            number: numer,
+            photoURL: '',
+            photoConsent: false,
+            isActive: true,
+            guardianIds: [],
+            guardianPhones,
+            guardianData: null,
+            history: [],
+            teams: [{ teamId: aktualnyTeamId, status: 'ACTIVE' }],
+            coachOnlyData: { coachNotes: '', level: liga || '' },
+            publicData: { goals: 0, assists: 0, matches: 0, attendance: '0/0', yellowCards: 0, redCards: 0, cleanSheets: 0 },
+            userAccountId: null,
+            createdAt: firebase.firestore.Timestamp.now(),
+            createdBy: aktualnyUserId,
+            isDemo: false,
+            demoSetId: '',
+            demoVisibleFor: [],
+            demoEditableBy: []
+        };
+
+        try {
+            await db.collection('players').doc(pid).set(playerDoc);
+            zamknijDodajZawodnika();
+            await zaladujZawodnikow();
+        } catch (e) {
+            console.error('B³ad dodawania zawodnika:', e);
+            alert('B³ad podczas dodawania zawodnika. Spróbuj ponownie.');
+        }
+    }
+}
+
+/* Picker awatara - DiceBear Adventurer - grid losowych */
+
+// Funkcja losujaca element z tablicy
+function losuj(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Wszystkie mo¿liwe fryzury per styl
+const HAIR_CHLOPIEC = ['short01','short02','short03','short04','short05','short06','short07','short08','short09','short10','short11','short12','short13','short14','short15','short16','short17','short18','short19'];
+const HAIR_DZIEWCZYNKA = ['long01','long02','long03','long04','long05','long06','long07','long08','long09','long10','long11','long12','long13','long14','long15','long16','long17','long18','long19'];
+const HAIR_COLORS = ['A57239','8B4513','D2691E','DEB887','F4A460','BC8F8F','CD853F','F5DEB3'];
+const SKIN_COLORS = ['FDBCB4','F1C27D','E0AC69','C68642','8D5524','FFE0BD','FFCD94','EAC086'];
+const BG_COLORS = ['3B82F6','10B981','F59E0B','EF4444','8B5CF6','EC4899','14B8A6','F97316'];
+
+function budujAvatarUrl(hair, hairColor, skinColor, bgColor) {
+    const seed = hair + '_' + hairColor + '_' + skinColor + '_' + bgColor + '_' + Math.random().toString(36).slice(2,6);
+    const params = new URLSearchParams({ seed, hair, hairColor, skinColor, backgroundColor: bgColor, backgroundType: 'solid', radius: '50' });
+    return `${DICEBEAR_BASE_URL}/adventurer/svg?${params.toString()}`;
+}
+
+function generujGrid() {
+    const grid = document.getElementById('av-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    wybranyAvatarUrl = null;
+
+    const hairs = aktualnyStylGrid === 'chlopiec' ? HAIR_CHLOPIEC : HAIR_DZIEWCZYNKA;
+    // Generuj 20 unikalnych kombinacji
+    const combo = new Set();
+    const urls = [];
+    while (urls.length < 20) {
+        const h = losuj(hairs);
+        const hc = losuj(HAIR_COLORS);
+        const sc = losuj(SKIN_COLORS);
+        const bg = losuj(BG_COLORS);
+        const url = budujAvatarUrl(h, hc, sc, bg);
+        urls.push(url);
+    }
+
+    urls.forEach((url, i) => {
+        const div = document.createElement('div');
+        div.className = 'av-thumb';
+        div.dataset.url = url;
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = `Awatar ${i+1}`;
+        img.loading = 'lazy';
+        div.appendChild(img);
+        div.onclick = function() {
+            document.querySelectorAll('.av-thumb').forEach(t => t.classList.remove('selected'));
+            this.classList.add('selected');
+            wybranyAvatarUrl = url;
+        };
+        grid.appendChild(div);
+    });
+}
+
+function wybierzStylGrid(btn, styl) {
+    document.querySelectorAll('.av-styl-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    aktualnyStylGrid = styl;
+    generujGrid();
+}
+
+function otworzPickerAwatara() {
+    if (!aktualnyZawodnik) return;
+    aktualnyStylGrid = 'chlopiec';
+    document.querySelectorAll('.av-styl-btn').forEach((b,i) => b.classList.toggle('selected', i===0));
+    wybranyAvatarUrl = null;
+    generujGrid();
+    document.getElementById('avatar-picker-panel').classList.add('open');
+}
+
+function zamknijPickerAwatara() {
+    document.getElementById('avatar-picker-panel').classList.remove('open');
+}
+
+async function zapiszAwatar() {
+    if (!aktualnyZawodnik) return;
+    if (!wybranyAvatarUrl) {
+        alert('Wybierz jeden z awatarów klikając na niego.');
+        return;
+    }
+    const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
+    try {
+        await db.collection('players').doc(pid).update({ photoURL: wybranyAvatarUrl });
+        aktualnyZawodnik.photoURL = wybranyAvatarUrl;
+        const dpAv = document.getElementById('dp-av');
+        dpAv.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = wybranyAvatarUrl;
+        img.alt = aktualnyZawodnik.name;
+        dpAv.appendChild(img);
+        renderujListe();
+        zamknijPickerAwatara();
+        console.log('✅ Awatar zapisany');
+    } catch (e) { alert('Błąd zapisu awatara.'); console.error(e); }
+}
+
+/* ── Modal potwierdzenia kodu ── */
+let _modalKodResolve = null;
+
+function pokazModalKodu(liczbaKodow) {
+    return new Promise(resolve => {
+        _modalKodResolve = resolve;
+        const body = document.getElementById('modal-kod-body');
+        if (body) body.textContent = `Dla tego zawodnika istnieje już ${liczbaKodow} aktywny kod (typ: ${aktualnyTypKodu}). Co chcesz zrobić?`;
+        document.getElementById('modal-kod').classList.add('open');
+    });
+}
+
+function modalKodAkcja(akcja) {
+    document.getElementById('modal-kod').classList.remove('open');
+    if (_modalKodResolve) {
+        _modalKodResolve(akcja);
+        _modalKodResolve = null;
+    }
+}
+
+/* ── Powiązane konta ── */
+let _allRodzice = [], _allKibice = [], _powPlayer = null;
+
+function toggleNieaktywnePowiazania() {
+    renderujPowiazane();
+}
+
+function isAktywne(m) {
+    const st = (m.status || '').toLowerCase();
+    return st === 'active' || st === 'grace' || st === 'pending';
+}
+
+function renderujPowiazane() {
+    const container = document.getElementById('dp-powiazane-content');
+    if (!container) return;
+    const pokazNieaktywne = document.getElementById('pow-show-inactive')?.checked || false;
+    const rodzice = pokazNieaktywne ? _allRodzice : _allRodzice.filter(isAktywne);
+    const kibice  = pokazNieaktywne ? _allKibice  : _allKibice.filter(isAktywne);
+
+    let html = '';
+    html += `<div class="pow-group-label">👨‍👦 Rodzice / Opiekunowie</div>`;
+    if (rodzice.length === 0) {
+        html += `<div class="pow-empty">Brak ${pokazNieaktywne ? '' : 'aktywnych '}powiązanych rodziców</div>`;
+    } else {
+        rodzice.forEach(m => { html += renderPowiazanyItem(m, _powUserMap, 'RODZIC'); });
+    }
+    html += `<div class="pow-group-label" style="margin-top:14px;">👁️ Kibice</div>`;
+    if (kibice.length === 0) {
+        html += `<div class="pow-empty">Brak ${pokazNieaktywne ? '' : 'aktywnych '}powiązanych kibiców</div>`;
+    } else {
+        kibice.forEach(m => { html += renderPowiazanyItem(m, _powUserMap, 'KIBIC'); });
+    }
+    container.innerHTML = html;
+}
+
+async function zaladujPowiazaneKonta(player) {
+    const container = document.getElementById('dp-powiazane-content');
+    if (!container) return;
+    container.innerHTML = '<div style="color:var(--szary);font-size:12px;">Ładowanie...</div>';
+
+    // Reset checkboxa przy każdym otwarciu profilu
+    const cb = document.getElementById('pow-show-inactive');
+    if (cb) cb.checked = false;
+
+    const pid = player.playerId || player.id;
+    const { rodzice, kibice, userMap } = await getMembershipsForPlayer(pid);
+    _allRodzice = rodzice;
+    _allKibice  = kibice;
+    _powUserMap = userMap;
+    _powPlayer  = player;
+
+    renderujPowiazane();
+    console.log(`✅ Powiązane konta: ${rodzice.length} rodziców, ${kibice.length} kibiców`);
+}
+
+function renderPowiazanyItem(m, userMap, typ) {
+    const user     = m.userId ? userMap[m.userId] : null;
+    const st = (m.status || '').toLowerCase();
+    const isPending = st === 'pending';
+    const isExpired = st === 'expired';
+    const isActive  = st === 'active' || st === 'grace';
+
+    const nazwa = user?.displayName || (isPending ? 'Oczekuje na rejestrację' : 'Brak danych');
+    const ikona = typ === 'RODZIC' ? '👤' : '👁️';
+
+    const statusChip = isActive
+        ? `<span class="pow-status pow-status-active">aktywny</span>`
+        : isPending
+        ? `<span class="pow-status pow-status-pending">oczekuje</span>`
+        : `<span class="pow-status pow-status-expired">wygasł</span>`;
+
+    // Kod dla oczekujących
+    let kodRow = '';
+    if (isPending && m.code) {
+        const exp = m.codeExpiresAt
+            ? (m.codeExpiresAt.toDate ? m.codeExpiresAt.toDate() : new Date(m.codeExpiresAt))
+            : null;
+        const expStr = exp ? exp.toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+        kodRow = `<div class="pow-code-row">
+            <span class="pow-code">${m.code}</span>
+            <span class="pow-exp">ważny do ${expStr}</span>
+        </div>`;
+    }
+
+    // Akcje — tylko dla oczekujących kodów (aktywne mają akcje w modalu)
+    let akcje = '';
+    if (isPending) {
+        akcje = `<button class="pow-action-btn" onclick="dezaktywujKodPow('${m.id}')">🗑️ Dezaktywuj kod</button>`;
+    }
+
+    const onclickAttr = isActive && m.userId
+        ? `onclick="otworzDanePowiazanego('${m.userId}','${typ}','${m.id}')"`
+        : '';
+
+    return `<div class="pow-item" ${onclickAttr}>
+        <div class="pow-item-top">
+            <div class="pow-avatar">${ikona}</div>
+            <div class="pow-name">${nazwa}</div>
+            ${statusChip}
+            ${isActive && m.userId ? '<span class="pow-chevron">›</span>' : ''}
+        </div>
+        ${kodRow}
+        ${akcje ? `<div class="pow-actions" onclick="event.stopPropagation()">${akcje}</div>` : ''}
+    </div>`;
+}
+
+function dezaktywujKodPow(membershipId) {
+    pokazKomunikat('W trakcie budowy 🚧', 'info');
+}
+
+/* ── Modal danych powiązanego ── */
+let _powUserMap = {};  // przechowuje userMap z ostatniego ładowania
+let _powActiveMembershipId = null;
+let _powActiveUserId = null;
+let _powActiveTyp = null;
+
+function otworzDanePowiazanego(userId, typ, membershipId) {
+    _powActiveMembershipId = membershipId || null;
+    _powActiveUserId = userId || null;
+    _powActiveTyp = typ || null;
+    const user = _powUserMap[userId];
+    const player = aktualnyZawodnik;
+    const ikona = typ === 'RODZIC' ? '👤' : '👁️';
+    const typLabel = typ === 'RODZIC' ? 'Rodzic / Opiekun' : 'Kibic';
+
+    // Dane kontaktowe — dla RODZIC z guardianData zawodnika, dla KIBIC z usera
+    const gd = (typ === 'RODZIC' && player?.guardianData) ? player.guardianData : null;
+    const nazwa = user?.displayName || gd?.guardianName || '—';
+    const email = gd?.guardianEmail || user?.email || null;
+    const tel   = gd?.guardianPhone || user?.phone  || null;
+    const adr   = gd?.address || null;
+
+    let rows = '';
+
+    if (email) rows += `<div class="pow-modal-row">
+        <div class="pow-modal-icon">✉️</div>
+        <div><div class="pow-modal-label">Email</div><div class="pow-modal-val">${email}</div></div>
+    </div>`;
+
+    if (tel) rows += `<div class="pow-modal-row">
+        <div class="pow-modal-icon">📞</div>
+        <div><div class="pow-modal-label">Telefon</div><div class="pow-modal-val">${tel}</div></div>
+    </div>`;
+
+    if (adr) {
+        const adres = [
+            adr.street && adr.houseNumber ? `${adr.street} ${adr.houseNumber}${adr.apartmentNumber ? '/'+adr.apartmentNumber : ''}` : null,
+            adr.postalCode && adr.city ? `${adr.postalCode} ${adr.city}` : (adr.city || null)
+        ].filter(Boolean).join('\n');
+        if (adres) rows += `<div class="pow-modal-row">
+            <div class="pow-modal-icon">📍</div>
+            <div><div class="pow-modal-label">Adres</div><div class="pow-modal-val" style="white-space:pre-line">${adres}</div></div>
+        </div>`;
+    }
+
+    if (!rows) rows = `<div style="color:var(--szary);font-size:12px;padding:10px 0">Brak danych kontaktowych</div>`;
+
+    // Przyciski akcji — tylko dla trenera
+    const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
+    let btnAkcje = '';
+    if (isCoach && membershipId) {
+        const btnStyle = `padding: 11px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; width: 100%;`;
+        const odlaczLabel = typ === 'RODZIC' ? 'Odłącz rodzica' : 'Odłącz kibica';
+        const btnOdlacz = `<button onclick="odlaczPowiazanego()" style="${btnStyle} background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #F87171;">${odlaczLabel}</button>`;
+        btnAkcje = `<div style="display:flex;flex-direction:column;gap:8px;margin-top:20px;">${btnOdlacz}</div>`;
+    }
+
+    document.getElementById('pow-modal-avatar').textContent = ikona;
+    document.getElementById('pow-modal-title').textContent  = nazwa;
+    document.getElementById('pow-modal-subtitle').textContent = typLabel;
+    document.getElementById('pow-modal-rows').innerHTML = rows + btnAkcje;
+    document.getElementById('pow-modal-overlay').classList.add('open');
+}
+
+// Odłącza rodzica/kibica od zawodnika: dezaktywuje membership (soft), czyści guardianId/guardianPhones
+// jeśli to rodzic, i powiadamia odłączaną osobę. Wywoływane z przycisku "Odłącz rodzica"/"Odłącz kibica"
+// w sekcji Powiązane konta — jedyne miejsce w oknie zawodnika do zarządzania dostępem opiekunów.
+async function odlaczOpiekunaOdZawodnika(userId, typ, membershipIdZnany) {
+    const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
+    const now = new Date().toISOString();
+
+    let membershipId = membershipIdZnany;
+    if (!membershipId) {
+        const snap = await db.collection('memberships')
+            .where('userId', '==', userId)
+            .where('playerId', '==', pid)
+            .where('role', '==', typ)
+            .limit(1).get();
+        if (!snap.empty) membershipId = snap.docs[0].id;
+    }
+    if (membershipId) {
+        await db.collection('memberships').doc(membershipId).update({
+            status: 'REMOVED', removedAt: now, removedBy: aktualnyUserId
+        });
+    }
+
+    if (typ === 'RODZIC') {
+        const playerDoc = await db.collection('players').doc(pid).get();
+        if (playerDoc.exists) {
+            const pd = playerDoc.data();
+            const updates = {};
+            if (pd.guardianId === userId) updates.guardianId = null;
+            try {
+                const uDoc = await db.collection('users').doc(userId).get();
+                const userPhone = uDoc.exists ? uDoc.data().phone : null;
+                if (userPhone && Array.isArray(pd.guardianPhones) && pd.guardianPhones.includes(userPhone)) {
+                    updates.guardianPhones = pd.guardianPhones.filter(p => p !== userPhone);
+                }
+            } catch (e) {}
+            if (Object.keys(updates).length) await db.collection('players').doc(pid).update(updates);
+        }
+    }
+
+    try {
+        await createNotification({
+            userId,
+            teamId: aktualnyTeamId,
+            type: 'INFO',
+            title: 'Utracono dostęp do profilu zawodnika',
+            body: `Trener odłączył Cię od profilu zawodnika ${aktualnyZawodnik.name || ''}. Skontaktuj się z trenerem, jeśli to pomyłka.`,
+            forPlayerId: pid
+        });
+    } catch (e) { console.error('Powiadomienie o odłączeniu:', e); }
+}
+
+async function odlaczPowiazanego() {
+    if (!_powActiveMembershipId || !_powActiveUserId || !_powActiveTyp) return;
+    const label = _powActiveTyp === 'RODZIC' ? 'rodzica' : 'kibica';
+    const ok = await pokazDialog(`Odłączyć tego ${label} od zawodnika?`, { tak: 'Odłącz', nie: 'Anuluj' });
+    if (!ok) return;
+    try {
+        await odlaczOpiekunaOdZawodnika(_powActiveUserId, _powActiveTyp, _powActiveMembershipId);
+        zamknijPowModal();
+        pokazKomunikat('Użytkownik odłączony', 'sukces');
+        await zaladujPowiazaneKonta(aktualnyZawodnik);
+    } catch (e) {
+        pokazKomunikat('Błąd: ' + e.message, 'blad');
+    }
+}
+
+function zamknijPowModal() {
+    document.getElementById('pow-modal-overlay').classList.remove('open');
+}
+
+// Przejmuje zawodnika z powrotem całkowicie — odłącza WSZYSTKICH aktywnych rodziców i kibiców naraz.
+// Osobny, zawsze widoczny przycisk na dole okna zawodnika (obok punktowego "Odłącz rodzica"/"Odłącz kibica").
+async function przejmijZawodnikaZPowrotem() {
+    if (!aktualnyZawodnik) return;
+    const aktywni = [
+        ..._allRodzice.filter(isAktywne).map(m => ({ ...m, typ: 'RODZIC' })),
+        ..._allKibice.filter(isAktywne).map(m => ({ ...m, typ: 'KIBIC' }))
+    ];
+    if (aktywni.length === 0) {
+        pokazKomunikat('Brak podpiętych rodziców pod zawodnika', 'info');
+        return;
+    }
+    if (!await showConfirmSheet('Przejąć zawodnika z powrotem? Wszyscy powiązani rodzice i kibice stracą dostęp.')) return;
+    try {
+        for (const m of aktywni) {
+            await odlaczOpiekunaOdZawodnika(m.userId, m.typ, m.id);
+        }
+        pokazKomunikat('Zawodnik przejęty z powrotem', 'sukces');
+        await zaladujPowiazaneKonta(aktualnyZawodnik);
+    } catch (e) {
+        pokazKomunikat('Błąd: ' + e.message, 'blad');
+    }
+}
+
+// Usuwa zawodnika (RODO — anonimizacja, nie hard-delete): odłącza wszystkich opiekunów, czyści dane
+// osobowe, zachowuje historię/statystyki. birthDate zostaje — bez nazwiska nie identyfikuje osoby.
+// Tylko TRENER_GLOWNY (patrz ARCHITEKTURA.md — tabela uprawnień).
+async function usunZawodnika() {
+    if (!aktualnyZawodnik) return;
+    const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
+    const imie = aktualnyZawodnik.name || 'tego zawodnika';
+
+    if (!await showConfirmSheet(`Usunąć zawodnika ${imie}? Dane osobowe zostaną trwale usunięte, historia (mecze, statystyki) zostanie zachowana. Tej operacji nie można cofnąć.`)) return;
+
+    try {
+        // 1. Odłącz wszystkich aktywnych opiekunów (rodzice + kibice)
+        const { rodzice, kibice } = await getMembershipsForPlayer(pid);
+        const aktywni = [
+            ...rodzice.filter(isAktywne).map(m => ({ ...m, typ: 'RODZIC' })),
+            ...kibice.filter(isAktywne).map(m => ({ ...m, typ: 'KIBIC' }))
+        ];
+        for (const m of aktywni) {
+            await odlaczOpiekunaOdZawodnika(m.userId, m.typ, m.id);
+        }
+
+        // 2. Anonimizuj dane osobowe, zachowaj birthDate/statystyki/historię
+        await db.collection('players').doc(pid).update({
+            firstName: '', lastName: '', name: 'Usunięty zawodnik',
+            photoURL: '', guardianPhones: [], guardianData: null,
+            'coachOnlyData.coachNotes': '',
+            isActive: false,
+            deletedAt: new Date().toISOString(),
+            deletedBy: aktualnyUserId
+        });
+
+        pokazKomunikat('Zawodnik usunięty', 'sukces');
+        zamknijProfil();
+        await zaladujZawodnikow();
+    } catch (e) {
+        pokazKomunikat('Błąd: ' + e.message, 'blad');
+    }
+}
+
+
+/* ── Start ── */
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(user => {
+        if (_loaded) return;
+        if (user) {
+            _loaded = true;
+            if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
+            initDruzyna();
+        } else {
+            if (!isDemoMode()) window.location.href = 'login.html';
+        }
+    });
+});
+</script>
+
+
+</body>
+</html>

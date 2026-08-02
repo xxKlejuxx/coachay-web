@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Trenerzy</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+.screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
+
+/* ── Nagłówek ekranu ── */
+.tr-header { padding: 12px 16px 10px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.tr-header-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
+.tr-header-right { display: flex; align-items: center; gap: 8px; }
+.tr-header-count { font-size: 11px; font-weight: 700; color: var(--szary); background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; }
+.tr-btn-invite { font-size: 12px; font-weight: 900; color: #fff; background: var(--akcent); border: none; border-radius: 999px; padding: 5px 14px; cursor: pointer; display: none; }
+.tr-btn-invite:active { opacity: 0.8; }
+
+/* ── Lista trenerów ── */
+.tr-scroll { flex: 1; overflow-y: auto; padding: 10px 16px 80px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+.tr-scroll::-webkit-scrollbar { display: none; }
+
+.tr-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.15s; }
+.tr-item:active { background: var(--tlo-karta2); }
+
+.tr-av { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border2); flex-shrink: 0; background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; position: relative; }
+.tr-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tr-av-initials { font-family: var(--font-d); font-size: 16px; font-weight: 800; color: var(--bialy); }
+.tr-av-star { position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px; border-radius: 50%; background: var(--warn); border: 2px solid var(--tlo-karta); display: flex; align-items: center; justify-content: center; font-size: 8px; }
+
+.tr-info { flex: 1; min-width: 0; }
+.tr-nazwa { font-size: 14px; font-weight: 800; color: var(--bialy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tr-rola { font-size: 11px; color: var(--szary); margin-top: 2px; font-weight: 600; }
+.tr-teams { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.tr-team-badge { font-size: 9px; font-weight: 800; color: var(--akcent); background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2); border-radius: 999px; padding: 2px 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.tr-arrow { color: var(--border2); font-size: 16px; flex-shrink: 0; }
+
+/* ── Panel szczegółów trenera ── */
+.detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.detail-panel.open { transform: translateX(0); }
+
+.dp-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-back { display: flex; align-items: center; gap: 8px; color: var(--bialy); font-size: 13px; font-weight: 800; cursor: pointer; }
+.dp-back-icon { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.dp-edit-btn { font-size: 12px; font-weight: 900; color: var(--akcent); cursor: pointer; padding: 4px 0; display: none; }
+
+.dp-hero { background: #000; padding: 20px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-hero-main { display: flex; align-items: center; gap: 16px; }
+.dp-av { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border2); flex-shrink: 0; background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; }
+.dp-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dp-av-initials { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
+.dp-info { flex: 1; min-width: 0; }
+.dp-nazwa { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); line-height: 1.1; }
+.dp-sub { font-size: 12px; color: var(--szary); margin-top: 4px; font-weight: 600; }
+.dp-teams { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+
+.dp-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: none; }
+.dp-scroll::-webkit-scrollbar { display: none; }
+
+.dp-section { display: flex; flex-direction: column; gap: 8px; }
+.dp-section-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 2px; }
+.dp-section-value { font-size: 13px; font-weight: 600; color: var(--bialy); line-height: 1.5; }
+.dp-section-empty { font-size: 13px; color: var(--szary); font-style: italic; }
+
+.dp-contact-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.dp-contact-row:last-child { border-bottom: none; }
+.dp-contact-icon { font-size: 16px; width: 28px; text-align: center; }
+.dp-contact-val { font-size: 13px; font-weight: 700; color: var(--bialy); }
+
+.dp-btn-msg { width: 100%; padding: 14px; background: var(--akcent); border-radius: var(--r); font-size: 14px; font-weight: 800; color: #fff; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.dp-btn-msg:active { opacity: 0.8; }
+
+/* ── Panel edycji trenera ── */
+.edit-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 150; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.edit-panel.open { transform: translateY(0); }
+.edit-panel-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.edit-panel-title { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+.edit-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+.edit-panel-body::-webkit-scrollbar { display: none; }
+
+/* ── Panel zaproszenia ── */
+.invite-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.invite-panel.open { transform: translateY(0); }
+.invite-panel-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.invite-panel-title { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+.invite-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: none; }
+
+.kod-box { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: center; }
+.kod-value { font-family: var(--font-d); font-size: 36px; font-weight: 800; color: var(--akcent); letter-spacing: 8px; margin: 8px 0; }
+.kod-pin-label { font-size: 11px; color: var(--szary); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
+.kod-pin-value { font-size: 22px; font-weight: 800; color: var(--bialy); margin-top: 4px; letter-spacing: 4px; }
+.kod-expires { font-size: 11px; color: var(--szary); margin-top: 12px; }
+
+.tr-pending-badge { font-size: 10px; font-weight: 800; color: var(--warn); background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); border-radius: 999px; padding: 2px 8px; margin-top: 4px; display: inline-block; }
+.tr-item-pending { opacity: 0.75; }
+
+.kod-copy-btn { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--bialy); cursor: pointer; }
+.kod-copy-btn:active { opacity: 0.7; }
+
+/* ── Toggle widoczności ── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.toggle-label { font-size: 13px; font-weight: 700; color: var(--bialy); }
+.toggle-sub { font-size: 11px; color: var(--szary); margin-top: 2px; }
+.toggle-switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--border2); border-radius: 999px; cursor: pointer; transition: background 0.2s; }
+.toggle-slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+.toggle-switch input:checked + .toggle-slider { background: var(--akcent); }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+/* ── Avatar picker ── */
+.av-gender-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.av-gender-btn { flex: 1; padding: 8px; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; font-weight: 700; color: var(--szary); cursor: pointer; text-align: center; }
+.av-gender-btn.selected { background: rgba(59,130,246,0.15); border-color: var(--akcent); color: var(--akcent); }
+.av-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+.av-thumb { width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; cursor: pointer; border: 2px solid var(--border); transition: border 0.15s; }
+.av-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.av-thumb.selected { border-color: var(--akcent); }
+
+/* ── Sticky save ── */
+.sticky-save { position: sticky; bottom: 0; padding: 14px 16px; background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
+
+/* ── Badges admin / blocked ── */
+.tr-admin-badge { font-size: 9px; font-weight: 900; color: #FBBF24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); border-radius: 999px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; }
+.tr-blocked-badge { font-size: 9px; font-weight: 900; color: #F87171; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); border-radius: 999px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; }
+.dp-admin-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 900; color: #FBBF24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); border-radius: 999px; padding: 3px 10px; letter-spacing: 1px; text-transform: uppercase; margin-top: 6px; }
+
+/* ── Sekcja akcji admina w panelu ── */
+.dp-actions { display: flex; flex-direction: column; gap: 8px; }
+.dp-action-btn { width: 100%; padding: 13px 16px; border-radius: var(--r); font-size: 13px; font-weight: 800; cursor: pointer; border: none; text-align: left; display: flex; align-items: center; gap: 10px; transition: opacity 0.15s; }
+.dp-action-btn:active { opacity: 0.7; }
+.dp-action-btn-edit    { background: var(--tlo-karta2); color: var(--bialy); border: 1px solid var(--border2); }
+.dp-action-btn-warn    { background: rgba(251,191,36,0.08); color: #FBBF24; border: 1px solid rgba(251,191,36,0.2); }
+.dp-action-btn-neutral { background: var(--tlo-karta2); color: var(--szary-j); border: 1px solid var(--border2); }
+.dp-action-btn-danger  { background: rgba(239,68,68,0.08); color: #F87171; border: 1px solid rgba(239,68,68,0.2); }
+
+/* ── Modal blokady ── */
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
+.modal-overlay.open { opacity: 1; visibility: visible; }
+.modal-box { background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: 20px 20px 0 0; padding: 20px 20px 32px; width: 100%; }
+.modal-title { font-family: var(--font-d); font-size: 16px; font-weight: 800; color: var(--bialy); margin-bottom: 6px; }
+.modal-body { font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.6; margin-bottom: 18px; }
+.modal-btns { display: flex; flex-direction: column; gap: 8px; }
+.modal-btn { width: 100%; padding: 14px; border-radius: var(--r-pill); font-size: 13px; font-weight: 900; cursor: pointer; border: none; transition: opacity 0.15s; }
+.modal-btn:active { opacity: 0.8; }
+.modal-btn-team    { background: rgba(251,191,36,0.12); color: #FBBF24; border: 1px solid rgba(251,191,36,0.25); }
+.modal-btn-club    { background: rgba(239,68,68,0.12); color: #F87171; border: 1px solid rgba(239,68,68,0.25); }
+.modal-btn-cancel  { background: transparent; color: var(--szary); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+
+    <!-- ── Top bar ── -->
+    <div class="top-bar">
+        <div class="ctx-switcher" onclick="toggleCtxOv()">
+            <div class="ctx-dot" id="ctx-dot"></div>
+            <div class="ctx-text">
+                <span class="ctx-klub" id="ctx-klub"></span>
+                <span class="ctx-team" id="ctx-team"></span>
+            </div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+            <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+        </div>
+    </div>
+
+    <!-- ── Overlaye globalne ── -->
+    <div class="ctx-overlay" id="ctx-ov">
+        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
+        <div class="ctx-teams" id="ctx-teams"></div>
+    </div>
+    <div class="notif-overlay" id="notif-ov">
+        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
+    </div>
+
+    <!-- ── Zawartość ekranu ── -->
+    <div class="screen-body">
+
+        <div class="tr-header">
+            <div class="tr-header-title">Trenerzy</div>
+            <div class="tr-header-right">
+                <div class="tr-header-count" id="tr-count">—</div>
+                <button class="tr-btn-invite" id="tr-btn-invite" onclick="openAddPanel()">+ Dodaj</button>
+            </div>
+        </div>
+
+        <div class="tr-scroll" id="tr-scroll">
+            <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;font-weight:600;">Ładowanie...</div>
+        </div>
+
+    </div>
+
+    <!-- ── Bottom nav ── -->
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+    </div>
+
+    <!-- ══ PANEL SZCZEGÓŁÓW TRENERA ══ -->
+    <div class="detail-panel" id="detail-panel">
+        <div class="dp-topbar">
+            <div class="dp-back" onclick="closeDetailPanel()">
+                <div class="dp-back-icon">‹</div>
+                Trenerzy
+            </div>
+            <span class="dp-edit-btn" id="dp-edit-btn" onclick="openEditPanel()">Edytuj</span>
+        </div>
+        <div class="dp-hero">
+            <div class="dp-hero-main">
+                <div class="dp-av" id="dp-av">
+                    <div class="dp-av-initials" id="dp-initials"></div>
+                </div>
+                <div class="dp-info">
+                    <div class="dp-nazwa" id="dp-nazwa"></div>
+                    <div class="dp-sub" id="dp-sub"></div>
+                </div>
+            </div>
+            <div class="dp-teams" id="dp-teams"></div>
+        </div>
+        <div class="dp-scroll" id="dp-scroll"></div>
+    </div>
+
+    <!-- ══ PANEL EDYCJI TRENERA ══ -->
+    <div class="edit-panel" id="edit-panel">
+        <div class="edit-panel-hdr">
+            <div class="dp-back" onclick="closeEditPanel()">
+                <div class="dp-back-icon">‹</div>
+                Profil
+            </div>
+            <div class="edit-panel-title">Edytuj trenera</div>
+        </div>
+        <div class="edit-panel-body">
+
+            <!-- ── Awatar ── -->
+            <div class="form-group">
+                <label class="form-lbl">Awatar</label>
+                <div style="display:flex;justify-content:center;margin-bottom:12px;">
+                    <div id="ep-av-preview" style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:2px solid var(--border2);background:var(--tlo-karta2);display:flex;align-items:center;justify-content:center;">
+                        <div id="ep-av-initials-prev" style="font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--bialy);"></div>
+                    </div>
+                </div>
+                <div class="av-gender-row">
+                    <button class="av-gender-btn selected" id="av-btn-m" onclick="selectGender('mezczyzna', this)">♂ Mężczyzna</button>
+                    <button class="av-gender-btn" id="av-btn-k" onclick="selectGender('kobieta', this)">♀ Kobieta</button>
+                </div>
+                <div class="av-grid" id="ep-av-grid"></div>
+                <button type="button" onclick="regenAvatarGrid()" style="width:100%;padding:9px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:12px;font-weight:700;cursor:pointer;">↺ Inne awatary</button>
+            </div>
+
+            <div style="display:flex;gap:10px;">
+                <div class="form-group" style="flex:1">
+                    <label class="form-lbl">Imię</label>
+                    <input class="form-inp" id="ep-fname" type="text" placeholder="Jan">
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label class="form-lbl">Nazwisko</label>
+                    <input class="form-inp" id="ep-lname" type="text" placeholder="Kowalski">
+                </div>
+            </div>
+            <div class="toggle-row" id="ep-admin-row" style="display:none">
+                <div>
+                    <div class="toggle-label">Administrator klubu</div>
+                    <div class="toggle-sub">pełny dostęp do zarządzania</div>
+                </div>
+                <label class="toggle-switch"><input type="checkbox" id="ep-is-admin"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">O trenerze <span style="color:var(--szary);font-weight:600;">(bio)</span></label>
+                <textarea class="form-inp" id="ep-bio" rows="3" placeholder="Kilka słów o trenerze..." style="resize:none;line-height:1.5;"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Trener od roku</label>
+                <input class="form-inp" id="ep-since" type="number" placeholder="np. 2010" min="1970" max="2030">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Licencja</label>
+                <input class="form-inp" id="ep-licencja" type="text" placeholder="np. UEFA B">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Specjalizacja</label>
+                <input class="form-inp" id="ep-spec" type="text" placeholder="np. Piłka nożna młodzieżowa">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">E-mail kontaktowy <span style="color:var(--szary);font-weight:600;">(do wyświetlenia)</span></label>
+                <input class="form-inp" id="ep-email" type="email" placeholder="trener@email.pl">
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Telefon</label>
+                <input class="form-inp" id="ep-tel" type="tel" placeholder="+48 600 100 200">
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Telefon widoczny</div>
+                    <div class="toggle-sub">dla rodziców i zawodników</div>
+                </div>
+                <label class="toggle-switch"><input type="checkbox" id="ep-tel-visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">E-mail widoczny</div>
+                    <div class="toggle-sub">dla rodziców i zawodników</div>
+                </div>
+                <label class="toggle-switch"><input type="checkbox" id="ep-email-visible"><span class="toggle-slider"></span></label>
+            </div>
+        </div>
+        <div class="sticky-save">
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="saveEditTrainer()">Zapisz zmiany</button>
+        </div>
+    </div>
+
+    <!-- ══ PANEL DODAJ TRENERA ══ -->
+    <div class="invite-panel" id="add-panel">
+        <div class="invite-panel-hdr">
+            <div class="dp-back" onclick="closeAddPanel()">
+                <div class="dp-back-icon">‹</div>
+                Trenerzy
+            </div>
+            <div class="invite-panel-title">Nowy trener</div>
+        </div>
+        <div class="invite-panel-body">
+            <div style="font-size:13px;color:var(--szary);line-height:1.6;background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:14px;">
+                Trener pojawi się na liście ze statusem <strong style="color:var(--warn)">Oczekuje</strong>. Kod rejestracyjny będzie widoczny w jego profilu — przekaż go trenerowi.
+            </div>
+            <div style="display:flex;gap:10px;">
+                <div class="form-group" style="flex:1">
+                    <label class="form-lbl">Imię</label>
+                    <input class="form-inp" id="add-fname" type="text" placeholder="Marek">
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label class="form-lbl">Nazwisko</label>
+                    <input class="form-inp" id="add-lname" type="text" placeholder="Nowak">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Rola</label>
+                <select class="form-select" id="add-rola">
+                    <option value="TRENER_GLOWNY">Trener Główny</option>
+                    <option value="TRENER_POMOCNICZY">Trener Pomocniczy</option>
+                </select>
+            </div>
+            <div class="sticky-save" style="position:static;padding:0;border:none;">
+                <button class="btn-primary" style="width:100%;padding:14px;" onclick="saveNewTrainer()">Dodaj trenera i generuj kod</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Menu panel ── -->
+    <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
+        <div class="menu-panel-items">
+
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-sep"></div>
+            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-sep"></div>
+        </div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
+    </div>
+
+    <!-- ── Modal: zakres blokady ── -->
+    <div class="modal-overlay" id="modal-block" onclick="closeBlockModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-title">Zablokować trenera?</div>
+            <div class="modal-body" id="modal-block-body"></div>
+            <div class="modal-btns">
+                <button class="modal-btn modal-btn-team" onclick="blockTrainer('TEAM')">Tylko ta drużyna</button>
+                <button class="modal-btn modal-btn-club" onclick="blockTrainer('CLUB')">Cały klub</button>
+                <button class="modal-btn modal-btn-cancel" onclick="closeBlockModal()">Anuluj</button>
+            </div>
+        </div>
+    </div>
+
+
+
+</div><!-- /phone -->
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   TRENERZY — logika ekranu
+═══════════════════════════════════════════════════ */
+
+let currentUserId = '';
+let currentUserRole = '';
+let currentClubId = '';
+let currentTeamId = '';
+let allTrainers = [];
+let allClubTeams = [];
+let detailTrainer = null;
+let isGlowny = false;
+let isAdmin = false; // trainers.isClubAdmin aktualnego usera
+let selectedAvatarUrl = null;    // null = inicjały, string = pełny URL DiceBear
+let selectedGender    = 'mezczyzna';
+
+const DICEBEAR_BASE  = 'https://api.dicebear.com/9.x';
+const HAIR_M = ['short01','short02','short03','short04','short05','short06','short07','short08','short09','short10','short11','short12','short13','short14','short15','short16','short17','short19','short20'];
+const HAIR_K = ['long01','long02','long03','long04','long05','long06','long07','long08','long09','long10','long11','long12','long13','long14','long15','long16','long17','long18','long19','long20'];
+const HAIR_COLORS = ['0e0e0e','6a4e35','562306','ac6511','cb6820','b9a05f','e5d7a3','afafaf'];
+const SKIN_COLORS = ['ecad80','d4956a','c68642','9e5622','763900','fde68a'];
+const BG_COLORS   = ['b6e3f4','c0aede','d1d4f9','ffd5dc','ffdfbf','d4f7c5'];
+
+function losuj(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function buildAvatarUrl(hair, hc, sc, bg) {
+    const seed = `${hair}_${hc}_${sc}_${bg}_${Math.random().toString(36).slice(2,6)}`;
+    const p = new URLSearchParams({ seed, hair, hairColor: hc, skinColor: sc, backgroundColor: bg, backgroundType: 'solid', radius: '50' });
+    return `${DICEBEAR_BASE}/adventurer/svg?${p}`;
+}
+
+const ROLE_LABELS = {
+    'TRENER_GLOWNY':    'Trener Główny',
+    'TRENER_POMOCNICZY':'Trener Pomocniczy',
+    'TRENER_ASYSTENT':  'Trener Asystent',
+    'OWNER':            'Właściciel'
+};
+
+/* ── Avatar helpers ── */
+function buildAvatarGrid() {
+    const grid = document.getElementById('ep-av-grid');
+    if (!grid) return;
+    const hairs = selectedGender === 'mezczyzna' ? HAIR_M : HAIR_K;
+    const urls = [];
+    for (let i = 0; i < 8; i++) {
+        urls.push(buildAvatarUrl(losuj(hairs), losuj(HAIR_COLORS), losuj(SKIN_COLORS), losuj(BG_COLORS)));
+    }
+    grid.innerHTML = '';
+    urls.forEach(url => {
+        const div = document.createElement('div');
+        div.className = 'av-thumb' + (url === selectedAvatarUrl ? ' selected' : '');
+        div.dataset.url = url;
+        div.innerHTML = `<img src="${url}" loading="lazy">`;
+        div.onclick = () => selectAvatarItem(div, url);
+        grid.appendChild(div);
+    });
+}
+
+function regenAvatarGrid() { buildAvatarGrid(); }
+
+function selectGender(gender, btn) {
+    selectedGender = gender;
+    document.querySelectorAll('.av-gender-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    buildAvatarGrid();
+}
+
+function selectAvatarItem(div, url) {
+    selectedAvatarUrl = url;
+    document.querySelectorAll('.av-thumb').forEach(t => t.classList.remove('selected'));
+    div.classList.add('selected');
+    const prev = document.getElementById('ep-av-preview');
+    if (prev) prev.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+}
+
+function calcExpYears(coachingSince) {
+    if (!coachingSince) return 0;
+    return Math.floor((Date.now() - new Date(coachingSince).getTime()) / (365.25 * 24 * 3600 * 1000));
+}
+
+/* ── Inicjalizacja ── */
+async function initTrenerzy() {
+    if (!requireAuth()) return;
+
+    currentUserId = getCurrentUserId();
+
+    const s = await initSession();
+    if (!s || !s.team) {
+        document.getElementById('tr-scroll').innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;text-align:center;">
+                <div style="font-size:2rem">🏟️</div>
+                <div style="font-size:.95rem;font-weight:600;color:var(--bialy)">Brak drużyny</div>
+                <div style="font-size:.82rem;color:var(--szary);line-height:1.5">Najpierw dodaj drużynę w sekcji Klub,<br>potem wróć tu i zaproś trenera.</div>
+                <button onclick="window.location.href='klub.html'" style="margin-top:8px;padding:10px 20px;background:var(--akcent);color:#fff;border:none;border-radius:8px;font-size:.85rem;cursor:pointer;">Przejdź do Klub →</button>
+            </div>`;
+        return;
+    }
+    const { user, team, membership } = s;
+
+    loadCtxOverlay(user, membership, team);
+    loadMenuPanel(user, membership, team);
+
+    currentUserRole = isDemoMode() ? getDemoRole() : getCurrentUserData().role;
+    currentTeamId   = team.teamId || team.id;
+    currentClubId   = membership?.clubId || team?.clubId || '';
+
+    // Załaduj drużyny klubu
+    try {
+        const teamsSnap = await db.collection('teams').where('clubId', '==', currentClubId).get();
+        allClubTeams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) { allClubTeams = []; }
+
+    isGlowny = currentUserRole === 'TRENER_GLOWNY' || currentUserRole === 'OWNER';
+
+    // Sprawdź isClubAdmin
+    try {
+        const tSnap = await db.collection('trainers')
+            .where('userId', '==', currentUserId)
+            .where('clubId', '==', currentClubId)
+            .limit(1).get();
+        if (!tSnap.empty) isAdmin = tSnap.docs[0].data().isClubAdmin === true;
+    } catch (e) {}
+
+    // Przycisk Dodaj — admin lub trener główny
+    if (isAdmin || isGlowny) {
+        const btn = document.getElementById('tr-btn-invite');
+        if (btn) btn.style.display = 'block';
+    }
+
+    await loadTrainers();
+}
+
+/* ── Pobierz trenerów ── */
+async function loadTrainers() {
+    try {
+        const snap = await db.collection('trainers')
+            .where('clubId', '==', currentClubId)
+            .get();
+        const all = snap.docs.map(d => ({ trainerId: d.id, ...d.data() }));
+        allTrainers = all.filter(t => t.isActive !== false && t.status !== 'REMOVED');
+
+        // Buduj teamNames z memberships (source of truth)
+        const userIds = allTrainers.filter(t => t.userId).map(t => t.userId);
+        if (userIds.length) {
+            const [mbrSnap1, mbrSnap2] = await Promise.all([
+                db.collection('memberships').where('clubId', '==', currentClubId).where('status', '==', 'active').get(),
+                db.collection('memberships').where('clubId', '==', currentClubId).where('status', '==', 'ACTIVE').get()
+            ]);
+            const allMbrs = [...mbrSnap1.docs, ...mbrSnap2.docs].map(d => d.data());
+
+            // Buduj mapę teamId → teamName z allClubTeams
+            const teamNameMap = {};
+            allClubTeams.forEach(t => { teamNameMap[t.teamId || t.id] = t.teamName || t.displayName || t.name || ''; });
+
+            allTrainers.forEach(trainer => {
+                if (!trainer.userId) return;
+                const mbrs = allMbrs.filter(m =>
+                    m.userId === trainer.userId &&
+                    ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER'].includes(m.role) &&
+                    m.teamId
+                );
+                trainer.teamNames = [...new Set(mbrs.map(m => teamNameMap[m.teamId] || m.teamId))].filter(Boolean);
+            });
+        }
+
+        renderTrainers();
+    } catch (e) {
+        console.error('❌ loadTrainers:', e);
+        document.getElementById('tr-scroll').innerHTML =
+            '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">Błąd ładowania</div>';
+    }
+}
+
+/* ── Renderuj listę ── */
+function renderTrainers() {
+    const scroll = document.getElementById('tr-scroll');
+    const countEl = document.getElementById('tr-count');
+    const n = allTrainers.length;
+
+    if (countEl) countEl.textContent = `${n} ${n === 1 ? 'trener' : n < 5 ? 'trenerzy' : 'trenerów'}`;
+
+    if (!n) {
+        scroll.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;font-weight:600;">Brak trenerów w klubie</div>';
+        return;
+    }
+
+    const sorted = [...allTrainers].sort((a, b) => {
+        // Oczekujący na końcu
+        const aP = a.registrationStatus === 'PENDING';
+        const bP = b.registrationStatus === 'PENDING';
+        if (aP && !bP) return 1;
+        if (!aP && bP) return -1;
+        // Wśród aktywnych: główni pierwsi
+        const aG = a.role === 'TRENER_GLOWNY' || a.role === 'OWNER';
+        const bG = b.role === 'TRENER_GLOWNY' || b.role === 'OWNER';
+        if (aG && !bG) return -1;
+        if (!aG && bG) return 1;
+        return (a.displayName || '').localeCompare(b.displayName || '');
+    });
+
+    scroll.innerHTML = '';
+    sorted.forEach(t => scroll.appendChild(buildTrainerCard(t)));
+}
+
+/* ── Karta trenera ── */
+function buildTrainerCard(t) {
+    const name = t.displayName || t.trainerId;
+    const initials = name.split(' ').map(w => w[0].toUpperCase()).join('').slice(0, 2);
+    const cp = t.coachProfile || {};
+    const teamNames = (t.teamNames || []).filter(Boolean);
+    const isPending = t.registrationStatus === 'PENDING';
+    const isBlocked = t.status === 'BLOCKED';
+    const isSelf    = t.userId === currentUserId;
+
+    const item = document.createElement('div');
+    item.className = 'tr-item';
+    if (isPending) item.classList.add('tr-item-pending');
+    if (isBlocked) item.style.opacity = '0.6';
+    item.onclick = () => openDetailPanel(t);
+
+    const adminBadge   = t.isClubAdmin ? `<span class="tr-admin-badge">★ Admin</span>` : '';
+    const blockedBadge = isBlocked ? `<span class="tr-blocked-badge">Zablokowany</span>` : '';
+    const pendingBadge = isPending ? `<div class="tr-pending-badge">⏳ Oczekuje na rejestrację</div>` : '';
+    const teamsBadges  = (!isPending && !isBlocked && teamNames.length)
+        ? `<div class="tr-teams">${teamNames.map(tn => `<div class="tr-team-badge">${tn}</div>`).join('')}</div>` : '';
+
+    item.innerHTML = `
+        <div class="tr-av">
+            ${cp.avatarUrl ? `<img src="${cp.avatarUrl}" alt="${name}">` : `<div class="tr-av-initials">${initials}</div>`}
+        </div>
+        <div class="tr-info">
+            <div class="tr-nazwa">${name}</div>
+            <div class="tr-rola" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                ${ROLE_LABELS[t.role] || 'Trener'}
+                ${adminBadge}
+            </div>
+            ${blockedBadge}${pendingBadge}${teamsBadges}
+        </div>
+        <div class="tr-arrow">›</div>`;
+    return item;
+}
+
+/* ── Panel szczegółów ── */
+async function openDetailPanel(t) {
+    detailTrainer = t;
+    const name = t.displayName || t.trainerId;
+    const initials = name.split(' ').map(w => w[0].toUpperCase()).join('').slice(0, 2);
+    const cp = t.coachProfile || {};
+
+    // Avatar
+    const dpAvSrc = cp.avatarUrl || null;
+    document.getElementById('dp-av').innerHTML = dpAvSrc
+        ? `<img src="${dpAvSrc}" alt="${name}">`
+        : `<div class="dp-av-initials">${initials}</div>`;
+
+    document.getElementById('dp-nazwa').textContent = name;
+    document.getElementById('dp-sub').textContent = ROLE_LABELS[t.role] || 'Trener';
+
+    // Drużyny + badge admina
+    const adminBadgeHtml = t.isClubAdmin ? `<div class="dp-admin-badge">★ Administrator klubu</div>` : '';
+    document.getElementById('dp-teams').innerHTML =
+        (t.teamNames || []).filter(Boolean).map(tn => `<div class="tr-team-badge">${tn}</div>`).join('') +
+        adminBadgeHtml;
+
+    const isPending = t.registrationStatus === 'PENDING';
+    const isBlocked = t.status === 'BLOCKED';
+    const isSelf    = t.userId === currentUserId;
+
+    // Przycisk Edytuj — tylko admin, nie dla siebie (profil → profil.html), nie pending
+    const editBtn = document.getElementById('dp-edit-btn');
+    console.log('isAdmin:', isAdmin, 'isPending:', isPending, 'isSelf:', isSelf);
+    console.log('editBtn.style.display:', (isAdmin && !isPending && !isSelf) ? 'block' : 'none');
+    editBtn.style.display = (isAdmin && !isPending) ? 'block' : 'none';
+
+    let html = '';
+
+    if (isPending) {
+        // ── Widok oczekującego trenera ──
+        html += `<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:24px;margin-bottom:8px;">⏳</div>
+            <div style="font-size:13px;font-weight:800;color:var(--warn);">Oczekuje na rejestrację</div>
+            <div style="font-size:12px;color:var(--szary);margin-top:4px;line-height:1.5;">Trener jeszcze nie założył konta.<br>Przekaż poniższy kod.</div>
+        </div>`;
+
+        // Załaduj kod z inviteCodes (async — placeholder na start)
+        html += `<div class="dp-section">
+            <div class="dp-section-label">Kod rejestracyjny</div>
+            <div id="dp-kod-box" style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;">
+                <div style="font-size:11px;color:var(--szary);">Ładowanie kodu...</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button onclick="regenTrainerCode()" style="flex:1;padding:10px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:12px;font-weight:700;cursor:pointer;">↺ Nowy kod</button>
+                <button onclick="cancelInvitation()" style="flex:1;padding:10px;background:transparent;border:1px solid rgba(248,113,113,0.3);border-radius:10px;color:var(--blad);font-size:12px;font-weight:700;cursor:pointer;">✕ Anuluj</button>
+            </div>
+        </div>`;
+
+        document.getElementById('dp-scroll').innerHTML = html;
+        loadTrainerCode(t.trainerId); // async, wypełni dp-kod-box
+
+    } else {
+        // ── Widok aktywnego trenera ──
+        html += `<div class="dp-section">
+            <div class="dp-section-label">O trenerze</div>
+            ${cp.bio ? `<div class="dp-section-value">${cp.bio}</div>` : `<div class="dp-section-empty">Brak opisu</div>`}
+        </div>`;
+
+        const expYears = calcExpYears(cp.coachingSince);
+        if (cp.coachingSince || cp.licenseLevel || cp.specialization) {
+            html += `<div class="dp-section"><div class="dp-section-label">Doświadczenie</div>`;
+            if (cp.coachingSince) {
+                const since = new Date(cp.coachingSince).getFullYear();
+                const yLbl = expYears === 1 ? 'rok' : expYears < 5 ? 'lata' : 'lat';
+                html += `<div class="dp-section-value">🏟️ Trener od ${since} r. (${expYears} ${yLbl})</div>`;
+            }
+            if (cp.licenseLevel)   html += `<div class="dp-section-value">📋 Licencja: ${cp.licenseLevel}</div>`;
+            if (cp.specialization) html += `<div class="dp-section-value">🎯 ${cp.specialization}</div>`;
+            html += `</div>`;
+        }
+
+        // Drużyny z membership (read-only)
+        const teamNames = (t.teamNames || []).filter(Boolean);
+        if (teamNames.length) {
+            html += `<div class="dp-section">
+                <div class="dp-section-label">Drużyny</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${teamNames.map(tn => `<div class="tr-team-badge">${tn}</div>`).join('')}
+                </div>
+            </div>`;
+        }
+
+        const phone = cp.phoneVisible ? cp.phone : null;
+        // email: trainer doc || users doc (Google rejestracja zapisuje tylko w users)
+        let emailVal = t.email || null;
+        if (!emailVal && t.userId) {
+            try {
+                const uDoc = await db.collection('users').doc(t.userId).get();
+                if (uDoc.exists) emailVal = uDoc.data().email || null;
+            } catch(e) {}
+        }
+        const email = cp.emailVisible ? emailVal : null;
+        if (phone || email) {
+            html += `<div class="dp-section"><div class="dp-section-label">Kontakt</div>
+                <div style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:4px 12px;">`;
+            if (phone) html += `<div class="dp-contact-row"><div class="dp-contact-icon">📞</div><div class="dp-contact-val">${phone}</div></div>`;
+            if (email) html += `<div class="dp-contact-row"><div class="dp-contact-icon">✉️</div><div class="dp-contact-val">${email}</div></div>`;
+            html += `</div></div>`;
+        }
+
+
+        // Akcje admina (nie dla siebie)
+        if (isAdmin && !isSelf) {
+            html += `<div class="dp-section">
+                <div class="dp-section-label">Zarządzanie</div>
+                <div class="dp-actions">`;
+
+            if (!isBlocked) {
+                html += `<button class="dp-action-btn dp-action-btn-warn" onclick="showBlockModal()">🔒 Zablokuj trenera</button>`;
+                // Admin — tylko dla zarejestrowanych (nie pending, nie zablokowanych)
+                if (t.userId && !isBlocked) {
+                    if (!t.isClubAdmin) {
+                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="grantAdminRole()">★ Nadaj prawa admina</button>`;
+                    } else {
+                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="revokeAdminRole()">✕ Odbierz prawa admina</button>`;
+                    }
+                }
+            } else {
+                html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="unblockTrainer()">🔓 Odblokuj trenera</button>`;
+            }
+
+            html += `<button class="dp-action-btn dp-action-btn-danger" onclick="removeTrainerFromClub()">🗑️ Usuń z klubu</button>
+                </div>
+            </div>`;
+        }
+
+        document.getElementById('dp-scroll').innerHTML = html;
+    }
+
+    document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetailPanel() {
+    document.getElementById('detail-panel').classList.remove('open');
+    detailTrainer = null;
+}
+
+
+/* ── Edycja trenera ── */
+async function openEditPanel() {
+    if (!detailTrainer) return;
+    const t = detailTrainer;
+    const cp = t.coachProfile || {};
+
+    // Rozdziel imię i nazwisko — najpierw z osobnych pól, fallback ze split displayName
+    const existingFirst = t.firstName || (t.displayName || '').split(' ')[0] || '';
+    const existingLast  = t.lastName  || (t.displayName || '').split(' ').slice(1).join(' ') || '';
+    document.getElementById('ep-fname').value   = existingFirst;
+    document.getElementById('ep-lname').value   = existingLast;
+    document.getElementById('ep-bio').value     = cp.bio || '';
+    document.getElementById('ep-since').value   = cp.coachingSince ? new Date(cp.coachingSince).getFullYear() : '';
+    document.getElementById('ep-licencja').value= cp.licenseLevel || '';
+    document.getElementById('ep-spec').value    = cp.specialization || '';
+    // Email — z trainer doc lub users doc
+    let trainerEmail = t.email || '';
+    if (!trainerEmail && t.userId) {
+        try {
+            const uDoc = await db.collection('users').doc(t.userId).get();
+            if (uDoc.exists) trainerEmail = uDoc.data().email || '';
+        } catch(e) {}
+    }
+    document.getElementById('ep-email').value    = trainerEmail;
+    document.getElementById('ep-tel').value     = cp.phone || '';
+    document.getElementById('ep-tel-visible').checked   = !!cp.phoneVisible;
+    document.getElementById('ep-email-visible').checked = !!cp.emailVisible;
+
+    // Avatar preview
+    selectedAvatarUrl = cp.avatarUrl || null;
+    selectedGender    = cp.avatarGender || 'mezczyzna';
+    document.getElementById('av-btn-m').classList.toggle('selected', selectedGender === 'mezczyzna');
+    document.getElementById('av-btn-k').classList.toggle('selected', selectedGender === 'kobieta');
+
+    const previewName = (existingFirst + ' ' + existingLast).trim() || t.displayName || '';
+    const initials = previewName.split(' ').map(w => w[0]?.toUpperCase() || '').join('').slice(0, 2);
+    const prev = document.getElementById('ep-av-preview');
+    if (selectedAvatarUrl) {
+        prev.innerHTML = `<img src="${selectedAvatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+        prev.innerHTML = `<div style="font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--bialy);">${initials}</div>`;
+    }
+    buildAvatarGrid();
+
+
+    // Admin toggle — widoczny tylko dla zalogowanego admina edytującego innych
+    const adminRow = document.getElementById('ep-admin-row');
+    if (isAdmin) {
+        adminRow.style.display = '';
+        document.getElementById('ep-is-admin').checked = !!t.isClubAdmin;
+    } else {
+        adminRow.style.display = 'none';
+    }
+
+    document.getElementById('edit-panel').classList.add('open');
+}
+
+function closeEditPanel() {
+    document.getElementById('edit-panel').classList.remove('open');
+}
+
+async function saveEditTrainer() {
+    if (!detailTrainer || !db) return;
+    // Pobierz świeże dane — lokalny cache może mieć stare userId (null przed rejestracją)
+    let t = detailTrainer;
+    try {
+        const fresh = await db.collection('trainers').doc(t.trainerId).get();
+        if (fresh.exists) t = { trainerId: fresh.id, ...fresh.data() };
+    } catch(e) {}
+    const now = new Date().toISOString();
+    const dateStr = now.slice(0,10).replace(/-/g,'');
+
+
+    const newIsAdmin = isAdmin
+        ? (document.getElementById('ep-is-admin')?.checked || false)
+        : (t.isClubAdmin || false);
+
+    const sinceYear = parseInt(document.getElementById('ep-since').value);
+    const coachingSince = sinceYear >= 1970 ? `${sinceYear}-01-01` : (t.coachProfile?.coachingSince || null);
+
+    const newFirstName   = document.getElementById('ep-fname').value.trim();
+    const newLastName    = document.getElementById('ep-lname').value.trim();
+    const newDisplayName = (newFirstName + ' ' + newLastName).trim() || t.displayName;
+
+    try {
+        // Zaktualizuj displayName we wszystkich aktywnych memberships (status active lub ACTIVE)
+        if (t.userId) {
+            const [mbrSnap1, mbrSnap2] = await Promise.all([
+                db.collection('memberships').where('userId', '==', t.userId).where('clubId', '==', currentClubId).where('status', '==', 'active').get(),
+                db.collection('memberships').where('userId', '==', t.userId).where('clubId', '==', currentClubId).where('status', '==', 'ACTIVE').get()
+            ]);
+            const mbrSnap = { docs: [...mbrSnap1.docs, ...mbrSnap2.docs] };
+            const batch = db.batch();
+            mbrSnap.docs.forEach(d => batch.update(d.ref, { displayName: newDisplayName, isClubAdmin: newIsAdmin }));
+            await batch.commit();
+
+            // Zaktualizuj users doc
+            try {
+                console.log('🔍 users update — userId:', t.userId);
+                const uDoc = await db.collection('users').doc(t.userId).get();
+                console.log('🔍 users doc exists:', uDoc.exists, 'data:', uDoc.exists ? uDoc.data()?.displayName : 'N/A');
+                const uData = uDoc.exists ? uDoc.data() : {};
+                const uUpdates = { firstName: newFirstName, lastName: newLastName, displayName: newDisplayName };
+                const newEmail = document.getElementById('ep-email').value.trim();
+                const newPhone = document.getElementById('ep-tel').value.trim();
+                if (!uData.email && newEmail) uUpdates.email = newEmail;
+                if (!uData.phone && newPhone) uUpdates.phone = newPhone;
+                console.log('🔍 users uUpdates:', uUpdates);
+                await db.collection('users').doc(t.userId).update(uUpdates);
+                console.log('✅ users updated');
+            } catch(e) { console.error('❌ users update failed:', e.code, e.message); }
+        }
+
+        // Zaktualizuj trainer doc
+        const updates = {
+            firstName: newFirstName || t.firstName || '',
+            lastName:  newLastName  || t.lastName  || '',
+            displayName: newDisplayName,
+            isClubAdmin: newIsAdmin,
+            coachProfile: {
+                ...(t.coachProfile || {}),
+                bio:            document.getElementById('ep-bio').value.trim(),
+                coachingSince,
+                licenseLevel:   document.getElementById('ep-licencja').value.trim(),
+                specialization: document.getElementById('ep-spec').value.trim(),
+                phone:          document.getElementById('ep-tel').value.trim(),
+                phoneVisible:   document.getElementById('ep-tel-visible').checked,
+                emailVisible:   document.getElementById('ep-email-visible').checked,
+                avatarUrl:      selectedAvatarUrl || null,
+                avatarGender:   selectedAvatarUrl ? selectedGender : null,
+            }
+        };
+
+        const newEmail = document.getElementById('ep-email').value.trim();
+        if (newEmail) updates.email = newEmail;
+        await db.collection('trainers').doc(t.trainerId).update(updates);
+        Object.assign(detailTrainer, updates);
+        const idx = allTrainers.findIndex(x => x.trainerId === t.trainerId);
+        if (idx >= 0) Object.assign(allTrainers[idx], updates);
+
+        closeEditPanel();
+        openDetailPanel(detailTrainer);
+        renderTrainers();
+        console.log('✅ Trener zaktualizowany');
+    } catch (e) {
+        console.error('❌ saveEditTrainer:', e);
+        alert('Błąd zapisu: ' + e.message);
+    }
+}
+
+/* ── Modal blokady (zakres) ── */
+function showBlockModal() {
+    if (!detailTrainer) return;
+    const name = detailTrainer.displayName || 'trenera';
+    document.getElementById('modal-block-body').textContent =
+        `Zablokować ${name} tylko w tej drużynie, czy w całym klubie?`;
+    document.getElementById('modal-block').classList.add('open');
+}
+function closeBlockModal() {
+    document.getElementById('modal-block').classList.remove('open');
+}
+
+/* ── Zablokuj trenera ── */
+async function blockTrainer(scope) {
+    closeBlockModal();
+    if (!detailTrainer || !db) return;
+    const t = detailTrainer;
+    if (!t.userId) { alert('Trener nie ma jeszcze konta — nie można zablokować.'); return; }
+    const now = new Date().toISOString();
+    try {
+        // Znajdź memberships TRENER dla tego usera w tym klubie
+        let q = db.collection('memberships')
+            .where('userId', '==', t.userId)
+            .where('clubId', '==', currentClubId)
+            .where('role', 'in', ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER']);
+        if (scope === 'TEAM') q = q.where('teamId', '==', currentTeamId);
+        const snap = await q.get();
+
+        // Blokada całego klubu = koniec dostępu → zwolnij slot z puli B2B jeśli z niej korzystał.
+        // Musi się wykonać PRZED zmianą statusu membershipu na BLOCKED, bo releaseClubLicenseSlot
+        // szuka membershipu po statusie active/ACTIVE.
+        if (scope === 'CLUB') {
+            await releaseClubLicenseSlot(t.userId, currentClubId);
+        }
+
+        const batch = db.batch();
+        snap.docs.forEach(d => batch.update(d.ref, { status: 'BLOCKED', blockedAt: now, blockedBy: currentUserId }));
+        await batch.commit();
+
+        // Aktualizuj trainers doc jeśli blokada całego klubu
+        if (scope === 'CLUB') {
+            await db.collection('trainers').doc(t.trainerId).update({
+                status: 'BLOCKED', blockedAt: now, blockedBy: currentUserId
+            });
+        }
+
+        // Aktualizuj lokalnie
+        const idx = allTrainers.findIndex(x => x.trainerId === t.trainerId);
+        if (scope === 'CLUB' && idx >= 0) allTrainers[idx].status = 'BLOCKED';
+        detailTrainer.status = scope === 'CLUB' ? 'BLOCKED' : detailTrainer.status;
+
+        closeDetailPanel();
+        renderTrainers();
+        console.log(`✅ Trener zablokowany (${scope})`);
+    } catch (e) {
+        console.error('❌ blockTrainer:', e);
+        alert('Błąd: ' + e.message);
+    }
+}
+
+/* ── Odblokuj trenera ── */
+async function unblockTrainer() {
+    if (!detailTrainer || !db) return;
+    const t = detailTrainer;
+    if (!t.userId) return;
+    const name = t.displayName || 'trenera';
+    if (!await showConfirmSheet(`Odblokować ${name}?`)) return;
+    try {
+        const snap = await db.collection('memberships')
+            .where('userId', '==', t.userId)
+            .where('clubId', '==', currentClubId)
+            .where('status', '==', 'BLOCKED').get();
+        const batch = db.batch();
+        snap.docs.forEach(d => batch.update(d.ref, { status: 'ACTIVE', unblockedAt: new Date().toISOString(), unblockedBy: currentUserId }));
+        await batch.commit();
+        await db.collection('trainers').doc(t.trainerId).update({ status: 'ACTIVE' });
+        const idx = allTrainers.findIndex(x => x.trainerId === t.trainerId);
+        if (idx >= 0) allTrainers[idx].status = 'ACTIVE';
+        detailTrainer.status = 'ACTIVE';
+        closeDetailPanel();
+        renderTrainers();
+        console.log('✅ Trener odblokowany');
+    } catch (e) {
+        console.error('❌ unblockTrainer:', e);
+        alert('Błąd: ' + e.message);
+    }
+}
+
+/* ── Usuń z klubu ── */
+async function grantAdminRole() {
+    if (!detailTrainer || !db || !isAdmin) return;
+    const name = detailTrainer.displayName || 'tego trenera';
+    if (!await showConfirmSheet(`Nadać ${name} prawa Administratora klubu?\n\nOba konta będą miały uprawnienia admina. Nowy admin może później odebrać Ci te prawa.`)) return;
+    try {
+        await db.collection('trainers').doc(detailTrainer.trainerId).update({ isClubAdmin: true });
+        if (detailTrainer.userId) {
+            const snap = await db.collection('memberships')
+                .where('userId', '==', detailTrainer.userId)
+                .where('clubId', '==', currentClubId)
+                .where('status', '==', 'ACTIVE').get();
+            const batch = db.batch();
+            snap.docs.forEach(d => batch.update(d.ref, { isClubAdmin: true }));
+            await batch.commit();
+        }
+        detailTrainer.isClubAdmin = true;
+        const idx = allTrainers.findIndex(t => t.trainerId === detailTrainer.trainerId);
+        if (idx !== -1) allTrainers[idx].isClubAdmin = true;
+        openDetailPanel(detailTrainer);
+        renderTrainers();
+    } catch (e) {
+        alert('Błąd: ' + e.message);
+    }
+}
+
+async function revokeAdminRole() {
+    if (!detailTrainer || !db || !isAdmin) return;
+    const name = detailTrainer.displayName || 'tego trenera';
+    if (!await showConfirmSheet(`Odebrać ${name} prawa Administratora klubu?`)) return;
+    try {
+        await db.collection('trainers').doc(detailTrainer.trainerId).update({ isClubAdmin: false });
+        if (detailTrainer.userId) {
+            const snap = await db.collection('memberships')
+                .where('userId', '==', detailTrainer.userId)
+                .where('clubId', '==', currentClubId)
+                .where('status', '==', 'ACTIVE').get();
+            const batch = db.batch();
+            snap.docs.forEach(d => batch.update(d.ref, { isClubAdmin: false }));
+            await batch.commit();
+        }
+        detailTrainer.isClubAdmin = false;
+        const idx = allTrainers.findIndex(t => t.trainerId === detailTrainer.trainerId);
+        if (idx !== -1) allTrainers[idx].isClubAdmin = false;
+        openDetailPanel(detailTrainer);
+        renderTrainers();
+    } catch (e) {
+        alert('Błąd: ' + e.message);
+    }
+}
+
+async function removeTrainerFromClub() {
+    if (!detailTrainer || !db) return;
+    const t = detailTrainer;
+    const name = t.displayName || 'tego trenera';
+
+    // Ryzyko osieroconej drużyny: jeśli trener ma jakiekolwiek aktywne przypisanie do drużyny, zablokuj usunięcie
+    if (t.userId) {
+        try {
+            const snap = await db.collection('memberships')
+                .where('userId', '==', t.userId)
+                .where('clubId', '==', currentClubId)
+                .where('role', 'in', ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER']).get();
+            const maAktywneDruzyny = snap.docs.some(d => {
+                const m = d.data();
+                const st = (m.status || '').toLowerCase();
+                return m.teamId && (st === 'active' || st === 'grace');
+            });
+            if (maAktywneDruzyny) {
+                alert('Oddaj drużynę innemu trenerowi przed usunięciem konta, lub zgłoś się do zarządcy klubu.');
+                return;
+            }
+        } catch (e) {
+            console.error('❌ Sprawdzanie przypisań trenera:', e);
+            alert('Błąd sprawdzania przypisań do drużyn.');
+            return;
+        }
+    }
+
+    if (!await showConfirmSheet(`Usunąć ${name} z klubu?\n\nWszystkie jego przypisania do drużyn zostaną usunięte.`)) return;
+    const now = new Date().toISOString();
+    try {
+        // Usunięcie z klubu = koniec dostępu → zwolnij slot z puli B2B jeśli z niej korzystał.
+        // Musi się wykonać PRZED zmianą statusu membershipu na REMOVED, bo releaseClubLicenseSlot
+        // szuka membershipu po statusie active/ACTIVE.
+        if (t.userId) await releaseClubLicenseSlot(t.userId, currentClubId);
+
+        // Ustaw wszystkie memberships TRENER na REMOVED
+        if (t.userId) {
+            const snap = await db.collection('memberships')
+                .where('userId', '==', t.userId)
+                .where('clubId', '==', currentClubId)
+                .where('role', 'in', ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER']).get();
+            const batch = db.batch();
+            snap.docs.forEach(d => batch.update(d.ref, { status: 'REMOVED', removedAt: now, removedBy: currentUserId }));
+            await batch.commit();
+        }
+        // Dezaktywuj trainers doc
+        await db.collection('trainers').doc(t.trainerId).update({
+            isActive: false, status: 'REMOVED', removedAt: now, removedBy: currentUserId
+        });
+        allTrainers = allTrainers.filter(x => x.trainerId !== t.trainerId);
+        closeDetailPanel();
+        renderTrainers();
+        console.log('✅ Trener usunięty z klubu');
+    } catch (e) {
+        console.error('❌ removeTrainerFromClub:', e);
+        alert('Błąd: ' + e.message);
+    }
+}
+
+/* ── Panel Dodaj trenera ── */
+function openAddPanel() {
+    document.getElementById('add-fname').value = '';
+    document.getElementById('add-lname').value = '';
+    document.getElementById('add-rola').value = 'TRENER_GLOWNY';
+    document.getElementById('add-panel').classList.add('open');
+}
+
+function closeAddPanel() {
+    document.getElementById('add-panel').classList.remove('open');
+}
+
+async function saveNewTrainer() {
+    if (!db) return;
+    const firstName = document.getElementById('add-fname').value.trim();
+    const lastName  = document.getElementById('add-lname').value.trim();
+    const name = (firstName + ' ' + lastName).trim();
+    const role = document.getElementById('add-rola').value;
+    if (!firstName) { alert('Podaj imię trenera.'); document.getElementById('add-fname').focus(); return; }
+    if (!lastName)  { alert('Podaj nazwisko trenera.'); document.getElementById('add-lname').focus(); return; }
+
+    const now = new Date();
+    const trainerId = `trainer_${now.toISOString().slice(0,10).replace(/-/g,'')}_${Date.now().toString().slice(-5)}`;
+
+    const trainerData = {
+        displayName: name,
+        firstName,
+        lastName,
+        role,
+        clubId: currentClubId,
+        teamIds: currentTeamId ? [currentTeamId] : [],
+        teamNames: [],
+        registrationStatus: 'PENDING',
+        isActive: true,
+        isClubAdmin: false,
+        coachProfile: {},
+        roleHistory: [],
+        createdAt: now.toISOString(),
+        createdBy: currentUserId,
+        userId: null,
+        email: null
+    };
+
+    try {
+        await db.collection('trainers').doc(trainerId).set(trainerData);
+        // Generuj kod powiązany z trainerem
+        await _generateCode(trainerId, name, role);
+        // Dodaj lokalnie i odśwież
+        allTrainers.push({ trainerId, ...trainerData });
+        closeAddPanel();
+        renderTrainers();
+        console.log('✅ Trener dodany');
+    } catch (e) {
+        console.error('❌ saveNewTrainer:', e);
+        alert('Błąd: ' + e.message);
+    }
+}
+
+/* ── Generowanie kodu (wspólna funkcja) ── */
+async function _generateCode(trainerId, forName, role) {
+    const now = new Date();
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    const expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30);
+    const codeId = `code_${now.toISOString().slice(0,10).replace(/-/g,'')}_${Date.now().toString().slice(-5)}`;
+
+    await db.collection('inviteCodes').doc(codeId).set({
+        codeId,
+        code,
+        type: 'TRENER',
+        role,
+        trainerId,
+        teamId: currentTeamId,
+        clubId: currentClubId,
+        createdBy: currentUserId,
+        createdAt: now.toISOString(),
+        expiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
+        isUsed: false, usedAt: null, usedBy: null,
+        forName,
+        isDemo: false
+    });
+    return { code, expiresAt };
+}
+
+/* ── Kod w panelu szczegółów ── */
+async function loadTrainerCode(trainerId) {
+    const box = document.getElementById('dp-kod-box');
+    if (!box || !db) return;
+    try {
+        const snap = await db.collection('inviteCodes')
+            .where('trainerId', '==', trainerId)
+            .get();
+
+        const now = new Date();
+        const wszystkie = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+        if (!wszystkie.length) {
+            box.innerHTML = `<div style="font-size:12px;color:var(--szary);text-align:center;">Brak kodów.<br>Kliknij "Nowy kod" aby wygenerować.</div>`;
+            return;
+        }
+
+        // Znajdź aktywny (nieużyty, niewyegasły)
+        const active = wszystkie.find(c => {
+            if (c.isUsed) return false;
+            const exp = c.expiresAt?.toDate ? c.expiresAt.toDate() : null;
+            return !exp || exp > now;
+        });
+
+        function kodStatusStr(c) {
+            if (c.isUsed && c.usedBy && c.usedBy !== 'DEZAKTYWOWANY_PRZEZ_TRENERA')
+                return { icon: '✅', txt: `Wykorzystany · ${c.usedAt ? new Date(c.usedAt).toLocaleDateString('pl-PL') : ''}` };
+            if (c.isUsed)
+                return { icon: '🚫', txt: 'Dezaktywowany' };
+            const exp = c.expiresAt?.toDate ? c.expiresAt.toDate() : null;
+            if (exp && exp < now)
+                return { icon: '⏰', txt: `Wygasł · ${exp.toLocaleDateString('pl-PL')}` };
+            const expStr = exp ? exp.toLocaleDateString('pl-PL') : '—';
+            return { icon: '⏳', txt: `Aktywny · ważny do ${expStr}` };
+        }
+
+        let html = '';
+
+        // Aktywny kod — prominentnie
+        if (active) {
+            const exp = active.expiresAt?.toDate ? active.expiresAt.toDate() : null;
+            html += `
+                <div style="text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">
+                    <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--szary);">Aktywny kod dostępu</div>
+                    <div style="font-family:var(--font-d);font-size:32px;font-weight:800;color:var(--akcent);letter-spacing:8px;margin:8px 0;">${active.code}</div>
+                    <div style="font-size:11px;color:var(--szary);margin-bottom:10px;">Ważny do: ${exp ? exp.toLocaleDateString('pl-PL') : '—'}</div>
+                    <button class="kod-copy-btn" onclick="navigator.clipboard.writeText('${active.code}').then(()=>this.textContent='Skopiowano ✓')">Kopiuj kod</button>
+                </div>`;
+        } else {
+            html += `<div style="font-size:12px;color:var(--szary);text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">Brak aktywnego kodu · wygeneruj nowy</div>`;
+        }
+
+        // Historia wszystkich kodów
+        if (wszystkie.length > 0) {
+            html += `<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--szary);margin-bottom:8px;">Historia kodów</div>`;
+            html += wszystkie.map(c => {
+                const s = kodStatusStr(c);
+                return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
+                    <div style="font-size:16px;flex-shrink:0;">${s.icon}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-family:var(--font-d);font-size:15px;font-weight:800;color:var(--akcent);letter-spacing:3px;">${c.code}</div>
+                        <div style="font-size:11px;color:var(--szary);margin-top:1px;">${s.txt}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        box.innerHTML = html;
+    } catch (e) { console.warn('loadTrainerCode:', e); box.innerHTML = '<div style="color:var(--szary);font-size:12px;">Błąd ładowania</div>'; }
+}
+
+async function regenTrainerCode() {
+    if (!detailTrainer || !db) return;
+    const t = detailTrainer;
+    const now = new Date();
+
+    // Sprawdź czy jest aktywny kod
+    const snap = await db.collection('inviteCodes')
+        .where('trainerId', '==', t.trainerId)
+        .where('isUsed', '==', false)
+        .get();
+
+    const activeCode = snap.docs.map(d => ({ id: d.id, ...d.data() })).find(c => {
+        const exp = c.expiresAt?.toDate ? c.expiresAt.toDate() : null;
+        return !exp || exp > now;
+    });
+
+    if (activeCode) {
+        if (!await showConfirmSheet(`Aktualny kod "${activeCode.code}" jest jeszcze aktywny.\nDezaktywować i wygenerować nowy?`)) return;
+    }
+
+    // Dezaktywuj wszystkie nieużyte kody
+    for (const d of snap.docs) {
+        await d.ref.update({ isUsed: true, usedBy: 'DEZAKTYWOWANY_PRZEZ_TRENERA', usedAt: now.toISOString() });
+    }
+    await _generateCode(t.trainerId, t.displayName, t.role);
+    loadTrainerCode(t.trainerId);
+}
+
+async function cancelInvitation() {
+    if (!detailTrainer || !db) return;
+    const name = detailTrainer.displayName || 'tego trenera';
+    if (!await showConfirmSheet(`Anulować zaproszenie dla ${name}?\nTrener zostanie usunięty z listy.`)) return;
+    try {
+        await db.collection('trainers').doc(detailTrainer.trainerId).update({
+            isActive: false, deactivatedAt: new Date().toISOString(), deactivatedBy: currentUserId
+        });
+        // Dezaktywuj kod
+        const snap = await db.collection('inviteCodes')
+            .where('trainerId', '==', detailTrainer.trainerId)
+            .where('isUsed', '==', false).get();
+        for (const d of snap.docs) {
+            await d.ref.update({ isUsed: true, usedBy: 'DEZAKTYWOWANY_PRZEZ_TRENERA', usedAt: new Date().toISOString() });
+        }
+        allTrainers = allTrainers.filter(t => t.trainerId !== detailTrainer.trainerId);
+        closeDetailPanel();
+        renderTrainers();
+    } catch (e) { alert('Błąd: ' + e.message); }
+}
+
+/* ── Reset dostępu trenera ── */
+async function resetTrainerAccess() {
+    if (!detailTrainer || !db) return;
+    const t = detailTrainer;
+    const name = t.displayName || 'tego trenera';
+
+    if (!await showConfirmSheet(
+        `Resetować dostęp dla ${name}?\n\n` +
+        `Trener straci możliwość logowania się obecnym kontem i będzie musiał zarejestrować się ponownie (może użyć innego e-maila).\n\n` +
+        `Wszystkie dane profilu, historia i przypisania zostaną zachowane.`
+    )) return;
+
+    try {
+        const now = new Date().toISOString();
+
+        // Cofnij do statusu PENDING, wyczyść userId i email logowania
+        await db.collection('trainers').doc(t.trainerId).update({
+            registrationStatus: 'PENDING',
+            userId: null,
+            email: null,
+            accessResetAt: now,
+            accessResetBy: currentUserId
+        });
+
+        // Dezaktywuj wszystkie stare kody
+        const oldCodes = await db.collection('inviteCodes')
+            .where('trainerId', '==', t.trainerId)
+            .where('isUsed', '==', false)
+            .get();
+        for (const d of oldCodes.docs) {
+            await d.ref.update({ isUsed: true, usedBy: 'DEZAKTYWOWANY_PRZEZ_TRENERA', usedAt: now });
+        }
+
+        // Wygeneruj nowy kod
+        await _generateCode(t.trainerId, t.displayName, t.role);
+
+        // Aktualizuj lokalnie i odśwież widok
+        const idx = allTrainers.findIndex(x => x.trainerId === t.trainerId);
+        if (idx >= 0) {
+            allTrainers[idx].registrationStatus = 'PENDING';
+            allTrainers[idx].userId = null;
+        }
+        detailTrainer.registrationStatus = 'PENDING';
+        detailTrainer.userId = null;
+
+        // Otwórz panel jak dla oczekującego (pokaże nowy kod)
+        openDetailPanel(detailTrainer);
+        renderTrainers();
+        console.log('✅ Dostęp trenera zresetowany');
+    } catch (e) {
+        console.error('❌ resetTrainerAccess:', e);
+        alert('Błąd: ' + e.message);
+    }
+}
+
+/* ── Start ── */
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(user => {
+        if (_loaded) return;
+        if (user) {
+            _loaded = true;
+            if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
+            initTrenerzy();
+        } else {
+            if (!isDemoMode()) window.location.href = 'login.html';
+        }
+    });
+});
+</script>
+</body>
+</html>

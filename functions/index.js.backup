@@ -1,0 +1,398 @@
+/* ═══════════════════════════════════════════════════
+   COACHAY — Firebase Cloud Functions
+   Obsługa powiadomień server-side
+   ═══════════════════════════════════════════════════ */
+
+const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { initializeApp } = require('firebase-admin/app');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+
+initializeApp();
+const db = getFirestore();
+
+/* ─── helpers ──────────────────────────────────────── */
+
+const TYPE_NAMES = { TRENING: 'Trening', MECZ: 'Mecz', WYJAZD: 'Wyjazd', INNE: 'Wydarzenie' };
+
+function formatDatePL(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const day  = d.toLocaleDateString('pl-PL', { weekday: 'short' });
+    const date = d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+    return { day, date };
+}
+
+function buildBodyText(event) {
+    const typeName = TYPE_NAMES[event.type] || 'Wydarzenie';
+    const { day, date } = formatDatePL(event.date);
+    return `${typeName} · ${day} ${date}, ${event.timeFrom || ''}–${event.timeTo || ''} · ${event.location?.venueName || ''}`;
+}
+
+function buildNotifTitle(event, requiresAction, suffix = '') {
+    const typeName = TYPE_NAMES[event.type] || 'Wydarzenie';
+    const { day, date } = formatDatePL(event.date);
+    const name = event.title || `${typeName} ${day} ${date}`;
+    return suffix ? `${name} — ${suffix}` : name;
+}
+
+async function createNotification(data) {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const notifId = 'notif_' + dateStr + '_' + Date.now().toString().slice(-7) + '_' + Math.random().toString(36).slice(2, 6);
+    const notif = {
+        notificationId: notifId,
+        userId:         data.userId,
+        teamId:         data.teamId || null,
+        type:           data.type || 'INFO',
+        title:          data.title || '',
+        body:           data.body || '',
+        referenceId:    data.referenceId || null,
+        referenceType:  data.referenceType || null,
+        forPlayerId:    data.forPlayerId || null,
+        requiresAction: data.requiresAction || false,
+        actionType:     data.actionType || null,
+        actionDone:     false,
+        actionResult:   null,
+        actionComment:  null,
+        createdAt:      now.toISOString(),
+        readAt:         null,
+        isRead:         false,
+        priority:       data.priority || 'NORMAL',
+        isDemo:         false,
+        demoSetId:      null,
+        source:         'cloud_function'
+    };
+    await db.collection('notifications').doc(notifId).set(notif);
+    return notif;
+}
+
+/** Sprawdza czy powiadomienie dla tego eventu + usera już istnieje (anty-duplikat) */
+async function notifExists(userId, referenceId, forPlayerId = null) {
+    const q = db.collection('notifications')
+        .where('userId', '==', userId)
+        .where('referenceId', '==', referenceId)
+        .where('actionDone', '==', false);
+    if (forPlayerId) {
+        // Sprawdź po forPlayerId
+        const snap = await q.where('forPlayerId', '==', forPlayerId).get();
+        return !snap.empty;
+    }
+    const snap = await q.get();
+    return !snap.empty;
+}
+
+/**
+ * Główna funkcja wysyłająca powiadomienia dla eventu.
+ * Działa zarówno przy tworzeniu jak i przy dołączeniu nowego membera.
+ * skipUserIds — lista userIds którzy już dostali powiadomienie (anty-duplikat).
+ */
+async function sendNotificationsForEvent(event, skipUserIds = []) {
+    const rawInvited = event.attendance?.invited || [];
+    if (rawInvited.length === 0) return 0;
+
+    // Twórca eventu nigdy nie dostaje powiadomienia — niezależnie od roli
+    if (event.createdBy && !skipUserIds.includes(event.createdBy)) {
+        skipUserIds = [...skipUserIds, event.createdBy];
+    }
+
+    const eventId      = event.eventId || event.id;
+    const requiresAction = event.requireConfirmation || false;
+    const typeName     = TYPE_NAMES[event.type] || 'Wydarzenie';
+    const bodyText     = buildBodyText(event);
+    const { day, date } = formatDatePL(event.date);
+
+    // Pobierz memberships drużyny
+    const mbrSnap = await db.collection('memberships')
+        .where('teamId', '==', event.teamId)
+        .where('status', 'in', ['active', 'grace', 'demo'])
+        .get();
+    const members = mbrSnap.docs.map(d => d.data());
+
+    // Rozwiń __TEAM__ → wszyscy zawodnicy z memberships
+    // Uwzględniamy zarówno ZAWODNIK jak i graczy znanych tylko przez RODZIC (brak konta ZAWODNIK)
+    let invited = rawInvited.filter(id => id !== '__TEAM__');
+    if (rawInvited.includes('__TEAM__')) {
+        members.forEach(m => {
+            if (!m.playerId) return;
+            const isPlayer = m.role === 'ZAWODNIK' || m.role === 'RODZIC';
+            if (isPlayer && !invited.includes(m.playerId)) {
+                invited.push(m.playerId);
+            }
+        });
+    }
+
+    // Zbuduj mapy: playerId → userId zawodnika, parentUserId → [playerId]
+    const playerIds = invited.filter(id => id.includes('player_'));
+    const playerUserMap  = {};  // playerId → userId zawodnika
+    const parentChildMap = {};  // parentUserId → [playerId]
+
+    members.forEach(m => {
+        if (!m.userId || !m.playerId) return;
+        if (m.role === 'ZAWODNIK' && playerIds.includes(m.playerId)) {
+            playerUserMap[m.playerId] = m.userId;
+        }
+        if (m.role === 'RODZIC' && playerIds.includes(m.playerId)) {
+            if (!parentChildMap[m.userId]) parentChildMap[m.userId] = [];
+            if (!parentChildMap[m.userId].includes(m.playerId)) parentChildMap[m.userId].push(m.playerId);
+        }
+    });
+
+    // Pobierz aktywne absencje (do pominięcia)
+    let activeAbsences = [];
+    try {
+        const absSnap = await db.collection('absences')
+            .where('isActive', '==', true)
+            .get();
+        activeAbsences = absSnap.docs.map(d => d.data());
+    } catch (e) {}
+
+    const notifiedParents = new Set();
+    let created = 0;
+
+    for (const personId of invited) {
+        // Pomiń jeśli długa nieobecność
+        const hasAbsence = activeAbsences.some(a =>
+            a.playerId === personId &&
+            a.dateFrom <= event.date &&
+            a.dateTo >= event.date &&
+            a.isActive
+        );
+        if (hasAbsence) continue;
+
+        const isPlayer = personId.includes('player_');
+
+        if (isPlayer) {
+            // Powiadomienie dla zawodnika
+            const playerUserId = playerUserMap[personId];
+            if (playerUserId && !skipUserIds.includes(playerUserId)) {
+                const exists = await notifExists(playerUserId, eventId, personId);
+                if (!exists) {
+                    await createNotification({
+                        userId: playerUserId,
+                        teamId: event.teamId,
+                        type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
+                        title: buildNotifTitle(event, requiresAction, requiresAction ? 'potwierdź obecność' : ''),
+                        body: bodyText,
+                        referenceId: eventId,
+                        referenceType: 'event',
+                        forPlayerId: personId,
+                        requiresAction,
+                        actionType: requiresAction ? 'ATTENDANCE' : null,
+                        priority: 'NORMAL'
+                    });
+                    created++;
+                }
+            }
+
+            // Powiadomienie dla rodzica
+            for (const [parentId, childIds] of Object.entries(parentChildMap)) {
+                if (!childIds.includes(personId)) continue;
+                const notifKey = `${parentId}_${personId}`;
+                if (notifiedParents.has(notifKey)) continue;
+                if (skipUserIds.includes(parentId)) continue;
+                notifiedParents.add(notifKey);
+
+                const exists = await notifExists(parentId, eventId, personId);
+                if (!exists) {
+                    let childName = personId;
+                    try {
+                        const pd = await db.collection('players').doc(personId).get();
+                        if (pd.exists) childName = pd.data().name || personId;
+                    } catch (e) {}
+
+                    await createNotification({
+                        userId: parentId,
+                        teamId: event.teamId,
+                        type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
+                        title: buildNotifTitle(event, requiresAction, requiresAction ? `potwierdź obecność (${childName})` : ''),
+                        body: bodyText,
+                        referenceId: eventId,
+                        referenceType: 'event',
+                        forPlayerId: personId,
+                        requiresAction,
+                        actionType: requiresAction ? 'ATTENDANCE' : null,
+                        priority: 'NORMAL'
+                    });
+                    created++;
+                }
+            }
+        } else {
+            // Trener / inny user — twórca eventu nie dostaje powiadomienia o własnym evencie
+            if (personId === event.createdBy) continue;
+            if (!skipUserIds.includes(personId)) {
+                const exists = await notifExists(personId, eventId);
+                if (!exists) {
+                    // Trenerzy dostają zawsze informacyjne — nie prosi się ich o potwierdzenie obecności
+                    await createNotification({
+                        userId: personId,
+                        teamId: event.teamId,
+                        type: 'EVENT_CREATED',
+                        title: buildNotifTitle(event, false),
+                        body: bodyText,
+                        referenceId: eventId,
+                        referenceType: 'event',
+                        forPlayerId: null,
+                        requiresAction: false,
+                        actionType: null,
+                        priority: 'NORMAL'
+                    });
+                    created++;
+                }
+            }
+        }
+    }
+
+    console.log(`✅ sendNotificationsForEvent [${eventId}]: wysłano ${created} powiadomień`);
+    return created;
+}
+
+/* ═══════════════════════════════════════════════════
+   TRIGGER 1: Nowy event → wyślij powiadomienia
+   ═══════════════════════════════════════════════════ */
+exports.onEventCreated = onDocumentCreated('events/{eventId}', async (event) => {
+    const data = event.data.data();
+    if (!data || !data.teamId) return;
+
+    // Pomiń przeszłe eventy (np. import danych)
+    const today = new Date().toISOString().slice(0, 10);
+    if (data.date < today) {
+        console.log(`⏭ Pominięto przeszły event: ${data.date}`);
+        return;
+    }
+
+    try {
+        await sendNotificationsForEvent({ ...data, id: event.params.eventId });
+    } catch (e) {
+        console.error('❌ onEventCreated:', e);
+    }
+});
+
+/* ═══════════════════════════════════════════════════
+   TRIGGER 2: Nowy membership → powiadomienia o nadchodzących DRUZYNA eventach
+   ═══════════════════════════════════════════════════ */
+exports.onMembershipCreated = onDocumentCreated('memberships/{membershipId}', async (event) => {
+    const m = event.data.data();
+    if (!m || !m.teamId || !m.userId) return;
+    if (!['active', 'grace', 'demo'].includes(m.status)) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const maxDate = new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().slice(0, 10); // 60 dni do przodu
+
+    try {
+        const evSnap = await db.collection('events')
+            .where('teamId', '==', m.teamId)
+            .where('date', '>=', today)
+            .where('date', '<=', maxDate)
+            .get();
+
+        let total = 0;
+        for (const doc of evSnap.docs) {
+            const ev = { ...doc.data(), id: doc.id };
+            // Tylko eventy dla całej drużyny (scope DRUZYNA)
+            if (!(ev.attendance?.invited || []).includes('__TEAM__')) continue;
+
+            // Wyślij powiadomienie tylko dla nowego usera (skipUserIds = wszyscy oprócz niego)
+            // Trick: przekazujemy pustą listę skipUserIds — notifExists() zadba o duplikaty
+            await sendNotificationsForEvent(ev, []);
+            total++;
+        }
+        console.log(`✅ onMembershipCreated [${m.userId}]: sprawdzono ${total} eventów`);
+    } catch (e) {
+        console.error('❌ onMembershipCreated:', e);
+    }
+});
+
+/* ═══════════════════════════════════════════════════
+   TRIGGER 3: Harmonogram — przypomnienia (co godzinę)
+   Wysyła EVENT_REMINDER gdy jesteśmy w oknie reminderHoursBefore
+   ═══════════════════════════════════════════════════ */
+exports.sendReminders = onSchedule('every 60 minutes', async () => {
+    const now = Date.now();
+    const today = new Date().toISOString().slice(0, 10);
+    const tomorrow = new Date(now + 2 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+
+    try {
+        const evSnap = await db.collection('events')
+            .where('date', '>=', today)
+            .where('date', '<=', tomorrow)
+            .get();
+
+        for (const doc of evSnap.docs) {
+            const ev = { ...doc.data(), id: doc.id };
+            if (!ev.reminderHoursBefore || ev.reminderHoursBefore <= 0) continue;
+
+            const evTime = new Date(ev.date + 'T' + (ev.timeFrom || '00:00')).getTime();
+            const reminderStart = evTime - ev.reminderHoursBefore * 3600000;
+
+            // Sprawdź czy jesteśmy w oknie: start <= now < start+1h
+            if (now < reminderStart || now >= reminderStart + 3600000) continue;
+
+            console.log(`⏰ Reminder dla eventu ${ev.id} (${ev.date} ${ev.timeFrom})`);
+            // Użyj sendNotificationsForEvent — notifExists() zapobiega duplikatom
+            await sendNotificationsForEvent(ev, []);
+        }
+    } catch (e) {
+        console.error('❌ sendReminders:', e);
+    }
+});
+/ *    
+       T R I G G E R   4 :   A u t o m a t y c z n e   z a k o � c z e n i e   m e c z y   o   p Bl n o c y  
+       C o d z i e n n i e   o   0 0 : 0 0   z a k a n c z a   m e c z e   L I V E   z   d n i a   p o p r z e d n i e g o  
+ * /  
+ e x p o r t s . a u t o F i n i s h M a t c h e s   =   o n S c h e d u l e ( ' e v e r y   d a y   0 0 : 0 0 ' ,   a s y n c   ( )   = >   {  
+         c o n s t   t o d a y   =   n e w   D a t e ( ) . t o I S O S t r i n g ( ) . s l i c e ( 0 ,   1 0 ) ;   / /   Y Y Y Y - M M - D D  
+         c o n s t   y e s t e r d a y   =   n e w   D a t e ( D a t e . n o w ( )   -   2 4   *   3 6 0 0   *   1 0 0 0 ) . t o I S O S t r i n g ( ) . s l i c e ( 0 ,   1 0 ) ;  
+          
+         c o n s o l e . l o g ( ` P Bl n o c :   s p r a w d z a n i e   m e c z y   z   d n i a   $ { y e s t e r d a y }   d o   a u t o m a t y c z n e g o   z a k o � c z e n i a ` ) ;  
+          
+         t r y   {  
+                 c o n s t   m a t c h e s S n a p   =   a w a i t   d b . c o l l e c t i o n ( ' e v e n t s ' )  
+                         . w h e r e ( ' t y p e ' ,   ' = = ' ,   ' M E C Z ' )  
+                         . w h e r e ( ' d a t e ' ,   ' = = ' ,   y e s t e r d a y )  
+                         . w h e r e ( ' m a t c h D a t a . m a t c h S t a t u s ' ,   ' = = ' ,   ' L I V E ' )  
+                         . g e t ( ) ;  
+                          
+                 l e t   f i n i s h e d C o u n t   =   0 ;  
+                  
+                 f o r   ( c o n s t   d o c   o f   m a t c h e s S n a p . d o c s )   {  
+                         c o n s t   m a t c h D a t a   =   d o c . d a t a ( ) . m a t c h D a t a   | |   { } ;  
+                         c o n s t   o u r   =   m a t c h D a t a . r e s u l t ? . o u r   ? ?   0 ;  
+                         c o n s t   o p p   =   m a t c h D a t a . r e s u l t ? . o p p o n e n t   ? ?   0 ;  
+                         c o n s t   o u t c o m e   =   o u r   >   o p p   ?   ' W I N '   :   o u r   <   o p p   ?   ' L O S S '   :   ' D R A W ' ;  
+                          
+                         a w a i t   d b . c o l l e c t i o n ( ' e v e n t s ' ) . d o c ( d o c . i d ) . u p d a t e ( {  
+                                 ' m a t c h D a t a . m a t c h S t a t u s ' :   ' F I N I S H E D ' ,  
+                                 ' m a t c h D a t a . e n d e d A t ' :   n e w   D a t e ( ) . t o I S O S t r i n g ( ) ,  
+                                 ' m a t c h D a t a . e n d e d B y ' :   ' S Y S T E M _ A U T O ' ,  
+                                 ' m a t c h D a t a . r e s u l t . o u t c o m e ' :   o u t c o m e ,  
+                                 ' m a t c h D a t a . r e s u l t . u p d a t e d B y ' :   ' S Y S T E M _ A U T O ' ,  
+                                 ' m a t c h D a t a . r e s u l t . u p d a t e d A t ' :   n e w   D a t e ( ) . t o I S O S t r i n g ( ) ,  
+                                 ' m a t c h D a t a . a u t o F i n i s h e d ' :   t r u e ,  
+                                 ' m a t c h D a t a . a u t o F i n i s h e d A t ' :   n e w   D a t e ( ) . t o I S O S t r i n g ( )  
+                         } ) ;  
+                          
+                         f i n i s h e d C o u n t + + ;  
+                         c o n s o l e . l o g ( ` A u t o - z a k o � c z o n o   m e c z   $ { d o c . i d } :   $ { o u r } : $ { o p p }   ( $ { o u t c o m e } ) ` ) ;  
+                          
+                         / /   W y s l i j   p o w i a d o m i e n i e   d o   t r e n e r a / a s y s t e n t a  
+                         c o n s t   a s s i s t a n t I d   =   m a t c h D a t a . l i v e A s s i s t a n t ? . u s e r I d ;  
+                         i f   ( a s s i s t a n t I d )   {  
+                                 a w a i t   c r e a t e N o t i f i c a t i o n ( {  
+                                         u s e r I d :   a s s i s t a n t I d ,  
+                                         t e a m I d :   d o c . d a t a ( ) . t e a m I d ,  
+                                         t y p e :   ' M A T C H _ A U T O _ F I N I S H E D ' ,  
+                                         t i t l e :   ' M e c z   a u t o m a t y c z n i e   z a k o � c z o n y ' ,  
+                                         b o d y :   ` M e c z   z   d n i a   $ { y e s t e r d a y }   z o s t a � B  a u t o m a t y c z n i e   z a k o � c z o n y   o   p Bl n o c y .   W y n i k :   $ { o u r } : $ { o p p } ` ,  
+                                         r e f e r e n c e I d :   d o c . i d ,  
+                                         r e f e r e n c e T y p e :   ' e v e n t '  
+                                 } ) ;  
+                         }  
+                 }  
+                  
+                 c o n s o l e . l o g ( ` Z a k o � c z o n o   $ { f i n i s h e d C o u n t }   m e c z y   a u t o m a t y c z n i e ` ) ;  
+                  
+         }   c a t c h   ( e )   {  
+                 c o n s o l e . e r r o r ( ' B l a d   a u t o F i n i s h M a t c h e s : ' ,   e ) ;  
+         }  
+ } ) ;  
+ 

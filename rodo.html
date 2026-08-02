@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Polityka i RODO</title>
+<link rel="stylesheet" href="_global.css?v=20260730a">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+:root { --phone-h: 750px; }
+
+.screen-body {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 0; gap: 0; overflow: hidden;
+}
+
+/* ── Nagłówek ── */
+.rodo-header {
+    background: #000; border-bottom: 1px solid var(--border);
+    padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+}
+.rodo-back {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--tlo-karta); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--bialy); cursor: pointer; flex-shrink: 0;
+}
+.rodo-header-title {
+    font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy);
+}
+
+/* ── Scroll ── */
+.rodo-scroll {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+    scrollbar-width: none;
+}
+.rodo-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Sekcja ── */
+.rodo-section {
+    background: var(--tlo-karta); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px;
+}
+.rodo-section-title {
+    font-family: var(--font-d); font-size: 13px; font-weight: 800;
+    color: var(--bialy); margin-bottom: 8px;
+}
+.rodo-section-text {
+    font-size: 13px; font-weight: 600; color: var(--szary-j); line-height: 1.7;
+}
+
+/* ── Przycisk usunięcia konta ── */
+.rodo-delete-btn {
+    width: 100%; padding: 15px;
+    background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 14px; color: var(--blad); font-size: 14px; font-weight: 800;
+    cursor: pointer; transition: background 0.15s;
+}
+.rodo-delete-btn:active { background: rgba(248,113,113,0.14); }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.rodo-section { animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.rodo-section:nth-child(1) { animation-delay: 0.05s; }
+.rodo-section:nth-child(2) { animation-delay: 0.10s; }
+.rodo-section:nth-child(3) { animation-delay: 0.15s; }
+.rodo-section:nth-child(4) { animation-delay: 0.20s; }
+.rodo-delete-btn          { animation: fadeUp 0.4s 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="notch"></div>
+    <div class="screen-body">
+
+        <div class="rodo-header">
+            <button class="rodo-back" onclick="history.back()">←</button>
+            <div class="rodo-header-title">Polityka i RODO</div>
+        </div>
+
+        <div class="rodo-scroll">
+
+            <div class="rodo-section">
+                <div class="rodo-section-title">Administrator danych</div>
+                <div class="rodo-section-text">
+                    Operator serwisu Coachay, NIP: <strong style="color:var(--bialy)">771-222-88-03</strong><br>
+                    Kontakt: <strong style="color:var(--bialy)">support@coachay.com</strong>
+                </div>
+            </div>
+
+            <div class="rodo-section">
+                <div class="rodo-section-title">Cel przetwarzania danych</div>
+                <div class="rodo-section-text">
+                    Dane przetwarzane są wyłącznie w celu świadczenia usług aplikacji:
+                    zarządzanie drużyną, rejestrowanie obecności, komunikacja między
+                    trenerami, zawodnikami i rodzicami.
+                </div>
+            </div>
+
+            <div class="rodo-section">
+                <div class="rodo-section-title">Twoje prawa</div>
+                <div class="rodo-section-text">
+                    Masz prawo do:<br>
+                    · dostępu do swoich danych<br>
+                    · sprostowania nieprawidłowych danych<br>
+                    · usunięcia danych (prawo do bycia zapomnianym)<br>
+                    · przenoszenia danych<br>
+                    · wniesienia sprzeciwu wobec przetwarzania
+                </div>
+            </div>
+
+            <div class="rodo-section">
+                <div class="rodo-section-title">Dane dzieci</div>
+                <div class="rodo-section-text">
+                    Dane zawodników niepełnoletnich przetwarzamy wyłącznie za zgodą
+                    rodzica lub opiekuna prawnego. Profile zawodników widoczne są
+                    tylko dla trenerów i rodziców przypisanych do danej drużyny.
+                </div>
+            </div>
+
+            <div class="rodo-section" style="cursor:pointer;" onclick="window.location.href='polityka-prywatnosci.html'">
+                <div class="rodo-section-title">📄 Pełna polityka prywatności</div>
+                <div class="rodo-section-text">
+                    Szczegółowy dokument — administrator danych, hosting, cookies, podmioty przetwarzające. →
+                </div>
+            </div>
+
+            <button class="rodo-delete-btn" onclick="requestDelete()">
+                🗑️ Usuń moje konto i dane
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+    </div>
+</div>
+
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') return;
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(async user => {
+        if (_loaded || !user) { if (!user) window.location.href = 'login.html'; return; }
+        _loaded = true;
+        await initSession();
+    });
+});
+
+async function requestDelete() {
+    if (await showConfirmSheet('Aby usunąć konto i dane, wyślij prośbę na support@coachay.com. Otworzyć klienta email?')) {
+        window.location.href = 'mailto:support@coachay.com?subject=Usunięcie konta COACHAY';
+    }
+}
+</script>
+</body>
+</html>
