@@ -1217,8 +1217,25 @@
             }
 
             const assigned = t.assignedTo || [];
-            const druzChip = document.querySelector('#vis-grid .vis-chip[data-vis="DRUZYNA"]');
-            if (druzChip) { druzChip.classList.add('selected'); renderPersonList(); }
+            // Dobierz chipy wg faktycznych ról WSZYSTKICH przypisanych osób (nie tylko "Drużyna" na
+            // sztywno) — inaczej przypisany rodzic/trener/kibic byłby niewidoczny na liście osób przy
+            // edycji, a zapis (getSelectedPersonIds() czyta tylko zaznaczone .person-check-row) cicho
+            // skasowałby go z assignedTo. Naprawione 2026-08-05 po tym samym błędzie znalezionym przy
+            // migracji tego ekranu do apki mobilnej.
+            const neededVis = new Set();
+            assigned.forEach(id => {
+                const u = allMembers.users?.find(x => x.userId === id);
+                const r = u?.role || '';
+                if (r === 'TRENER_GLOWNY' || r === 'TRENER_POMOCNICZY') neededVis.add('TRENERZY');
+                else if (r === 'ZAWODNIK') neededVis.add('DRUZYNA');
+                else if (r === 'RODZIC') neededVis.add('RODZICE');
+                else if (r === 'KIBIC') neededVis.add('KIBICE');
+            });
+            if (neededVis.size === 0) neededVis.add('DRUZYNA');
+            document.querySelectorAll('#vis-grid .vis-chip').forEach(chip => {
+                if (neededVis.has(chip.dataset.vis)) chip.classList.add('selected');
+            });
+            renderPersonList();
             setTimeout(() => {
                 document.querySelectorAll('#person-list .person-check-row').forEach(r => {
                     if (assigned.includes(r.dataset.personId)) { r.classList.add('checked'); r.querySelector('.person-cb').textContent = '✓'; }
