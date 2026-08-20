@@ -1,26 +1,25 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COACHAY — Polityka i RODO</title>
-<link rel="stylesheet" href="_global.css?v=20260730a">
+<link rel="stylesheet" href="_global.css?v=20260802d">
+<link rel="stylesheet" href="_desktop.css?v=20260818">
+<script src="_i18n.js?v=20260820"></script>
+<script src="_sidebar.js?v=20260818b"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
 :root { --phone-h: 750px; }
 
-.screen-body {
-    flex: 1; display: flex; flex-direction: column;
-    padding: 0; gap: 0; overflow: hidden;
-}
+.screen-body { overflow-y: auto; scrollbar-width: none; }
+.screen-body::-webkit-scrollbar { display: none; }
 
-/* ── Nagłówek ── */
 .rodo-header {
     background: #000; border-bottom: 1px solid var(--border);
     padding: 12px 16px; display: flex; align-items: center; gap: 12px;
-    flex-shrink: 0;
 }
 .rodo-back {
     width: 32px; height: 32px; border-radius: 50%;
@@ -29,16 +28,19 @@
     font-size: 16px; color: var(--bialy); cursor: pointer; flex-shrink: 0;
 }
 .rodo-header-title {
-    font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy);
+    font-family: var(--font-d); font-size: 23px; font-weight: 800; color: var(--bialy);
 }
+body:has(#app-sidebar) .rodo-header { display: none; }
 
-/* ── Scroll ── */
-.rodo-scroll {
-    flex: 1; overflow-y: auto; padding: 16px;
+.rodo-page-title { display: none; font-family: var(--font-d); font-size: 27px; font-weight: 800; color: var(--bialy); }
+body:has(#app-sidebar) .rodo-page-title { display: block; }
+
+.rodo-wrap {
+    align-self: center; width: min(1222px, 100%);
+    padding: 16px 16px 80px;
     display: flex; flex-direction: column; gap: 12px;
-    scrollbar-width: none;
 }
-.rodo-scroll::-webkit-scrollbar { display: none; }
+body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
 
 /* ── Sekcja ── */
 .rodo-section {
@@ -46,18 +48,18 @@
     border-radius: 16px; padding: 16px;
 }
 .rodo-section-title {
-    font-family: var(--font-d); font-size: 13px; font-weight: 800;
+    font-family: var(--font-d); font-size: 18px; font-weight: 800;
     color: var(--bialy); margin-bottom: 8px;
 }
 .rodo-section-text {
-    font-size: 13px; font-weight: 600; color: var(--szary-j); line-height: 1.7;
+    font-size: 18px; font-weight: 600; color: var(--szary-j); line-height: 1.7;
 }
 
 /* ── Przycisk usunięcia konta ── */
 .rodo-delete-btn {
     width: 100%; padding: 15px;
     background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.2);
-    border-radius: 14px; color: var(--blad); font-size: 14px; font-weight: 800;
+    border-radius: 14px; color: var(--blad); font-size: 19px; font-weight: 800;
     cursor: pointer; transition: background 0.15s;
 }
 .rodo-delete-btn:active { background: rgba(248,113,113,0.14); }
@@ -81,22 +83,23 @@
 
         <div class="rodo-header">
             <button class="rodo-back" onclick="history.back()">←</button>
-            <div class="rodo-header-title">Polityka i RODO</div>
+            <div class="rodo-header-title" data-i18n="rodo.headerTitle">Polityka i RODO</div>
         </div>
 
-        <div class="rodo-scroll">
+        <div class="rodo-wrap">
+            <div class="rodo-page-title" data-i18n="rodo.headerTitle">Polityka i RODO</div>
 
             <div class="rodo-section">
-                <div class="rodo-section-title">Administrator danych</div>
-                <div class="rodo-section-text">
+                <div class="rodo-section-title" data-i18n="rodo.adminTitle">Administrator danych</div>
+                <div class="rodo-section-text" id="rodo-admin-body">
                     Operator serwisu Coachay, NIP: <strong style="color:var(--bialy)">771-222-88-03</strong><br>
                     Kontakt: <strong style="color:var(--bialy)">support@coachay.com</strong>
                 </div>
             </div>
 
             <div class="rodo-section">
-                <div class="rodo-section-title">Cel przetwarzania danych</div>
-                <div class="rodo-section-text">
+                <div class="rodo-section-title" data-i18n="rodo.purposeTitle">Cel przetwarzania danych</div>
+                <div class="rodo-section-text" id="rodo-purpose-body">
                     Dane przetwarzane są wyłącznie w celu świadczenia usług aplikacji:
                     zarządzanie drużyną, rejestrowanie obecności, komunikacja między
                     trenerami, zawodnikami i rodzicami.
@@ -104,8 +107,8 @@
             </div>
 
             <div class="rodo-section">
-                <div class="rodo-section-title">Twoje prawa</div>
-                <div class="rodo-section-text">
+                <div class="rodo-section-title" data-i18n="rodo.rightsTitle">Twoje prawa</div>
+                <div class="rodo-section-text" id="rodo-rights-body">
                     Masz prawo do:<br>
                     · dostępu do swoich danych<br>
                     · sprostowania nieprawidłowych danych<br>
@@ -116,8 +119,8 @@
             </div>
 
             <div class="rodo-section">
-                <div class="rodo-section-title">Dane dzieci</div>
-                <div class="rodo-section-text">
+                <div class="rodo-section-title" data-i18n="rodo.childrenTitle">Dane dzieci</div>
+                <div class="rodo-section-text" id="rodo-children-body">
                     Dane zawodników niepełnoletnich przetwarzamy wyłącznie za zgodą
                     rodzica lub opiekuna prawnego. Profile zawodników widoczne są
                     tylko dla trenerów i rodziców przypisanych do danej drużyny.
@@ -125,31 +128,31 @@
             </div>
 
             <div class="rodo-section" style="cursor:pointer;" onclick="window.location.href='polityka-prywatnosci.html'">
-                <div class="rodo-section-title">📄 Pełna polityka prywatności</div>
-                <div class="rodo-section-text">
+                <div class="rodo-section-title" data-i18n="rodo.fullPolicyLabel">📄 Pełna polityka prywatności</div>
+                <div class="rodo-section-text" id="rodo-fullpolicy-body">
                     Szczegółowy dokument — administrator danych, hosting, cookies, podmioty przetwarzające. →
                 </div>
             </div>
 
-            <button class="rodo-delete-btn" onclick="requestDelete()">
+            <button class="rodo-delete-btn" onclick="requestDelete()" data-i18n="rodo.deleteAccountButton">
                 🗑️ Usuń moje konto i dane
             </button>
 
-        </div>
+        </div><!-- /rodo-wrap -->
 
     </div>
 
     <!-- Bottom nav -->
     <div class="bottom-nav">
-        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
-        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
-        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
-        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
-        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label" data-i18n="nav.team">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label" data-i18n="nav.match">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label" data-i18n="nav.chat">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label" data-i18n="nav.calendar">Kalendarz</span></a>
     </div>
 </div>
 
-<script src="coachay-core.js?v=20260730a"></script>
+<script src="coachay-core.js?v=20260818"></script>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
     if (typeof firebase === 'undefined') return;
@@ -163,8 +166,36 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 async function requestDelete() {
-    if (await showConfirmSheet('Aby usunąć konto i dane, wyślij prośbę na support@coachay.com. Otworzyć klienta email?')) {
-        window.location.href = 'mailto:support@coachay.com?subject=Usunięcie konta COACHAY';
+    const msg = typeof t === 'function' ? t('rodo.deleteConfirmBody') : 'Aby usunąć konto i dane, wyślij prośbę na support@coachay.com. Otworzyć klienta email?';
+    const subj = typeof t === 'function' ? t('rodo.deleteMailSubject') : 'Usunięcie konta COACHAY';
+    const body = typeof t === 'function' ? t('rodo.deleteMailBody') : '';
+    if (await showConfirmSheet(msg)) {
+        window.location.href = 'mailto:support@coachay.com?subject=' + encodeURIComponent(subj) + (body ? '&body=' + encodeURIComponent(body) : '');
+    }
+}
+
+if (typeof onI18nReady === 'function') {
+    onI18nReady(renderRodoBodies);
+} else {
+    renderRodoBodies();
+}
+
+function renderRodoBodies() {
+    const _t = (key, fb) => typeof t === 'function' ? t(key) : fb;
+    const adminEl = document.getElementById('rodo-admin-body');
+    if (adminEl) adminEl.innerHTML = _t('rodo.adminBody', adminEl.innerHTML);
+    const purposeEl = document.getElementById('rodo-purpose-body');
+    if (purposeEl) purposeEl.innerHTML = _t('rodo.purposeBody', purposeEl.innerHTML);
+    const childrenEl = document.getElementById('rodo-children-body');
+    if (childrenEl) childrenEl.innerHTML = _t('rodo.childrenBody', childrenEl.innerHTML);
+    const fullEl = document.getElementById('rodo-fullpolicy-body');
+    if (fullEl) fullEl.innerHTML = _t('rodo.fullPolicyDesc', fullEl.innerHTML);
+    const rightsEl = document.getElementById('rodo-rights-body');
+    if (rightsEl) {
+        const list = typeof t === 'function' ? t('rodo.rightsList') : null;
+        if (Array.isArray(list) && list.length) {
+            rightsEl.innerHTML = list.map(r => '· ' + r).join('<br>');
+        }
     }
 }
 </script>
