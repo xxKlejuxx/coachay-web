@@ -1455,5 +1455,26 @@
   "pricingB2bTitle": "Club license",
   "pricingB2bDesc": "For clubs with multiple teams and coaches. One license covers the whole club — coaches and parents. Pricing on request.",
   "pricingB2bCta": "Get in touch →"
+ },
+ "start": {
+  "upcomingEvents": "Upcoming Events",
+  "tasks": "Tasks",
+  "calendar": "Calendar",
+  "seeAll": "All",
+  "noTasks": "No tasks",
+  "noEvents": "No upcoming events in the next {{days}} days",
+  "typeLabels": {
+   "TRENING": "Training",
+   "MECZ": "Match",
+   "WYJAZD": "Trip",
+   "INNE": "Other"
+  },
+  "sub": {
+   "TRENER_GLOWNY": "Welcome Coach",
+   "TRENER_POMOCNICZY": "Welcome Coach",
+   "RODZIC": "Welcome Parent",
+   "ZAWODNIK": "Welcome Player",
+   "KIBIC": "Welcome Fan"
+  }
  }
 }

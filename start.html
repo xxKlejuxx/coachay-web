@@ -1,1455 +1,1439 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COACHAY — Start</title>
-    <link rel="stylesheet" href="_global.css?v=20260730a">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <style>
-        .screen-body { padding: 18px 16px 10px !important; gap: 12px !important; display: flex; flex-direction: column; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COACHAY — Start</title>
+<link rel="stylesheet" href="_global.css?v=20260802d">
+<link rel="stylesheet" href="_desktop.css?v=20260818">
+<script src="_i18n.js?v=20260820"></script>
+<script src="_sidebar.js?v=20260818b"></script>
+<style>
+:root { --phone-h: 750px; }
 
-        /* ── Powitanie ── */
-        .hello-row { display: flex; justify-content: space-between; align-items: flex-start; }
-        .hello-sub { font-size: 11px; color: var(--szary); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 4px; }
-        .hello-name { font-family: var(--font-d); font-size: 24px; font-weight: 800; color: var(--txt-primary); }
-        .hello-name span { color: var(--akcent); }
-        .hello-date { font-size: 11px; color: var(--szary); font-weight: 600; text-align: right; line-height: 1.6; }
+/* ── Scrollable body ── */
+.screen-body {
+    flex: 1; overflow-y: auto; scrollbar-width: none;
+    padding: 0 !important; gap: 0 !important;
+    display: flex; flex-direction: column;
+}
+.screen-body::-webkit-scrollbar { display: none; }
 
-        /* ── Karuzela meczy ── */
-        .mecz-carousel-wrap { position: relative; }
-        .mecz-carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; border-radius: var(--r); }
-        .mecz-carousel::-webkit-scrollbar { display: none; }
+/* ── Hub layout ── */
+.hub-inner {
+    max-width: 1222px; margin: 0 auto;
+    padding: 14px 14px 80px;
+    display: flex; flex-direction: column;
+}
+body:has(#app-sidebar) .hub-inner { padding: 28px 28px 80px; }
 
-        .mecz-card { background: var(--bialy); border-radius: var(--r); padding: 14px 16px; color: #000; position: relative; cursor: pointer; transition: transform 0.15s; display: flex; flex-direction: column; gap: 2px; min-width: 100%; max-width: 100%; width: 100%; scroll-snap-align: start; flex-shrink: 0; overflow: hidden; box-sizing: border-box; }
-        .mecz-card:active { transform: scale(0.98); }
-        .mecz-card.mc-finished { background: var(--tlo-karta); border: 1px solid var(--border); color: var(--txt-primary); }
-        .mecz-card-bg { position: absolute; right: -10px; bottom: -10px; font-size: 60px; opacity: 0.05; pointer-events: none; line-height: 1; }
-        .mc-label { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #999; }
-        .mc-finished .mc-label { color: var(--szary); }
-        .mc-tytul { font-family: var(--font-d); font-size: 16px; font-weight: 800; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mc-finished .mc-tytul { color: var(--txt-primary); }
-        .mc-desc { font-size: 11px; font-weight: 600; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mc-finished .mc-desc { color: var(--szary); }
-        .mc-info { font-size: 11px; font-weight: 700; color: #777; line-height: 1.5; overflow: hidden; }
-        .mc-info-venue { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mc-info-time { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mc-wynik { font-family: var(--font-d); font-size: 19px; font-weight: 800; color: #000; margin: 2px 0; }
-        .mc-finished .mc-wynik { color: var(--txt-primary); }
-        .mc-wynik-label { font-family: var(--font); font-size: 12px; font-weight: 600; opacity: 0.65; margin-right: 4px; }
-        .mc-result-info { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; display: inline-block; margin: 4px 0; }
-        .mc-result-win { background: rgba(74,222,128,0.15); color: #16A34A; }
-        .mc-result-loss { background: rgba(248,113,113,0.15); color: #DC2626; }
-        .mc-result-draw { background: rgba(251,191,36,0.15); color: #D97706; }
-        .mc-counts { display: flex; gap: 6px; margin-top: 6px; }
-        .mcc { flex: 1; border-radius: 10px; padding: 6px 4px; text-align: center; }
-        .mcc-g { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25); }
-        .mcc-r { background: rgba(248,113,113,0.10); border: 1px solid rgba(248,113,113,0.20); }
-        .mcc-s { background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.10); }
-        .mc-finished .mcc-g { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.15); }
-        .mc-finished .mcc-r { background: rgba(248,113,113,0.06); border-color: rgba(248,113,113,0.12); }
-        .mc-finished .mcc-s { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
-        .mcc-n { font-family: var(--font-d); font-size: 18px; font-weight: 800; line-height: 1; }
-        .mn-g { color: #16A34A; } .mn-r { color: #DC2626; } .mn-s { color: #777; }
-        .mc-finished .mn-s { color: var(--szary); }
-        .mcc-l { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #999; }
-        .mc-finished .mcc-l { color: var(--szary); }
+.hub-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
-        .mecz-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
-        .mecz-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: all 0.2s; cursor: pointer; }
-        .mecz-dot.active { background: var(--akcent); width: 20px; border-radius: 4px; }
+.hub-col { display: flex; flex-direction: column; gap: 20px; }
 
+.hub-widget {
+    background: var(--tlo-karta); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px;
+}
 
-        /* ── Nagłówek sekcji ── */
-        .sec-hdr { display: flex; align-items: center; justify-content: space-between; }
-        .sec-hdr .s-label { margin: 0; }
-        .sec-more { font-size: 11px; font-weight: 800; color: var(--akcent); cursor: pointer; padding: 4px 0; }
+/* ── Hello row ── */
+.hello-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.hello-sub { font-size: 21px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--szary); }
+.hello-name { font-family: var(--font-d); font-size: 34px; font-weight: 800; color: var(--akcent); line-height: 1.1; }
+.hello-date { text-align: right; font-size: 21px; font-weight: 700; color: var(--szary); line-height: 1.6; }
 
-        /* ── Najbliższe wydarzenia ── */
-        .events-list { display: flex; flex-direction: column; gap: 6px; }
-        
-        .ev-item {
-            background: var(--tlo-karta);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 12px 14px;
-            position: relative;
-            cursor: pointer;
-            transition: background 0.15s;
-            overflow: hidden;
-            min-width: 0;
-        }
-        .ev-item:active { background: var(--tlo-karta2); }
-        .ev-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 14px 0 0 14px; }
-        .ev-item.ev-trening::before { background: #3B82F6; }
-        .ev-item.ev-mecz::before { background: #10B981; }
-        .ev-item.ev-wyjazd::before { background: #F59E0B; }
-        .ev-item.ev-inne::before { background: #6B7280; }
-        .ev-item.ev-ann::before { background: var(--warn); }
+/* ── Mecz carousel ── */
+.mecz-carousel-wrap { margin-bottom: 20px; }
+.mecz-carousel {
+    display: flex; overflow-x: hidden; scroll-snap-type: x mandatory;
+    border-radius: 16px;
+}
+.mecz-card {
+    min-width: 100%; background: var(--tlo-karta); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px; scroll-snap-align: start;
+    cursor: pointer; transition: background 0.15s; position: relative; overflow: hidden;
+}
+.mecz-card.mc-finished { background: var(--tlo-karta2); }
+.mecz-card-bg { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 64px; opacity: 0.07; user-select: none; pointer-events: none; }
+.mc-label { font-size: 19px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
+.mc-tytul { font-family: var(--font-d); font-size: 26px; font-weight: 800; color: var(--bialy); line-height: 1.2; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-finished .mc-tytul { color: var(--szary-j); }
+.mc-desc { font-size: 21px; font-weight: 600; color: var(--szary); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-info { font-size: 19px; font-weight: 700; color: var(--szary-j); margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+.mc-info-venue { color: var(--szary); }
+.mc-wynik { font-size: 29px; font-weight: 900; color: var(--bialy); margin: 4px 0; }
+.mc-wynik-label { font-size: 19px; font-weight: 700; color: var(--szary); margin-right: 6px; }
+.mc-result-info { font-size: 19px; font-weight: 900; padding: 3px 12px; border-radius: 999px; }
+.mc-result-win  { background: rgba(74,222,128,0.12); color: #16A34A; }
+.mc-result-loss { background: rgba(248,113,113,0.10); color: #DC2626; }
+.mc-result-draw { background: rgba(107,114,128,0.12); color: #6B7280; }
+.mc-counts { display: flex; gap: 8px; margin-top: 8px; }
+.mcc { flex: 1; border-radius: 12px; padding: 8px; text-align: center; }
+.mcc-g { background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.15); }
+.mcc-r { background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.12); }
+.mcc-s { background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.10); }
+.mc-finished .mcc-g { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.15); }
+.mc-finished .mcc-r { background: rgba(248,113,113,0.06); border-color: rgba(248,113,113,0.12); }
+.mc-finished .mcc-s { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+.mcc-n { font-family: var(--font-d); font-size: 28px; font-weight: 800; line-height: 1; }
+.mn-g { color: #16A34A; } .mn-r { color: #DC2626; } .mn-s { color: #777; }
+.mc-finished .mn-s { color: var(--szary); }
+.mcc-l { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #999; }
+.mc-finished .mcc-l { color: var(--szary); }
 
-        .ev-row1 { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; padding-left: 6px; flex-wrap: wrap; }
-        .ev-badge { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 2px 7px; border-radius: 999px; line-height: 1.4; }
-        .ev-badge-trening { background: rgba(59,130,246,0.15); color: #3B82F6; }
-        .ev-badge-mecz { background: rgba(16,185,129,0.15); color: #10B981; }
-        .ev-badge-wyjazd { background: rgba(245,158,11,0.15); color: #F59E0B; }
-        .ev-badge-inne { background: rgba(107,114,128,0.15); color: #6B7280; }
-        .ev-badge-ann { background: rgba(251,191,36,0.15); color: var(--warn); }
-        .ev-badge-confirm { background: rgba(248,113,113,0.15); color: var(--blad); }
+.mecz-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+.mecz-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: all 0.2s; cursor: pointer; }
+.mecz-dot.active { background: var(--akcent); width: 20px; border-radius: 4px; }
 
-        .ev-time { font-size: 10px; font-weight: 700; color: var(--szary); margin-left: auto; }
-        .ev-title { font-size: 13px; font-weight: 700; color: var(--txt-primary); line-height: 1.4; padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ev-desc { font-size: 11px; font-weight: 600; color: var(--szary-j); padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
-        .ev-sub { font-size: 11px; color: var(--szary); font-weight: 600; padding-left: 6px; margin-top: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ev-org { font-size: 10px; color: var(--szary); font-weight: 600; padding-left: 6px; margin-top: 3px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* ── Section header ── */
+.sec-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.sec-hdr .s-label { margin: 0; font-size: 21px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: var(--szary); }
+.sec-more { font-size: 21px; font-weight: 800; color: var(--akcent); cursor: pointer; padding: 4px 0; }
 
-        /* Przyciski potwierdzenia — pełne */
-        .ev-att-row { padding-left: 6px; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
-        .ev-att-row:first-child { border-top: none; margin-top: 6px; padding-top: 0; }
-        .ev-att-player { font-size: 12px; font-weight: 800; color: var(--txt-primary); margin-bottom: 4px; }
-        .ev-att-btns { display: flex; gap: 8px; }
-        .ev-att-btns button { flex: 1; padding: 7px; border-radius: 999px; font-size: 11px; font-weight: 900; cursor: pointer; border: 1px solid; }
-        .ev-btn-yes { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25); color: #16A34A; }
-        .ev-btn-no { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.20); color: #DC2626; }
+/* ── Upcoming events ── */
+.events-list { display: flex; flex-direction: column; gap: 6px; }
+.ev-item {
+    background: var(--tlo-karta2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 14px;
+    position: relative; cursor: pointer; transition: background 0.15s;
+    overflow: hidden; min-width: 0;
+}
+.ev-item:active { background: var(--tlo-karta); }
+.ev-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 14px 0 0 14px; }
+.ev-item.ev-trening::before { background: #3B82F6; }
+.ev-item.ev-mecz::before   { background: #10B981; }
+.ev-item.ev-wyjazd::before  { background: #F59E0B; }
+.ev-item.ev-inne::before    { background: #6B7280; }
+.ev-item.ev-ann::before     { background: var(--warn); }
 
-        /* Status po potwierdzeniu — kompaktowy */
-        .ev-att-status { display: flex; align-items: center; gap: 8px; }
-        .ev-att-status span { font-size: 11px; font-weight: 800; }
-        .ev-att-change { padding: 3px 10px; background: var(--tlo-karta2); border: 1px solid var(--border2); border-radius: 999px; color: var(--szary); font-size: 10px; font-weight: 800; cursor: pointer; }
+.ev-row1 { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; padding-left: 6px; flex-wrap: wrap; }
+.ev-badge { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 2px 7px; border-radius: 999px; line-height: 1.4; }
+.ev-badge-trening { background: rgba(59,130,246,0.15); color: #3B82F6; }
+.ev-badge-mecz    { background: rgba(16,185,129,0.15); color: #10B981; }
+.ev-badge-wyjazd  { background: rgba(245,158,11,0.15); color: #F59E0B; }
+.ev-badge-inne    { background: rgba(107,114,128,0.15); color: #6B7280; }
+.ev-badge-ann     { background: rgba(251,191,36,0.15); color: var(--warn); }
+.ev-badge-confirm { background: rgba(248,113,113,0.15); color: var(--blad); }
 
-        /* ── Zadania ── */
-        .task-list { display: flex; flex-direction: column; gap: 6px; }
-        .task-item { background: var(--tlo-karta); border: 1px solid var(--border); border-left: 3px solid var(--akcent); border-radius: 14px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px; }
-        .task-item.done-item { border-left-color: var(--border2); }
-        .task-check { width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; border: 1.5px solid var(--border2); background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; cursor: pointer; transition: all 0.15s; margin-top: 1px; }
-        .task-check.done { background: var(--sukces); border-color: var(--sukces); color: #000; }
-        .task-body { flex: 1; }
-        .task-text { font-size: 13px; font-weight: 700; color: var(--txt-primary); line-height: 1.4; }
-        .task-text.done-text { text-decoration: line-through; color: var(--szary); }
-        .task-meta { font-size: 11px; color: var(--szary); margin-top: 2px; font-weight: 600; }
-        .task-status { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-        .task-status-txt { font-size: 11px; font-weight: 800; }
-        .task-change-btn { padding: 3px 10px; background: var(--tlo-karta2); border: 1px solid var(--border2); border-radius: 999px; color: var(--szary); font-size: 10px; font-weight: 800; cursor: pointer; }
-        .task-item.rejected-item { border-left-color: var(--blad); }
+.ev-time  { font-size: 20px; font-weight: 700; color: var(--szary); margin-left: auto; }
+.ev-title { font-size: 23px; font-weight: 700; color: var(--txt-primary); line-height: 1.4; padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-desc  { font-size: 21px; font-weight: 600; color: var(--szary-j); padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.ev-sub   { font-size: 21px; color: var(--szary); font-weight: 600; padding-left: 6px; margin-top: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-org   { font-size: 19px; color: var(--szary); font-weight: 600; padding-left: 6px; margin-top: 3px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* ── Status meczu — przyciski trenera ── */
-        .mc-status-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-        .mc-status-badge { font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
-        .mc-status-upcoming { background: rgba(59,130,246,0.12); color: #3B82F6; }
-        .mc-status-live { background: rgba(248,113,113,0.15); color: #DC2626; }
-        .mc-status-finished { background: rgba(74,222,128,0.12); color: #16A34A; }
-        .mc-action-btn { padding: 5px 14px; border-radius: 999px; font-size: 10px; font-weight: 900; cursor: pointer; border: 1px solid; margin-left: auto; }
-        .mc-btn-start { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25); color: #16A34A; }
-        .mc-btn-end { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.20); color: #DC2626; }
-        .mc-btn-takeover { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); color: #3B82F6; margin-left: 0; }
-        .mc-btn-claim { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); color: #3B82F6; margin-left: 0; flex: 1; }
-        .mc-btn-request { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.25); color: #D97706; margin-left: 0; flex: 1; }
+.ev-att-row { padding-left: 6px; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+.ev-att-row:first-child { border-top: none; margin-top: 6px; padding-top: 0; }
+.ev-att-player { font-size: 17px; font-weight: 800; color: var(--txt-primary); margin-bottom: 4px; }
+.ev-att-btns { display: flex; gap: 8px; }
+.ev-att-btns button { flex: 1; padding: 7px; border-radius: 999px; font-size: 16px; font-weight: 900; cursor: pointer; border: 1px solid; }
+.ev-btn-yes { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25); color: #16A34A; }
+.ev-btn-no  { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.20); color: #DC2626; }
+.ev-att-status { display: flex; align-items: center; gap: 8px; }
+.ev-att-status span { font-size: 16px; font-weight: 800; }
+.ev-att-change { padding: 3px 10px; background: var(--tlo-karta2); border: 1px solid var(--border2); border-radius: 999px; color: var(--szary); font-size: 15px; font-weight: 800; cursor: pointer; }
 
-        .mc-coaches { font-size: 10px; font-weight: 700; color: #999; margin-top: 4px; }
-        .mc-finished .mc-coaches { color: var(--szary); }
-        .mc-assistant { font-size: 10px; font-weight: 800; color: var(--szary-j); margin-top: 2px; }
-        .mc-assistant strong { color: var(--bialy); }
-        .mc-finished .mc-assistant strong { color: var(--szary-j); }
-        .mc-assistant-free { color: var(--warn); font-style: italic; }
+/* ── Zadania ── */
+.task-list { display: flex; flex-direction: column; gap: 6px; }
+.task-item { background: var(--tlo-karta2); border: 1px solid var(--border); border-left: 3px solid var(--akcent); border-radius: 14px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px; }
+.task-item.done-item { border-left-color: var(--border2); }
+.task-check { width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; border: 1.5px solid var(--border2); background: var(--tlo-karta); display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; cursor: pointer; transition: all 0.15s; margin-top: 1px; }
+.task-check.done { background: var(--sukces); border-color: var(--sukces); color: #000; }
+.task-body { flex: 1; }
+.task-text { font-size: 23px; font-weight: 700; color: var(--txt-primary); line-height: 1.4; }
+.task-text.done-text { text-decoration: line-through; color: var(--szary); }
+.task-meta { font-size: 21px; color: var(--szary); margin-top: 2px; font-weight: 600; }
+.task-status { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.task-status-txt { font-size: 16px; font-weight: 800; }
+.task-change-btn { padding: 3px 10px; background: var(--tlo-karta2); border: 1px solid var(--border2); border-radius: 999px; color: var(--szary); font-size: 15px; font-weight: 800; cursor: pointer; }
+.task-item.rejected-item { border-left-color: var(--blad); }
 
-        /* ── Slide panel ── */
-        .slide-panel { position: absolute; top: 20px; left: 0; right: 0; bottom: 0; background: var(--tlo); border-top: 1px solid var(--border); z-index: 130; transform: translateY(-110%); transition: transform 0.38s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
-        .slide-panel.open { transform: translateY(0); }
-        .slide-panel-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .slide-panel-tytul { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--txt-primary); }
-        .slide-panel-close { width: 30px; height: 30px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--szary); cursor: pointer; }
-        
-        .slide-panel-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 14px 16px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            scrollbar-width: none;
-            min-height: 0;
-        }
-        .slide-panel-body::-webkit-scrollbar { display: none; }
+/* ── Match status ── */
+.mc-status-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.mc-status-badge { font-size: 18px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
+.mc-status-upcoming { background: rgba(59,130,246,0.12); color: #3B82F6; }
+.mc-status-live     { background: rgba(248,113,113,0.15); color: #DC2626; }
+.mc-status-finished { background: rgba(74,222,128,0.12); color: #16A34A; }
+.mc-action-btn  { padding: 5px 14px; border-radius: 999px; font-size: 16px; font-weight: 900; cursor: pointer; border: 1px solid; margin-left: auto; }
+.mc-btn-start   { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25); color: #16A34A; }
+.mc-btn-end     { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.20); color: #DC2626; }
+.mc-btn-takeover { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); color: #3B82F6; margin-left: 0; }
+.mc-btn-claim   { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); color: #3B82F6; margin-left: 0; flex: 1; }
+.mc-btn-request { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.25); color: #D97706; margin-left: 0; flex: 1; }
+.mc-coaches { font-size: 19px; font-weight: 700; color: #999; margin-top: 4px; }
+.mc-finished .mc-coaches { color: var(--szary); }
+.mc-assistant { font-size: 19px; font-weight: 800; color: var(--szary-j); margin-top: 2px; }
+.mc-assistant strong { color: var(--bialy); }
+.mc-finished .mc-assistant strong { color: var(--szary-j); }
+.mc-assistant-free { color: var(--warn); font-style: italic; }
 
-    </style>
+/* ── Slide panel ── */
+.slide-panel { position: absolute; top: 20px; left: 0; right: 0; bottom: 0; background: var(--tlo); border-top: 1px solid var(--border); z-index: 130; transform: translateY(-110%); transition: transform 0.38s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.slide-panel.open { transform: translateY(0); }
+.slide-panel-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.slide-panel-tytul { font-family: var(--font-d); font-size: 28px; font-weight: 800; color: var(--txt-primary); }
+.slide-panel-close { width: 30px; height: 30px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--szary); cursor: pointer; }
+.slide-panel-body { flex: 1; overflow-y: auto; padding: 14px 16px 24px; display: flex; flex-direction: column; gap: 6px; scrollbar-width: none; min-height: 0; }
+.slide-panel-body::-webkit-scrollbar { display: none; }
+
+/* ── Calendar widget ── */
+.cal-nav-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.cal-widget-month { font-family: var(--font-d); font-size: 23px; font-weight: 800; color: var(--bialy); flex: 1; }
+.cal-nav-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); color: var(--szary); font-size: 14px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cal-grid { width: 100%; border-collapse: collapse; }
+.cal-grid th { font-size: 17px; font-weight: 700; color: var(--szary); text-align: center; padding: 4px 2px; }
+.cal-grid td { text-align: center; padding: 3px 2px; }
+.cal-day { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; color: var(--txt-primary); cursor: pointer; position: relative; transition: background 0.15s; }
+.cal-day:hover { background: var(--tlo-karta2); }
+.cal-day.today { background: var(--akcent); color: #fff; font-weight: 900; }
+.cal-day.selected:not(.today) { background: var(--border2); color: var(--bialy); }
+.cal-day.other-month { color: var(--szary); opacity: 0.4; }
+.cal-day-dots { position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; }
+
+.cal-inspector { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+.cal-inspector-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-inspector-date { font-size: 19px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: var(--szary); }
+.cal-inspector-count { font-size: 17px; font-weight: 700; color: var(--szary); }
+.cal-inspector-list { display: flex; flex-direction: column; gap: 6px; }
+.cal-ev-item { background: var(--tlo-karta2); border: 1px solid var(--border); border-left: 3px solid var(--border2); border-radius: 10px; padding: 8px 12px; cursor: pointer; }
+.cal-ev-item.cal-ev-trening { border-left-color: #3B82F6; }
+.cal-ev-item.cal-ev-mecz    { border-left-color: #10B981; }
+.cal-ev-item.cal-ev-wyjazd  { border-left-color: #F59E0B; }
+.cal-ev-item.cal-ev-inne    { border-left-color: #6B7280; }
+.cal-ev-badge { font-size: 17px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.cal-ev-title { font-size: 21px; font-weight: 700; color: var(--txt-primary); }
+.cal-ev-time  { font-size: 17px; font-weight: 600; color: var(--szary); }
+.cal-ev-counts { display: flex; gap: 4px; margin-top: 4px; }
+.cal-ev-count   { font-size: 15px; font-weight: 800; padding: 1px 6px; border-radius: 999px; }
+.cal-ev-count-g { background: rgba(74,222,128,0.12); color: #16A34A; }
+.cal-ev-count-r { background: rgba(248,113,113,0.10); color: #DC2626; }
+.cal-ev-count-s { background: rgba(107,114,128,0.10); color: #6B7280; }
+</style>
 </head>
 <body>
-    <div class="phone">
-        <div class="notch"></div>
-        <!-- Baner zawodnika — brak licencji klubowej (nie blokuje, tylko informuje) -->
-        <div id="zawodnik-license-banner" style="display:none; background:rgba(239,68,68,0.08); border-bottom:1px solid rgba(239,68,68,0.2); padding:8px 16px; align-items:center; gap:10px; flex-shrink:0;">
-            <span style="font-size:11px;font-weight:700;color:var(--blad);flex:1">⚠ Klub nie ma aktywnej licencji — skontaktuj się z trenerem</span>
-        </div>
+<div class="phone">
+    <div class="notch"></div>
 
-        <!-- Baner impersonacji — widoczny tylko gdy supportOriginalUserId w localStorage -->
-        <div id="imp-banner" style="display:none; background:rgba(245,158,11,0.12); border-bottom:1px solid rgba(245,158,11,0.3); padding:8px 16px; align-items:center; gap:10px; flex-shrink:0;">
-            <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:800;color:var(--warn)">🔍 Impersonacja aktywna</div>
-                <div id="imp-banner-status" style="font-size:10px;font-weight:600;color:var(--szary-j);margin-top:1px"></div>
-            </div>
-            <button onclick="exitImpersonationFromStart()" style="padding:5px 14px;border-radius:var(--r-pill);background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--warn);font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap;">← Support</button>
-        </div>
+    <!-- Baner zawodnika — brak licencji -->
+    <div id="zawodnik-license-banner" style="display:none; background:rgba(239,68,68,0.08); border-bottom:1px solid rgba(239,68,68,0.2); padding:8px 16px; align-items:center; gap:10px; flex-shrink:0;">
+        <span style="font-size:11px;font-weight:700;color:var(--blad);flex:1">⚠ Klub nie ma aktywnej licencji — skontaktuj się z trenerem</span>
+    </div>
 
-        <div class="top-bar">
-            <div class="ctx-switcher" onclick="toggleCtxOv()">
-                <div class="ctx-dot" id="ctx-dot"></div>
-                <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
-                <span class="ctx-arrow">▾</span>
-            </div>
-            <div class="top-bar-right">
-                <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
-                <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
-            </div>
+    <!-- Baner impersonacji -->
+    <div id="imp-banner" style="display:none; background:rgba(245,158,11,0.12); border-bottom:1px solid rgba(245,158,11,0.3); padding:8px 16px; align-items:center; gap:10px; flex-shrink:0;">
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:800;color:var(--warn)">🔍 Impersonacja aktywna</div>
+            <div id="imp-banner-status" style="font-size:10px;font-weight:600;color:var(--szary-j);margin-top:1px"></div>
         </div>
-        <div class="ctx-overlay" id="ctx-ov">
-            <div class="ov-label">Wybierz klub i zespół</div>
-            <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
-            <div class="ctx-teams" id="ctx-teams"></div>
-        </div>
-        <div class="notif-overlay" id="notif-ov">
-            <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
-        </div>
+        <button onclick="exitImpersonationFromStart()" style="padding:5px 14px;border-radius:var(--r-pill);background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--warn);font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap;">← Support</button>
+    </div>
 
-        <div class="screen-body">
+    <div class="top-bar">
+        <div class="ctx-switcher" onclick="toggleCtxOv()">
+            <div class="ctx-dot" id="ctx-dot"></div>
+            <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
+            <span class="ctx-arrow">▾</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
+            <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
+        </div>
+    </div>
+    <div class="ctx-overlay" id="ctx-ov">
+        <div class="ov-label" data-i18n="common.selectClubAndTeam">Wybierz klub i zespół</div>
+        <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
+        <div class="ctx-teams" id="ctx-teams"></div>
+    </div>
+    <div class="notif-overlay" id="notif-ov">
+        <div class="notif-hdr"><span class="notif-tytul" data-i18n="common.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="common.clearRead">Wyczyść przeczytane</span></div>
+    </div>
+
+    <div class="screen-body">
+        <div class="hub-inner">
+
+            <!-- Hello row -->
             <div class="hello-row">
-                <div><div class="hello-sub">Dzień dobry</div><div class="hello-name"></div></div>
-                <div class="hello-date"></div>
+                <div>
+                    <div class="hello-sub" id="hello-sub"></div>
+                    <div class="hello-name" id="hello-name"></div>
+                </div>
+                <div class="hello-date" id="hello-date"></div>
             </div>
 
-            <!-- Karuzela meczy -->
+            <!-- Karuzela meczy — pełna szerokość, nad gridem -->
             <div class="mecz-carousel-wrap" id="mecz-carousel-wrap" style="display:none">
                 <div class="mecz-carousel" id="mecz-carousel"></div>
                 <div class="mecz-dots" id="mecz-dots"></div>
             </div>
 
-            <div class="sec-hdr"><div class="s-label">Najbliższe wydarzenia</div><span class="sec-more" id="ev-more" onclick="openSlidePanel('panel-ev')">Wszystkie ›</span></div>
-            <div class="events-list" id="ev-dashboard"><div style="padding:20px;text-align:center;color:var(--szary);font-size:12px;">Ładowanie...</div></div>
+            <!-- Hub 2-col grid -->
+            <div class="hub-grid">
 
-            <div class="sec-hdr"><div class="s-label">Zadania</div><span class="sec-more" id="task-more" onclick="openSlidePanel('panel-task')">Wszystkie ›</span></div>
-            <div class="task-list" id="task-dashboard"><div style="padding:20px;text-align:center;color:var(--szary);font-size:12px;">Ładowanie...</div></div>
-        </div>
-
-        <div class="slide-panel" id="panel-ev">
-            <div class="slide-panel-hdr"><span class="slide-panel-tytul">Najbliższe wydarzenia</span><div class="slide-panel-close" onclick="closeSlidePanel('panel-ev')">✕</div></div>
-            <div class="slide-panel-body" id="ev-panel-body"></div>
-        </div>
-        <div class="slide-panel" id="panel-task">
-            <div class="slide-panel-hdr"><span class="slide-panel-tytul">Zadania</span><div class="slide-panel-close" onclick="closeSlidePanel('panel-task')">✕</div></div>
-            <div class="slide-panel-body" id="task-panel-body"></div>
-        </div>
-
-        <div class="bottom-nav">
-            <a class="nav-item active" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
-            <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
-            <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
-            <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
-            <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
-        </div>
-
-        <div class="login-overlay" id="login-ov">
-            <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
-            <button class="login-close" onclick="closeLogin()">✕</button>
-            <div class="login-body">
-                <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
-                <div class="auth-tabs"><button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button><button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button></div>
-                <div id="auth-login">
-                    <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
-                    <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
-                    <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
-                    <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
-                    <div class="social-btns"><button class="social-btn"><span style="font-size:17px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size:17px">🍎</span> Apple</button></div>
+                <!-- Lewa kolumna: wydarzenia + zadania -->
+                <div class="hub-col">
+                    <div class="hub-widget">
+                        <div class="sec-hdr">
+                            <div class="s-label" data-i18n="start.upcomingEvents">Najbliższe wydarzenia</div>
+                            <span class="sec-more" id="ev-more" onclick="openSlidePanel('panel-ev')">Wszystkie ›</span>
+                        </div>
+                        <div class="events-list" id="ev-dashboard">
+                            <div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;" data-i18n="common.loading">Ładowanie...</div>
+                        </div>
+                    </div>
+                    <div class="hub-widget">
+                        <div class="sec-hdr">
+                            <div class="s-label" data-i18n="start.tasks">Zadania</div>
+                            <span class="sec-more" id="task-more" onclick="openSlidePanel('panel-task')">Wszystkie ›</span>
+                        </div>
+                        <div class="task-list" id="task-dashboard">
+                            <div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;" data-i18n="common.loading">Ładowanie...</div>
+                        </div>
+                    </div>
                 </div>
-                <div id="auth-register" style="display:none">
-                    <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size:18px"></div>
-                    <div class="form-group"><label class="form-lbl">Imię i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
-                    <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
-                    <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
-                    <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj się →</button>
-                    <div class="kod-info"><div class="kod-info-txt">🔑 Kod dostępu otrzymasz od trenera lub opiekuna.<br>Jednorazowy · ważny 7 dni</div></div>
+
+                <!-- Prawa kolumna: kalendarz -->
+                <div class="hub-col">
+                    <div class="hub-widget">
+                        <div class="sec-hdr">
+                            <div class="s-label" data-i18n="start.calendar">Kalendarz</div>
+                        </div>
+                        <div class="cal-nav-row">
+                            <button class="cal-nav-btn" onclick="navigateCalMonth(-1)">‹</button>
+                            <div class="cal-widget-month" id="cal-month-label"></div>
+                            <button class="cal-nav-btn" onclick="navigateCalMonth(1)">›</button>
+                        </div>
+                        <div id="cal-grid-wrap"></div>
+                        <div class="cal-inspector" id="cal-inspector" style="display:none"></div>
+                    </div>
                 </div>
-            </div>
+
+            </div><!-- .hub-grid -->
+        </div><!-- .hub-inner -->
+    </div><!-- .screen-body -->
+
+    <!-- Slide panel: wszystkie wydarzenia -->
+    <div class="slide-panel" id="panel-ev">
+        <div class="slide-panel-hdr">
+            <span class="slide-panel-tytul" data-i18n="start.upcomingEvents">Najbliższe wydarzenia</span>
+            <div class="slide-panel-close" onclick="closeSlidePanel('panel-ev')">✕</div>
         </div>
+        <div class="slide-panel-body" id="ev-panel-body"></div>
+    </div>
 
-        <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
-        <div class="menu-panel" id="menu-panel">
-            <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
-            <div class="menu-panel-items">
+    <!-- Slide panel: wszystkie zadania -->
+    <div class="slide-panel" id="panel-task">
+        <div class="slide-panel-hdr">
+            <span class="slide-panel-tytul" data-i18n="start.tasks">Zadania</span>
+            <div class="slide-panel-close" onclick="closeSlidePanel('panel-task')">✕</div>
+        </div>
+        <div class="slide-panel-body" id="task-panel-body"></div>
+    </div>
 
-                <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
-                <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
-                <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
-                <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
-                <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
-                <div class="menu-item" id="menu-support" style="display:none" onclick="window.location.href='support.html'"><div class="menu-item-icon">🛠️</div><span class="menu-item-label">Support</span><span class="menu-item-arrow">›</span></div>
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+        <a class="nav-item active" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label" data-i18n="nav.druzyna">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label" data-i18n="nav.mecz">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label" data-i18n="nav.czat">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label" data-i18n="nav.kalendarz">Kalendarz</span></a>
+    </div>
+
+    <div class="login-overlay" id="login-ov">
+        <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
+        <button class="login-close" onclick="closeLogin()">✕</button>
+        <div class="login-body">
+            <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
+            <div class="auth-tabs"><button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button><button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button></div>
+            <div id="auth-login">
+                <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+                <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
+                <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
+                <div class="social-btns"><button class="social-btn"><span style="font-size:17px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size:17px">🍎</span> Apple</button></div>
             </div>
-            <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
+            <div id="auth-register" style="display:none">
+                <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size:18px"></div>
+                <div class="form-group"><label class="form-lbl">Imię i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
+                <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
+                <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj się →</button>
+                <div class="kod-info"><div class="kod-info-txt">🔑 Kod dostępu otrzymasz od trenera lub opiekuna.<br>Jednorazowy · ważny 7 dni</div></div>
+            </div>
         </div>
     </div>
 
-    <script src="coachay-core.js?v=20260730a"></script>
-    <script>
-        async function toggleTask(id) {
-            const item = document.getElementById(id); if (!item) return;
-            const taskId = id.replace('task-', '');
-            const userId = currentUserData?.userId;
-            if (!db || !userId || !taskId) return;
+    <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
+        <div class="menu-panel-items">
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-support" style="display:none" onclick="window.location.href='support.html'"><div class="menu-item-icon">🛠️</div><span class="menu-item-label">Support</span><span class="menu-item-arrow">›</span></div>
+        </div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
+    </div>
+</div>
 
-            try {
-                const taskDoc = await db.collection('tasks').doc(taskId).get();
-                if (!taskDoc.exists) return;
-                const task = taskDoc.data();
-                let completed = task.completedBy || [];
-                const assigned = task.assignedTo || [];
-                const rejected = (task.rejectedBy || []).filter(rid => rid !== userId);
-                const wasCompleted = completed.includes(userId);
+<script src="coachay-core.js?v=20260730a"></script>
+<script>
+    /* ─────────────────────────────────────────────────────
+       i18n — TYPE_LABELS aktualizowane po załadowaniu locale
+    ───────────────────────────────────────────────────── */
+    let TYPE_LABELS = { 'TRENING': 'Trening', 'MECZ': 'Mecz', 'WYJAZD': 'Wyjazd', 'INNE': 'Inne' };
+    const TYPE_ICONS  = { 'TRENING': '🏃', 'MECZ': '⚽', 'WYJAZD': '🚌', 'INNE': '📋' };
 
-                if (wasCompleted) {
-                    completed = completed.filter(cid => cid !== userId);
-                } else {
-                    completed.push(userId);
+    if (typeof onI18nReady === 'function') {
+        onI18nReady(function () {
+            if (typeof t !== 'function') return;
+            const tl = t('start.typeLabels');
+            if (tl && typeof tl === 'object') Object.assign(TYPE_LABELS, tl);
+        });
+    }
+
+    /* ─────────────────────────────────────────────────────
+       GLOBALNE STAŁE
+    ───────────────────────────────────────────────────── */
+    const UPCOMING_DAYS = 7;
+    const MAX_EVENTS = 3;
+    const MAX_ANN    = 3;
+    const MAX_TASKS  = 3;
+
+    let orgNames = {};
+    let playerNamesCache = {};
+
+    /* ─────────────────────────────────────────────────────
+       IMPERSONACJA
+    ───────────────────────────────────────────────────── */
+    function checkImpersonationBanner() {
+        const originalId = localStorage.getItem('supportOriginalUserId');
+        const currentId  = localStorage.getItem('currentUserId');
+        if (originalId && originalId !== currentId) {
+            const banner = document.getElementById('imp-banner');
+            if (banner) banner.style.display = 'flex';
+        } else if (originalId && originalId === currentId) {
+            localStorage.removeItem('supportOriginalUserId');
+        }
+    }
+
+    function exitImpersonationFromStart() {
+        const original = localStorage.getItem('supportOriginalUserId');
+        if (original) {
+            localStorage.setItem('currentUserId', original);
+            localStorage.removeItem('supportOriginalUserId');
+            localStorage.removeItem('selectedMembershipId');
+            localStorage.removeItem('selectedTeamId');
+        }
+        window.location.replace('support.html');
+    }
+
+    /* ─────────────────────────────────────────────────────
+       SLIDE PANELS
+    ───────────────────────────────────────────────────── */
+    function openSlidePanel(id)  { document.getElementById(id).classList.add('open'); }
+    function closeSlidePanel(id) { document.getElementById(id).classList.remove('open'); }
+
+    /* ─────────────────────────────────────────────────────
+       INICJALIZACJA DASHBOARDU
+    ───────────────────────────────────────────────────── */
+    async function loadDashboard() {
+        checkImpersonationBanner();
+
+        const session = await initSession();
+        if (!session) { console.error('Brak sesji'); return; }
+        const { user, team, membership } = session;
+        if (!user) { console.error('Brak danych'); return; }
+
+        if (!isDemoMode() && !user.onboardingDone) {
+            const _onbRole = getCurrentUserData()?.role;
+            if (_onbRole && _onbRole !== 'ZAWODNIK') {
+                window.location.href = 'onboarding.html';
+                return;
+            }
+        }
+
+        if (!team) {
+            sessionStorage.setItem('noTeamRedirect', '1');
+            window.location.href = 'klub.html';
+            return;
+        }
+
+        const _effectiveRole   = getCurrentUserData()?.role;
+        const _isPlatformAdmin = !!getCurrentUserData()?._raw?.isPlatformAdmin;
+        const _isImpersonating = !!localStorage.getItem('supportOriginalUserId');
+        const clubId = membership?.clubId || team?.clubId || '';
+        const _isZawodnik = _effectiveRole === 'ZAWODNIK';
+
+        if (!isDemoMode() && !_isPlatformAdmin && _isZawodnik && clubId) {
+            getAccessStatus(user.userId || user.id, clubId).then(access => {
+                if (access.status === 'EXPIRED') {
+                    const b = document.getElementById('zawodnik-license-banner');
+                    if (b) b.style.display = 'flex';
                 }
+            });
+        }
 
-                const active = assigned.filter(aid => !rejected.includes(aid));
-                const status = (completed.length >= active.length && active.length > 0) ? 'DONE' : 'PENDING';
-
-                await db.collection('tasks').doc(taskId).update({
-                    completedBy: completed,
-                    rejectedBy: rejected,
-                    status: status,
-                    completedAt: !wasCompleted ? new Date().toISOString() : null
+        if (!isDemoMode() && !_isPlatformAdmin && !_isZawodnik && clubId) {
+            if (_isImpersonating) {
+                getAccessStatus(user.userId || user.id, clubId).then(access => {
+                    const statusEl = document.getElementById('imp-banner-status');
+                    if (!statusEl) return;
+                    const labels = { ACTIVE: '✓ Licencja aktywna', TRIAL: '⏳ Trial', GRACE: '⚠ Grace period', EXPIRED: '🔴 Licencja WYGASŁA' };
+                    const colors = { ACTIVE: 'var(--sukces)', TRIAL: '#60A5FA', GRACE: 'var(--warn)', EXPIRED: 'var(--blad)' };
+                    statusEl.textContent = labels[access.status] || access.status;
+                    statusEl.style.color  = colors[access.status] || 'var(--szary-j)';
+                    if (access.daysLeft > 0 && access.daysLeft < 9000) statusEl.textContent += ` · ${access.daysLeft} dni`;
                 });
-
-                // Synchronizacja z powiadomieniami
-                await syncTaskNotification(taskId, userId, !wasCompleted ? 'completed' : null);
-
-                // Powiadomienie dla twórcy zadania (trenera) o wykonaniu / cofnięciu
-                if (task.createdBy && task.createdBy !== userId) {
-                    const userName = currentUserData.displayName || userId;
-                    const dueText = task.dueDate ? ` · termin: ${task.dueDate}` : '';
-                    if (!wasCompleted) {
-                        await createNotification({ userId: task.createdBy, teamId: task.teamId, type: 'TASK_COMPLETED', title: `${userName} — zadanie wykonane`, body: `${task.title}${dueText}`, referenceId: taskId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });
-                    } else {
-                        await createNotification({ userId: task.createdBy, teamId: task.teamId, type: 'TASK_UPDATED', title: `${userName} — cofnął(ęła) wykonanie`, body: `${task.title}${dueText}`, referenceId: taskId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });
-                    }
-                }
-
-                console.log(`✅ Zadanie ${taskId}: ${!wasCompleted ? 'wykonane' : 'cofnięte'}`);
-                await reloadTasks();
-                await loadAndRenderNotifications();
-            } catch (e) {
-                console.error('❌ Błąd zapisu zadania:', e);
-            }
-        }
-
-        async function resetTaskFromDashboard(taskId, elementId) {
-            const userId = currentUserData?.userId;
-            if (!db || !userId) return;
-
-            try {
-                const taskDoc = await db.collection('tasks').doc(taskId).get();
-                if (!taskDoc.exists) return;
-                const task = taskDoc.data();
-
-                const completed = (task.completedBy || []).filter(cid => cid !== userId);
-                const rejected = (task.rejectedBy || []).filter(rid => rid !== userId);
-                const reasons = task.rejectReasons || {};
-                delete reasons[userId];
-
-                await db.collection('tasks').doc(taskId).update({
-                    completedBy: completed,
-                    rejectedBy: rejected,
-                    rejectReasons: reasons,
-                    status: 'PENDING'
-                });
-
-                // Reset powiadomienia
-                await syncTaskNotification(taskId, userId, null);
-
-                console.log(`✅ Zadanie ${taskId}: reset decyzji`);
-                await reloadTasks();
-                await loadAndRenderNotifications();
-            } catch (e) {
-                console.error('❌ Błąd resetu zadania:', e);
-            }
-        }
-
-        // Synchronizuj powiadomienie z zadaniem
-        async function syncTaskNotification(taskId, userId, result) {
-            try {
-                const snap = await db.collection('notifications')
-                    .where('userId', '==', userId)
-                    .where('referenceId', '==', taskId)
-                    .where('actionType', '==', 'TASK')
-                    .limit(1)
-                    .get();
-                if (snap.empty) return;
-                const notifDoc = snap.docs[0];
-                if (result) {
-                    await notifDoc.ref.update({
-                        actionDone: true,
-                        actionResult: result,
-                        isRead: true,
-                        readAt: new Date().toISOString()
-                    });
-                } else {
-                    await notifDoc.ref.update({
-                        actionDone: false,
-                        actionResult: null,
-                        actionComment: null,
-                        isRead: false,
-                        readAt: null
-                    });
-                }
-            } catch (e) { console.error('Błąd sync powiadomienia:', e); }
-        }
-
-        // Przeładuj sekcję zadań
-        async function reloadTasks() {
-            const team = await getCurrentTeam();
-            if (!team) return;
-            const teamId = team.teamId || team.id;
-            await loadTasks(teamId, currentUserData.userId);
-        }
-        function openSlidePanel(id) { document.getElementById(id).classList.add('open'); }
-        function closeSlidePanel(id) { document.getElementById(id).classList.remove('open'); }
-
-        const UPCOMING_DAYS = 7;
-        const MAX_EVENTS = 3;  // max eventów na dashboardzie
-        const MAX_ANN = 3;     // max ogłoszeń na dashboardzie
-        const MAX_TASKS = 3;
-        const TYPE_LABELS = { 'TRENING':'Trening', 'MECZ':'Mecz', 'WYJAZD':'Wyjazd', 'INNE':'Inne' };
-        const TYPE_ICONS = { 'TRENING':'🏃', 'MECZ':'⚽', 'WYJAZD':'🚌', 'INNE':'📋' };
-
-        let orgNames = {};
-
-        /* ═══════════════════════════════════════════════════
-           INICJALIZACJA
-        ═══════════════════════════════════════════════════ */
-        // Cache imion zawodników (playerId → name)
-        let playerNamesCache = {};
-
-        // Impersonacja — sprawdź czy aktywna i pokaż baner
-        function checkImpersonationBanner() {
-            const originalId = localStorage.getItem('supportOriginalUserId');
-            const currentId  = localStorage.getItem('currentUserId');
-            if (originalId && originalId !== currentId) {
-                const banner = document.getElementById('imp-banner');
-                if (banner) banner.style.display = 'flex';
-            } else if (originalId && originalId === currentId) {
-                // Wróciłeś na swoje konto — wyczyść pozostałość
-                localStorage.removeItem('supportOriginalUserId');
-            }
-        }
-
-        function exitImpersonationFromStart() {
-            const original = localStorage.getItem('supportOriginalUserId');
-            if (original) {
-                localStorage.setItem('currentUserId', original);
-                localStorage.removeItem('supportOriginalUserId');
-                localStorage.removeItem('selectedMembershipId');
-                localStorage.removeItem('selectedTeamId');
-            }
-            window.location.replace('support.html');
-        }
-
-        async function loadDashboard() {
-            checkImpersonationBanner();
-
-            // initSession() respektuje selectedTeamId (ctx-switcher) — zastępuje osobne wywołania
-            const session = await initSession();
-            if (!session) { console.error('Brak sesji'); return; }
-            const { user, team, membership, allMemberships } = session;
-
-            if (!user) { console.error('Brak danych'); return; }
-
-            // Onboarding — pierwsze uruchomienie (pomijamy demo i zawodnika, dla niego nie ma treści)
-            if (!isDemoMode() && !user.onboardingDone) {
-                const _onbRole = getCurrentUserData()?.role;
-                if (_onbRole && _onbRole !== 'ZAWODNIK') {
-                    window.location.href = 'onboarding.html';
+            } else {
+                const access = await checkPaymentAccess(user.userId || user.id, clubId);
+                if (!access) return;
+                if (access && shouldShowTrialBanner(access.daysLeft)) {
+                    localStorage.setItem('trialBannerShownDay', String(access.daysLeft));
+                    window.location.href = `platnosci-banner.html?status=${access.status}&days=${access.daysLeft}&redirect=${encodeURIComponent('start.html')}`;
                     return;
                 }
             }
-
-            if (!team) {
-                sessionStorage.setItem('noTeamRedirect', '1');
-                window.location.href = 'klub.html';
-                return;
-            }
-
-            // Sprawdź dostęp płatniczy (pomijaj demo i platformAdmin)
-            const _effectiveRole   = getCurrentUserData()?.role;
-            const _isPlatformAdmin = !!getCurrentUserData()?._raw?.isPlatformAdmin;
-            const _isImpersonating = !!localStorage.getItem('supportOriginalUserId');
-            const clubId = membership?.clubId || team?.clubId || '';
-
-            // ZAWODNIK nigdy nie płaci — konto przez kod od rodzica (platnosci.md)
-            const _isZawodnik = _effectiveRole === 'ZAWODNIK';
-
-            if (!isDemoMode() && !_isPlatformAdmin && _isZawodnik && clubId) {
-                // Zawodnik: sprawdź czy klub ma licencję — pokaż baner informacyjny (nie blokuj)
-                getAccessStatus(user.userId || user.id, clubId).then(access => {
-                    if (access.status === 'EXPIRED') {
-                        const b = document.getElementById('zawodnik-license-banner');
-                        if (b) b.style.display = 'flex';
-                    }
-                });
-            }
-
-            if (!isDemoMode() && !_isPlatformAdmin && !_isZawodnik && clubId) {
-                if (_isImpersonating) {
-                    // Impersonacja: nie blokuj, ale pokaż rzeczywisty status w banerze
-                    getAccessStatus(user.userId || user.id, clubId).then(access => {
-                        const statusEl = document.getElementById('imp-banner-status');
-                        if (!statusEl) return;
-                        const labels = { ACTIVE: '✓ Licencja aktywna', TRIAL: '⏳ Trial', GRACE: '⚠ Grace period', EXPIRED: '🔴 Licencja WYGASŁA — brak dostępu' };
-                        const colors = { ACTIVE: 'var(--sukces)', TRIAL: '#60A5FA', GRACE: 'var(--warn)', EXPIRED: 'var(--blad)' };
-                        statusEl.textContent  = labels[access.status] || access.status;
-                        statusEl.style.color  = colors[access.status] || 'var(--szary-j)';
-                        if (access.daysLeft > 0 && access.daysLeft < 9000)
-                            statusEl.textContent += ` · ${access.daysLeft} dni`;
-                    });
-                } else {
-                    const access = await checkPaymentAccess(user.userId || user.id, clubId);
-                    if (!access) return; // redirect do blocked.html już w checkPaymentAccess
-                    if (access && shouldShowTrialBanner(access.daysLeft)) {
-                        localStorage.setItem('trialBannerShownDay', String(access.daysLeft));
-                        window.location.href = `platnosci-banner.html?status=${access.status}&days=${access.daysLeft}&redirect=${encodeURIComponent('start.html')}`;
-                        return;
-                    }
-                }
-            }
-
-            // currentUserData już ustawione przez initSession() — override dla demo role
-            if (isDemoMode()) {
-                const demoRole = getDemoRole();
-                if (demoRole) setCurrentUserData({ ...getCurrentUserData(), role: demoRole });
-            }
-
-            // Pobierz imiona zawodników powiązanych z userem (dzieci rodzica / sam zawodnik)
-            const myIds = getMyPlayerIds();
-            for (const pid of myIds) {
-                try {
-                    const pDoc = await db.collection('players').doc(pid).get();
-                    if (pDoc.exists) playerNamesCache[pid] = pDoc.data().name || pid;
-                    else playerNamesCache[pid] = pid;
-                } catch (e) { playerNamesCache[pid] = pid; }
-            }
-
-            updateGreeting(user, membership);
-            updateDate();
-            loadCtxOverlay(user, membership, team);
-            loadMenuPanel(user, membership, team);
-            // Pokaż Support tylko dla isPlatformAdmin
-            if (_isPlatformAdmin) {
-                const el = document.getElementById('menu-support');
-                if (el) el.style.display = '';
-            }
-
-            const teamId = team.teamId || team.id;
-
-            // Pre-warm cache wiadomości — odpalamy JAK NAJWCZEŚNIEJ, równolegle z dashboardem
-            if (db && teamId) {
-                db.collection('messages').where('teamId', '==', teamId).get()
-                    .then(() => console.log('✅ Cache wiadomości podgrzany'))
-                    .catch(() => {});
-            }
-
-            await Promise.all([
-                loadNextMatch(teamId),
-                loadUpcomingEvents(teamId),
-                loadTasks(teamId, currentUserData.userId)
-            ]);
-            console.log('✅ Dashboard załadowany dla:', currentUserData.role);
-
-            // Rejestracja callbacku — akcja na powiadomieniu odświeża dashboard
-            window.onNotifAction = () => refreshDashboard();
         }
 
-        /* ── Powitanie + data ── */
-        function updateGreeting(user, membership) {
-            const r = getCurrentUserData()?.role || getDemoRole();
-            // Imię — kilka fallbacków bo zależy od sposobu rejestracji
-            const _playerId = membership?.playerId || getCurrentUserData()?.playerId;
-            const _playerFullName = _playerId ? (playerNamesCache[_playerId] || '') : '';
-            const firstName =
-                user.firstName ||
-                (user.displayName || '').split(' ')[0] ||
-                (membership?.displayName || '').split(' ')[0] ||
-                _playerFullName.split(' ')[0] ||
-                '';
-            // hello-sub — "Witaj Zawodniku"
-            const roleLabel = { TRENER_GLOWNY: 'Trenerze', TRENER_POMOCNICZY: 'Trenerze', RODZIC: 'Rodzicu', ZAWODNIK: 'Zawodniku', KIBIC: 'Kibicu' }[r] || '';
-            const subEl = document.querySelector('.hello-sub');
-            if (subEl) subEl.textContent = roleLabel ? `Witaj ${roleLabel}` : 'Witaj';
-            // hello-name — samo imię dużą czcionką
-            const el = document.querySelector('.hello-name');
-            if (el) el.innerHTML = `<span>${firstName}</span>`;
-        }
-        function updateDate() {
-            const el = document.querySelector('.hello-date'); if (!el) return;
-            const now = new Date();
-            const dn = now.toLocaleDateString('pl-PL', { weekday: 'long' });
-            const dd = String(now.getDate()).padStart(2, '0');
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const yyyy = now.getFullYear();
-            el.innerHTML = `${dn.charAt(0).toUpperCase() + dn.slice(1)}<br>${dd}.${mm}.${yyyy}`;
+        if (isDemoMode()) {
+            const demoRole = getDemoRole();
+            if (demoRole) setCurrentUserData({ ...getCurrentUserData(), role: demoRole });
         }
 
-        /* ═══════════════════════════════════════════════════
-           KARUZELA MECZY
-        ═══════════════════════════════════════════════════ */
-        const DEFAULT_MATCH_DAYS = 7;
-
-        // Lokalna data YYYY-MM-DD (bez problemu UTC)
-        function getLocalDateStr(date) {
-            const d = date || new Date();
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            return `${yyyy}-${mm}-${dd}`;
-        }
-
-        async function loadNextMatch(teamId) {
-            const allEv = await getTeamEvents(teamId);
-            // Mecz bez matchData — traktuj jako UPCOMING (zabezpieczenie)
-            const matches = allEv.filter(e => e.type === 'MECZ').map(e => {
-                if (!e.matchData) e.matchData = { matchStatus: 'UPCOMING' };
-                return e;
-            });
-            const todayStr = getLocalDateStr();
-
-            // Pobierz matchDays z settings drużyny (lub domyślne 7)
-            let matchDays = DEFAULT_MATCH_DAYS;
+        const myIds = getMyPlayerIds();
+        for (const pid of myIds) {
             try {
-                const teamDoc = await db.collection('teams').doc(teamId).get();
-                if (teamDoc.exists) {
-                    const s = teamDoc.data().settings;
-                    if (s?.dashboard?.matchDays) matchDays = s.dashboard.matchDays;
+                const pDoc = await db.collection('players').doc(pid).get();
+                playerNamesCache[pid] = pDoc.exists ? (pDoc.data().name || pid) : pid;
+            } catch (e) { playerNamesCache[pid] = pid; }
+        }
+
+        updateGreeting(user, membership);
+        updateDate();
+        loadCtxOverlay(user, membership, team);
+        loadMenuPanel(user, membership, team);
+
+        if (_isPlatformAdmin) {
+            const el = document.getElementById('menu-support');
+            if (el) el.style.display = '';
+        }
+
+        const teamId = team.teamId || team.id;
+
+        if (db && teamId) {
+            db.collection('messages').where('teamId', '==', teamId).get()
+                .then(() => console.log('✅ Cache wiadomości podgrzany'))
+                .catch(() => {});
+        }
+
+        await Promise.all([
+            loadNextMatch(teamId),
+            loadUpcomingEvents(teamId),
+            loadTasks(teamId, currentUserData.userId)
+        ]);
+
+        loadCalWidget(teamId);
+        console.log('✅ Dashboard załadowany dla:', currentUserData.role);
+        window.onNotifAction = () => refreshDashboard();
+    }
+
+    /* ─────────────────────────────────────────────────────
+       POWITANIE + DATA
+    ───────────────────────────────────────────────────── */
+    function updateGreeting(user, membership) {
+        const r = getCurrentUserData()?.role || getDemoRole();
+        const _playerId = membership?.playerId || getCurrentUserData()?.playerId;
+        const _playerFullName = _playerId ? (playerNamesCache[_playerId] || '') : '';
+        const firstName =
+            user.firstName ||
+            (user.displayName || '').split(' ')[0] ||
+            (membership?.displayName || '').split(' ')[0] ||
+            _playerFullName.split(' ')[0] || '';
+
+        const subEl = document.getElementById('hello-sub');
+        if (subEl) {
+            const subKey = 'start.sub.' + r;
+            const subVal = typeof t === 'function' ? t(subKey) : null;
+            const fallback = { TRENER_GLOWNY: 'Witaj Trenerze', TRENER_POMOCNICZY: 'Witaj Trenerze', RODZIC: 'Witaj Rodzicu', ZAWODNIK: 'Witaj Zawodniku', KIBIC: 'Witaj Kibicu' }[r] || 'Witaj';
+            subEl.textContent = (typeof subVal === 'string' && subVal !== subKey) ? subVal : fallback;
+        }
+        const nameEl = document.getElementById('hello-name');
+        if (nameEl) nameEl.innerHTML = `<span>${firstName}</span>`;
+    }
+
+    function updateDate() {
+        const el = document.getElementById('hello-date');
+        if (!el) return;
+        const now  = new Date();
+        const lang = typeof getLang === 'function' ? getLang() : 'pl';
+        const dn   = now.toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL', { weekday: 'long' });
+        const dd   = String(now.getDate()).padStart(2, '0');
+        const mm   = String(now.getMonth() + 1).padStart(2, '0');
+        el.innerHTML = `${dn.charAt(0).toUpperCase() + dn.slice(1)}<br>${dd}.${mm}.${now.getFullYear()}`;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       KARUZELA MECZY
+    ───────────────────────────────────────────────────── */
+    const DEFAULT_MATCH_DAYS = 7;
+
+    function getLocalDateStr(date) {
+        const d = date || new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    async function loadNextMatch(teamId) {
+        const allEv = await getTeamEvents(teamId);
+        const matches = allEv.filter(e => e.type === 'MECZ').map(e => {
+            if (!e.matchData) e.matchData = { matchStatus: 'UPCOMING' };
+            return e;
+        });
+        const todayStr = getLocalDateStr();
+
+        let matchDays = DEFAULT_MATCH_DAYS;
+        try {
+            const teamDoc = await db.collection('teams').doc(teamId).get();
+            if (teamDoc.exists) {
+                const s = teamDoc.data().settings;
+                if (s?.dashboard?.matchDays) matchDays = s.dashboard.matchDays;
+            }
+        } catch (e) {}
+
+        const maxDate = getLocalDateStr(new Date(new Date().getTime() + matchDays * 86400000));
+        const _myPlayerIds = getMyPlayerIds();
+        const _userId = currentUserData?.userId;
+
+        const visible = matches.filter(m => {
+            if (m.date < todayStr || m.date > maxDate) return false;
+            if (!isVisible(m)) return false;
+            const inv = m.attendance?.invited || [];
+            if (inv.includes('__TEAM__')) return true;
+            if (_userId && inv.includes(_userId)) return true;
+            if (_myPlayerIds.length > 0 && _myPlayerIds.some(pid => inv.includes(pid))) return true;
+            return false;
+        });
+
+        visible.sort((a, b) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            return (a.timeFrom || '').localeCompare(b.timeFrom || '');
+        });
+
+        const wrap = document.getElementById('mecz-carousel-wrap');
+        if (visible.length === 0) { if (wrap) wrap.style.display = 'none'; return; }
+        if (wrap) wrap.style.display = '';
+
+        const nonPlayerIds = new Set();
+        visible.forEach(m => {
+            (m.attendance?.invited || []).filter(id => !id.includes('player_')).forEach(id => nonPlayerIds.add(id));
+            if (m.matchData?.liveAssistant?.userId) nonPlayerIds.add(m.matchData.liveAssistant.userId);
+        });
+        const userCache = {};
+        for (const uid of nonPlayerIds) {
+            try {
+                const uDoc = await db.collection('users').doc(uid).get();
+                userCache[uid] = uDoc.exists ? { name: uDoc.data().displayName || uid, role: uDoc.data().role || '' } : { name: uid, role: '' };
+            } catch (e) { userCache[uid] = { name: uid, role: '' }; }
+        }
+
+        let parentsCanAssist = true;
+        try {
+            const teamDoc = await db.collection('teams').doc(teamId).get();
+            if (teamDoc.exists) {
+                const ml = teamDoc.data().settings?.matchLive;
+                if (ml && ml.parentsCanAssist === false) parentsCanAssist = false;
+            }
+        } catch (e) {}
+
+        const carousel = document.getElementById('mecz-carousel');
+        const dotsEl   = document.getElementById('mecz-dots');
+        carousel.innerHTML = '';
+        dotsEl.innerHTML = '';
+
+        visible.forEach(match => { carousel.appendChild(renderMatchCard(match, todayStr, userCache, parentsCanAssist)); });
+
+        if (visible.length > 1) {
+            visible.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = 'mecz-dot' + (idx === 0 ? ' active' : '');
+                dot.onclick = () => { carousel.scrollTo({ left: idx * carousel.offsetWidth, behavior: 'smooth' }); };
+                dotsEl.appendChild(dot);
+            });
+            carousel.addEventListener('scroll', () => {
+                const activeIdx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+                dotsEl.querySelectorAll('.mecz-dot').forEach((d, i) => d.classList.toggle('active', i === activeIdx));
+            });
+        }
+    }
+
+    function renderMatchCard(match, todayStr, userCache, parentsCanAssist) {
+        const card = document.createElement('div');
+        const md = match.matchData || {};
+        const isFinished = md.matchStatus === 'FINISHED';
+        const isLive = md.matchStatus === 'LIVE';
+        const isUpcoming = !isFinished && !isLive;
+        const matchId = match.eventId || match.id;
+
+        card.className = 'mecz-card' + (isFinished ? ' mc-finished' : '');
+
+        let label = isFinished ? 'ZAKOŃCZONY' : isLive ? '🔴 NA ŻYWO' : (md.homeAway === 'HOME' ? 'MECZ DOMOWY' : 'MECZ WYJAZDOWY');
+
+        let resultHtml = '';
+        if (isFinished && md.result) {
+            const isCoach = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
+            const outcome = md.result.outcome;
+            const outcomeLabel = outcome === 'WIN' ? 'Wygrana' : outcome === 'LOSS' ? 'Przegrana' : 'Remis';
+            const outcomeClass = outcome === 'WIN' ? 'mc-result-win' : outcome === 'LOSS' ? 'mc-result-loss' : 'mc-result-draw';
+            if (isCoach) {
+                resultHtml = `<div class="mc-wynik"><span class="mc-wynik-label">Wynik:</span>${md.result.our} : ${md.result.opponent}</div><span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
+            } else {
+                resultHtml = `<span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
+            }
+        }
+
+        let liveHtml = '';
+        if (isLive && md.result) {
+            liveHtml = `<div class="mc-wynik"><span class="mc-wynik-label">Wynik:</span>${md.result.our ?? 0} : ${md.result.opponent ?? 0}</div>`;
+        }
+
+        let bg = isFinished && md.result?.outcome === 'WIN' ? '🏆' : isLive ? '🔴' : '⚽';
+
+        const att = match.attendance || {};
+        const invP  = (att.invited || []).filter(id => id.includes('player_'));
+        const conf  = (att.confirmed || []).filter(id => id.includes('player_')).length;
+        const decl  = (att.declined  || []).filter(id => id.includes('player_')).length;
+        const noResp = Math.max(0, invP.length - conf - decl);
+
+        const invCoaches = (att.invited || []).filter(id => !id.includes('player_') && userCache[id] && (userCache[id].role === 'TRENER_GLOWNY' || userCache[id].role === 'TRENER_POMOCNICZY'));
+        const coachListHtml = invCoaches.length > 0 ? `<div class="mc-coaches">🎽 ${invCoaches.map(id => userCache[id].name).join(', ')}</div>` : '';
+
+        const la = md.liveAssistant;
+        let assistantHtml = '';
+        if (la && la.userId) {
+            const aName = la.displayName || (userCache[la.userId] ? userCache[la.userId].name : la.userId);
+            assistantHtml = `<div class="mc-assistant">📋 Obsługuje: <strong>${aName}</strong></div>`;
+        } else if (!isFinished) {
+            assistantHtml = `<div class="mc-assistant mc-assistant-free">📋 Mecz wolny — brak obsługi</div>`;
+        }
+
+        const isCoachRole = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
+        const isParent = currentUserData.role === 'RODZIC';
+        const isLiveAssistant = la && la.userId === currentUserData.userId;
+        const isMatchDay = match.date === todayStr;
+        let statusRowHtml = '';
+
+        if (isCoachRole) {
+            if (isUpcoming) {
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-upcoming">⏳ Przed meczem</span></div>`;
+            } else if (isLive) {
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">🔴 Na żywo</span><button class="mc-action-btn mc-btn-end" onclick="endMatch('${matchId}')">⏹ Zakończ</button></div>`;
+                if (la && la.userId && la.userId !== currentUserData.userId) {
+                    statusRowHtml += `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-takeover" onclick="takeoverMatch('${matchId}')">🔄 Przejmij obsługę</button></div>`;
                 }
-            } catch (e) { }
+            } else if (isFinished) {
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-finished">✅ Zakończony</span><button class="mc-action-btn mc-btn-takeover" onclick="reopenMatch('${matchId}')">↩ Cofnij zakończenie</button></div>`;
+            }
+        } else if (isParent && parentsCanAssist && !isFinished) {
+            if (!la || !la.userId) {
+                if (isMatchDay) {
+                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-claim" onclick="claimMatch('${matchId}')">📋 Obsługuję mecz</button></div>`;
+                }
+            } else if (la.userId !== currentUserData.userId) {
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-request" onclick="requestTakeover('${matchId}')">🔄 Poproś o przejęcie</button></div>`;
+            } else if (isLiveAssistant) {
+                if (isLive) {
+                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">🔴 Na żywo</span><button class="mc-action-btn mc-btn-end" onclick="endMatch('${matchId}')">⏹ Zakończ</button></div>`;
+                } else if (isUpcoming) {
+                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-upcoming">⏳ Przed meczem</span></div>`;
+                }
+            }
+        }
 
-            const maxDate = getLocalDateStr(new Date(new Date().getTime() + matchDays * 86400000));
+        const descText = trunc(match.description || '', 50);
+        const descHtml = descText ? `<div class="mc-desc">${descText}</div>` : '';
+        const venueText = trunc(match.location?.venueName || '', 30);
 
-            // Filtruj: date >= today ORAZ date <= maxDate ORAZ w oknie przypomnienia
-            const inWindow = matches.filter(m => {
-                if (m.date < todayStr || m.date > maxDate) return false;
-                return true;
+        card.innerHTML = `
+            <div class="mecz-card-bg">${bg}</div>
+            <div class="mc-label">${label}</div>
+            <div class="mc-tytul">${trunc(match.title || md.opponent || '', 22)}</div>
+            ${descHtml}
+            <div class="mc-info">${venueText ? `<span class="mc-info-venue">📍 ${venueText}</span>` : ''}<span class="mc-info-time">🕐 ${formatDateDisplay(match.date)} · ${match.timeFrom || ''}</span></div>
+            ${resultHtml}${liveHtml}
+            ${coachListHtml}
+            ${assistantHtml}
+            <div class="mc-counts">
+                <div class="mcc mcc-g"><div class="mcc-n mn-g">${conf}</div><div class="mcc-l">Obecni</div></div>
+                <div class="mcc mcc-r"><div class="mcc-n mn-r">${decl}</div><div class="mcc-l">Nieobecni</div></div>
+                <div class="mcc mcc-s"><div class="mcc-n mn-s">${noResp}</div><div class="mcc-l">Brak odp.</div></div>
+            </div>
+            ${statusRowHtml}
+        `;
+        card.onclick = () => { sessionStorage.setItem('activeMatch', matchId); window.location.href = 'mecz.html'; };
+        return card;
+    }
+
+    /* ── Operacje na meczu ── */
+    async function startMatch(eventId) {
+        if (!db) return;
+        try { await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE' }); await refreshDashboard(); } catch (e) { console.error('❌', e); }
+    }
+
+    async function endMatch(eventId) {
+        const input = prompt('Podaj wynik (nasz:przeciwnik), np. 3:1');
+        if (input === null) return;
+        const parts = input.split(':').map(s => parseInt(s.trim()));
+        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) { alert('Nieprawidłowy format. Użyj np. 3:1'); return; }
+        const our = parts[0], opp = parts[1];
+        const outcome = our > opp ? 'WIN' : our < opp ? 'LOSS' : 'DRAW';
+        if (!db) return;
+        try {
+            await db.collection('events').doc(eventId).update({
+                'matchData.matchStatus': 'FINISHED',
+                'matchData.endedAt': new Date().toISOString(),
+                'matchData.endedBy': currentUserData.userId,
+                'matchData.result': { our, opponent: opp, outcome, updatedBy: currentUserData.userId, updatedAt: new Date().toISOString() }
             });
+            await refreshDashboard();
+        } catch (e) { console.error('❌', e); }
+    }
 
-            // Filtruj per rola — tylko eventy gdzie user lub jego zawodnicy są zaproszeni
-            const _myPlayerIds = getMyPlayerIds();
-            const _userId = currentUserData?.userId;
-            const visible = inWindow.filter(m => {
-                if (!isVisible(m)) return false;
-                const inv = m.attendance?.invited || [];
-                if (inv.includes('__TEAM__')) return true;
-                if (_userId && inv.includes(_userId)) return true;
-                if (_myPlayerIds.length > 0 && _myPlayerIds.some(pid => inv.includes(pid))) return true;
-                return false;
+    async function claimMatch(eventId) {
+        if (!db) return;
+        try {
+            const doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) return;
+            if (doc.data().date !== getLocalDateStr()) { alert('Obsługę meczu można przejąć dopiero w dniu meczu.'); await refreshDashboard(); return; }
+            await db.collection('events').doc(eventId).update({ 'matchData.liveAssistant': { userId: currentUserData.userId, displayName: currentUserData.displayName, claimedAt: new Date().toISOString() } });
+            await refreshDashboard();
+        } catch (e) { console.error('❌', e); }
+    }
+
+    async function takeoverMatch(eventId) {
+        if (!db) return;
+        try {
+            await db.collection('events').doc(eventId).update({ 'matchData.liveAssistant': { userId: currentUserData.userId, displayName: currentUserData.displayName, claimedAt: new Date().toISOString() }, 'matchData.takeoverRequest': null });
+            await refreshDashboard();
+        } catch (e) { console.error('❌', e); }
+    }
+
+    async function requestTakeover(eventId) {
+        if (!db) return;
+        try {
+            const doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) return;
+            const md = doc.data().matchData || {};
+            if (md.takeoverRequest && md.takeoverRequest.userId) { alert('Inna prośba o przejęcie już oczekuje.'); return; }
+            await db.collection('events').doc(eventId).update({ 'matchData.takeoverRequest': { userId: currentUserData.userId, displayName: currentUserData.displayName, requestedAt: new Date().toISOString() } });
+            if (md.liveAssistant && md.liveAssistant.userId) {
+                await createNotification({ userId: md.liveAssistant.userId, teamId: doc.data().teamId, type: 'MATCH_TAKEOVER_REQUEST', title: `${currentUserData.displayName} prosi o przejęcie meczu`, body: `${doc.data().title || ''} · ${formatDateDisplay(doc.data().date)}`, referenceId: eventId, referenceType: 'event', requiresAction: true, actionType: 'TAKEOVER', priority: 'HIGH' });
+            }
+            alert('Prośba o przejęcie wysłana!');
+            await refreshDashboard();
+        } catch (e) { console.error('❌', e); }
+    }
+
+    async function reopenMatch(eventId) {
+        if (!await showConfirmSheet('Cofnąć zakończenie meczu? Status wróci do "Na żywo".')) return;
+        if (!db) return;
+        try {
+            await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE', 'matchData.endedAt': null, 'matchData.endedBy': null });
+            await refreshDashboard();
+        } catch (e) { console.error('❌', e); }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       NAJBLIŻSZE WYDARZENIA
+    ───────────────────────────────────────────────────── */
+    async function loadUpcomingEvents(teamId) {
+        const today    = new Date();
+        const todayStr = getLocalDateStr(today);
+        const maxStr   = getLocalDateStr(new Date(today.getTime() + UPCOMING_DAYS * 86400000));
+        const isCoach  = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
+        const isKibic  = currentUserData.role === 'KIBIC';
+        const myPlayerIds = getMyPlayerIds();
+
+        const allEv = await getTeamEvents(teamId);
+        const upEv  = allEv.filter(e => e.date >= todayStr && e.date <= maxStr);
+
+        let activeAbsences = [];
+        try {
+            const absSnap = await db.collection('absences').where('isActive', '==', true).get();
+            activeAbsences = absSnap.docs.map(d => d.data());
+        } catch (e) {}
+
+        const oids = [...new Set(upEv.map(e => e.createdBy).filter(Boolean))];
+        for (const o of oids) { if (!orgNames[o]) orgNames[o] = await getUserName(o); }
+
+        const anns = await getTeamAnnouncements(teamId);
+        const validAnns = anns.filter(a => {
+            if (a.archived) return false;
+            if (!a.expiresAt && a.isDemo) return false;
+            if (!a.expiresAt && a._fromMessages) return false;
+            if (!a.expiresAt) return true;
+            const exp = a.expiresAt.toDate ? a.expiresAt.toDate() : new Date(a.expiresAt);
+            return exp >= today;
+        });
+        const annOids = [...new Set(validAnns.map(a => a.createdBy).filter(Boolean))];
+        for (const o of annOids) { if (!orgNames[o]) orgNames[o] = await getUserName(o); }
+
+        const items = [];
+        const isParentRole = currentUserData.role === 'RODZIC';
+
+        upEv.filter(e => {
+            if (!isVisible(e)) return false;
+            const inv = e.attendance?.invited || [];
+            const uid = currentUserData.userId;
+            if (inv.includes('__TEAM__')) return true;
+            if (inv.includes(uid)) return true;
+            if (myPlayerIds.length > 0 && myPlayerIds.some(pid => inv.includes(pid))) return true;
+            return false;
+        }).forEach(e => {
+            const att = e.attendance || {};
+            const invited = att.invited || [];
+            const eventId = e.eventId || e.id;
+            const isPast = e.date < todayStr;
+            const isFinishedMatch = e.type === 'MECZ' && e.matchData?.matchStatus === 'FINISHED';
+            const isLocked = isPast || isFinishedMatch;
+            const statuses = getAttendanceStatus(att, invited);
+            const myInvitedIds = Object.keys(statuses);
+            const canConfirm = !isCoach && !isKibic && e.requireConfirmation && myInvitedIds.length > 0 && !isLocked;
+
+            let attendanceRows = [];
+            if (canConfirm) {
+                for (const pid of myInvitedIds) {
+                    const info = statuses[pid];
+                    const playerName = playerNamesCache[pid] || pid;
+                    const absForPlayer = activeAbsences.find(a => a.playerId === pid && a.dateFrom <= e.date && a.dateTo >= e.date);
+                    if (absForPlayer && info.status === 'pending') {
+                        attendanceRows.push({ playerId: pid, playerName, status: 'declined', reason: absForPlayer.reason || 'Długa nieobecność' });
+                    } else {
+                        attendanceRows.push({ playerId: pid, playerName, status: info.status, reason: info.reason });
+                    }
+                }
+            }
+
+            const needsConfirm = attendanceRows.some(r => r.status === 'pending');
+            items.push({
+                source: 'event', type: e.type,
+                title: e.title || TYPE_LABELS[e.type] || 'Wydarzenie',
+                description: e.description || '',
+                date: e.date, timeFrom: e.timeFrom || '', timeTo: e.timeTo || '',
+                location: e.location?.venueName || '',
+                priority: e.priority || 999,
+                needsConfirm, attendanceRows,
+                eventId, isPinned: false,
+                createdBy: orgNames[e.createdBy] || ''
             });
+        });
 
-            // Sortuj chronologicznie
-            visible.sort((a, b) => {
+        validAnns.forEach(a => {
+            const d = a.createdAt?.toDate ? a.createdAt.toDate().toISOString().slice(0, 10) : (typeof a.createdAt === 'string' ? a.createdAt.slice(0, 10) : todayStr);
+            items.push({
+                source: 'announcement', type: 'ANN',
+                title: a.title || '', body: a.body || '',
+                date: d, timeFrom: '', timeTo: '', location: '',
+                priority: a.isPinned ? 0 : 500,
+                needsConfirm: false, responded: null,
+                eventId: null, isPinned: a.isPinned || false,
+                createdBy: orgNames[a.createdBy] || ''
+            });
+        });
+
+        items.sort((a, b) => {
+            if (a.needsConfirm !== b.needsConfirm) return a.needsConfirm ? -1 : 1;
+            const aIsEvent = a.source === 'event', bIsEvent = b.source === 'event';
+            if (aIsEvent !== bIsEvent) return aIsEvent ? -1 : 1;
+            if (aIsEvent && bIsEvent) {
                 if (a.date !== b.date) return a.date.localeCompare(b.date);
                 return (a.timeFrom || '').localeCompare(b.timeFrom || '');
-            });
-
-            const wrap = document.getElementById('mecz-carousel-wrap');
-            if (visible.length === 0) { if (wrap) wrap.style.display = 'none'; return; }
-            if (wrap) wrap.style.display = '';
-
-            // Pobierz dane userów z invited (bez prefixu player_) — imiona + role
-            const nonPlayerIds = new Set();
-            visible.forEach(m => {
-                (m.attendance?.invited || []).filter(id => !id.includes('player_')).forEach(id => nonPlayerIds.add(id));
-                if (m.matchData?.liveAssistant?.userId) nonPlayerIds.add(m.matchData.liveAssistant.userId);
-            });
-            const userCache = {}; // { userId: { name, role } }
-            for (const uid of nonPlayerIds) {
-                try {
-                    const uDoc = await db.collection('users').doc(uid).get();
-                    if (uDoc.exists) {
-                        const u = uDoc.data();
-                        userCache[uid] = { name: u.displayName || uid, role: u.role || '' };
-                    } else {
-                        userCache[uid] = { name: uid, role: '' };
-                    }
-                } catch (e) { userCache[uid] = { name: uid, role: '' }; }
             }
+            if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+            return b.date.localeCompare(a.date);
+        });
 
-            // Pobierz parentsCanAssist z settings
-            let parentsCanAssist = true;
-            try {
-                const teamDoc = await db.collection('teams').doc(teamId).get();
-                if (teamDoc.exists) {
-                    const ml = teamDoc.data().settings?.matchLive;
-                    if (ml && ml.parentsCanAssist === false) parentsCanAssist = false;
-                }
-            } catch (e) { }
-
-            const carousel = document.getElementById('mecz-carousel');
-            const dotsEl = document.getElementById('mecz-dots');
-            carousel.innerHTML = '';
-            dotsEl.innerHTML = '';
-
-            visible.forEach((match, idx) => {
-                carousel.appendChild(renderMatchCard(match, todayStr, userCache, parentsCanAssist));
-            });
-
-            // Kropki — tylko jeśli > 1 mecz
-            if (visible.length > 1) {
-                visible.forEach((_, idx) => {
-                    const dot = document.createElement('div');
-                    dot.className = 'mecz-dot' + (idx === 0 ? ' active' : '');
-                    dot.onclick = () => {
-                        carousel.scrollTo({ left: idx * carousel.offsetWidth, behavior: 'smooth' });
-                    };
-                    dotsEl.appendChild(dot);
-                });
-
-                // Aktualizuj aktywną kropkę przy scrollu
-                carousel.addEventListener('scroll', () => {
-                    const scrollPos = carousel.scrollLeft;
-                    const cardWidth = carousel.offsetWidth;
-                    const activeIdx = Math.round(scrollPos / cardWidth);
-                    dotsEl.querySelectorAll('.mecz-dot').forEach((d, i) => {
-                        d.classList.toggle('active', i === activeIdx);
-                    });
-                });
-            }
-        }
-
-        function renderMatchCard(match, todayStr, userCache, parentsCanAssist) {
-            const card = document.createElement('div');
-            const md = match.matchData || {};
-            const isFinished = md.matchStatus === 'FINISHED';
-            const isLive = md.matchStatus === 'LIVE';
-            const isUpcoming = !isFinished && !isLive;
-            const matchId = match.eventId || match.id;
-
-            card.className = 'mecz-card' + (isFinished ? ' mc-finished' : '');
-
-            // Label
-            let label = '';
-            if (isFinished) {
-                label = 'ZAKOŃCZONY';
-            } else if (isLive) {
-                label = '🔴 NA ŻYWO';
-            } else {
-                label = md.homeAway === 'HOME' ? 'MECZ DOMOWY' : 'MECZ WYJAZDOWY';
-            }
-
-            // Wynik dla zakończonego meczu
-            let resultHtml = '';
-            if (isFinished && md.result) {
-                const isCoach = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
-                const outcome = md.result.outcome;
-                const outcomeLabel = outcome === 'WIN' ? 'Wygrana' : outcome === 'LOSS' ? 'Przegrana' : 'Remis';
-                const outcomeClass = outcome === 'WIN' ? 'mc-result-win' : outcome === 'LOSS' ? 'mc-result-loss' : 'mc-result-draw';
-
-                if (isCoach) {
-                    resultHtml = `<div class="mc-wynik"><span class="mc-wynik-label">Wynik:</span>${md.result.our} : ${md.result.opponent}</div>
-                        <span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
-                } else {
-                    resultHtml = `<span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
-                }
-            }
-
-            // Wynik live
-            let liveHtml = '';
-            if (isLive && md.result) {
-                liveHtml = `<div class="mc-wynik"><span class="mc-wynik-label">Wynik:</span>${md.result.our ?? 0} : ${md.result.opponent ?? 0}</div>`;
-            }
-
-            // Emoji tła
-            let bg = '⚽';
-            if (isFinished && md.result?.outcome === 'WIN') bg = '🏆';
-            if (isLive) bg = '🔴';
-
-            // Liczniki obecności
-            const att = match.attendance || {};
-            const invP = (att.invited || []).filter(id => id.includes('player_'));
-            const conf = (att.confirmed || []).filter(id => id.includes('player_')).length;
-            const decl = (att.declined || []).filter(id => id.includes('player_')).length;
-            const noResp = Math.max(0, invP.length - conf - decl);
-
-            // Trenerzy na meczu — z invited, filtruj po roli TRENER_*
-            const invCoaches = (att.invited || []).filter(id => !id.includes('player_') && userCache[id] && (userCache[id].role === 'TRENER_GLOWNY' || userCache[id].role === 'TRENER_POMOCNICZY'));
-            const coachListHtml = invCoaches.length > 0
-                ? `<div class="mc-coaches">🎽 ${invCoaches.map(id => userCache[id].name).join(', ')}</div>`
-                : '';
-
-            // Asystent meczowy
-            const la = md.liveAssistant;
-            let assistantHtml = '';
-            if (la && la.userId) {
-                const aName = la.displayName || (userCache[la.userId] ? userCache[la.userId].name : la.userId);
-                assistantHtml = `<div class="mc-assistant">📋 Obsługuje: <strong>${aName}</strong></div>`;
-            } else if (!isFinished) {
-                assistantHtml = `<div class="mc-assistant mc-assistant-free">📋 Mecz wolny — brak obsługi</div>`;
-            }
-
-            // Przycisk statusu + obsługi meczu
-            const isCoachRole = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
-            const isParent = currentUserData.role === 'RODZIC';
-            const isLiveAssistant = la && la.userId === currentUserData.userId;
-            const isMatchDay = match.date === todayStr;
-            let statusRowHtml = '';
-
-            if (isCoachRole) {
-                if (isUpcoming) {
-                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()">
-                        <span class="mc-status-badge mc-status-upcoming">⏳ Przed meczem</span>
-                    </div>`;
-                } else if (isLive) {
-                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()">
-                        <span class="mc-status-badge mc-status-live">🔴 Na żywo</span>
-                        <button class="mc-action-btn mc-btn-end" onclick="endMatch('${matchId}')">⏹ Zakończ</button>
-                    </div>`;
-                    // Trener może przejąć od rodzica
-                    if (la && la.userId && la.userId !== currentUserData.userId) {
-                        statusRowHtml += `<div class="mc-status-row" onclick="event.stopPropagation()">
-                            <button class="mc-action-btn mc-btn-takeover" onclick="takeoverMatch('${matchId}')">🔄 Przejmij obsługę</button>
-                        </div>`;
-                    }
-                } else if (isFinished) {
-                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()">
-                        <span class="mc-status-badge mc-status-finished">✅ Zakończony</span>
-                        <button class="mc-action-btn mc-btn-takeover" onclick="reopenMatch('${matchId}')">↩ Cofnij zakończenie</button>
-                    </div>`;
-                }
-            } else if (isParent && parentsCanAssist && !isFinished) {
-                if (!la || !la.userId) {
-                    // Mecz wolny — rodzic może przejąć, ale dopiero w dniu meczu
-                    if (isMatchDay) {
-                        statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()">
-                            <button class="mc-action-btn mc-btn-claim" onclick="claimMatch('${matchId}')">📋 Obsługuję mecz</button>
-                        </div>`;
-                    }
-                } else if (la.userId !== currentUserData.userId) {
-                    // Inny rodzic obsługuje — poproś o przejęcie
-                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()">
-                        <button class="mc-action-btn mc-btn-request" onclick="requestTakeover('${matchId}')">🔄 Poproś o przejęcie</button>
-                    </div>`;
-                } else if (isLiveAssistant) {
-                    // Ja obsługuję — mogę zakończyć
-                    if (isLive) {
-                        statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()">
-                            <span class="mc-status-badge mc-status-live">🔴 Na żywo</span>
-                            <button class="mc-action-btn mc-btn-end" onclick="endMatch('${matchId}')">⏹ Zakończ</button>
-                        </div>`;
-                    } else if (isUpcoming) {
-                        statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()">
-                            <span class="mc-status-badge mc-status-upcoming">⏳ Przed meczem</span>
-                        </div>`;
-                    }
-                }
-            }
-
-            const descText = trunc(match.description || '', 50);
-            const descHtml = descText ? `<div class="mc-desc">${descText}</div>` : '';
-            const venueText = trunc(match.location?.venueName || '', 30);
-
-            card.innerHTML = `
-                <div class="mecz-card-bg">${bg}</div>
-                <div class="mc-tytul">${trunc(match.title || md.opponent || '', 22)}</div>
-                ${descHtml}
-                <div class="mc-info">${venueText ? `<span class="mc-info-venue">📍 ${venueText}</span>` : ''}<span class="mc-info-time">🕐 ${formatDateDisplay(match.date)} · ${match.timeFrom || ''}</span></div>
-                ${resultHtml}${liveHtml}
-                ${coachListHtml}
-                ${assistantHtml}
-                <div class="mc-counts">
-                    <div class="mcc mcc-g"><div class="mcc-n mn-g">${conf}</div><div class="mcc-l">Obecni</div></div>
-                    <div class="mcc mcc-r"><div class="mcc-n mn-r">${decl}</div><div class="mcc-l">Nieobecni</div></div>
-                    <div class="mcc mcc-s"><div class="mcc-n mn-s">${noResp}</div><div class="mcc-l">Brak odp.</div></div>
-                </div>
-                ${statusRowHtml}
-            `;
-
-            card.onclick = () => {
-                sessionStorage.setItem('activeMatch', matchId);
-                window.location.href = 'mecz.html';
-            };
-
-            return card;
-        }
-
-        /* ── Zmiana statusu meczu ── */
-        async function startMatch(eventId) {
-            if (!db) return;
-            try {
-                await db.collection('events').doc(eventId).update({
-                    'matchData.matchStatus': 'LIVE'
-                });
-                console.log('✅ Mecz rozpoczęty:', eventId);
-                await refreshDashboard();
-            } catch (e) { console.error('❌ Błąd:', e); }
-        }
-
-        async function endMatch(eventId) {
-            const input = prompt('Podaj wynik (nasz:przeciwnik), np. 3:1');
-            if (input === null) return; // anulowano
-            const parts = input.split(':').map(s => parseInt(s.trim()));
-            if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-                alert('Nieprawidłowy format wyniku. Użyj formatu np. 3:1');
+        const render = (el, list) => {
+            el.innerHTML = '';
+            if (list.length === 0) {
+                const msg = typeof t === 'function' ? t('start.noEvents', { days: UPCOMING_DAYS }) : `Brak wydarzeń w najbliższych ${UPCOMING_DAYS} dniach`;
+                el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;">${msg}</div>`;
                 return;
             }
-            const our = parts[0], opp = parts[1];
-            const outcome = our > opp ? 'WIN' : our < opp ? 'LOSS' : 'DRAW';
+            list.forEach(i => el.appendChild(createEventCard(i)));
+        };
 
-            if (!db) return;
-            try {
-                await db.collection('events').doc(eventId).update({
-                    'matchData.matchStatus': 'FINISHED',
-                    'matchData.endedAt': new Date().toISOString(),
-                    'matchData.endedBy': currentUserData.userId,
-                    'matchData.result': {
-                        our: our,
-                        opponent: opp,
-                        outcome: outcome,
-                        updatedBy: currentUserData.userId,
-                        updatedAt: new Date().toISOString()
-                    }
-                });
-                console.log(`✅ Mecz zakończony: ${our}:${opp} (${outcome})`);
-                await refreshDashboard();
-            } catch (e) { console.error('❌ Błąd:', e); }
+        const dash  = document.getElementById('ev-dashboard');
+        const more  = document.getElementById('ev-more');
+        const panel = document.getElementById('ev-panel-body');
+        const allLabel = typeof t === 'function' ? t('start.seeAll') : 'Wszystkie';
+
+        const dashEvents = items.filter(i => i.source === 'event').slice(0, MAX_EVENTS);
+        const dashAnns   = items.filter(i => i.source === 'announcement').slice(0, MAX_ANN);
+        const dashItems  = [...dashEvents, ...dashAnns];
+
+        if (dash)  render(dash, dashItems);
+        if (more)  more.textContent = `${allLabel} (${items.length}) ›`;
+        if (panel) render(panel, items);
+    }
+
+    const trunc = (s, n) => s && s.length > n ? s.substring(0, n) + '…' : (s || '');
+
+    function createEventCard(item) {
+        const card = document.createElement('div');
+        const tk   = (item.type || 'inne').toLowerCase();
+        card.className = `ev-item ev-${item.source === 'announcement' ? 'ann' : tk}`;
+
+        let typeBadge = '';
+        if (item.source === 'announcement') {
+            typeBadge = `<span class="ev-badge ev-badge-ann">${item.isPinned ? '📌 Ważne' : '📢 Ogłoszenie'}</span>`;
+        } else {
+            typeBadge = `<span class="ev-badge ev-badge-${tk}">${TYPE_ICONS[item.type] || '📋'} ${TYPE_LABELS[item.type] || item.type}</span>`;
         }
 
-        /* ── Asystent meczowy ── */
-        async function claimMatch(eventId) {
-            if (!db) return;
-            try {
-                const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) return;
-                if (doc.data().date !== getLocalDateStr()) {
-                    alert('Obsługę meczu można przejąć dopiero w dniu meczu.');
-                    await refreshDashboard();
-                    return;
-                }
-                await db.collection('events').doc(eventId).update({
-                    'matchData.liveAssistant': {
-                        userId: currentUserData.userId,
-                        displayName: currentUserData.displayName,
-                        claimedAt: new Date().toISOString()
-                    }
-                });
-                console.log('✅ Przejąłem obsługę meczu:', eventId);
-                await refreshDashboard();
-            } catch (e) { console.error('❌ Błąd:', e); }
+        const confirmBadge = item.needsConfirm ? `<span class="ev-badge ev-badge-confirm">⏳ Potwierdź</span>` : '';
+
+        let subHtml = '';
+        if (item.source === 'event') {
+            const p = [];
+            if (item.location) p.push(`📍 ${trunc(item.location, 28)}`);
+            p.push(formatDateDisplay(item.date));
+            if (item.timeFrom) p.push(item.timeFrom + (item.timeTo ? `–${item.timeTo}` : ''));
+            subHtml = `<div class="ev-sub">${p.join(' · ')}</div>`;
+        } else if (item.body) {
+            subHtml = `<div class="ev-sub">${trunc(item.body, 80)}</div>`;
         }
 
-        async function takeoverMatch(eventId) {
-            if (!db) return;
-            try {
-                await db.collection('events').doc(eventId).update({
-                    'matchData.liveAssistant': {
-                        userId: currentUserData.userId,
-                        displayName: currentUserData.displayName,
-                        claimedAt: new Date().toISOString()
-                    },
-                    'matchData.takeoverRequest': null
-                });
-                console.log('✅ Trener przejął obsługę meczu:', eventId);
-                await refreshDashboard();
-            } catch (e) { console.error('❌ Błąd:', e); }
-        }
+        const orgHtml   = item.createdBy ? `<div class="ev-org">Organizator: ${trunc(item.createdBy, 25)}</div>` : '';
+        const evDescHtml = item.description ? `<div class="ev-desc">${trunc(item.description, 60)}</div>` : '';
 
-        async function requestTakeover(eventId) {
-            if (!db) return;
-            try {
-                // Sprawdź czy nie ma już oczekującej prośby
-                const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) return;
-                const md = doc.data().matchData || {};
-                if (md.takeoverRequest && md.takeoverRequest.userId) {
-                    alert('Inna prośba o przejęcie już oczekuje.');
-                    return;
-                }
+        let actHtml = '';
+        const isParentRole = currentUserData.role === 'RODZIC';
+        const lblYes = isParentRole ? 'Będzie' : 'Będę';
+        const lblNo  = isParentRole ? 'Nie będzie' : 'Nie będę';
 
-                await db.collection('events').doc(eventId).update({
-                    'matchData.takeoverRequest': {
-                        userId: currentUserData.userId,
-                        displayName: currentUserData.displayName,
-                        requestedAt: new Date().toISOString()
-                    }
-                });
-
-                // Powiadomienie do aktualnego asystenta
-                if (md.liveAssistant && md.liveAssistant.userId) {
-                    await createNotification({
-                        userId: md.liveAssistant.userId,
-                        teamId: doc.data().teamId,
-                        type: 'MATCH_TAKEOVER_REQUEST',
-                        title: `${currentUserData.displayName} prosi o przejęcie meczu`,
-                        body: `${doc.data().title || ''} · ${formatDateDisplay(doc.data().date)}`,
-                        referenceId: eventId,
-                        referenceType: 'event',
-                        requiresAction: true,
-                        actionType: 'TAKEOVER',
-                        priority: 'HIGH'
-                    });
-                }
-
-                alert('Prośba o przejęcie wysłana!');
-                console.log('✅ Prośba o przejęcie wysłana:', eventId);
-                await refreshDashboard();
-            } catch (e) { console.error('❌ Błąd:', e); }
-        }
-
-        async function reopenMatch(eventId) {
-            if (!await showConfirmSheet('Cofnąć zakończenie meczu? Status wróci do "Na żywo".')) return;
-            if (!db) return;
-            try {
-                await db.collection('events').doc(eventId).update({
-                    'matchData.matchStatus': 'LIVE',
-                    'matchData.endedAt': null,
-                    'matchData.endedBy': null
-                });
-                console.log('✅ Mecz cofnięty do LIVE:', eventId);
-                await refreshDashboard();
-            } catch (e) { console.error('❌ Błąd:', e); }
-        }
-
-        /* ═══════════════════════════════════════════════════
-           NAJBLIŻSZE WYDARZENIA
-        ═══════════════════════════════════════════════════ */
-        async function loadUpcomingEvents(teamId) {
-            const today = new Date();
-            const todayStr = getLocalDateStr(today);
-            const maxStr = getLocalDateStr(new Date(today.getTime()+UPCOMING_DAYS*86400000));
-            const isCoach = currentUserData.role==='TRENER_GLOWNY'||currentUserData.role==='TRENER_POMOCNICZY';
-            const isKibic = currentUserData.role === 'KIBIC';
-            const myPlayerIds = getMyPlayerIds();
-
-            const allEv = await getTeamEvents(teamId);
-            const now = today.getTime();
-            const upEv = allEv.filter(e => {
-                if (e.date < todayStr) return false;
-                if (e.date > maxStr) return false;
-                return true;
-            });
-
-            // Pobierz aktywne absencje (do sprawdzania per dziecko)
-            let activeAbsences = [];
-            try {
-                const absSnap = await db.collection('absences').where('isActive', '==', true).get();
-                activeAbsences = absSnap.docs.map(d => d.data());
-            } catch (e) { }
-
-            // Imiona organizatorów
-            const oids = [...new Set(upEv.map(e=>e.createdBy).filter(Boolean))];
-            for (const o of oids) { if (!orgNames[o]) orgNames[o] = await getUserName(o); }
-
-            // Ogłoszenia ręczne
-            const anns = await getTeamAnnouncements(teamId);
-            const validAnns = anns.filter(a => {
-                // Zarchiwizowane - nie pokazujemy
-                if (a.archived) return false;
-                // Demo-owe bez expiresAt - pomijamy (stare dane)
-                if (!a.expiresAt && a.isDemo) return false;
-                // BROADCAST bez expiresAt - stare dane bez daty ważności, pomijamy
-                if (!a.expiresAt && a._fromMessages) return false;
-                // Bez expiresAt - aktywne (np. auto-ogłoszenia systemowe)
-                if (!a.expiresAt) return true;
-                const exp = a.expiresAt.toDate ? a.expiresAt.toDate() : new Date(a.expiresAt);
-                return exp >= today;
-            });
-
-            // Imiona organizatorów ogłoszeń
-            const annOids = [...new Set(validAnns.map(a=>a.createdBy).filter(Boolean))];
-            for (const o of annOids) { if (!orgNames[o]) orgNames[o] = await getUserName(o); }
-
-            const items = [];
-            const isParentRole = currentUserData.role === 'RODZIC';
-
-            upEv.filter(e => {
-                if (!isVisible(e)) return false;
-                const inv = e.attendance?.invited || [];
-                const userId = currentUserData.userId;
-                if (inv.includes('__TEAM__')) return true;
-                if (inv.includes(userId)) return true;
-                if (myPlayerIds.length > 0 && myPlayerIds.some(pid => inv.includes(pid))) return true;
-                return false;
-            }).forEach(e => {
-                const att = e.attendance || {};
-                const invited = att.invited || [];
-                const eventId = e.eventId || e.id;
-
-                // Czy event jest przeszły lub mecz zakończony — blokada potwierdzania
-                const isPast = e.date < todayStr;
-                const isFinishedMatch = e.type === 'MECZ' && e.matchData?.matchStatus === 'FINISHED';
-                const isLocked = isPast || isFinishedMatch;
-
-                // Pobierz status per zawodnik
-                const statuses = getAttendanceStatus(att, invited);
-                const myInvitedIds = Object.keys(statuses);
-
-                // Czy wymaga potwierdzenia (nie-trener, nie-kibic, requireConfirmation, nie zablokowany)
-                const canConfirm = !isCoach && !isKibic && e.requireConfirmation && myInvitedIds.length > 0 && !isLocked;
-
-                // Buduj dane per zawodnik (attendanceRows)
-                let attendanceRows = [];
-                if (canConfirm) {
-                    for (const pid of myInvitedIds) {
-                        const info = statuses[pid];
-                        const playerName = playerNamesCache[pid] || pid;
-
-                        // Sprawdź absencję — nadpisuj status na declined jeśli gracz ma absencję
-                        const absForPlayer = activeAbsences.find(a =>
-                            a.playerId === pid && a.dateFrom <= e.date && a.dateTo >= e.date
-                        );
-                        if (absForPlayer && info.status === 'pending') {
-                            attendanceRows.push({
-                                playerId: pid,
-                                playerName: playerName,
-                                status: 'declined',
-                                reason: absForPlayer.reason || 'Długa nieobecność'
-                            });
-                        } else {
-                            attendanceRows.push({
-                                playerId: pid,
-                                playerName: playerName,
-                                status: info.status,
-                                reason: info.reason
-                            });
-                        }
-                    }
-                }
-
-                // needsConfirm = jest choć jedno dziecko bez odpowiedzi
-                const needsConfirm = attendanceRows.some(r => r.status === 'pending');
-
-                items.push({
-                    source: 'event', type: e.type,
-                    title: e.title || TYPE_LABELS[e.type] || 'Wydarzenie',
-                    description: e.description || '',
-                    date: e.date, timeFrom: e.timeFrom||'', timeTo: e.timeTo||'',
-                    location: e.location?.venueName||'',
-                    priority: e.priority||999,
-                    needsConfirm, attendanceRows,
-                    eventId: eventId, isPinned: false,
-                    createdBy: orgNames[e.createdBy]||''
-                });
-            });
-
-            validAnns.forEach(a => {
-                const d = a.createdAt?.toDate ? a.createdAt.toDate().toISOString().slice(0,10) : (typeof a.createdAt==='string'?a.createdAt.slice(0,10):todayStr);
-                items.push({
-                    source:'announcement', type:'ANN',
-                    title: a.title||'', body: a.body||'',
-                    date: d, timeFrom:'', timeTo:'', location:'',
-                    priority: a.isPinned?0:500,
-                    needsConfirm:false, responded:null,
-                    eventId:null, isPinned:a.isPinned||false,
-                    createdBy: orgNames[a.createdBy]||''
-                });
-            });
-
-            items.sort((a,b) => {
-                // 1. Eventy wymagające potwierdzenia — na górze
-                if (a.needsConfirm !== b.needsConfirm) return a.needsConfirm?-1:1;
-
-                // 2. Eventy przed ogłoszeniami
-                const aIsEvent = a.source === 'event';
-                const bIsEvent = b.source === 'event';
-                if (aIsEvent !== bIsEvent) return aIsEvent ? -1 : 1;
-
-                // 3. Wśród eventów — chronologicznie po dacie
-                if (aIsEvent && bIsEvent) {
-                    if (a.date !== b.date) return a.date.localeCompare(b.date);
-                    return (a.timeFrom || '').localeCompare(b.timeFrom || '');
-                }
-
-                // 4. Wśród ogłoszeń — pinned na górze, reszta po dacie
-                if (a.isPinned !== b.isPinned) return a.isPinned?-1:1;
-                return b.date.localeCompare(a.date);
-            });
-
-            const render = (el, list) => {
-                el.innerHTML = '';
-                if (list.length===0) { el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;">Brak wydarzeń w najbliższych ${UPCOMING_DAYS} dniach</div>`; return; }
-                list.forEach(i => el.appendChild(createEventCard(i)));
-            };
-
-            const dash = document.getElementById('ev-dashboard');
-            const more = document.getElementById('ev-more');
-            const panel = document.getElementById('ev-panel-body');
-
-            // Dashboard: max MAX_EVENTS eventów + max MAX_ANN ogłoszeń
-            const dashEvents = items.filter(i => i.source === 'event').slice(0, MAX_EVENTS);
-            const dashAnns = items.filter(i => i.source === 'announcement').slice(0, MAX_ANN);
-            // Zachowaj oryginalne sortowanie — eventy najpierw, potem ogłoszenia
-            const dashItems = [...dashEvents, ...dashAnns];
-
-            if (dash) render(dash, dashItems);
-            if (more) more.textContent = `Wszystkie (${items.length}) ›`;
-            if (panel) render(panel, items);
-        }
-
-        const trunc = (s, n) => s && s.length > n ? s.substring(0, n) + '…' : (s || '');
-
-        function createEventCard(item) {
-            const card = document.createElement('div');
-            const tk = (item.type||'inne').toLowerCase();
-            card.className = `ev-item ev-${item.source==='announcement'?'ann':tk}`;
-
-            // Badge typu — kolorowy
-            let typeBadge = '';
-            if (item.source==='announcement') {
-                typeBadge = `<span class="ev-badge ev-badge-ann">${item.isPinned?'📌 Ważne':'📢 Ogłoszenie'}</span>`;
-            } else {
-                typeBadge = `<span class="ev-badge ev-badge-${tk}">${TYPE_ICONS[item.type]||'📋'} ${TYPE_LABELS[item.type]||item.type}</span>`;
-            }
-
-            // Dodatkowy badge "Potwierdź" tylko jeśli needsConfirm
-            let confirmBadge = item.needsConfirm ? `<span class="ev-badge ev-badge-confirm">⏳ Potwierdź</span>` : '';
-
-            // Podtytuł
-            let subHtml = '';
-            if (item.source==='event') {
-                const p = [];
-                if (item.location) p.push(`📍 ${trunc(item.location, 28)}`);
-                p.push(formatDateDisplay(item.date));
-                if (item.timeFrom) p.push(item.timeFrom+(item.timeTo?`–${item.timeTo}`:''));
-                subHtml = `<div class="ev-sub">${p.join(' · ')}</div>`;
-            } else if (item.body) {
-                subHtml = `<div class="ev-sub">${trunc(item.body, 80)}</div>`;
-            }
-
-            // Organizator
-            const orgHtml = item.createdBy ? `<div class="ev-org">Organizator: ${trunc(item.createdBy, 25)}</div>` : '';
-
-            // Wiersze obecności per zawodnik
-            let actHtml = '';
-            const isParentRole = currentUserData.role === 'RODZIC';
-            const lblYes = isParentRole ? 'Będzie' : 'Będę';
-            const lblNo = isParentRole ? 'Nie będzie' : 'Nie będę';
-            if (item.attendanceRows && item.attendanceRows.length > 0 && item.eventId) {
-                for (const row of item.attendanceRows) {
-                    if (row.status === 'pending') {
-                        actHtml += `<div class="ev-att-row" onclick="event.stopPropagation()">
-                            <div class="ev-att-player">${trunc(row.playerName, 30)}</div>
-                            <div class="ev-att-btns">
-                                <button class="ev-btn-yes" onclick="confirmAttendance('${item.eventId}','${row.playerId}')">✅ ${lblYes}</button>
-                                <button class="ev-btn-no" onclick="declineAttendance('${item.eventId}','${row.playerId}')">❌ ${lblNo}</button>
-                            </div>
-                        </div>`;
-                    } else {
-                        const txt = row.status==='confirmed' ? `✅ ${lblYes}` : `❌ ${lblNo}`;
-                        const col = row.status==='confirmed' ? 'var(--sukces)' : 'var(--blad)';
-                        const rHtml = row.reason ? ` — ${trunc(row.reason, 40)}` : '';
-                        actHtml += `<div class="ev-att-row" onclick="event.stopPropagation()">
-                            <div class="ev-att-player">${trunc(row.playerName, 30)}</div>
-                            <div class="ev-att-status">
-                                <span style="color:${col}">${txt}${rHtml}</span>
-                                <button class="ev-att-change" onclick="resetAttendance('${item.eventId}','${row.playerId}')">Zmień</button>
-                            </div>
-                        </div>`;
-                    }
-                }
-            }
-
-            // Opis eventu — mniejszy font po tytule
-            const evDescHtml = item.description ? `<div class="ev-desc">${trunc(item.description, 60)}</div>` : '';
-
-            card.innerHTML = `
-                <div class="ev-row1">${typeBadge}${confirmBadge}<span class="ev-time">${item.source==='event'&&item.timeFrom?item.timeFrom:''}</span></div>
-                <div class="ev-title">${trunc(item.title, 38)}</div>
-                ${evDescHtml}
-                ${subHtml}${orgHtml}${actHtml}
-            `;
-
-            if (item.eventId) { card.onclick = () => { sessionStorage.setItem('selectedDate', item.date); window.location.href = 'kalendarz.html'; }; }
-            return card;
-        }
-
-        /* ═══════════════════════════════════════════════════
-           POTWIERDZANIE / ODMAWIANIE / ZMIANA
-           targetPlayerId = konkretny playerId zawodnika
-        ═══════════════════════════════════════════════════ */
-        async function confirmAttendance(eventId, targetPlayerId) {
-            if (!db) return;
-            try {
-                const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) return;
-                const att = doc.data().attendance || {};
-
-                att.confirmed = (att.confirmed||[]).filter(id => id !== targetPlayerId);
-                att.declined = (att.declined||[]).filter(id => id !== targetPlayerId);
-                if (att.declineReasons) delete att.declineReasons[targetPlayerId];
-                att.confirmed.push(targetPlayerId);
-                if (!att.decidedBy) att.decidedBy = {};
-                att.decidedBy[targetPlayerId] = { by: currentUserData.userId, byName: currentUserData.displayName, byRole: currentUserData.role, at: new Date().toISOString() };
-
-                await db.collection('events').doc(eventId).update({ attendance: att });
-                console.log('✅ Potwierdzone:', targetPlayerId);
-                await refreshDashboard();
-            } catch (e) { console.error('Błąd:', e); }
-        }
-
-        async function declineAttendance(eventId, targetPlayerId) {
-            const reason = prompt('Podaj powód nieobecności (opcjonalnie):');
-            if (!db) return;
-            try {
-                const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) return;
-                const att = doc.data().attendance || {};
-
-                att.confirmed = (att.confirmed||[]).filter(id => id !== targetPlayerId);
-                att.declined = (att.declined||[]).filter(id => id !== targetPlayerId);
-                att.declined.push(targetPlayerId);
-                if (reason) { if (!att.declineReasons) att.declineReasons = {}; att.declineReasons[targetPlayerId] = reason; }
-                if (!att.decidedBy) att.decidedBy = {};
-                att.decidedBy[targetPlayerId] = { by: currentUserData.userId, byName: currentUserData.displayName, byRole: currentUserData.role, at: new Date().toISOString() };
-
-                await db.collection('events').doc(eventId).update({ attendance: att });
-                console.log('✅ Odmowa:', targetPlayerId);
-                await refreshDashboard();
-            } catch (e) { console.error('Błąd:', e); }
-        }
-
-        async function resetAttendance(eventId, targetPlayerId) {
-            if (!db) return;
-            try {
-                const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) return;
-                const evData = doc.data();
-                // Blokada — nie można zmieniać obecności dla przeszłych eventów
-                const todayStr = getLocalDateStr(new Date());
-                if (evData.date < todayStr) { console.warn('⛔ Miniony event — brak możliwości zmiany'); return; }
-                const att = evData.attendance || {};
-
-                att.confirmed = (att.confirmed||[]).filter(id => id !== targetPlayerId);
-                att.declined = (att.declined||[]).filter(id => id !== targetPlayerId);
-                if (att.declineReasons) delete att.declineReasons[targetPlayerId];
-                if (att.decidedBy) delete att.decidedBy[targetPlayerId];
-
-                await db.collection('events').doc(eventId).update({ attendance: att });
-
-                // Synchronizacja z powiadomieniem — cofnij decyzję (actionDone → false)
-                const notifSnap = await db.collection('notifications')
-                    .where('userId', '==', currentUserData.userId)
-                    .where('referenceId', '==', eventId)
-                    .where('forPlayerId', '==', targetPlayerId)
-                    .limit(1).get();
-                if (!notifSnap.empty) {
-                    await notifSnap.docs[0].ref.update({
-                        actionDone: false, actionResult: null, actionComment: null,
-                        isRead: false, readAt: null
-                    });
-                }
-
-                console.log('✅ Reset obecności:', targetPlayerId);
-                await refreshDashboard();
-            } catch (e) { console.error('Błąd resetu:', e); }
-        }
-
-        async function refreshDashboard() {
-            const team = await getCurrentTeam();
-            if (!team) return;
-            const teamId = team.teamId || team.id;
-            await Promise.all([
-                loadNextMatch(teamId),
-                loadUpcomingEvents(teamId),
-                loadTasks(teamId, currentUserData.userId),
-                loadAndRenderNotifications()
-            ]);
-        }
-
-        /* ═══════════════════════════════════════════════════
-           ZADANIA
-        ═══════════════════════════════════════════════════ */
-        function createTaskCard(task, userId, mm) {
-            const completed = task.completedBy || [];
-            const rejected = task.rejectedBy || [];
-            const isDone = completed.includes(userId);
-            const isRejected = rejected.includes(userId);
-            const tid = 'task-' + (task.taskId || task.id);
-            const taskId = task.taskId || task.id;
-            const from = mm && mm[task.createdBy] ? mm[task.createdBy] : '';
-            const fh = from ? `<span style="color:var(--akcent);">Od: ${from}</span> · ` : '';
-
-            let meta = '';
-            if (task.dueDate) meta = `Termin: ${formatDateDisplay(task.dueDate)}`;
-
-            // Status wiersz
-            let statusHtml = '';
-            if (isDone) {
-                statusHtml = `<div class="task-status" onclick="event.stopPropagation()">
-                    <span class="task-status-txt" style="color:var(--sukces);">✅ Wykonane</span>
-                    <button class="task-change-btn" onclick="resetTaskFromDashboard('${taskId}','${tid}')">Zmień</button>
-                </div>`;
-            } else if (isRejected) {
-                const reason = task.rejectReasons?.[userId] || '';
-                const reasonHtml = reason ? ` — <span style="font-style:italic;">${reason}</span>` : '';
-                statusHtml = `<div class="task-status" onclick="event.stopPropagation()">
-                    <span class="task-status-txt" style="color:var(--blad);">❌ Odrzucone${reasonHtml}</span>
-                    <button class="task-change-btn" onclick="resetTaskFromDashboard('${taskId}','${tid}')">Zmień</button>
-                </div>`;
-            }
-
-            const card = document.createElement('div');
-            const extraClass = isDone ? ' done-item' : isRejected ? ' rejected-item' : '';
-            card.className = 'task-item' + extraClass;
-            card.id = tid;
-
-            // Checkbox — widoczny tylko jeśli nie ma jeszcze decyzji
-            const showCheck = !isDone && !isRejected;
-            const checkHtml = showCheck
-                ? `<div class="task-check" onclick="toggleTask('${tid}')"></div>`
-                : `<div class="task-check done" style="${isRejected ? 'background:var(--blad);border-color:var(--blad);' : ''}">${isDone ? '✓' : '✕'}</div>`;
-
-            card.innerHTML = `${checkHtml}<div class="task-body"><div class="task-text${isDone ? ' done-text' : ''}">${task.title}</div><div class="task-meta">${fh}${meta}</div>${statusHtml}</div>`;
-            return card;
-        }
-
-        async function loadTasks(teamId, userId) {
-            const tasks = await getTeamTasks(teamId);
-            const my = tasks.filter(t => t.assignedTo&&t.assignedTo.includes(userId));
-            const cids = [...new Set(my.map(t=>t.createdBy).filter(Boolean))];
-            const mm = {};
-            for (const c of cids) { mm[c] = await getUserName(c); }
-            const dash = document.getElementById('task-dashboard');
-            const more = document.getElementById('task-more');
-            if (dash) { dash.innerHTML=''; if(my.length===0) dash.innerHTML='<div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;">Brak zadań</div>'; else my.slice(0,MAX_TASKS).forEach(t => dash.appendChild(createTaskCard(t,userId,mm))); }
-            if (more) more.textContent = `Wszystkie (${my.length}) ›`;
-            const pb = document.getElementById('task-panel-body');
-            if (pb) { pb.innerHTML=''; if(my.length===0) pb.innerHTML='<div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;">Brak zadań</div>'; else my.forEach(t => pb.appendChild(createTaskCard(t,userId,mm))); }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (typeof firebase==='undefined') { console.error('❌ Firebase!'); return; }
-            initFirebase();
-            let _loaded = false;
-            // Czekamy na auth state — działa dla realnych userów I dla demo (anon auth)
-            auth.onAuthStateChanged(user => {
-                if (_loaded) return;
-                if (user) {
-                    _loaded = true;
-                    if (!isDemoMode() && !getCurrentUserId()) {
-                        localStorage.setItem('currentUserId', user.uid);
-                    }
-                    loadDashboard();
+        if (item.attendanceRows && item.attendanceRows.length > 0 && item.eventId) {
+            for (const row of item.attendanceRows) {
+                if (row.status === 'pending') {
+                    actHtml += `<div class="ev-att-row" onclick="event.stopPropagation()">
+                        <div class="ev-att-player">${trunc(row.playerName, 30)}</div>
+                        <div class="ev-att-btns">
+                            <button class="ev-btn-yes" onclick="confirmAttendance('${item.eventId}','${row.playerId}')">✅ ${lblYes}</button>
+                            <button class="ev-btn-no"  onclick="declineAttendance('${item.eventId}','${row.playerId}')">❌ ${lblNo}</button>
+                        </div>
+                    </div>`;
                 } else {
-                    // Brak usera — jeśli demo to czekamy na signInAnonymously, jeśli nie — login
-                    if (!isDemoMode()) {
-                        window.location.href = 'login.html';
-                    }
+                    const txt = row.status === 'confirmed' ? `✅ ${lblYes}` : `❌ ${lblNo}`;
+                    const col = row.status === 'confirmed' ? 'var(--sukces)' : 'var(--blad)';
+                    const rHtml = row.reason ? ` — ${trunc(row.reason, 40)}` : '';
+                    actHtml += `<div class="ev-att-row" onclick="event.stopPropagation()">
+                        <div class="ev-att-player">${trunc(row.playerName, 30)}</div>
+                        <div class="ev-att-status">
+                            <span style="color:${col}">${txt}${rHtml}</span>
+                            <button class="ev-att-change" onclick="resetAttendance('${item.eventId}','${row.playerId}')">Zmień</button>
+                        </div>
+                    </div>`;
                 }
-            });
-        });
+            }
+        }
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && typeof refreshDashboard === 'function') {
-                refreshDashboard();
+        card.innerHTML = `
+            <div class="ev-row1">${typeBadge}${confirmBadge}<span class="ev-time">${item.source === 'event' && item.timeFrom ? item.timeFrom : ''}</span></div>
+            <div class="ev-title">${trunc(item.title, 38)}</div>
+            ${evDescHtml}
+            ${subHtml}${orgHtml}${actHtml}
+        `;
+
+        if (item.eventId) { card.onclick = () => { sessionStorage.setItem('selectedDate', item.date); window.location.href = 'kalendarz.html'; }; }
+        return card;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       POTWIERDZANIE OBECNOŚCI
+    ───────────────────────────────────────────────────── */
+    async function confirmAttendance(eventId, targetPlayerId) {
+        if (!db) return;
+        try {
+            const doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) return;
+            const att = doc.data().attendance || {};
+            att.confirmed = (att.confirmed || []).filter(id => id !== targetPlayerId);
+            att.declined  = (att.declined  || []).filter(id => id !== targetPlayerId);
+            if (att.declineReasons) delete att.declineReasons[targetPlayerId];
+            att.confirmed.push(targetPlayerId);
+            if (!att.decidedBy) att.decidedBy = {};
+            att.decidedBy[targetPlayerId] = { by: currentUserData.userId, byName: currentUserData.displayName, byRole: currentUserData.role, at: new Date().toISOString() };
+            await db.collection('events').doc(eventId).update({ attendance: att });
+            await refreshDashboard();
+        } catch (e) { console.error('Błąd:', e); }
+    }
+
+    async function declineAttendance(eventId, targetPlayerId) {
+        const reason = prompt('Podaj powód nieobecności (opcjonalnie):');
+        if (!db) return;
+        try {
+            const doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) return;
+            const att = doc.data().attendance || {};
+            att.confirmed = (att.confirmed || []).filter(id => id !== targetPlayerId);
+            att.declined  = (att.declined  || []).filter(id => id !== targetPlayerId);
+            att.declined.push(targetPlayerId);
+            if (reason) { if (!att.declineReasons) att.declineReasons = {}; att.declineReasons[targetPlayerId] = reason; }
+            if (!att.decidedBy) att.decidedBy = {};
+            att.decidedBy[targetPlayerId] = { by: currentUserData.userId, byName: currentUserData.displayName, byRole: currentUserData.role, at: new Date().toISOString() };
+            await db.collection('events').doc(eventId).update({ attendance: att });
+            await refreshDashboard();
+        } catch (e) { console.error('Błąd:', e); }
+    }
+
+    async function resetAttendance(eventId, targetPlayerId) {
+        if (!db) return;
+        try {
+            const doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) return;
+            const evData = doc.data();
+            if (evData.date < getLocalDateStr(new Date())) { console.warn('⛔ Miniony event'); return; }
+            const att = evData.attendance || {};
+            att.confirmed = (att.confirmed || []).filter(id => id !== targetPlayerId);
+            att.declined  = (att.declined  || []).filter(id => id !== targetPlayerId);
+            if (att.declineReasons) delete att.declineReasons[targetPlayerId];
+            if (att.decidedBy) delete att.decidedBy[targetPlayerId];
+            await db.collection('events').doc(eventId).update({ attendance: att });
+            const notifSnap = await db.collection('notifications').where('userId', '==', currentUserData.userId).where('referenceId', '==', eventId).where('forPlayerId', '==', targetPlayerId).limit(1).get();
+            if (!notifSnap.empty) {
+                await notifSnap.docs[0].ref.update({ actionDone: false, actionResult: null, actionComment: null, isRead: false, readAt: null });
+            }
+            await refreshDashboard();
+        } catch (e) { console.error('Błąd resetu:', e); }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       ZADANIA
+    ───────────────────────────────────────────────────── */
+    async function toggleTask(id) {
+        const item = document.getElementById(id); if (!item) return;
+        const taskId = id.replace('task-', '');
+        const userId = currentUserData?.userId;
+        if (!db || !userId || !taskId) return;
+        try {
+            const taskDoc = await db.collection('tasks').doc(taskId).get();
+            if (!taskDoc.exists) return;
+            const task = taskDoc.data();
+            let completed = task.completedBy || [];
+            const assigned = task.assignedTo || [];
+            const rejected = (task.rejectedBy || []).filter(rid => rid !== userId);
+            const wasCompleted = completed.includes(userId);
+            if (wasCompleted) { completed = completed.filter(cid => cid !== userId); } else { completed.push(userId); }
+            const active = assigned.filter(aid => !rejected.includes(aid));
+            const status = (completed.length >= active.length && active.length > 0) ? 'DONE' : 'PENDING';
+            await db.collection('tasks').doc(taskId).update({ completedBy: completed, rejectedBy: rejected, status, completedAt: !wasCompleted ? new Date().toISOString() : null });
+            await syncTaskNotification(taskId, userId, !wasCompleted ? 'completed' : null);
+            if (task.createdBy && task.createdBy !== userId) {
+                const userName = currentUserData.displayName || userId;
+                const dueText  = task.dueDate ? ` · termin: ${task.dueDate}` : '';
+                if (!wasCompleted) {
+                    await createNotification({ userId: task.createdBy, teamId: task.teamId, type: 'TASK_COMPLETED', title: `${userName} — zadanie wykonane`, body: `${task.title}${dueText}`, referenceId: taskId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });
+                } else {
+                    await createNotification({ userId: task.createdBy, teamId: task.teamId, type: 'TASK_UPDATED', title: `${userName} — cofnął(ęła) wykonanie`, body: `${task.title}${dueText}`, referenceId: taskId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });
+                }
+            }
+            await reloadTasks();
+            await loadAndRenderNotifications();
+        } catch (e) { console.error('❌ Błąd zapisu zadania:', e); }
+    }
+
+    async function resetTaskFromDashboard(taskId, elementId) {
+        const userId = currentUserData?.userId;
+        if (!db || !userId) return;
+        try {
+            const taskDoc = await db.collection('tasks').doc(taskId).get();
+            if (!taskDoc.exists) return;
+            const task = taskDoc.data();
+            const completed = (task.completedBy || []).filter(cid => cid !== userId);
+            const rejected  = (task.rejectedBy  || []).filter(rid => rid !== userId);
+            const reasons = task.rejectReasons || {};
+            delete reasons[userId];
+            await db.collection('tasks').doc(taskId).update({ completedBy: completed, rejectedBy: rejected, rejectReasons: reasons, status: 'PENDING' });
+            await syncTaskNotification(taskId, userId, null);
+            await reloadTasks();
+            await loadAndRenderNotifications();
+        } catch (e) { console.error('❌ Błąd resetu zadania:', e); }
+    }
+
+    async function syncTaskNotification(taskId, userId, result) {
+        try {
+            const snap = await db.collection('notifications').where('userId', '==', userId).where('referenceId', '==', taskId).where('actionType', '==', 'TASK').limit(1).get();
+            if (snap.empty) return;
+            const notifDoc = snap.docs[0];
+            if (result) {
+                await notifDoc.ref.update({ actionDone: true, actionResult: result, isRead: true, readAt: new Date().toISOString() });
+            } else {
+                await notifDoc.ref.update({ actionDone: false, actionResult: null, actionComment: null, isRead: false, readAt: null });
+            }
+        } catch (e) { console.error('Błąd sync powiadomienia:', e); }
+    }
+
+    async function reloadTasks() {
+        const team = await getCurrentTeam();
+        if (!team) return;
+        await loadTasks(team.teamId || team.id, currentUserData.userId);
+    }
+
+    function createTaskCard(task, userId, mm) {
+        const completed = task.completedBy || [];
+        const rejected  = task.rejectedBy  || [];
+        const isDone     = completed.includes(userId);
+        const isRejected = rejected.includes(userId);
+        const tid    = 'task-' + (task.taskId || task.id);
+        const taskId = task.taskId || task.id;
+        const from   = mm && mm[task.createdBy] ? mm[task.createdBy] : '';
+        const fh     = from ? `<span style="color:var(--akcent);">Od: ${from}</span> · ` : '';
+        const meta   = task.dueDate ? `Termin: ${formatDateDisplay(task.dueDate)}` : '';
+
+        let statusHtml = '';
+        if (isDone) {
+            statusHtml = `<div class="task-status" onclick="event.stopPropagation()"><span class="task-status-txt" style="color:var(--sukces);">✅ Wykonane</span><button class="task-change-btn" onclick="resetTaskFromDashboard('${taskId}','${tid}')">Zmień</button></div>`;
+        } else if (isRejected) {
+            const reason = task.rejectReasons?.[userId] || '';
+            const reasonHtml = reason ? ` — <span style="font-style:italic;">${reason}</span>` : '';
+            statusHtml = `<div class="task-status" onclick="event.stopPropagation()"><span class="task-status-txt" style="color:var(--blad);">❌ Odrzucone${reasonHtml}</span><button class="task-change-btn" onclick="resetTaskFromDashboard('${taskId}','${tid}')">Zmień</button></div>`;
+        }
+
+        const card = document.createElement('div');
+        const extraClass = isDone ? ' done-item' : isRejected ? ' rejected-item' : '';
+        card.className = 'task-item' + extraClass;
+        card.id = tid;
+
+        const showCheck = !isDone && !isRejected;
+        const checkHtml = showCheck
+            ? `<div class="task-check" onclick="toggleTask('${tid}')"></div>`
+            : `<div class="task-check done" style="${isRejected ? 'background:var(--blad);border-color:var(--blad);' : ''}">${isDone ? '✓' : '✕'}</div>`;
+
+        card.innerHTML = `${checkHtml}<div class="task-body"><div class="task-text${isDone ? ' done-text' : ''}">${task.title}</div><div class="task-meta">${fh}${meta}</div>${statusHtml}</div>`;
+        return card;
+    }
+
+    async function loadTasks(teamId, userId) {
+        const tasks = await getTeamTasks(teamId);
+        const my    = tasks.filter(t => t.assignedTo && t.assignedTo.includes(userId));
+        const cids  = [...new Set(my.map(t => t.createdBy).filter(Boolean))];
+        const mm    = {};
+        for (const c of cids) { mm[c] = await getUserName(c); }
+
+        const allLabel = typeof t === 'function' ? t('start.seeAll') : 'Wszystkie';
+        const noLabel  = typeof t === 'function' ? t('start.noTasks') : 'Brak zadań';
+
+        const dash = document.getElementById('task-dashboard');
+        const more = document.getElementById('task-more');
+        if (dash) {
+            dash.innerHTML = '';
+            if (my.length === 0) {
+                dash.innerHTML = `<div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;">${noLabel}</div>`;
+            } else {
+                my.slice(0, MAX_TASKS).forEach(t => dash.appendChild(createTaskCard(t, userId, mm)));
+            }
+        }
+        if (more) more.textContent = `${allLabel} (${my.length}) ›`;
+
+        const pb = document.getElementById('task-panel-body');
+        if (pb) {
+            pb.innerHTML = '';
+            if (my.length === 0) {
+                pb.innerHTML = `<div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;">${noLabel}</div>`;
+            } else {
+                my.forEach(task => pb.appendChild(createTaskCard(task, userId, mm)));
+            }
+        }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       ODŚWIEŻANIE DASHBOARDU
+    ───────────────────────────────────────────────────── */
+    async function refreshDashboard() {
+        const team = await getCurrentTeam();
+        if (!team) return;
+        const teamId = team.teamId || team.id;
+        await Promise.all([
+            loadNextMatch(teamId),
+            loadUpcomingEvents(teamId),
+            loadTasks(teamId, currentUserData.userId),
+            loadAndRenderNotifications()
+        ]);
+        loadCalWidget(teamId);
+    }
+
+    /* ─────────────────────────────────────────────────────
+       WIDGET KALENDARZA
+    ───────────────────────────────────────────────────── */
+    let calYear  = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+    let calSelectedDate = null;
+    let calAllEvents    = [];
+
+    const CAL_DOT_COLORS = { 'TRENING': '#3B82F6', 'MECZ': '#10B981', 'WYJAZD': '#F59E0B', 'INNE': '#6B7280' };
+
+    async function loadCalWidget(teamId) {
+        calAllEvents = await getTeamEvents(teamId);
+        renderCalGrid();
+        selectCalDay(getLocalDateStr());
+    }
+
+    function navigateCalMonth(delta) {
+        calMonth += delta;
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        if (calMonth < 0)  { calMonth = 11; calYear--; }
+        renderCalGrid();
+        if (calSelectedDate) renderDayInspector(calSelectedDate);
+    }
+
+    function renderCalGrid() {
+        const lang = typeof getLang === 'function' ? getLang() : 'pl';
+        const locale = lang === 'en' ? 'en-GB' : 'pl-PL';
+
+        const monthLabel = document.getElementById('cal-month-label');
+        if (monthLabel) {
+            let ml = new Date(calYear, calMonth, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+            monthLabel.textContent = ml.charAt(0).toUpperCase() + ml.slice(1);
+        }
+
+        const wrap = document.getElementById('cal-grid-wrap');
+        if (!wrap) return;
+
+        const todayStr = getLocalDateStr();
+        const monthStr = String(calYear) + '-' + String(calMonth + 1).padStart(2, '0');
+
+        const eventMap = {};
+        calAllEvents.forEach(ev => {
+            if (ev.date && ev.date.startsWith(monthStr)) {
+                if (!eventMap[ev.date]) eventMap[ev.date] = [];
+                eventMap[ev.date].push(ev);
             }
         });
-    </script>
+
+        const dayNames = lang === 'en'
+            ? ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+            : ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
+
+        let firstDow = new Date(calYear, calMonth, 1).getDay();
+        firstDow = firstDow === 0 ? 6 : firstDow - 1;
+
+        const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+        const rows = Math.ceil((firstDow + daysInMonth) / 7);
+
+        let html = `<table class="cal-grid"><thead><tr>`;
+        dayNames.forEach(d => { html += `<th>${d}</th>`; });
+        html += '</tr></thead><tbody>';
+
+        let day = 1;
+        for (let r = 0; r < rows; r++) {
+            html += '<tr>';
+            for (let c = 0; c < 7; c++) {
+                const ci = r * 7 + c;
+                if (ci < firstDow || day > daysInMonth) {
+                    html += '<td></td>';
+                } else {
+                    const ds = monthStr + '-' + String(day).padStart(2, '0');
+                    const isToday    = ds === todayStr;
+                    const isSelected = ds === calSelectedDate;
+                    const evs = eventMap[ds] || [];
+                    const dotsHtml = evs.length > 0
+                        ? `<div class="cal-day-dots">${evs.slice(0, 3).map(e => `<div class="cal-dot" style="background:${CAL_DOT_COLORS[e.type] || '#6B7280'}"></div>`).join('')}</div>`
+                        : '';
+                    let cls = 'cal-day';
+                    if (isToday) cls += ' today';
+                    else if (isSelected) cls += ' selected';
+                    html += `<td><div class="${cls}" onclick="selectCalDay('${ds}')">${day}${dotsHtml}</div></td>`;
+                    day++;
+                }
+            }
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+        wrap.innerHTML = html;
+    }
+
+    function selectCalDay(dateStr) {
+        calSelectedDate = dateStr;
+        renderCalGrid();
+        renderDayInspector(dateStr);
+    }
+
+    function renderDayInspector(dateStr) {
+        const inspector = document.getElementById('cal-inspector');
+        if (!inspector) return;
+
+        const dayEvs = calAllEvents.filter(e => e.date === dateStr);
+        if (dayEvs.length === 0) { inspector.style.display = 'none'; return; }
+        inspector.style.display = '';
+
+        const lang   = typeof getLang === 'function' ? getLang() : 'pl';
+        const locale = lang === 'en' ? 'en-GB' : 'pl-PL';
+        const d      = new Date(dateStr + 'T12:00:00');
+        const dayName  = d.toLocaleDateString(locale, { weekday: 'long' }).toUpperCase();
+        const dayNum   = d.getDate();
+        const monthName = d.toLocaleDateString(locale, { month: 'long' }).toUpperCase();
+        const evCount  = dayEvs.length;
+        const countLabel = lang === 'en' ? `${evCount} event${evCount !== 1 ? 's' : ''}` : `${evCount} wydarzeni${evCount === 1 ? 'e' : 'a'}`;
+
+        const evListHtml = dayEvs.map(ev => {
+            const att   = ev.attendance || {};
+            const invP  = (att.invited || []).filter(id => id.includes('player_'));
+            const conf  = (att.confirmed || []).filter(id => id.includes('player_')).length;
+            const decl  = (att.declined  || []).filter(id => id.includes('player_')).length;
+            const noResp = Math.max(0, invP.length - conf - decl);
+            const tc    = (ev.type || '').toLowerCase();
+            const color = CAL_DOT_COLORS[ev.type] || '#6B7280';
+            const typeLabel = TYPE_LABELS[ev.type] || ev.type;
+            return `<div class="cal-ev-item cal-ev-${tc}" onclick="sessionStorage.setItem('selectedDate','${ev.date}');window.location.href='kalendarz.html'">
+                <div class="cal-ev-badge" style="color:${color}">${typeLabel}</div>
+                <div class="cal-ev-title">${ev.title || typeLabel}</div>
+                <div class="cal-ev-time">${ev.timeFrom || ''}${ev.timeTo ? '–' + ev.timeTo : ''}</div>
+                <div class="cal-ev-counts">
+                    <span class="cal-ev-count cal-ev-count-g">${conf}✓</span>
+                    <span class="cal-ev-count cal-ev-count-r">${decl}✗</span>
+                    <span class="cal-ev-count cal-ev-count-s">${noResp}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        inspector.innerHTML = `
+            <div class="cal-inspector-hdr">
+                <div class="cal-inspector-date">${dayName} ${dayNum} ${monthName}</div>
+                <div class="cal-inspector-count">${countLabel}</div>
+            </div>
+            <div class="cal-inspector-list">${evListHtml}</div>`;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       INICJALIZACJA
+    ───────────────────────────────────────────────────── */
+    window.addEventListener('DOMContentLoaded', () => {
+        if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
+        initFirebase();
+        let _loaded = false;
+        auth.onAuthStateChanged(user => {
+            if (_loaded) return;
+            if (user) {
+                _loaded = true;
+                if (!isDemoMode() && !getCurrentUserId()) { localStorage.setItem('currentUserId', user.uid); }
+                loadDashboard();
+            } else {
+                if (!isDemoMode()) { window.location.href = 'login.html'; }
+            }
+        });
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && typeof refreshDashboard === 'function') {
+            refreshDashboard();
+        }
+    });
+</script>
 </body>
 </html>

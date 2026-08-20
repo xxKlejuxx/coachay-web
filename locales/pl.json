@@ -1455,5 +1455,26 @@
   "pricingB2bTitle": "Licencja klubowa",
   "pricingB2bDesc": "Dla klubów z wieloma drużynami i trenerami. Jedna licencja obejmuje cały klub — trenerów i rodziców. Cena negocjowana.",
   "pricingB2bCta": "Napisz do nas →"
+ },
+ "start": {
+  "upcomingEvents": "Najbliższe wydarzenia",
+  "tasks": "Zadania",
+  "calendar": "Kalendarz",
+  "seeAll": "Wszystkie",
+  "noTasks": "Brak zadań",
+  "noEvents": "Brak wydarzeń w najbliższych {{days}} dniach",
+  "typeLabels": {
+   "TRENING": "Trening",
+   "MECZ": "Mecz",
+   "WYJAZD": "Wyjazd",
+   "INNE": "Inne"
+  },
+  "sub": {
+   "TRENER_GLOWNY": "Witaj Trenerze",
+   "TRENER_POMOCNICZY": "Witaj Trenerze",
+   "RODZIC": "Witaj Rodzicu",
+   "ZAWODNIK": "Witaj Zawodniku",
+   "KIBIC": "Witaj Kibicu"
+  }
  }
 }
