@@ -4,19 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COACHAY — Polityka Prywatności</title>
-<link rel="stylesheet" href="_global.css?v=20260730a">
+<link rel="stylesheet" href="_global.css?v=20260802d">
+<link rel="stylesheet" href="_desktop.css?v=20260818">
+<script src="_i18n.js?v=20260820"></script>
+<script src="_sidebar.js?v=20260818b"></script>
 <style>
 :root { --phone-h: 750px; }
 
-.screen-body {
-    flex: 1; display: flex; flex-direction: column;
-    padding: 0; gap: 0; overflow: hidden;
-}
+.screen-body { overflow-y: auto; scrollbar-width: none; }
+.screen-body::-webkit-scrollbar { display: none; }
 
 .pp-header {
     background: #000; border-bottom: 1px solid var(--border);
     padding: 12px 16px; display: flex; align-items: center; gap: 12px;
-    flex-shrink: 0;
 }
 .pp-back {
     width: 32px; height: 32px; border-radius: 50%;
@@ -25,18 +25,22 @@
     font-size: 16px; color: var(--bialy); cursor: pointer; flex-shrink: 0;
 }
 .pp-header-title {
-    font-family: var(--font-d); font-size: 16px; font-weight: 800; color: var(--bialy);
+    font-family: var(--font-d); font-size: 21px; font-weight: 800; color: var(--bialy);
 }
+body:has(#app-sidebar) .pp-header { display: none; }
 
-.pp-scroll {
-    flex: 1; overflow-y: auto; padding: 16px 16px 40px;
+.pp-page-title { display: none; font-family: var(--font-d); font-size: 27px; font-weight: 800; color: var(--bialy); }
+body:has(#app-sidebar) .pp-page-title { display: block; }
+
+.pp-wrap {
+    align-self: center; width: min(1222px, 100%);
+    padding: 16px 16px 80px;
     display: flex; flex-direction: column; gap: 12px;
-    scrollbar-width: none;
 }
-.pp-scroll::-webkit-scrollbar { display: none; }
+body:has(#app-sidebar) .pp-wrap { padding: 20px 28px 80px; }
 
 .pp-intro {
-    font-size: 12px; font-weight: 600; color: var(--szary); line-height: 1.6;
+    font-size: 17px; font-weight: 600; color: var(--szary); line-height: 1.6;
     padding-bottom: 4px;
 }
 
@@ -45,19 +49,19 @@
     border-radius: 16px; padding: 16px;
 }
 .pp-section-title {
-    font-family: var(--font-d); font-size: 13px; font-weight: 800;
+    font-family: var(--font-d); font-size: 18px; font-weight: 800;
     color: var(--bialy); margin-bottom: 10px;
     text-transform: uppercase; letter-spacing: 0.5px;
 }
 .pp-section-text {
-    font-size: 13px; font-weight: 600; color: var(--szary-j); line-height: 1.7;
-    margin-bottom: 8px;
+    font-size: 18px; font-weight: 600; color: var(--szary-j); line-height: 1.7;
+    margin-bottom: 8px; white-space: pre-line;
 }
 .pp-section-text:last-child { margin-bottom: 0; }
 .pp-section-text strong { color: var(--bialy); }
 
 .pp-footer {
-    font-size: 11px; font-weight: 600; color: var(--szary);
+    font-size: 16px; font-weight: 600; color: var(--szary);
     text-align: center; padding: 12px 0 4px;
 }
 </style>
@@ -69,69 +73,49 @@
 
         <div class="pp-header">
             <button class="pp-back" onclick="history.back()">←</button>
-            <div class="pp-header-title">Polityka Prywatności</div>
+            <div class="pp-header-title" data-i18n="polityka.headerTitle">Polityka Prywatności</div>
         </div>
 
-        <div class="pp-scroll">
-
-            <div class="pp-intro">Serwisu i aplikacji COACHAY (coachay.com) oraz zasady ochrony danych osobowych.</div>
-
-            <div class="pp-section">
-                <div class="pp-section-title">1. Informacje ogólne</div>
-                <div class="pp-section-text">1.1. Niniejsza polityka dotyczy serwisu i aplikacji COACHAY, funkcjonujących pod adresem URL: <strong>coachay.com</strong> (zwanych dalej „Serwisem”).</div>
-                <div class="pp-section-text">1.2. Operatorem Serwisu oraz Administratorem danych osobowych zebranych za pośrednictwem Serwisu jest <strong>Operator serwisu Coachay</strong>, NIP: <strong>771-222-88-03</strong>.</div>
-                <div class="pp-section-text">1.3. Adres kontaktu elektronicznego z Operatorem: <strong>support@coachay.com</strong>.</div>
-                <div class="pp-section-text">1.4. Operator jest Administratorem danych osobowych podanych dobrowolnie w Serwisie — przy rejestracji, zakładaniu drużyny/klubu, dodawaniu zawodników oraz w komunikacji wewnątrz aplikacji (czat, ogłoszenia, zadania).</div>
-                <div class="pp-section-text">1.5. Serwis realizuje funkcje pozyskiwania informacji o użytkownikach w następujący sposób:</div>
-                <div class="pp-section-text">
-                    • poprzez dobrowolnie wprowadzone dane (rejestracja, profile zawodników i trenerów, obecność, komunikacja),<br>
-                    • poprzez zapisywanie w urządzeniach końcowych plików cookie (tzw. „ciasteczka”) oraz analogicznych mechanizmów lokalnego zapisu na urządzeniach mobilnych.
-                </div>
-            </div>
-
-            <div class="pp-section">
-                <div class="pp-section-title">2. Metody ochrony danych</div>
-                <div class="pp-section-text">2.1. Transmisja danych między urządzeniem użytkownika a serwerem odbywa się w warstwie szyfrowanej (SSL/TLS) — dane wprowadzone w aplikacji są szyfrowane w drodze do serwera.</div>
-                <div class="pp-section-text">2.2. Dostęp do danych w aplikacji jest ograniczony rolami — zawodnik, rodzic/opiekun, trener, kibic widzą wyłącznie dane, do których mają uprawnienia w ramach swojej drużyny/klubu.</div>
-                <div class="pp-section-text">2.3. Operator na bieżąco aktualizuje komponenty programistyczne wykorzystywane do przetwarzania danych osobowych.</div>
-            </div>
-
-            <div class="pp-section">
-                <div class="pp-section-title">3. Hosting i podmioty przetwarzające</div>
-                <div class="pp-section-text">3.1. Serwis i baza danych aplikacji są hostowane technicznie na serwerach Google Cloud EMEA Limited (usługi Firebase Hosting oraz Firestore, region europe-west).</div>
-                <div class="pp-section-text">3.2. W zakresie obsługi płatności za dostęp do aplikacji dane niezbędne do realizacji transakcji mogą być przetwarzane przez operatorów płatności: Przelewy24 (płatności BLIK/kartą w Polsce), Google Play oraz Apple App Store (subskrypcje mobilne) — każdy z nich działa jako niezależny administrator lub podmiot przetwarzający w zakresie obsługiwanej przez siebie transakcji płatniczej.</div>
-            </div>
-
-            <div class="pp-section">
-                <div class="pp-section-title">4. Twoje prawa</div>
-                <div class="pp-section-text">4.1. Administrator może przekazywać dane osobowe innym odbiorcom, jeśli jest to niezbędne do wykonania umowy lub obowiązków ciążących na Administratorze — dotyczy to w szczególności upoważnionych pracowników/współpracowników Operatora oraz firm świadczących usługi hostingu i wsparcia IT.</div>
-                <div class="pp-section-text">4.2. Dane osobowe nie będą przechowywane dłużej, niż jest to konieczne do realizacji celu ich przetwarzania lub wynikające z przepisów prawa.</div>
-                <div class="pp-section-text">4.3. Przysługuje Ci prawo żądania od Administratora: dostępu do danych Cię dotyczących, ich sprostowania, usunięcia, ograniczenia przetwarzania oraz prawo do przenoszenia danych.</div>
-                <div class="pp-section-text">4.4. Przysługuje Ci prawo do złożenia sprzeciwu wobec przetwarzania danych osobowych w celu realizowania prawnie uzasadnionych interesów Administratora.</div>
-                <div class="pp-section-text">4.5. Na działania Administratora przysługuje skarga do Prezesa Urzędu Ochrony Danych Osobowych, ul. Stawki 2, 00-193 Warszawa.</div>
-                <div class="pp-section-text">4.6. Podanie danych osobowych jest dobrowolne, lecz niezbędne do korzystania z funkcji Serwisu (np. dołączenia do drużyny, potwierdzania obecności).</div>
-                <div class="pp-section-text">4.7. Dane osobowe nie są przekazywane do krajów trzecich w rozumieniu przepisów o ochronie danych osobowych — nie są przesyłane poza teren Unii Europejskiej.</div>
-            </div>
-
-            <div class="pp-section">
-                <div class="pp-section-title">5. Dane małoletnich zawodników</div>
-                <div class="pp-section-text">5.1. Dane zawodników niepełnoletnich przetwarzane są wyłącznie za zgodą rodzica lub opiekuna prawnego, wyrażoną poprzez dodanie zawodnika do drużyny w aplikacji przez trenera lub samodzielne dołączenie rodzica z użyciem kodu dostępu.</div>
-                <div class="pp-section-text">5.2. Profile zawodników są widoczne wyłącznie dla przypisanych do danej drużyny trenerów oraz rodziców/opiekunów danego zawodnika — nie są publicznie dostępne.</div>
-                <div class="pp-section-text">5.3. Rodzic/opiekun może w każdej chwili zażądać wglądu, sprostowania lub usunięcia danych swojego dziecka, kontaktując się z Operatorem lub trenerem prowadzącym drużynę.</div>
-            </div>
-
-            <div class="pp-section">
-                <div class="pp-section-title">6. Pliki cookies</div>
-                <div class="pp-section-text">6.1. Serwis korzysta z plików cookies oraz analogicznych mechanizmów lokalnego zapisu (np. localStorage) w wersji mobilnej aplikacji.</div>
-                <div class="pp-section-text">6.2. Pliki te przechowywane są w urządzeniu końcowym Użytkownika i wykorzystywane są w celu utrzymania sesji użytkownika oraz zapamiętania jego preferencji (np. wybranej drużyny, ustawień powiadomień) — bez tworzenia profilu marketingowego użytkownika.</div>
-                <div class="pp-section-text">6.3. Użytkownik może w każdej chwili zmienić ustawienia dotyczące plików cookies w menu swojej przeglądarki internetowej. Ograniczenie ich stosowania może wpłynąć na niektóre funkcjonalności Serwisu (np. utrzymanie zalogowania).</div>
-            </div>
-
-            <div class="pp-footer">© 2026 Coachay. Wszelkie prawa zastrzeżone.</div>
-
+        <div class="pp-wrap">
+            <div class="pp-page-title" data-i18n="polityka.headerTitle">Polityka Prywatności</div>
+            <div class="pp-intro" data-i18n="polityka.intro">Serwisu i aplikacji COACHAY (coachay.com) oraz zasady ochrony danych osobowych.</div>
+            <div id="pp-sections"></div>
+            <div class="pp-footer" data-i18n="polityka.footer">© 2026 Coachay. Wszelkie prawa zastrzeżone.</div>
         </div>
 
     </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label" data-i18n="nav.team">Drużyna</span></a>
+        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label" data-i18n="nav.match">Mecz</span></a>
+        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label" data-i18n="nav.chat">Czat</span></a>
+        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label" data-i18n="nav.calendar">Kalendarz</span></a>
+    </div>
 </div>
+
+<script>
+function renderPolitykaSections() {
+    const container = document.getElementById('pp-sections');
+    if (!container) return;
+    const sections = typeof t === 'function' ? t('polityka.sections') : null;
+    if (!Array.isArray(sections) || !sections.length) {
+        container.innerHTML = '';
+        return;
+    }
+    container.innerHTML = sections.map(s => `
+        <div class="pp-section">
+            <div class="pp-section-title">${s.title || ''}</div>
+            <div class="pp-section-text">${(s.body || '').replace(/\n/g, '<br>')}</div>
+        </div>`).join('');
+}
+
+if (typeof onI18nReady === 'function') {
+    onI18nReady(renderPolitykaSections);
+} else {
+    renderPolitykaSections();
+}
+</script>
 </body>
 </html>
