@@ -183,7 +183,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
 /* ── Calendar widget ── */
 .cal-nav-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.cal-widget-month { font-family: var(--font-d); font-size: 23px; font-weight: 800; color: var(--bialy); flex: 1; }
+.cal-widget-month { font-family: var(--font-d); font-size: 23px; font-weight: 800; color: var(--bialy); flex: 1; text-align: center; }
 .cal-nav-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); color: var(--szary); font-size: 14px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cal-grid { width: 100%; border-collapse: collapse; }
 .cal-grid th { font-size: 17px; font-weight: 700; color: var(--szary); text-align: center; padding: 4px 2px; }
@@ -280,7 +280,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     <div class="hub-widget">
                         <div class="sec-hdr">
                             <div class="s-label" data-i18n="start.upcomingEvents">Najbliższe wydarzenia</div>
-                            <span class="sec-more" id="ev-more" onclick="openSlidePanel('panel-ev')">Wszystkie ›</span>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <span class="sec-add" id="ev-add-btn" onclick="window.location.href='kalendarz.html'" data-i18n="common.addButton">+ Dodaj</span>
+                                <span class="sec-more" id="ev-more" onclick="openSlidePanel('panel-ev')">Wszystkie ›</span>
+                            </div>
                         </div>
                         <div class="events-list" id="ev-dashboard">
                             <div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;" data-i18n="common.loading">Ładowanie...</div>
@@ -289,7 +292,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     <div class="hub-widget">
                         <div class="sec-hdr">
                             <div class="s-label" data-i18n="start.tasks">Zadania</div>
-                            <span class="sec-more" id="task-more" onclick="openSlidePanel('panel-task')">Wszystkie ›</span>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <span class="sec-add" onclick="window.location.href='zadania.html'" data-i18n="common.addButton">+ Dodaj</span>
+                                <span class="sec-more" id="task-more" onclick="openSlidePanel('panel-task')">Wszystkie ›</span>
+                            </div>
                         </div>
                         <div class="task-list" id="task-dashboard">
                             <div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;" data-i18n="common.loading">Ładowanie...</div>
@@ -1385,11 +1391,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const countLabel = lang === 'en' ? `${evCount} event${evCount !== 1 ? 's' : ''}` : `${evCount} wydarzeni${evCount === 1 ? 'e' : 'a'}`;
 
         const evListHtml = dayEvs.map(ev => {
-            const att   = ev.attendance || {};
-            const invP  = (att.invited || []).filter(id => id.includes('player_'));
-            const conf  = (att.confirmed || []).filter(id => id.includes('player_')).length;
-            const decl  = (att.declined  || []).filter(id => id.includes('player_')).length;
-            const noResp = Math.max(0, invP.length - conf - decl);
+            const att    = ev.attendance || {};
+            const conf   = (att.confirmed || []).length;
+            const decl   = (att.declined  || []).length;
+            const invP   = (att.invited   || []).filter(id => id.includes('player_'));
+            const noResp = invP.length > 0 ? Math.max(0, invP.length - conf - decl) : 0;
             const tc    = (ev.type || '').toLowerCase();
             const color = CAL_DOT_COLORS[ev.type] || '#6B7280';
             const typeLabel = TYPE_LABELS[ev.type] || ev.type;
