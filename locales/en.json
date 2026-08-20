@@ -1275,7 +1275,7 @@
  "rodo": {
   "headerTitle": "Privacy & GDPR",
   "adminTitle": "Data controller",
-  "adminBody": "Coachay service operator, Tax ID (NIP): <strong style=\"color:var(--bialy)\">771-222-88-03</strong><br>Contact: <strong style=\"color:var(--bialy)\">support@coachay.com</strong>",
+  "adminBody": "Coachay service operator, Tax ID (NIP): <strong style='color:var(--bialy)'>771-222-88-03</strong><br>Contact: <strong style='color:var(--bialy)'>support@coachay.com</strong>",
   "purposeTitle": "Purpose of data processing",
   "purposeBody": "Data is processed solely to provide the app's services: team management, attendance tracking, and communication between coaches, players, and parents.",
   "rightsTitle": "Your rights",

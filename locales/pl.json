@@ -1275,7 +1275,7 @@
  "rodo": {
   "headerTitle": "Polityka i RODO",
   "adminTitle": "Administrator danych",
-  "adminBody": "Operator serwisu Coachay, NIP: <strong style=\"color:var(--bialy)\">771-222-88-03</strong><br>Kontakt: <strong style=\"color:var(--bialy)\">support@coachay.com</strong>",
+  "adminBody": "Operator serwisu Coachay, NIP: <strong style='color:var(--bialy)'>771-222-88-03</strong><br>Kontakt: <strong style='color:var(--bialy)'>support@coachay.com</strong>",
   "purposeTitle": "Cel przetwarzania danych",
   "purposeBody": "Dane przetwarzane są wyłącznie w celu świadczenia usług aplikacji: zarządzanie drużyną, rejestrowanie obecności, komunikacja między trenerami, zawodnikami i rodzicami.",
   "rightsTitle": "Twoje prawa",
