@@ -23,3 +23,12 @@ Chat i task zostają w frontend — CF nie ma dla nich triggerów.
 [2026-09-04 00:50] [APP] [DONE] functions/index.js zsynchronizowane z wersją WEB (identyczna baza) + dołożone: KIBIC w resolveInvitedUserIds (brakował, obejmuje tylko odwołanie/zmianę eventu), fix wielkości liter statusu w onMembershipCreated ((m.status||'').toLowerCase()) — appka mobilna zapisuje status membershipu jako 'ACTIVE' (duże litery) przy dołączeniu kodem, ten check tego nie łapał.
 
 [2026-09-04 00:50] [APP] [INFO] sendNotificationsForEvent — zmieniona konsolidacja rodzic/kibic (decyzja Rafała, świadomie inna niż wcześniejsza wersja WEB): przy wymaganej akcji (Będę/Nie będę) RODZIC dostaje osobne powiadomienie per dziecko (własny przycisk), KIBIC w tym przypadku NIE dostaje żadnego powiadomienia (nie potwierdza obecności). Bez wymaganej akcji — jak dotychczas, jedno zbiorcze dla obu ról. Czeka na deploy po stronie Rafała.
+
+[2026-09-04 01:10] [APP] [DONE] functions/index.js — wrzucony do repo jako wspólny plik (Rafał: "abyście pracowali na jednym pliku"). Od teraz jedno miejsce, jeden plik, deploy robi sesja WEB (mobile nie ma stabilnego dostępu do Firebase CLI z tego środowiska).
+
+[2026-09-04 01:10] [APP] [TODO] Do przeglądu i deployu przez WEB — 3 zmiany względem poprzedniej wersji w repo:
+1) resolveInvitedUserIds — dodano KIBIC obok RODZIC (linia ~192) — brakował, więc przy odwołaniu/zmianie eventu (onEventUpdated) kibice nie dostawali powiadomienia.
+2) onMembershipCreated — status check zmieniony z `if (!['active','grace','demo'].includes(m.status))` na `.toLowerCase()` przed porównaniem — appka mobilna zapisuje status 'ACTIVE' (duże litery) przy dołączeniu kodem, stary check tego nie łapał.
+3) sendNotificationsForEvent — zmieniona konsolidacja rodzic/kibic PRZY WYMAGANEJ AKCJI (decyzja Rafała, ustalona wprost w rozmowie z appką): RODZIC dostaje TERAZ osobne powiadomienie per dziecko (własny przycisk Będę/Nie będę), KIBIC w tym przypadku NIE dostaje nic (nie potwierdza obecności). Bez wymaganej akcji — bez zmian, jedno zbiorcze dla obu ról. To świadomie INNE od poprzedniej wersji WEB (tam zawsze konsolidacja, nawet z akcją, forPlayerId=null) — priorytet ma decyzja Rafała.
+
+Diff pełny dostępny w historii commitów. node --check czysty.

@@ -189,7 +189,10 @@ async function resolveInvitedUserIds(evData, skipUserId) {
         if (!invitedPlayerIds.includes(m.playerId)) return;
         if (m.role === 'ZAWODNIK') {
             playerUserMap[m.playerId] = m.userId;
-        } else if (m.role === 'RODZIC') {
+        } else if (m.role === 'RODZIC' || m.role === 'KIBIC') {
+            // FIX (2026-09-03, mobile) — KIBIC tu brakował, więc przy odwołaniu/zmianie eventu
+            // kibice nie dostawali powiadomienia, mimo że sendNotificationsForEvent (nowy event,
+            // nowo zaproszeni) już ich poprawnie uwzględnia.
             parentChildPairs.push({ userId: m.userId, forPlayerId: m.playerId });
         }
     });
@@ -275,6 +278,10 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
     const playerIds = invited.filter(id => id.includes('player_'));
     const playerUserMap  = {};  // playerId → userId zawodnika
     const parentChildMap = {};  // parentUserId → [playerId]
+    // Rola per parentId (2026-09-03, decyzja Rafała) — KIBIC nie potwierdza obecności (to robi
+    // rodzic), więc przy evencie z wymaganą akcją KIBIC nie dostaje ŻADNEGO powiadomienia o nim —
+    // tylko RODZIC, osobno per dziecko (każde ma własny przycisk Będę/Nie będę, patrz pętla niżej).
+    const parentRoleMap = {};
 
     members.forEach(m => {
         if (!m.userId || !m.playerId) return;
@@ -284,6 +291,7 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
         if ((m.role === 'RODZIC' || m.role === 'KIBIC') && playerIds.includes(m.playerId)) {
             if (!parentChildMap[m.userId]) parentChildMap[m.userId] = [];
             if (!parentChildMap[m.userId].includes(m.playerId)) parentChildMap[m.userId].push(m.playerId);
+            parentRoleMap[m.userId] = m.role;
         }
     });
 
@@ -339,6 +347,37 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
                     created++;
                 }
             }
+            // Rodzic (nie kibic — kibic nie potwierdza obecności) — osobne powiadomienie per
+            // dziecko TYLKO gdy wymagana jest akcja (każde dziecko ma własny przycisk potwierdzenia).
+            // Gdy akcja nie jest wymagana, rodzic/kibic dostaje jedno zbiorcze niżej.
+            if (requiresAction) {
+                for (const [parentId, childIds] of Object.entries(parentChildMap)) {
+                    if (!childIds.includes(personId)) continue;
+                    if (parentRoleMap[parentId] !== 'RODZIC') continue;
+                    if (skipUserIds.includes(parentId)) continue;
+                    const exists = await notifExists(parentId, eventId, personId);
+                    if (exists) continue;
+                    let childName = personId;
+                    try {
+                        const pd = await db.collection('players').doc(personId).get();
+                        if (pd.exists) childName = pd.data().name || personId;
+                    } catch (e) {}
+                    await createNotification({
+                        userId: parentId,
+                        teamId: event.teamId,
+                        type: 'EVENT_ATTENDANCE',
+                        title: I18N.pl.newTitle(event.type),
+                        body: buildNotifBody(event, { childName, requiresAction: true, confirmLabel: I18N.pl.confirmAction }),
+                        referenceId: eventId,
+                        referenceType: 'event',
+                        forPlayerId: personId,
+                        requiresAction: true,
+                        actionType: 'ATTENDANCE',
+                        priority: 'NORMAL'
+                    });
+                    created++;
+                }
+            }
         } else {
             // Trener / inny user — twórca eventu nie dostaje powiadomienia o własnym evencie
             if (personId === event.createdBy) continue;
@@ -366,7 +405,10 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
         }
     }
 
-    // Zbiorcze powiadomienie dla rodziców/kibiców — 1 na osobę, nawet przy 2+ dzieciach
+    // Zbiorcze powiadomienie dla rodziców/kibiców — 1 na osobę, nawet przy 2+ dzieciach.
+    // TYLKO gdy event NIE wymaga akcji — dla wymaganej akcji RODZIC dostał już osobne powiadomienia
+    // per dziecko wyżej (własny przycisk), a KIBIC w ogóle nie potwierdza obecności (patrz wyżej).
+    if (!requiresAction) {
     for (const [parentId, childIds] of Object.entries(parentChildMap)) {
         if (skipUserIds.includes(parentId)) continue;
         const presentChildIds = childIds.filter(cid => !absentPlayerIds.has(cid));
@@ -383,17 +425,18 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
         await createNotification({
             userId: parentId,
             teamId: event.teamId,
-            type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
+            type: 'EVENT_CREATED',
             title: I18N.pl.newTitle(event.type),
-            body: buildNotifBody(event, { childNames, requiresAction, confirmLabel: I18N.pl.confirmAction }),
+            body: buildNotifBody(event, { childNames, requiresAction: false, confirmLabel: I18N.pl.confirmAction }),
             referenceId: eventId,
             referenceType: 'event',
             forPlayerId: null,
-            requiresAction,
-            actionType: requiresAction ? 'ATTENDANCE' : null,
+            requiresAction: false,
+            actionType: null,
             priority: 'NORMAL'
         });
         created++;
+    }
     }
 
     console.log(`✅ sendNotificationsForEvent [${eventId}]: wysłano ${created} powiadomień`);
@@ -550,7 +593,9 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
 exports.onMembershipCreated = onDocumentCreated('memberships/{membershipId}', async (event) => {
     const m = event.data.data();
     if (!m || !m.userId) return;
-    if (!['active', 'grace', 'demo'].includes(m.status)) return;
+    // FIX (2026-09-03, mobile) — porównanie było case-sensitive, appka mobilna zapisuje status
+    // membershipu jako 'ACTIVE' (wielkie litery) przy dołączeniu kodem.
+    if (!['active', 'grace', 'demo'].includes((m.status || '').toLowerCase())) return;
 
     /* ── Trial per (uid, clubId) — ZAWODNIK nie dostaje triala ── */
     if (m.clubId && m.role !== 'ZAWODNIK') {
