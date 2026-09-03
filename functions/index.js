@@ -1475,6 +1475,54 @@ exports.cleanupEvents = onSchedule('every day 03:30', async () => {
 });
 
 /* ═══════════════════════════════════════════════════════
+   Cleanup zadań — soft-delete (status: DELETE) zadania 48h po terminie (dueDate),
+   NIEZALEŻNIE od statusu (DONE/PENDING/częściowo odrzucone) — decyzja Rafała (2026-09-04,
+   pkt 8 z listy, ustalone przez sync z sesją web): "dotyczy WSZYSTKICH, liczymy od dueDate".
+   Jedna wspólna reguła dla web+app zamiast zdublowanej logiki klienckiej (dawne
+   autoCleanupTasks() w tasks.ts / zadania.html: DONE>14dni, PENDING>60dni liczone od
+   createdAt — ta reguła zostaje jako FALLBACK tylko dla zadań BEZ dueDate, bo dla nich nie
+   da się liczyć "48h po terminie").
+   Web i mobile mogą po wdrożeniu usunąć swoje client-side wywołania cleanupu — czytanie
+   zadań już filtruje status!=='DELETE', więc wystarczy że CF ustawia to pole.
+═══════════════════════════════════════════════════════ */
+exports.cleanupExpiredTasks = onSchedule('every day 04:00', async () => {
+    const now = new Date();
+    console.log(`cleanupExpiredTasks start: ${now.toISOString()}`);
+    try {
+        const snap = await db.collection('tasks').where('status', 'in', ['PENDING', 'DONE']).get();
+        if (snap.empty) { console.log('cleanupExpiredTasks: brak zadań do sprawdzenia'); return; }
+
+        const toArchive = [];
+        const D14 = 14 * 24 * 3600 * 1000;
+        const D60 = 60 * 24 * 3600 * 1000;
+        const H48 = 48 * 3600 * 1000;
+
+        snap.docs.forEach(doc => {
+            const t = doc.data();
+            if (t.dueDate) {
+                // Format dueDate: 'YYYY-MM-DD' (tak samo jak w tasks.ts/isTaskOverdue)
+                const dueMs = new Date(`${t.dueDate}T00:00:00`).getTime();
+                if (!isNaN(dueMs) && (now.getTime() - dueMs) > H48) toArchive.push(doc.ref);
+            } else {
+                // Fallback dla zadań bez terminu — stara reguła (createdAt-based)
+                const age = now.getTime() - new Date(t.createdAt || 0).getTime();
+                const archive = (t.status === 'DONE' && age > D14) || (t.status === 'PENDING' && age > D60);
+                if (archive) toArchive.push(doc.ref);
+            }
+        });
+
+        if (toArchive.length === 0) { console.log('cleanupExpiredTasks: żadne zadanie nie przekroczyło progu'); return; }
+
+        for (let i = 0; i < toArchive.length; i += 500) {
+            const batch = db.batch();
+            toArchive.slice(i, i + 500).forEach(ref => batch.update(ref, { status: 'DELETE' }));
+            await batch.commit();
+        }
+        console.log(`cleanupExpiredTasks: zarchiwizowano ${toArchive.length} zadań`);
+    } catch (e) { console.error('cleanupExpiredTasks error:', e); }
+});
+
+/* ═══════════════════════════════════════════════════════
    RevenueCat Webhook — obsługa subskrypcji indywidualnych
    POST /revenuecat-webhook
    Zdarzenia: INITIAL_PURCHASE, RENEWAL → ACTIVE
