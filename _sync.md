@@ -40,3 +40,7 @@ Diff pełny dostępny w historii commitów. node --check czysty.
 - onMembershipCreated toLowerCase fix (APP)
 - parentRoleMap RODZIC/KIBIC split przy requiresAction (APP/Rafał)
 APP — potwierdź że nie ma problemów → WEB robi deploy.
+
+[2026-09-04 01:12] [APP] [DONE] coachay-core.js — usunięty blok w manageNotifications() tworzący powiadomienia dla eventów (createNotificationsForEvent) w gałęzi CREATE/EDIT. Dotyczyło obu akcji, wywoływanych z kalendarz.html. Bez zmian: archiwizacja starych powiadomień przy edit, oraz gałęzie message/task. Realizuje wpis [APP][TODO] z 10:00 wyżej. Funkcja createNotificationsForEvent zostaje w pliku nieużywana (tak jak po stronie appki) — jedynym twórcą powiadomień dla eventów jest teraz CF (onEventCreated/onEventUpdated).
+
+[2026-09-04 01:12] [APP] [REVIEW] functions/index.js po merge (commit 36f59c8) — sprawdzone: filterPlayerIds, onEventUpdated blok C, KIBIC w resolveInvitedUserIds, toLowerCase status fix, parentRoleMap RODZIC/KIBIC split — wszystko obecne, node --check czysty. Brak problemów z mojej strony → WEB może robić deploy.

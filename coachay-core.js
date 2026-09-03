@@ -1449,12 +1449,11 @@ async function manageNotifications(action, referenceType, referenceId, payload =
     }
 
     // CREATE / EDIT — wyślij nowe powiadomienia
+    // UWAGA: powiadomienia dla eventów tworzy WYŁĄCZNIE Cloud Function
+    // (onEventCreated / onEventUpdated w functions/index.js), aby uniknąć
+    // duplikatów z race condition. Klient nic tu nie wysyła dla eventów.
     try {
-        if (referenceType === 'event') {
-            const { event, absences = [] } = payload;
-            await createNotificationsForEvent(event, absences);
-
-        } else if (referenceType === 'message') {
+        if (referenceType === 'message') {
             const { teamId, senderId, senderName, title, body, recipients, msgSubtype } = payload;
             const bodyShort = (body || '').length > 80 ? body.slice(0, 77) + '…' : (body || '');
             const isAnnouncement = msgSubtype === 'BROADCAST';
