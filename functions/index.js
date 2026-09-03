@@ -12,8 +12,9 @@ const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 const https = require('https');
 
-const WHATSAPP_TOKEN_SECRET  = defineSecret('WHATSAPP_TOKEN');
+const WHATSAPP_TOKEN_SECRET    = defineSecret('WHATSAPP_TOKEN');
 const WHATSAPP_PHONE_ID_SECRET = defineSecret('WHATSAPP_PHONE_ID');
+const REVENUECAT_WEBHOOK_SECRET = defineSecret('REVENUECAT_WEBHOOK_SECRET');
 
 initializeApp();
 const db = getFirestore();
@@ -22,6 +23,39 @@ const db = getFirestore();
 
 const TYPE_NAMES = { TRENING: 'Trening', MECZ: 'Mecz', WYJAZD: 'Wyjazd', INNE: 'Wydarzenie' };
 
+const I18N = {
+    pl: {
+        types: { TRENING: 'Trening', MECZ: 'Mecz', WYJAZD: 'Wyjazd', INNE: 'Wydarzenie' },
+        newTitle:       (type) => ({ TRENING: 'Nowy trening', MECZ: 'Nowy mecz', WYJAZD: 'Nowy wyjazd', INNE: 'Nowe wydarzenie' }[type] || 'Nowe wydarzenie'),
+        cancelledTitle: (type) => ({ TRENING: 'Odwołany trening', MECZ: 'Odwołany mecz', WYJAZD: 'Odwołany wyjazd', INNE: 'Odwołane wydarzenie' }[type] || 'Odwołane wydarzenie'),
+        updatedTitle:   (type) => ({ TRENING: 'Zmiana: trening', MECZ: 'Zmiana: mecz', WYJAZD: 'Zmiana: wyjazd', INNE: 'Zmiana: wydarzenie' }[type] || 'Zmiana: wydarzenie'),
+        confirmAction:  'potwierdź obecność',
+        dateChange: (d) => `📅 Data: ${d}`,
+        timeChange: (t) => `🕐 Godzina: ${t}`,
+        placeChange: (p) => `📍 Miejsce: ${p}`,
+        locale: 'pl-PL',
+    },
+    en: {
+        types: { TRENING: 'Training', MECZ: 'Match', WYJAZD: 'Away game', INNE: 'Event' },
+        newTitle:       (type) => ({ TRENING: 'New training', MECZ: 'New match', WYJAZD: 'New trip', INNE: 'New event' }[type] || 'New event'),
+        cancelledTitle: (type) => ({ TRENING: 'Cancelled training', MECZ: 'Cancelled match', WYJAZD: 'Cancelled trip', INNE: 'Cancelled event' }[type] || 'Cancelled event'),
+        updatedTitle:   (type) => ({ TRENING: 'Change: training', MECZ: 'Change: match', WYJAZD: 'Change: trip', INNE: 'Change: event' }[type] || 'Change: event'),
+        confirmAction:  'confirm attendance',
+        dateChange: (d) => `📅 Date: ${d}`,
+        timeChange: (t) => `🕐 Time: ${t}`,
+        placeChange: (p) => `📍 Location: ${p}`,
+        locale: 'en-GB',
+    },
+};
+
+async function getLang(userId) {
+    if (!userId) return 'pl';
+    try {
+        const doc = await db.collection('users').doc(userId).get();
+        return (doc.exists && (doc.data().language || doc.data().lang)) || 'pl';
+    } catch (e) { return 'pl'; }
+}
+
 function formatDatePL(dateStr) {
     const d = new Date(dateStr + 'T00:00:00');
     const day  = d.toLocaleDateString('pl-PL', { weekday: 'short' });
@@ -29,18 +63,30 @@ function formatDatePL(dateStr) {
     return { day, date };
 }
 
-function buildBodyText(event) {
-    const typeName = TYPE_NAMES[event.type] || 'Wydarzenie';
-    const { day, date } = formatDatePL(event.date);
-    return `${typeName} · ${day} ${date}, ${event.timeFrom || ''}–${event.timeTo || ''} · ${event.location?.venueName || ''}`;
+function formatDate(dateStr, locale) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const day  = d.toLocaleDateString(locale, { weekday: 'short' });
+    const date = d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    return { day, date };
 }
 
-function buildNotifTitle(event, requiresAction, suffix = '') {
-    const typeName = TYPE_NAMES[event.type] || 'Wydarzenie';
+// Nowy format: tytuł = krótka kategoria ("Nowy trening"), treść = szczegóły
+function buildNotifBody(event, { childName = null, childNames = null, requiresAction = false, confirmLabel = 'potwierdź obecność', changes = null } = {}) {
     const { day, date } = formatDatePL(event.date);
-    const name = event.title || `${typeName} ${day} ${date}`;
-    return suffix ? `${name} — ${suffix}` : name;
+    const parts = [];
+    if (event.title) parts.push(event.title);
+    if (changes) { parts.push(...changes); }
+    if (requiresAction) parts.push(confirmLabel);
+    const kids = childNames?.length ? childNames.join(', ') : (childName || null);
+    if (kids) parts.push(kids);
+    const timeStr = event.timeFrom ? `${event.timeFrom}${event.timeTo ? '–' + event.timeTo : ''}` : '';
+    parts.push(`${day} ${date}${timeStr ? ', ' + timeStr : ''}`);
+    if (event.location?.venueName) parts.push(event.location.venueName);
+    return parts.join(' · ');
 }
+
+// Zachowane dla wstecznej kompatybilności (używane w resolveInvitedUserIds path)
+function buildBodyText(event) { return buildNotifBody(event); }
 
 async function createNotification(data) {
     const now = new Date();
@@ -73,6 +119,103 @@ async function createNotification(data) {
     return notif;
 }
 
+/**
+ * Atomicznie inkrementuje liczniki w platform_metrics/{year_YYYY_month_MM}.
+ * updates: { deleted_notifications: 5, deleted_events: 2 } itp.
+ */
+async function incrementPlatformMetric(year, month, updates) {
+    const docId = `year_${year}_month_${String(month).padStart(2, '0')}`;
+    const delta = { year, month, updatedAt: FieldValue.serverTimestamp() };
+    for (const [key, val] of Object.entries(updates)) {
+        delta[key] = FieldValue.increment(val);
+    }
+    await db.collection('platform_metrics').doc(docId).set(delta, { merge: true });
+}
+
+/**
+ * Rozwiązuje invited do listy { userId, forPlayerId, playerName }.
+ * Obsługuje __TEAM__, jawne player_xxx, user_xxx oraz RODZICÓW (per dziecko).
+ * Rodzic z 2 dziećmi dostaje 2 osobne wpisy, każdy z playerName dziecka.
+ * Pomija skipUserId (createdBy / updatedBy).
+ */
+async function resolveInvitedUserIds(evData, skipUserId) {
+    const rawInvited = evData.attendance?.invited || [];
+    if (rawInvited.length === 0) return [];
+
+    const isTeam = rawInvited.includes('__TEAM__');
+
+    // Pobierz memberships drużyny (jeden query)
+    const mbrSnap = await db.collection('memberships')
+        .where('teamId', '==', evData.teamId).where('status', 'in', ['active', 'ACTIVE']).get();
+    const members = mbrSnap.docs.map(d => d.data());
+
+    // Ustal które playerId są zaproszone
+    let invitedPlayerIds;
+    if (isTeam) {
+        invitedPlayerIds = [...new Set(members.filter(m => m.playerId).map(m => m.playerId))];
+    } else {
+        invitedPlayerIds = rawInvited.filter(id => id.includes('player_'));
+    }
+
+    const results = [];
+    const seenCoach = new Set(); // deduplikacja trenerów/userów
+
+    // Trenerzy (zaproszeni przez __TEAM__ lub jawnie jako user_xxx)
+    members.forEach(m => {
+        if (!m.userId || m.userId === skipUserId) return;
+        const isCoach = m.role === 'TRENER_GLOWNY' || m.role === 'TRENER_POMOCNICZY';
+        if (isCoach && !seenCoach.has(m.userId)) {
+            seenCoach.add(m.userId);
+            results.push({ userId: m.userId, forPlayerId: null, playerName: null });
+        }
+    });
+
+    // Jawnie zaproszeni user_xxx (nie z drużyny)
+    if (!isTeam) {
+        rawInvited.filter(id => id.startsWith('user_')).forEach(uid => {
+            if (uid !== skipUserId && !seenCoach.has(uid)) {
+                seenCoach.add(uid);
+                results.push({ userId: uid, forPlayerId: null, playerName: null });
+            }
+        });
+    }
+
+    // Zawodnicy i rodzice — per playerId
+    const parentChildPairs = []; // { userId, forPlayerId }
+    const playerUserMap = {};    // playerId → userId zawodnika
+
+    members.forEach(m => {
+        if (!m.userId || !m.playerId || m.userId === skipUserId) return;
+        if (!invitedPlayerIds.includes(m.playerId)) return;
+        if (m.role === 'ZAWODNIK') {
+            playerUserMap[m.playerId] = m.userId;
+        } else if (m.role === 'RODZIC') {
+            parentChildPairs.push({ userId: m.userId, forPlayerId: m.playerId });
+        }
+    });
+
+    // Dodaj zawodników
+    Object.entries(playerUserMap).forEach(([playerId, userId]) => {
+        results.push({ userId, forPlayerId: playerId, playerName: null });
+    });
+
+    // Rozwiąż nazwy dzieci dla rodziców (batch po 10)
+    if (parentChildPairs.length > 0) {
+        const playerIds = [...new Set(parentChildPairs.map(p => p.forPlayerId))];
+        const playerNames = {};
+        for (let i = 0; i < playerIds.length; i += 10) {
+            const chunk = playerIds.slice(i, i + 10);
+            const snap = await db.collection('players').where('__name__', 'in', chunk).get();
+            snap.forEach(d => { playerNames[d.id] = d.data().name || d.id; });
+        }
+        parentChildPairs.forEach(p => {
+            results.push({ userId: p.userId, forPlayerId: p.forPlayerId, playerName: playerNames[p.forPlayerId] || null });
+        });
+    }
+
+    return results;
+}
+
 /** Sprawdza czy powiadomienie dla tego eventu + usera już istnieje (anty-duplikat) */
 async function notifExists(userId, referenceId, forPlayerId = null) {
     const q = db.collection('notifications')
@@ -93,7 +236,7 @@ async function notifExists(userId, referenceId, forPlayerId = null) {
  * Działa zarówno przy tworzeniu jak i przy dołączeniu nowego membera.
  * skipUserIds — lista userIds którzy już dostali powiadomienie (anty-duplikat).
  */
-async function sendNotificationsForEvent(event, skipUserIds = []) {
+async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerIds = null) {
     const rawInvited = event.attendance?.invited || [];
     if (rawInvited.length === 0) return 0;
 
@@ -111,7 +254,7 @@ async function sendNotificationsForEvent(event, skipUserIds = []) {
     // Pobierz memberships drużyny
     const mbrSnap = await db.collection('memberships')
         .where('teamId', '==', event.teamId)
-        .where('status', 'in', ['active', 'grace', 'demo'])
+        .where('status', 'in', ['active', 'ACTIVE', 'grace', 'demo'])
         .get();
     const members = mbrSnap.docs.map(d => d.data());
 
@@ -138,11 +281,20 @@ async function sendNotificationsForEvent(event, skipUserIds = []) {
         if (m.role === 'ZAWODNIK' && playerIds.includes(m.playerId)) {
             playerUserMap[m.playerId] = m.userId;
         }
-        if (m.role === 'RODZIC' && playerIds.includes(m.playerId)) {
+        if ((m.role === 'RODZIC' || m.role === 'KIBIC') && playerIds.includes(m.playerId)) {
             if (!parentChildMap[m.userId]) parentChildMap[m.userId] = [];
             if (!parentChildMap[m.userId].includes(m.playerId)) parentChildMap[m.userId].push(m.playerId);
         }
     });
+
+    // Jeśli podano filterPlayerIds — ogranicz do nowo zaproszonych graczy
+    if (filterPlayerIds) {
+        invited = invited.filter(id => filterPlayerIds.includes(id));
+        for (const parentId of Object.keys(parentChildMap)) {
+            parentChildMap[parentId] = parentChildMap[parentId].filter(cid => filterPlayerIds.includes(cid));
+            if (parentChildMap[parentId].length === 0) delete parentChildMap[parentId];
+        }
+    }
 
     // Pobierz aktywne absencje (do pominięcia)
     let activeAbsences = [];
@@ -153,18 +305,15 @@ async function sendNotificationsForEvent(event, skipUserIds = []) {
         activeAbsences = absSnap.docs.map(d => d.data());
     } catch (e) {}
 
-    const notifiedParents = new Set();
     let created = 0;
+    const absentPlayerIds = new Set(
+        activeAbsences
+            .filter(a => a.dateFrom <= event.date && a.dateTo >= event.date && a.isActive)
+            .map(a => a.playerId)
+    );
 
     for (const personId of invited) {
-        // Pomiń jeśli długa nieobecność
-        const hasAbsence = activeAbsences.some(a =>
-            a.playerId === personId &&
-            a.dateFrom <= event.date &&
-            a.dateTo >= event.date &&
-            a.isActive
-        );
-        if (hasAbsence) continue;
+        if (absentPlayerIds.has(personId)) continue;
 
         const isPlayer = personId.includes('player_');
 
@@ -178,41 +327,8 @@ async function sendNotificationsForEvent(event, skipUserIds = []) {
                         userId: playerUserId,
                         teamId: event.teamId,
                         type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
-                        title: buildNotifTitle(event, requiresAction, requiresAction ? 'potwierdź obecność' : ''),
-                        body: bodyText,
-                        referenceId: eventId,
-                        referenceType: 'event',
-                        forPlayerId: personId,
-                        requiresAction,
-                        actionType: requiresAction ? 'ATTENDANCE' : null,
-                        priority: 'NORMAL'
-                    });
-                    created++;
-                }
-            }
-
-            // Powiadomienie dla rodzica
-            for (const [parentId, childIds] of Object.entries(parentChildMap)) {
-                if (!childIds.includes(personId)) continue;
-                const notifKey = `${parentId}_${personId}`;
-                if (notifiedParents.has(notifKey)) continue;
-                if (skipUserIds.includes(parentId)) continue;
-                notifiedParents.add(notifKey);
-
-                const exists = await notifExists(parentId, eventId, personId);
-                if (!exists) {
-                    let childName = personId;
-                    try {
-                        const pd = await db.collection('players').doc(personId).get();
-                        if (pd.exists) childName = pd.data().name || personId;
-                    } catch (e) {}
-
-                    await createNotification({
-                        userId: parentId,
-                        teamId: event.teamId,
-                        type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
-                        title: buildNotifTitle(event, requiresAction, requiresAction ? `potwierdź obecność (${childName})` : ''),
-                        body: bodyText,
+                        title: I18N.pl.newTitle(event.type),
+                        body: buildNotifBody(event, { requiresAction, confirmLabel: I18N.pl.confirmAction }),
                         referenceId: eventId,
                         referenceType: 'event',
                         forPlayerId: personId,
@@ -226,16 +342,17 @@ async function sendNotificationsForEvent(event, skipUserIds = []) {
         } else {
             // Trener / inny user — twórca eventu nie dostaje powiadomienia o własnym evencie
             if (personId === event.createdBy) continue;
+            // Rodzic/kibic dostaje zbiorcze powiadomienie w osobnej pętli poniżej
+            if (parentChildMap[personId]) continue;
             if (!skipUserIds.includes(personId)) {
                 const exists = await notifExists(personId, eventId);
                 if (!exists) {
-                    // Trenerzy dostają zawsze informacyjne — nie prosi się ich o potwierdzenie obecności
                     await createNotification({
                         userId: personId,
                         teamId: event.teamId,
                         type: 'EVENT_CREATED',
-                        title: buildNotifTitle(event, false),
-                        body: bodyText,
+                        title: I18N.pl.newTitle(event.type),
+                        body: buildNotifBody(event),
                         referenceId: eventId,
                         referenceType: 'event',
                         forPlayerId: null,
@@ -247,6 +364,36 @@ async function sendNotificationsForEvent(event, skipUserIds = []) {
                 }
             }
         }
+    }
+
+    // Zbiorcze powiadomienie dla rodziców/kibiców — 1 na osobę, nawet przy 2+ dzieciach
+    for (const [parentId, childIds] of Object.entries(parentChildMap)) {
+        if (skipUserIds.includes(parentId)) continue;
+        const presentChildIds = childIds.filter(cid => !absentPlayerIds.has(cid));
+        if (presentChildIds.length === 0) continue;
+        const exists = await notifExists(parentId, eventId);
+        if (exists) continue;
+        const childNames = [];
+        for (const cid of presentChildIds) {
+            try {
+                const pd = await db.collection('players').doc(cid).get();
+                childNames.push(pd.exists ? (pd.data().name || cid) : cid);
+            } catch (e) { childNames.push(cid); }
+        }
+        await createNotification({
+            userId: parentId,
+            teamId: event.teamId,
+            type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
+            title: I18N.pl.newTitle(event.type),
+            body: buildNotifBody(event, { childNames, requiresAction, confirmLabel: I18N.pl.confirmAction }),
+            referenceId: eventId,
+            referenceType: 'event',
+            forPlayerId: null,
+            requiresAction,
+            actionType: requiresAction ? 'ATTENDANCE' : null,
+            priority: 'NORMAL'
+        });
+        created++;
     }
 
     console.log(`✅ sendNotificationsForEvent [${eventId}]: wysłano ${created} powiadomień`);
@@ -271,6 +418,129 @@ exports.onEventCreated = onDocumentCreated('events/{eventId}', async (event) => 
         await sendNotificationsForEvent({ ...data, id: event.params.eventId });
     } catch (e) {
         console.error('❌ onEventCreated:', e);
+    }
+});
+
+/* ═══════════════════════════════════════════════════
+   TRIGGER 1b: Event zaktualizowany
+   Obsługuje:
+     A) status → CANCELLED  → EVENT_CANCELLED do wszystkich zaproszonych
+     B) zmiana daty/godziny/miejsca → EVENT_UPDATED do wszystkich zaproszonych
+   Omija notifExists() — nie blokuje aktualizacji.
+   Guard: pomija zmiany tylko w matchData (live-score, wyniki).
+   ═══════════════════════════════════════════════════ */
+exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => {
+    const before = event.data.before.data();
+    const after  = event.data.after.data();
+    if (!before || !after) return;
+
+    const eventId = event.params.eventId;
+    const today   = new Date().toISOString().slice(0, 10);
+    if (after.date < today) return; // Przeszłe eventy — bez powiadomień
+
+    // Guard: jeśli żadne istotne pole się nie zmieniło, zakończ od razu
+    // (live-score update lub zmiana attendance nie generuje powiadomień)
+    const significantChange =
+        before.status     !== after.status     ||
+        before.date       !== after.date       ||
+        before.timeFrom   !== after.timeFrom   ||
+        before.timeTo     !== after.timeTo     ||
+        (before.location?.venueName || '') !== (after.location?.venueName || '');
+    if (!significantChange) return;
+
+    // Określ język na podstawie osoby która anulowała / edytowała
+    const senderLang = await getLang(after.cancelledBy || after.updatedBy || after.createdBy);
+    const i18n = I18N[senderLang] || I18N.pl;
+    const typeName = i18n.types[after.type] || i18n.types.INNE;
+    const { day, date } = formatDate(after.date, i18n.locale);
+    const eventLabel = after.title || `${typeName} ${day} ${date}`;
+
+    try {
+        // ── A: Odwołanie eventu ──────────────────────────────────────────
+        if (before.status !== 'CANCELLED' && after.status === 'CANCELLED') {
+            const notifBody  = [
+                typeName, `${day} ${date}`,
+                after.timeFrom ? `${after.timeFrom}${after.timeTo ? '–' + after.timeTo : ''}` : null,
+                after.location?.venueName || null,
+            ].filter(Boolean).join(' · ');
+
+            // Dezaktywuj stare notyfikacje ATTENDANCE/CREATED dla tego eventu
+            try {
+                const oldSnap = await db.collection('notifications')
+                    .where('referenceId', '==', eventId)
+                    .where('actionDone', '==', false)
+                    .get();
+                const batch = db.batch();
+                oldSnap.forEach(doc => {
+                    batch.update(doc.ref, { actionDone: true, actionResult: 'expired', isRead: true, readAt: new Date().toISOString() });
+                });
+                if (!oldSnap.empty) await batch.commit();
+            } catch (e) { console.warn('onEventUpdated CANCELLED — dezaktywacja notif:', e); }
+
+            const recipients = await resolveInvitedUserIds(after, after.cancelledBy || after.createdBy);
+            let sent = 0;
+            for (const { userId, forPlayerId, playerName } of recipients) {
+                await createNotification({
+                    userId, teamId: after.teamId,
+                    type: 'EVENT_CANCELLED',
+                    title: i18n.cancelledTitle(after.type),
+                    body: buildNotifBody(after, { childName: playerName || null }),
+                    referenceId: eventId, referenceType: 'event',
+                    forPlayerId: forPlayerId || null, requiresAction: false,
+                });
+                sent++;
+            }
+            console.log(`✅ onEventUpdated [${eventId}] CANCELLED: ${sent} powiadomień`);
+            return;
+        }
+
+        // ── B: Zmiana daty / godziny / miejsca ──────────────────────────
+        if (after.status !== 'CANCELLED') {
+            const changes = [];
+            if (before.date !== after.date) {
+                const { day: nd, date: ndt } = formatDate(after.date, i18n.locale);
+                changes.push(i18n.dateChange(`${nd} ${ndt}`));
+            }
+            if (before.timeFrom !== after.timeFrom || before.timeTo !== after.timeTo) {
+                changes.push(i18n.timeChange(`${after.timeFrom || '—'}–${after.timeTo || '—'}`));
+            }
+            if ((before.location?.venueName || '') !== (after.location?.venueName || '')) {
+                changes.push(i18n.placeChange(after.location?.venueName || '—'));
+            }
+            if (changes.length === 0) return;
+
+            const skipBy     = after.updatedBy || after.createdBy;
+
+            const recipients = await resolveInvitedUserIds(after, skipBy);
+            let sent = 0;
+            for (const { userId, forPlayerId, playerName } of recipients) {
+                await createNotification({
+                    userId, teamId: after.teamId,
+                    type: 'EVENT_UPDATED',
+                    title: i18n.updatedTitle(after.type),
+                    body: buildNotifBody(after, { childName: playerName || null, changes }),
+                    referenceId: eventId, referenceType: 'event',
+                    forPlayerId: forPlayerId || null, requiresAction: false,
+                });
+                sent++;
+            }
+            console.log(`✅ onEventUpdated [${eventId}] UPDATED: ${sent} powiadomień (${changes.join(', ')})`);
+        }
+    } catch (e) {
+        console.error('❌ onEventUpdated:', e);
+    }
+
+    // ── C: Nowo zaproszeni gracze (np. trener dodał zawodnika do istniejącego eventu) ──
+    try {
+        const beforeInvited = before.attendance?.invited || [];
+        const afterInvited  = after.attendance?.invited  || [];
+        const newlyAdded    = afterInvited.filter(id => !beforeInvited.includes(id));
+        if (newlyAdded.length > 0) {
+            const cnt = await sendNotificationsForEvent({ ...after, id: eventId }, [], newlyAdded);
+            console.log(`✅ onEventUpdated [${eventId}] NEWLY_ADDED: ${cnt} powiadomień (${newlyAdded.join(', ')})`);
+        }
+    } catch (e) {
+        console.error('❌ onEventUpdated [NEWLY_ADDED]:', e);
     }
 });
 
@@ -337,35 +607,111 @@ exports.onMembershipCreated = onDocumentCreated('memberships/{membershipId}', as
    Wysyła EVENT_REMINDER gdy jesteśmy w oknie reminderHoursBefore
    ═══════════════════════════════════════════════════ */
 /* -----------------------------------------------------
-   TRIGGER: Nowe powiadomienie w Firestore -> push FCM
-   Odpala sie dla kazdego dokumentu w notifications (event,
-   message, task...) i wysyla realny push na zapisany token
+   TRIGGER: Nowe powiadomienie w Firestore -> push
+   Dual-path: Expo push (native) lub FCM (web)
    ----------------------------------------------------- */
+const { Expo } = require('expo-server-sdk');
+const expo = new Expo(); // v2
+
+// Badge = obecności do potwierdzenia + nieprzeczytane chaty + zadania niewykonane
+async function calcBadgeCount(userId, teamId) {
+    const _now = Date.now();
+    const _DAY7 = 7 * 24 * 60 * 60 * 1000;
+    const queries = [
+        db.collection('notifications').where('userId', '==', userId).get()
+    ];
+    if (teamId) {
+        queries.push(
+            db.collection('tasks')
+                .where('teamId', '==', teamId)
+                .where('assignedTo', 'array-contains', userId)
+                .where('status', '==', 'PENDING')
+                .get()
+        );
+    }
+    const [notifSnap, taskSnap] = await Promise.all(queries);
+    let count = 0;
+    for (const d of notifSnap.docs) {
+        const n = d.data();
+        if (n.status === 'DELETE' || n.actionResult === 'expired') continue;
+        if (n.visibleFrom && new Date(n.visibleFrom).getTime() > _now) continue;
+        // Obecność do potwierdzenia — tylko przyszłe eventy w oknie 7 dni
+        if (n.requiresAction && !n.actionDone) {
+            if (n.eventDate) {
+                const evMs = new Date(n.eventDate).getTime();
+                if (evMs < _now) continue; // event już minął
+                if (evMs - _now > _DAY7) continue; // za daleko w przyszłości
+            }
+            count++;
+            continue;
+        }
+        // Nieprzeczytany czat
+        if (n.referenceType === 'message' && !n.isRead) {
+            count++;
+        }
+    }
+    if (taskSnap) {
+        for (const d of taskSnap.docs) {
+            const t = d.data();
+            if (!(t.completedBy || []).includes(userId) && !(t.rejectedBy || []).includes(userId)) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
 exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId}', async (event) => {
     const notif = event.data.data();
     if (!notif || !notif.userId) return;
 
     try {
         const userDoc = await db.collection('users').doc(notif.userId).get();
-        const token = userDoc.exists ? userDoc.data().fcmToken : null;
-        if (!token) return; // user nie ma zarejestrowanego urzadzenia (web albo appka bez zgody)
+        if (!userDoc.exists) return;
+        const userData = userDoc.data();
 
-        await getMessaging().send({
-            token,
-            notification: {
-                title: notif.title || 'Coachay',
-                body: notif.body || ''
-            },
-            data: {
-                referenceId: notif.referenceId || '',
-                referenceType: notif.referenceType || '',
-                notificationId: event.params.notificationId
+        // Filtruj puste/null tokeny
+        const expoToken = (userData.pushToken || '').trim() || null;
+        const fcmToken  = (userData.fcmToken  || '').trim() || null;
+
+        const title = (notif.title || '').trim() || 'Coachay';
+        const body  = (notif.body  || '').trim();
+        const notifData = {
+            referenceId:    notif.referenceId    || '',
+            referenceType:  notif.referenceType  || '',
+            notificationId: event.params.notificationId
+        };
+
+        // --- Expo push (natywna aplikacja iOS/Android) ---
+        const isValidExpoToken = expoToken && Expo.isExpoPushToken(expoToken);
+        if (isValidExpoToken) {
+            const badgeCount = await calcBadgeCount(notif.userId, notif.teamId || null);
+
+            const chunks = expo.chunkPushNotifications([{
+                to: expoToken, sound: 'default', badge: badgeCount,
+                title, body, data: notifData
+            }]);
+            for (const chunk of chunks) {
+                await expo.sendPushNotificationsAsync(chunk);
             }
-        });
-        console.log(`FCM push wyslany do ${notif.userId}`);
+            console.log(`Expo push wyslany do ${notif.userId}`);
+        }
+
+        // --- FCM push (web) — tylko jeśli brak Expo tokenu, żeby nie dublować na iOS ---
+        if (fcmToken && !isValidExpoToken) {
+            await getMessaging().send({
+                token: fcmToken,
+                notification: { title, body },
+                data: notifData
+            });
+            console.log(`FCM push wyslany do ${notif.userId}`);
+        }
+
+        if (!isValidExpoToken && !fcmToken) {
+            console.log(`User ${notif.userId} nie ma tokenu push.`);
+        }
     } catch (e) {
         if (e.code === 'messaging/registration-token-not-registered') {
-            // Token niewazny (np. appka odinstalowana) -- wyczysc, zeby nie probowac ponownie
             await db.collection('users').doc(notif.userId).update({ fcmToken: FieldValue.delete() }).catch(() => {});
         } else {
             console.error('onNotificationCreated error:', e);
@@ -458,14 +804,12 @@ exports.autoFinishMatches = onSchedule('every day 00:00', async () => {
    Kolejność priorytetów:
    1. clubs.license.valid_until aktywne → ACTIVE (club_license)
    2. Admin klubu ma access_rights aktywne → ACTIVE (admin_personal)
-   3. clubs.createdAt + 90 dni jeszcze trwa → TRIAL
-   4. Którykolwiek z powyższych w grace 7 dni → GRACE
-   5. Nic → EXPIRED
+   3. Nic → EXPIRED
+   (Trial liczony per-user w getAccessStatus() na podstawie memberships.createdAt)
 ═══════════════════════════════════════════════════════ */
 exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
     const now       = new Date();
     const GRACE_MS  = 7 * 86400 * 1000;
-    const TRIAL_DAYS = 90;
 
     console.log(`updateClubLicenseStatuses start: ${now.toISOString()}`);
 
@@ -533,19 +877,7 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
                 }
             }
 
-            // 3. Trial: clubs.createdAt + 90 dni
-            if (status === 'EXPIRED') {
-                const createdAt = d.createdAt?.toDate ? d.createdAt.toDate()
-                                : (d.createdAt ? new Date(d.createdAt) : null);
-                if (createdAt && !isNaN(createdAt)) {
-                    const trialEnd = new Date(createdAt.getTime() + TRIAL_DAYS * 86400 * 1000);
-                    if (trialEnd > now) {
-                        status = 'TRIAL'; source = 'trial'; statusExpiry = trialEnd;
-                    } else if (trialEnd > new Date(now - GRACE_MS)) {
-                        status = 'GRACE'; source = 'trial'; statusExpiry = trialEnd;
-                    }
-                }
-            }
+            // Trial liczony per-user w getAccessStatus() (memberships.createdAt) — nie tutaj
 
             // Zapisz tylko jeśli status się zmienił (oszczędność zapisów)
             if (status !== prevStatus) {
@@ -599,14 +931,17 @@ const LICENSE_NOTIF_DAYS = [15, 10, 5, 1, 0];
 const LICENSE_GRACE_MARKS = [0, 7];
 const TRIAL_DAYS_MS = 90 * 86400 * 1000;
 
-function makeLicenseNotifId() {
-    return 'notif_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '_' + Date.now().toString().slice(-7) + '_' + Math.floor(Math.random() * 1000);
+function makeLicenseNotifId(userId, title, daysLeft) {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const slug = title.replace(/[^a-zA-Z]/g, '').slice(0, 8).toLowerCase();
+    const dl = daysLeft >= 0 ? 'd' + daysLeft : 'g' + Math.abs(daysLeft);
+    return `licnotif_${today}_${userId}_${slug}_${dl}`;
 }
 
-async function sendLicenseNotification(userId, title, body, teamId) {
+async function sendLicenseNotification(userId, title, body, teamId, daysLeft) {
     const now = new Date();
     const notif = {
-        notificationId: makeLicenseNotifId(),
+        notificationId: makeLicenseNotifId(userId, title, daysLeft ?? 0),
         userId,
         teamId: teamId || null,
         type: 'LICENSE_EXPIRING',
@@ -655,6 +990,8 @@ exports.checkExpiringLicenses = onSchedule('every day 07:00', async () => {
     const now = new Date();
     console.log(`checkExpiringLicenses start: ${now.toISOString()}`);
     let sentA = 0, sentB = 0, sentEtap2 = 0, sentEtap3 = 0;
+    // Globalny dedup: userId → już dostał powiadomienie w tej iteracji (niezależnie od etapu)
+    const notifiedUsers = new Set();
 
     try {
         // ── System A (Etap 1): access_rights (P1 własna + P4 rodzinna) ──
@@ -674,8 +1011,9 @@ exports.checkExpiringLicenses = onSchedule('every day 07:00', async () => {
 
             const daysLeft = Math.ceil((validUntil - now) / 86400000);
             const msg = licenseExpiryMessage(daysLeft, 'Twój pakiet Coachay', 'active');
-            if (msg) {
-                await sendLicenseNotification(ar.uid, 'Coachay — pakiet', msg, ar.club_id);
+            if (msg && !notifiedUsers.has(ar.uid)) {
+                await sendLicenseNotification(ar.uid, 'Coachay — pakiet', msg, ar.club_id, daysLeft);
+                notifiedUsers.add(ar.uid);
                 sentA++;
             }
         }
@@ -708,7 +1046,7 @@ exports.checkExpiringLicenses = onSchedule('every day 07:00', async () => {
                             .get()
                     ]);
 
-                    // System B
+                    // System B — admini pierwsi (priorytet), potem trenerzy
                     const odbiorcyB = new Set();
                     adminsSnap.docs.forEach(d => { if (d.data().userId) odbiorcyB.add(d.data().userId); });
                     trenerzySnap.docs.forEach(d => {
@@ -717,7 +1055,9 @@ exports.checkExpiringLicenses = onSchedule('every day 07:00', async () => {
                         if (m.userId && (st === 'active' || st === 'grace')) odbiorcyB.add(m.userId);
                     });
                     for (const uid of odbiorcyB) {
-                        await sendLicenseNotification(uid, 'Coachay — licencja klubowa', msgKlub, null);
+                        if (notifiedUsers.has(uid)) continue; // już dostał powiadomienie w tym przebiegu
+                        await sendLicenseNotification(uid, 'Coachay — licencja klubowa', msgKlub, null, daysLeft);
+                        notifiedUsers.add(uid);
                         sentB++;
                     }
 
@@ -726,8 +1066,11 @@ exports.checkExpiringLicenses = onSchedule('every day 07:00', async () => {
                     if (msgSlot) {
                         for (const d of slotUsersSnap.docs) {
                             const m = d.data();
-                            if (!m.userId) continue;
-                            await sendLicenseNotification(m.userId, 'Coachay — dostęp przez pulę klubową', msgSlot, clubId);
+                            if (!m.userId || notifiedUsers.has(m.userId)) continue;
+                            // Rodzic i kibic nie mogą odnowić licencji — pomijamy
+                            if (['RODZIC', 'KIBIC', 'ZAWODNIK'].includes(m.role)) continue;
+                            await sendLicenseNotification(m.userId, 'Coachay — dostęp przez pulę klubową', msgSlot, clubId, daysLeft);
+                            notifiedUsers.add(m.userId);
                             sentEtap3++;
                         }
                     }
@@ -747,10 +1090,12 @@ exports.checkExpiringLicenses = onSchedule('every day 07:00', async () => {
                     for (const d of membersSnap.docs) {
                         const m = d.data();
                         const st = (m.status || '').toLowerCase();
-                        if (!m.userId || m.role === 'ZAWODNIK') continue;
+                        if (!m.userId || ['ZAWODNIK', 'RODZIC', 'KIBIC'].includes(m.role)) continue;
                         if (!(st === 'active' || st === 'grace')) continue;
-                        if (juzMaP1.has(m.userId)) continue; // już objęty Etapem 1 (własna licencja ważniejsza niż trial)
-                        await sendLicenseNotification(m.userId, 'Coachay — okres próbny', msgTrial, clubId);
+                        if (juzMaP1.has(m.userId)) continue;
+                        if (notifiedUsers.has(m.userId)) continue; // już dostał inny typ powiadomienia
+                        await sendLicenseNotification(m.userId, 'Coachay — okres próbny', msgTrial, clubId, daysLeftTrial);
+                        notifiedUsers.add(m.userId);
                         sentEtap2++;
                     }
                 }
@@ -994,28 +1339,169 @@ exports.onWhatsAppWebhook = onRequest({ secrets: [WHATSAPP_TOKEN_SECRET, WHATSAP
 */
 
 /* ═══════════════════════════════════════════════════════
-   Cleanup powiadomień — co noc zmienia status na DELETE
-   gdy deleteAt minął
+   Cleanup powiadomień — 3-fazowy hard-delete
+   Faza 1: soft-delete gdy deleteAt minął (zachowane)
+   Faza 2: hard-delete status=DELETE (oczekujące na purge)
+   Faza 3: hard-delete starsze niż 60 dni (niezależnie od statusu)
+   Przed hard-delete: zapis do platform_metrics
 ═══════════════════════════════════════════════════════ */
 exports.cleanupNotifications = onSchedule('every day 03:00', async () => {
     const now = new Date();
     console.log(`cleanupNotifications start: ${now.toISOString()}`);
+
+    // Faza 1: soft-delete (istniejące zachowanie)
     try {
-        const snap = await db.collection('notifications')
+        const softSnap = await db.collection('notifications')
             .where('status', '!=', 'DELETE')
             .where('deleteAt', '<=', now)
             .get();
+        if (!softSnap.empty) {
+            const batch = db.batch();
+            softSnap.docs.forEach(doc => batch.update(doc.ref, { status: 'DELETE' }));
+            await batch.commit();
+            console.log(`cleanupNotifications F1: soft-deleted ${softSnap.size}`);
+        }
+    } catch (e) { console.error('cleanupNotifications F1:', e); }
 
-        if (snap.empty) {
-            console.log('cleanupNotifications: brak powiadomień do wyczyszczenia');
-            return;
+    // Faza 2+3: hard-delete — status=DELETE + starsze niż 60 dni
+    try {
+        const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 3600 * 1000).toISOString();
+        const [deleteStatusSnap, oldSnap] = await Promise.all([
+            db.collection('notifications').where('status', '==', 'DELETE').get(),
+            db.collection('notifications').where('createdAt', '<=', sixtyDaysAgo).get(),
+        ]);
+
+        // Deduplikacja po doc.id
+        const toDelete = new Map();
+        deleteStatusSnap.docs.forEach(d => toDelete.set(d.id, d.ref));
+        oldSnap.docs.forEach(d => toDelete.set(d.id, d.ref));
+
+        if (toDelete.size > 0) {
+            await incrementPlatformMetric(now.getFullYear(), now.getMonth() + 1, {
+                deleted_notifications: toDelete.size,
+            });
+            const refs = [...toDelete.values()];
+            for (let i = 0; i < refs.length; i += 500) {
+                const batch = db.batch();
+                refs.slice(i, i + 500).forEach(ref => batch.delete(ref));
+                await batch.commit();
+            }
+            console.log(`cleanupNotifications F2/F3: hard-deleted ${toDelete.size}`);
+        } else {
+            console.log('cleanupNotifications: brak powiadomień do hard-delete');
+        }
+    } catch (e) { console.error('cleanupNotifications F2/F3:', e); }
+});
+
+/* ═══════════════════════════════════════════════════════
+   Cleanup eventów — hard-delete soft-deleted eventów po 14 dniach
+   Events ze status=DELETE i deletedAt starszym niż 14 dni.
+   Historyczne mecze/treningi (bez DELETE) zostają nieruszone.
+   Przed delete: zapis do platform_metrics.
+═══════════════════════════════════════════════════════ */
+exports.cleanupEvents = onSchedule('every day 03:30', async () => {
+    const now = new Date();
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 3600 * 1000);
+    console.log(`cleanupEvents start: ${now.toISOString()}`);
+    try {
+        const snap = await db.collection('events').where('status', '==', 'DELETE').get();
+        if (snap.empty) { console.log('cleanupEvents: brak eventów do usunięcia'); return; }
+
+        // Filtruj tylko te gdzie deletedAt > 14 dni temu
+        const toDelete = snap.docs.filter(doc => {
+            const deletedAt = doc.data().deletedAt;
+            if (!deletedAt) return true; // brak deletedAt = usuń od razu
+            return new Date(deletedAt) <= fourteenDaysAgo;
+        });
+
+        if (toDelete.length === 0) { console.log('cleanupEvents: żaden event nie przekroczył 14 dni'); return; }
+
+        await incrementPlatformMetric(now.getFullYear(), now.getMonth() + 1, {
+            deleted_events: toDelete.length,
+        });
+
+        for (let i = 0; i < toDelete.length; i += 500) {
+            const batch = db.batch();
+            toDelete.slice(i, i + 500).forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        }
+        console.log(`cleanupEvents: hard-deleted ${toDelete.length} eventów`);
+    } catch (e) { console.error('cleanupEvents error:', e); }
+});
+
+/* ═══════════════════════════════════════════════════════
+   RevenueCat Webhook — obsługa subskrypcji indywidualnych
+   POST /revenuecat-webhook
+   Zdarzenia: INITIAL_PURCHASE, RENEWAL → ACTIVE
+              CANCELLATION, EXPIRATION   → EXPIRED
+═══════════════════════════════════════════════════════ */
+exports.revenuecatWebhook = onRequest(
+    { secrets: [REVENUECAT_WEBHOOK_SECRET] },
+    async (req, res) => {
+        if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+
+        // Weryfikacja authorization header
+        const authHeader = req.headers['authorization'] || '';
+        const expected   = REVENUECAT_WEBHOOK_SECRET.value();
+        if (!expected || authHeader !== expected) {
+            console.warn('revenuecatWebhook: nieprawidłowy token autoryzacji');
+            return res.status(401).send('Unauthorized');
         }
 
-        const batch = db.batch();
-        snap.docs.forEach(doc => batch.update(doc.ref, { status: 'DELETE' }));
-        await batch.commit();
-        console.log(`cleanupNotifications: oznaczono ${snap.size} powiadomień jako DELETE`);
-    } catch (e) {
-        console.error('cleanupNotifications error:', e);
+        const event = req.body?.event;
+        if (!event) return res.status(400).send('Bad Request: brak pola event');
+
+        const { type, app_user_id, expiration_at_ms, product_id, store } = event;
+        if (!app_user_id) return res.status(400).send('Bad Request: brak app_user_id');
+
+        console.log(`revenuecatWebhook: type=${type} user=${app_user_id}`);
+
+        const ACTIVE_EVENTS  = ['INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION'];
+        const EXPIRED_EVENTS = ['CANCELLATION', 'EXPIRATION', 'BILLING_ISSUE'];
+
+        if (!ACTIVE_EVENTS.includes(type) && !EXPIRED_EVENTS.includes(type)) {
+            // Zdarzenie ignorowane (np. TEST, TRANSFER itp.)
+            console.log(`revenuecatWebhook: zdarzenie ${type} zignorowane`);
+            return res.status(200).send('OK');
+        }
+
+        try {
+            // Znajdź użytkownika po app_user_id (= userId w Coachay)
+            const userSnap = await db.collection('users').doc(app_user_id).get();
+            if (!userSnap.exists) {
+                // Fallback — szukaj po polu userId jeśli nie ma dokumentu pod tym kluczem
+                const byField = await db.collection('users')
+                    .where('userId', '==', app_user_id).limit(1).get();
+                if (byField.empty) {
+                    console.warn(`revenuecatWebhook: user ${app_user_id} nie istnieje`);
+                    return res.status(200).send('OK'); // 200 żeby RC nie retry'ował
+                }
+                await applyLicenseUpdate(byField.docs[0].ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS);
+            } else {
+                await applyLicenseUpdate(userSnap.ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS);
+            }
+
+            return res.status(200).send('OK');
+        } catch (e) {
+            console.error('revenuecatWebhook error:', e);
+            return res.status(500).send('Internal Server Error');
+        }
     }
-});
+);
+
+async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS) {
+    const isActive = ACTIVE_EVENTS.includes(type);
+    const updates = {
+        'subscription.status':    isActive ? 'ACTIVE' : 'EXPIRED',
+        'subscription.updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (product_id) updates['subscription.productId'] = product_id;
+    if (store)      updates['subscription.store']     = store;
+    if (expiration_at_ms) {
+        updates['subscription.expiresAt'] = new Date(expiration_at_ms);
+    } else if (!isActive) {
+        updates['subscription.expiresAt'] = FieldValue.serverTimestamp();
+    }
+    await userRef.update(updates);
+    console.log(`revenuecatWebhook: user ${userRef.id} → subscription.status=${updates['subscription.status']}`);
+}
