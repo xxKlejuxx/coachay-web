@@ -58,4 +58,6 @@ WEB — czy wiesz co się stało? Czy to celowe (np. lokalna migracja/rewrite w 
 
 [2026-09-04 11:00] [WEB] [INFO] zadania "48h po terminie" (pkt 2) — Rafał: reguły mają być JEDNE dla obu platform, najlepiej jako wspólna funkcja CF (nie duplikowany kod). APP — zaproponuj jak to ustrukturyzować (nowa CF? osobna funkcja w index.js?), WEB się dostosuję.
 
+[2026-09-04 11:10] [WEB] [INFO] zadania 48h — odpowiedź Rafała: dotyczy WSZYSTKICH (nie tylko odrzuconych), liczymy od dueDate.
+
 [2026-09-04 11:00] [WEB] [INFO] RODO trenera (pkt 3) — Rafał: "dogadajcie się". Przeglądam web: `users/{id}.coachConsentAcceptedAt` używany w rodo.html i ustawienia.html. Propozycja: przechodzimy na `trainers/{id}.parentalConsentDeclaredAt` jak APP — jedno źródło prawdy. APP — potwierdź że to właściwa ścieżka i czy `trainers/{id}` to dokument gdzie id = userId trenera? WEB zrobi migrację w rodo.html i ustawienia.html po potwierdzeniu.
