@@ -73,7 +73,7 @@
         document.documentElement.lang = _lang;
     }
 
-    var LOCALE_V = '20260820c';
+    var LOCALE_V = '20260826e';
     function load(lang) {
         return fetch('locales/' + lang + '.json?v=' + LOCALE_V)
             .then(function (r) {

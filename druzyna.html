@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COACHAY — Drużyna</title>
 <link rel="stylesheet" href="_global.css?v=20260730a">
+<link rel="stylesheet" href="_desktop.css?v=20260821c">
+<script src="_sidebar.js?v=20260821b"></script>
+<script src="_i18n.js?v=20260820g"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -14,15 +17,15 @@
 /* ── Sort bar ── */
 .sort-bar { padding: 10px 16px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
 .sort-bar::-webkit-scrollbar { display: none; }
-.sort-lbl { font-size: 10px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; flex-shrink: 0; }
-.sort-btn { border-radius: var(--r-pill); padding: 5px 12px; font-size: 11px; font-weight: 800; background: var(--tlo-karta); border: 1px solid var(--border); color: var(--szary); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.sort-lbl { font-size: 15px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; flex-shrink: 0; }
+.sort-btn { border-radius: var(--r-pill); padding: 5px 12px; font-size: 16px; font-weight: 800; background: var(--tlo-karta); border: 1px solid var(--border); color: var(--szary); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
 .sort-btn.active { background: var(--bialy); color: #000; border-color: var(--bialy); }
 
 /* ── Lista zawodników ── */
-.zaw-scroll { flex: 1; overflow-y: auto; padding: 10px 16px 80px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+.zaw-scroll { flex: 1; overflow-y: auto; padding: 10px 16px 80px; display: flex; flex-direction: column; align-items: center; gap: 8px; scrollbar-width: none; }
 .zaw-scroll::-webkit-scrollbar { display: none; }
 
-.zaw-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.15s; }
+.zaw-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.15s; width: 100%; max-width: 1100px; box-sizing: border-box; }
 .zaw-item:active { background: var(--tlo-karta2); }
 
 .zaw-av-wrap { position: relative; flex-shrink: 0; width: 46px; height: 46px; }
@@ -31,99 +34,101 @@
 .zaw-av-dot.has-account { background: #22c55e; }
 .zaw-av-dot.no-account  { background: var(--szary); }
 .zaw-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.zaw-av-initials { font-family: var(--font-d); font-size: 14px; font-weight: 800; color: var(--bialy); }
+.zaw-av-initials { font-family: var(--font-d); font-size: 19px; font-weight: 800; color: var(--bialy); }
 
 .zaw-info { flex: 1; min-width: 0; }
-.zaw-nazwa { font-size: 14px; font-weight: 800; color: var(--bialy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.zaw-sub { font-size: 11px; color: var(--szary); margin-top: 2px; font-weight: 600; }
+.zaw-nazwa { font-size: 19px; font-weight: 800; color: var(--bialy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zaw-sub { font-size: 16px; color: var(--szary); margin-top: 2px; font-weight: 600; }
 
 .zaw-meta { text-align: right; flex-shrink: 0; }
-.zaw-liga { font-size: 11px; font-weight: 900; color: var(--warn); white-space: nowrap; }
-.zaw-liga-lbl { font-size: 9px; color: var(--szary); font-weight: 700; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
+.zaw-liga { font-size: 16px; font-weight: 900; color: var(--warn); white-space: nowrap; }
+.zaw-liga-lbl { font-size: 14px; color: var(--szary); font-weight: 700; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* ── FAB — dodaj zawodnika ── */
-.fab { position: absolute; bottom: calc(var(--nav-h) + 12px); right: 18px; width: 52px; height: 52px; border-radius: 50%; background: var(--akcent); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 300; color: #fff; box-shadow: 0 4px 20px rgba(59,130,246,0.4); cursor: pointer; z-index: 10; transition: transform 0.15s; border: none; }
-.fab:active { transform: scale(0.92); }
+/* ── FAB dodaj zawodnika ── */
+.add-player-bar { position: absolute; bottom: 72px; right: 16px; z-index: 10; display: none; }
+body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
+.add-player-btn { width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size: 19px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); transition: opacity 0.15s; }
+.add-player-btn:active { opacity: 0.85; }
 
 /* ── Panel zawodnika (slide z prawej) ── */
 .detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .detail-panel.open { transform: translateX(0); }
 
 .dp-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.dp-back { display: flex; align-items: center; gap: 8px; color: var(--bialy); font-size: 13px; font-weight: 800; cursor: pointer; }
-.dp-back-icon { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-.dp-edit-btn { font-size: 12px; font-weight: 800; color: var(--akcent); cursor: pointer; padding: 4px 0; }
+.dp-back { display: flex; align-items: center; gap: 8px; color: var(--bialy); font-size: 18px; font-weight: 800; cursor: pointer; }
+.dp-back-icon { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 21px; }
+.dp-edit-btn { font-size: 17px; font-weight: 800; color: var(--akcent); cursor: pointer; padding: 4px 0; }
 
 .dp-hero { background: #000; padding: 16px 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .dp-hero-main { display: flex; align-items: center; gap: 16px; }
 .dp-av { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border2); flex-shrink: 0; background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; }
 .dp-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.dp-av-initials { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
+.dp-av-initials { font-family: var(--font-d); font-size: 27px; font-weight: 800; color: var(--bialy); }
 .dp-info { flex: 1; min-width: 0; }
-.dp-nazwa { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); line-height: 1.1; }
-.dp-sub { font-size: 12px; color: var(--szary); margin-top: 4px; font-weight: 600; line-height: 1.5; }
+.dp-nazwa { font-family: var(--font-d); font-size: 25px; font-weight: 800; color: var(--bialy); line-height: 1.1; }
+.dp-sub { font-size: 17px; color: var(--szary); margin-top: 4px; font-weight: 600; line-height: 1.5; }
 .dp-badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 
 .dp-stats { display: flex; background: var(--tlo-karta); border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .dp-stat { flex: 1; text-align: center; padding: 14px 8px; }
 .dp-stat + .dp-stat { border-left: 1px solid var(--border); }
-.dp-stat-n { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); line-height: 1; }
-.dp-stat-l { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: var(--szary); margin-top: 4px; }
+.dp-stat-n { font-family: var(--font-d); font-size: 25px; font-weight: 800; color: var(--bialy); line-height: 1; }
+.dp-stat-l { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: var(--szary); margin-top: 4px; }
 
 .dp-scroll { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
 .dp-scroll::-webkit-scrollbar { display: none; }
 
 /* ── Frekwencja ── */
 .freq-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.freq-label { font-size: 12px; font-weight: 700; color: var(--szary-j); width: 70px; flex-shrink: 0; }
+.freq-label { font-size: 17px; font-weight: 700; color: var(--szary-j); width: 70px; flex-shrink: 0; }
 .freq-bar-wrap { flex: 1; height: 8px; background: var(--tlo-karta2); border-radius: 999px; overflow: hidden; }
 .freq-bar { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
 .freq-bar-trening { background: #3B82F6; }
 .freq-bar-mecz { background: #10B981; }
 .freq-bar-wyjazd { background: #F59E0B; }
 .freq-bar-inne { background: #6B7280; }
-.freq-pct { font-size: 12px; font-weight: 900; color: var(--bialy); width: 36px; text-align: right; flex-shrink: 0; }
+.freq-pct { font-size: 17px; font-weight: 900; color: var(--bialy); width: 36px; text-align: right; flex-shrink: 0; }
 
 /* ── Absencje ── */
 .abs-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .abs-item:last-child { border-bottom: none; }
 .abs-dates { flex: 1; }
-.abs-dates-main { font-size: 12px; font-weight: 800; color: var(--bialy); }
-.abs-dates-comment { font-size: 11px; color: var(--szary); margin-top: 2px; }
-.abs-del { font-size: 16px; color: var(--szary); cursor: pointer; padding: 4px; }
+.abs-dates-main { font-size: 17px; font-weight: 800; color: var(--bialy); }
+.abs-dates-comment { font-size: 16px; color: var(--szary); margin-top: 2px; }
+.abs-del { font-size: 21px; color: var(--szary); cursor: pointer; padding: 4px; }
 
 /* ── Panel absencji (slide-in nad profilem) ── */
 .abs-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .abs-panel.open { transform: translateY(0); }
 .abs-panel-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.abs-panel-tytul { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+.abs-panel-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 .abs-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
 
 /* ── Panel dodaj zawodnika ── */
 .add-player-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .add-player-panel.open { transform: translateY(0); }
 .add-player-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.add-player-tytul { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+.add-player-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 .add-player-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; }
 
 /* ── Statystyki hero — 4 pola z zapisem X/Y ── */
-.dp-stat-sub { font-size: 9px; font-weight: 700; color: var(--szary); margin-top: 3px; }
+.dp-stat-sub { font-size: 14px; font-weight: 700; color: var(--szary); margin-top: 3px; }
 
 /* ── Sekcja w panelu ── */
 .dp-section { display: flex; flex-direction: column; gap: 8px; }
-.dp-section-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
+.dp-section-label { font-size: 15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
 
 /* ── Picker awatara (slide-in z dołu) ── */
 .avatar-picker-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 150; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .avatar-picker-panel.open { transform: translateY(0); }
 .avatar-picker-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.avatar-picker-tytul { font-family: var(--font-d); font-size: 17px; font-weight: 800; color: var(--bialy); }
+.avatar-picker-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 
 /* Wybór stylu + przycisk generuj */
 .av-styl-row { display: flex; gap: 8px; padding: 12px 16px; background: #000; border-bottom: 1px solid var(--border); flex-shrink: 0; align-items: center; }
-.av-styl-btn { padding: 7px 16px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1px solid var(--border); font-size: 12px; font-weight: 800; color: var(--szary-j); cursor: pointer; transition: all 0.15s; }
+.av-styl-btn { padding: 7px 16px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1px solid var(--border); font-size: 17px; font-weight: 800; color: var(--szary-j); cursor: pointer; transition: all 0.15s; }
 .av-styl-btn.selected { background: var(--bialy); color: #000; border-color: var(--bialy); }
-.av-generuj-btn { margin-left: auto; padding: 7px 14px; border-radius: var(--r-pill); background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); font-size: 12px; font-weight: 900; color: var(--akcent); cursor: pointer; flex-shrink: 0; }
+.av-generuj-btn { margin-left: auto; padding: 7px 14px; border-radius: var(--r-pill); background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); font-size: 17px; font-weight: 900; color: var(--akcent); cursor: pointer; flex-shrink: 0; }
 .av-generuj-btn:active { background: rgba(59,130,246,0.25); }
 
 /* Grid miniaturek */
@@ -139,16 +144,16 @@
 .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
 .modal-overlay.open { opacity: 1; visibility: visible; }
 .modal-box { background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: 20px 20px 0 0; padding: 20px 20px 32px; width: 100%; }
-.modal-title { font-family: var(--font-d); font-size: 16px; font-weight: 800; color: var(--bialy); margin-bottom: 8px; }
-.modal-body { font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.6; margin-bottom: 18px; }
+.modal-title { font-family: var(--font-d); font-size: 21px; font-weight: 800; color: var(--bialy); margin-bottom: 8px; }
+.modal-body { font-size: 17px; color: var(--szary); font-weight: 600; line-height: 1.6; margin-bottom: 18px; }
 .modal-btns { display: flex; flex-direction: column; gap: 8px; }
-.modal-btn { width: 100%; padding: 14px; border-radius: var(--r-pill); font-size: 13px; font-weight: 900; cursor: pointer; border: none; transition: opacity 0.15s; }
+.modal-btn { width: 100%; padding: 14px; border-radius: var(--r-pill); font-size: 18px; font-weight: 900; cursor: pointer; border: none; transition: opacity 0.15s; }
 .modal-btn-primary { background: var(--bialy); color: #000; }
 .modal-btn-secondary { background: var(--tlo-karta2); color: var(--szary-j); border: 1px solid var(--border2); }
-.modal-btn-cancel { background: transparent; color: var(--szary); font-size: 12px; }
+.modal-btn-cancel { background: transparent; color: var(--szary); font-size: 17px; }
 
 /* ── Notatki trenera ── */
-.coach-notes { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 12px 14px; color: var(--bialy); font-size: 13px; font-weight: 600; font-family: var(--font); resize: none; min-height: 80px; }
+.coach-notes { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 12px 14px; color: var(--bialy); font-size: 18px; font-weight: 600; font-family: var(--font); resize: none; min-height: 80px; }
 .coach-notes::placeholder { color: var(--szary); }
 .coach-notes:focus { border-color: var(--akcent); outline: none; }
 
@@ -159,13 +164,13 @@
 .kod-item.kod-wygasly { opacity: 0.5; }
 .kod-item.kod-nieaktywny { opacity: 0.5; }
 .kod-item-top { display: flex; align-items: center; justify-content: space-between; }
-.kod-val-big { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
-.kod-status-badge { font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 1px; }
+.kod-val-big { font-family: var(--font-d); font-size: 25px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
+.kod-status-badge { font-size: 14px; font-weight: 900; padding: 3px 8px; border-radius: 999px; letter-spacing: 0.5px; }
 .kod-status-aktywny { background: rgba(59,130,246,0.15); color: #3B82F6; }
 .kod-status-uzyty { background: rgba(74,222,128,0.12); color: var(--sukces); }
 .kod-status-wygasly { background: var(--tlo-karta2); color: var(--szary); }
 .kod-status-nieaktywny { background: rgba(251,191,36,0.12); color: var(--warn); }
-.kod-meta { font-size: 11px; color: var(--szary); font-weight: 600; line-height: 1.6; }
+.kod-meta { font-size: 16px; color: var(--szary); font-weight: 600; line-height: 1.6; }
 .kod-meta strong { color: var(--szary-j); }
 .kod-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 
@@ -174,59 +179,91 @@
 
 /* ── Kod dostępu ── */
 .kod-box { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; }
-.kod-val { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
-.kod-copy { font-size: 11px; font-weight: 900; color: var(--akcent); cursor: pointer; }
+.kod-val { font-family: var(--font-d); font-size: 27px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
+.kod-copy { font-size: 16px; font-weight: 900; color: var(--akcent); cursor: pointer; }
 
 /* ── Select custom ── */
-.form-select { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 15px; font-weight: 600; font-family: var(--font); appearance: none; cursor: pointer; }
+.form-select { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 20px; font-weight: 600; font-family: var(--font); appearance: none; cursor: pointer; }
 .form-select:focus { border-color: var(--akcent); outline: none; }
 .form-select option { background: #1a1a1a; }
 
 /* ── Empty state ── */
-.zaw-empty { padding: 60px 20px; text-align: center; color: var(--szary); font-size: 13px; font-weight: 600; line-height: 1.6; }
+.zaw-empty { padding: 60px 20px; text-align: center; color: var(--szary); font-size: 18px; font-weight: 600; line-height: 1.6; width: 100%; max-width: 1100px; box-sizing: border-box; }
 
 /* ── Powiązane konta ── */
-.pow-group-label { font-size: 10px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; margin-top: 4px; }
+.pow-group-label { font-size: 15px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; margin-top: 4px; }
 .pow-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
 .pow-item:last-child { margin-bottom: 0; }
 .pow-item:hover { border-color: var(--akcent); }
-.pow-chevron { color: var(--szary); font-size: 12px; flex-shrink: 0; }
+.pow-chevron { color: var(--szary); font-size: 17px; flex-shrink: 0; }
 /* Modal danych powiązanego */
 .pow-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 9000; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 .pow-modal-overlay.open { opacity: 1; pointer-events: all; }
 .pow-modal { background: var(--tlo-karta); border-radius: 20px 20px 0 0; padding: 20px 20px 36px; width: 100%; max-height: 80vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.25s cubic-bezier(.32,.72,0,1); }
 .pow-modal-overlay.open .pow-modal { transform: translateY(0); }
 .pow-modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.pow-modal-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; }
-.pow-modal-title { font-size: 16px; font-weight: 900; color: var(--bialy); flex: 1; }
-.pow-modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: var(--szary); }
+.pow-modal-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 25px; }
+.pow-modal-title { font-size: 21px; font-weight: 900; color: var(--bialy); flex: 1; }
+.pow-modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 19px; color: var(--szary); }
 .pow-modal-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .pow-modal-row:last-child { border-bottom: none; }
-.pow-modal-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; margin-top: 1px; }
-.pow-modal-label { font-size: 10px; font-weight: 700; color: var(--szary); text-transform: uppercase; letter-spacing: 0.5px; }
-.pow-modal-val { font-size: 13px; font-weight: 700; color: var(--bialy); margin-top: 2px; line-height: 1.4; }
+.pow-modal-icon { font-size: 21px; width: 24px; text-align: center; flex-shrink: 0; margin-top: 1px; }
+.pow-modal-label { font-size: 15px; font-weight: 700; color: var(--szary); text-transform: uppercase; letter-spacing: 0.5px; }
+.pow-modal-val { font-size: 18px; font-weight: 700; color: var(--bialy); margin-top: 2px; line-height: 1.4; }
 .pow-item-top { display: flex; align-items: center; gap: 10px; }
-.pow-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-.pow-name { font-size: 13px; font-weight: 800; color: var(--bialy); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pow-status { font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
+.pow-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.pow-name { font-size: 18px; font-weight: 800; color: var(--bialy); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pow-status { font-size: 14px; font-weight: 900; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
 .pow-status-active  { background: rgba(16,185,129,0.15); color: var(--sukces); }
 .pow-status-pending { background: rgba(107,114,128,0.15); color: var(--szary); }
 .pow-status-expired { background: rgba(248,113,113,0.15); color: var(--blad); }
 .pow-code-row { display: flex; align-items: center; gap: 8px; }
-.pow-code { font-size: 12px; font-weight: 800; color: var(--bialy); font-family: monospace; background: var(--tlo-karta2); border: 1px solid var(--border); padding: 3px 10px; border-radius: 6px; letter-spacing: 2px; }
-.pow-exp { font-size: 10px; color: var(--szary); font-weight: 600; }
+.pow-code { font-size: 17px; font-weight: 800; color: var(--bialy); font-family: monospace; background: var(--tlo-karta2); border: 1px solid var(--border); padding: 3px 10px; border-radius: 6px; letter-spacing: 2px; }
+.pow-exp { font-size: 15px; color: var(--szary); font-weight: 600; }
 .pow-actions { display: flex; gap: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
-.pow-action-btn { flex: 1; padding: 6px 8px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); background: var(--tlo-karta2); color: var(--szary-j); text-align: center; transition: opacity 0.15s; }
+.pow-action-btn { flex: 1; padding: 6px 8px; border-radius: 8px; font-size: 16px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); background: var(--tlo-karta2); color: var(--szary-j); text-align: center; transition: opacity 0.15s; }
 .pow-action-btn:active { opacity: 0.6; }
-.pow-empty { font-size: 12px; color: var(--szary); text-align: center; padding: 10px 0; }
+.pow-empty { font-size: 17px; color: var(--szary); text-align: center; padding: 10px 0; }
 .pow-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.pow-filter-row label { font-size: 11px; font-weight: 700; color: var(--szary); cursor: pointer; user-select: none; }
+.pow-filter-row label { font-size: 16px; font-weight: 700; color: var(--szary); cursor: pointer; user-select: none; }
 .pow-filter-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--akcent); }
 /* Phone prefix row */
 .phone-row { display: flex; gap: 6px; align-items: center; }
-.phone-prefix-select { width: 90px; flex-shrink: 0; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--bialy); font-size: 13px; font-weight: 700; padding: 10px 8px; -webkit-appearance: none; }
+.phone-prefix-select { width: 90px; flex-shrink: 0; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--bialy); font-size: 18px; font-weight: 700; padding: 10px 8px; -webkit-appearance: none; }
 .phone-num-inp { flex: 1; }
-.phone-error { font-size: 11px; color: var(--blad); margin-top: 4px; font-weight: 700; display: none; }
+.phone-error { font-size: 16px; color: var(--blad); margin-top: 4px; font-weight: 700; display: none; }
+/* Import CSV panel */
+.import-btn { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 10px; color: var(--szary-j); font-size: 13px; font-weight: 800; padding: 6px 10px; cursor: pointer; display: none; white-space: nowrap; }
+.import-btn:active { opacity: 0.7; }
+.import-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 145; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.import-panel.open { transform: translateY(0); }
+.import-hdr { background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; min-height: 60px; }
+.import-tytul { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); }
+.import-body { flex: 1; overflow-y: auto; padding: 20px 16px; }
+.import-inner { max-width: 1222px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+.import-step { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.import-step-num { font-size: 11px; font-weight: 900; color: var(--akcent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.import-step-title { font-size: 17px; font-weight: 800; color: var(--bialy); margin-bottom: 6px; }
+.import-step-body { font-size: 15px; color: var(--szary-j); line-height: 1.55; }
+.import-step-body code { background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; font-size: 13px; color: var(--bialy); font-family: monospace; }
+.import-step-body ol { margin: 8px 0 0 18px; padding: 0; }
+.import-step-body ol li { margin-bottom: 4px; }
+.import-cols { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.import-col-tag { background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 13px; font-weight: 700; color: var(--szary-j); }
+.import-col-tag.req { border-color: var(--akcent); color: var(--akcent); }
+.import-file-zone { border: 2px dashed var(--border2); border-radius: 14px; padding: 28px 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+.import-file-zone:hover { border-color: var(--akcent); }
+.import-file-zone-icon { font-size: 32px; margin-bottom: 8px; }
+.import-file-zone-label { font-size: 16px; font-weight: 800; color: var(--bialy); margin-bottom: 4px; }
+.import-file-zone-sub { font-size: 13px; color: var(--szary); }
+.import-preview { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.import-preview-hdr { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 800; color: var(--szary); }
+.import-preview-table { width: 100%; overflow-x: auto; }
+.import-preview-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.import-preview-table th { background: var(--tlo-karta2); padding: 8px 10px; text-align: left; font-weight: 800; color: var(--szary); font-size: 12px; white-space: nowrap; }
+.import-preview-table td { padding: 7px 10px; border-top: 1px solid var(--border); color: var(--bialy); white-space: nowrap; }
+.import-preview-table tr.err td { color: var(--blad); }
+.import-err-badge { display: inline-block; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #F87171; border-radius: 6px; padding: 2px 7px; font-size: 12px; font-weight: 800; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -241,6 +278,7 @@
             <span class="ctx-arrow">▾</span>
         </div>
         <div class="top-bar-right">
+            <button class="import-btn" id="import-csv-btn" onclick="otworzImportCSV()" data-i18n="druzyna.importCsvButton">📥 Importuj CSV</button>
             <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
             <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
         </div>
@@ -252,6 +290,7 @@
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
+    <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
         <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
     </div>
@@ -261,36 +300,38 @@
 
         <!-- Sort bar -->
         <div class="sort-bar">
-            <span class="sort-lbl">Sortuj:</span>
-            <button class="sort-btn active" data-sort="numer" onclick="sortujZawodnikow(this,'numer')">Numer</button>
-            <button class="sort-btn" data-sort="imie" onclick="sortujZawodnikow(this,'imie')">Imię</button>
-            <button class="sort-btn" data-sort="pozycja" onclick="sortujZawodnikow(this,'pozycja')">Pozycja</button>
-            <button class="sort-btn" data-sort="grupa" onclick="sortujZawodnikow(this,'grupa')">Grupa</button>
+            <span class="sort-lbl" data-i18n="druzyna.sortLabel">Sortuj:</span>
+            <button class="sort-btn active" data-sort="numer" onclick="sortujZawodnikow(this,'numer')" data-i18n="druzyna.sortNumber">Numer</button>
+            <button class="sort-btn" data-sort="imie" onclick="sortujZawodnikow(this,'imie')" data-i18n="druzyna.sortFirstName">Imię</button>
+            <button class="sort-btn" data-sort="pozycja" onclick="sortujZawodnikow(this,'pozycja')" data-i18n="druzyna.sortPosition">Pozycja</button>
+            <button class="sort-btn" data-sort="grupa" onclick="sortujZawodnikow(this,'grupa')" data-i18n="druzyna.sortGroup">Grupa</button>
         </div>
 
         <div class="pow-filter-row" id="zaw-show-deleted-row" style="display:none;padding:0 16px 8px;">
             <input type="checkbox" id="zaw-show-deleted" onchange="renderujListe()">
-            <label for="zaw-show-deleted">Pokaż usuniętych</label>
+            <label for="zaw-show-deleted" data-i18n="druzyna.showDeleted">Pokaż usuniętych</label>
         </div>
 
         <!-- Lista zawodników -->
         <div class="zaw-scroll" id="zaw-lista">
-            <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">Ładowanie...</div>
+            <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">Ładowanie...</div>
         </div>
 
     </div><!-- /screen-body -->
 
-    <!-- FAB — dodaj zawodnika (tylko trener) -->
-    <div class="fab" id="fab-dodaj" style="display:none" onclick="otworzDodajZawodnika()">+</div>
+    <!-- Przycisk dodaj zawodnika (tylko trener) -->
+    <div class="add-player-bar" id="fab-dodaj">
+        <button class="add-player-btn" onclick="otworzDodajZawodnika()">＋ <span data-i18n="druzyna.addPlayerButton">Dodaj zawodnika</span></button>
+    </div>
 
     <!-- ═══ PANEL ZAWODNIKA ═══ -->
     <div class="detail-panel" id="detail-panel">
         <div class="dp-topbar">
             <div class="dp-back" onclick="zamknijProfil()">
                 <div class="dp-back-icon">‹</div>
-                Drużyna
+                <span data-i18n="nav.druzyna">Drużyna</span>
             </div>
-            <span class="dp-edit-btn" id="dp-edit-btn" style="display:none" onclick="edytujZawodnika()">Edytuj</span>
+            <span class="dp-edit-btn" id="dp-edit-btn" style="display:none" onclick="edytujZawodnika()" data-i18n="edit">Edytuj</span>
         </div>
 
         <!-- Hero -->
@@ -298,7 +339,7 @@
             <div class="dp-hero-main">
                 <div style="position:relative;flex-shrink:0;">
                     <div class="dp-av" id="dp-av"><span class="dp-av-initials" id="dp-av-initials"></span></div>
-                    <div id="dp-av-edit-btn" style="display:none;position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--akcent);border:2px solid var(--tlo);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;" onclick="otworzPickerAwatara()">✏️</div>
+                    <div id="dp-av-edit-btn" style="display:none;position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--akcent);border:2px solid var(--tlo);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size: 16px;" onclick="otworzPickerAwatara()">✏️</div>
                 </div>
                 <div class="dp-info">
                     <div class="dp-nazwa" id="dp-nazwa"></div>
@@ -310,10 +351,10 @@
 
         <!-- Statystyki — X/Y z okresu -->
         <div class="dp-stats">
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-mecze">—</div><div class="dp-stat-sub" id="dp-mecze-sub"></div><div class="dp-stat-l">Mecze</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-treningi">—</div><div class="dp-stat-sub" id="dp-treningi-sub"></div><div class="dp-stat-l">Treningi</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-wyjazdy">—</div><div class="dp-stat-sub" id="dp-wyjazdy-sub"></div><div class="dp-stat-l">Wyjazdy</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-inne">—</div><div class="dp-stat-sub" id="dp-inne-sub"></div><div class="dp-stat-l">Inne</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-mecze">—</div><div class="dp-stat-sub" id="dp-mecze-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.MECZ">Mecze</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-treningi">—</div><div class="dp-stat-sub" id="dp-treningi-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.TRENING">Treningi</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-wyjazdy">—</div><div class="dp-stat-sub" id="dp-wyjazdy-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.WYJAZD">Wyjazdy</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-inne">—</div><div class="dp-stat-sub" id="dp-inne-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.INNE">Inne</div></div>
         </div>
 
         <!-- Treść profilu -->
@@ -321,75 +362,75 @@
 
             <!-- Frekwencja -->
             <div class="dp-section">
-                <div class="dp-section-label">Frekwencja</div>
-                <select id="dp-sezon-select" onchange="zmienSezonFrekwencji()" style="font-size:11px;font-weight:700;margin-bottom:8px;background:transparent;border:none;color:var(--szary-j);padding:0;cursor:pointer;max-width:100%;"></select>
+                <div class="dp-section-label" data-i18n="druzyna.frequencyLabel">Frekwencja</div>
+                <select id="dp-sezon-select" onchange="zmienSezonFrekwencji()" style="font-size: 16px;font-weight:700;margin-bottom:8px;background:transparent;border:none;color:var(--szary-j);padding:0;cursor:pointer;max-width:100%;"></select>
                 <div id="dp-frekwencja">
-                    <div style="color:var(--szary);font-size:12px;">Ładowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>
                 </div>
             </div>
 
             <!-- Absencje -->
             <div class="dp-section">
                 <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <div class="dp-section-label">Absencje</div>
-                    <button class="btn-ghost" id="dp-btn-abs" style="display:none;font-size:11px;padding:4px 12px;" onclick="otworzAbsencje()">+ Zgłoś</button>
+                    <div class="dp-section-label" data-i18n="druzyna.absencesLabel">Absencje</div>
+                    <button class="btn-ghost" id="dp-btn-abs" style="display:none;font-size: 16px;padding:4px 12px;" onclick="otworzAbsencje()" data-i18n="druzyna.reportAbsenceButton">+ Zgłoś</button>
                 </div>
                 <div id="dp-absencje">
-                    <div style="color:var(--szary);font-size:12px;">Ładowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>
                 </div>
             </div>
 
             <!-- Notatki trenera (tylko trener) -->
             <div class="dp-section" id="dp-notatki-section" style="display:none">
-                <div class="dp-section-label">Notatki trenera</div>
-                <textarea class="coach-notes" id="dp-notatki" placeholder="Notatki widoczne tylko dla trenerów..." rows="3"></textarea>
-                <button class="btn-ghost" style="align-self:flex-end;font-size:11px;" onclick="zapiszNotatki()">Zapisz notatki</button>
+                <div class="dp-section-label" data-i18n="druzyna.coachNotesLabel">Notatki trenera</div>
+                <textarea class="coach-notes" id="dp-notatki" data-i18n-placeholder="druzyna.coachNotesPlaceholder" placeholder="Notatki widoczne tylko dla trenerów..." rows="3"></textarea>
+                <button class="btn-ghost" style="align-self:flex-end;font-size: 16px;" onclick="zapiszNotatki()" data-i18n="druzyna.saveNotesButton">Zapisz notatki</button>
             </div>
 
             <!-- Kody dostępu (tylko trener) -->
             <div class="dp-section" id="dp-kod-section" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <div class="dp-section-label" style="margin-bottom:0">Kody dostępu</div>
+                    <div class="dp-section-label" style="margin-bottom:0" data-i18n="druzyna.accessCodesLabel">Kody dostępu</div>
                     <div class="pow-filter-row" style="margin-bottom:0;">
                         <input type="checkbox" id="kod-show-inactive" onchange="aktualnyZawodnik && zaladujKody(aktualnyZawodnik)">
-                        <label for="kod-show-inactive">Pokaż nieaktywne kody</label>
+                        <label for="kod-show-inactive" data-i18n="druzyna.showInactiveCodes">Pokaż nieaktywne kody</label>
                     </div>
                 </div>
                 <!-- Wybór typu kodu -->
                 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="dp-typ-kodu-row">
-                    <button class="sort-btn active" data-typ="RODZIC" onclick="wybierzTypKodu(this,'RODZIC')">👨‍👦 Rodzic</button>
-                    <button class="sort-btn" data-typ="ZAWODNIK" onclick="wybierzTypKodu(this,'ZAWODNIK')">⚽ Zawodnik</button>
-                    <button class="sort-btn" data-typ="KIBIC" onclick="wybierzTypKodu(this,'KIBIC')">👴 Kibic</button>
+                    <button class="sort-btn active" data-typ="RODZIC" onclick="wybierzTypKodu(this,'RODZIC')" data-i18n="druzyna.kodTypLabel.RODZIC">👨‍👦 Rodzic</button>
+                    <button class="sort-btn" data-typ="ZAWODNIK" onclick="wybierzTypKodu(this,'ZAWODNIK')" data-i18n="druzyna.kodTypLabel.ZAWODNIK">⚽ Zawodnik</button>
+                    <button class="sort-btn" data-typ="KIBIC" onclick="wybierzTypKodu(this,'KIBIC')" data-i18n="druzyna.kodTypLabel.KIBIC">👴 Kibic</button>
                 </div>
-                <div id="dp-typ-kodu-info" style="font-size:11px;color:var(--szary);margin-bottom:10px;line-height:1.5;"></div>
-                <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size:12px;" onclick="generujKod()">🔑 Wygeneruj nowy kod</button>
+                <div id="dp-typ-kodu-info" style="font-size: 16px;color:var(--szary);margin-bottom:10px;line-height:1.5;"></div>
+                <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size: 17px;" onclick="generujKod()" data-i18n="druzyna.generateCodeButton">🔑 Wygeneruj nowy kod</button>
                 <div id="dp-kod-content">
-                    <div style="color:var(--szary);font-size:12px;">Ładowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>
                 </div>
             </div>
 
             <!-- Powiązane konta (tylko trener) -->
             <div class="dp-section" id="dp-powiazane-section" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                    <div class="dp-section-label" style="margin-bottom:0;">Powiązane konta</div>
+                    <div class="dp-section-label" style="margin-bottom:0;" data-i18n="druzyna.linkedAccountsLabel">Powiązane konta</div>
                     <div class="pow-filter-row" style="margin-bottom:0;">
                         <input type="checkbox" id="pow-show-inactive" onchange="toggleNieaktywnePowiazania()">
-                        <label for="pow-show-inactive">Pokaż nieaktywne</label>
+                        <label for="pow-show-inactive" data-i18n="druzyna.showInactive">Pokaż nieaktywne</label>
                     </div>
                 </div>
                 <div id="dp-powiazane-content">
-                    <div style="color:var(--szary);font-size:12px;">Ładowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>
                 </div>
             </div>
 
             <!-- Przejmij zawodnika z powrotem (tylko trener) -->
             <div class="dp-section" id="dp-przejmij-section" style="display:none">
-                <button class="btn-ghost" style="width:100%;padding:11px;font-size:13px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()">↩ Przejmij zawodnika z powrotem</button>
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size: 18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">↩ Przejmij zawodnika z powrotem</button>
             </div>
 
             <!-- Usuń zawodnika (tylko TRENER_GLOWNY) -->
             <div class="dp-section" id="dp-usun-section" style="display:none">
-                <button class="btn-ghost" style="width:100%;padding:11px;font-size:13px;font-weight:800;color:#fff;border:1px solid #EF4444;background:#EF4444;border-radius:12px;" onclick="usunZawodnika()">🗑️ Usuń zawodnika</button>
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size: 18px;font-weight:800;color:#fff;border:1px solid #EF4444;background:#EF4444;border-radius:12px;" onclick="usunZawodnika()" data-i18n="druzyna.deletePlayerButton">🗑️ Usuń zawodnika</button>
             </div>
 
         </div><!-- /dp-scroll -->
@@ -401,7 +442,7 @@
                     <div class="pow-modal-avatar" id="pow-modal-avatar">👤</div>
                     <div style="flex:1;min-width:0">
                         <div class="pow-modal-title" id="pow-modal-title">—</div>
-                        <div style="font-size:11px;color:var(--szary);font-weight:600;margin-top:2px" id="pow-modal-subtitle">—</div>
+                        <div style="font-size: 16px;color:var(--szary);font-weight:600;margin-top:2px" id="pow-modal-subtitle">—</div>
                     </div>
                     <div class="pow-modal-close" onclick="zamknijPowModal()">✕</div>
                 </div>
@@ -416,29 +457,29 @@
         <div class="abs-panel-hdr">
             <div class="dp-back" onclick="zamknijAbsencje()">
                 <div class="dp-back-icon">‹</div>
-                Profil
+                <span data-i18n="druzyna.backToProfile">Profil</span>
             </div>
-            <span class="abs-panel-tytul">Zgłoś absencję</span>
+            <span class="abs-panel-tytul" data-i18n="druzyna.reportAbsenceTitle">Zgłoś absencję</span>
         </div>
         <div class="abs-panel-body">
-            <div class="dp-section-label">Zawodnik</div>
-            <div style="font-size:14px;font-weight:800;color:var(--bialy);" id="abs-player-name">—</div>
+            <div class="dp-section-label" data-i18n="druzyna.playerLabel">Zawodnik</div>
+            <div style="font-size: 19px;font-weight:800;color:var(--bialy);" id="abs-player-name">—</div>
 
             <div class="form-group">
-                <label class="form-lbl">Data od *</label>
+                <label class="form-lbl" data-i18n="druzyna.dateFromLabel">Data od *</label>
                 <input type="date" class="form-inp" id="abs-date-from">
             </div>
             <div class="form-group">
-                <label class="form-lbl">Data do *</label>
+                <label class="form-lbl" data-i18n="druzyna.dateToLabel">Data do *</label>
                 <input type="date" class="form-inp" id="abs-date-to">
             </div>
             <div class="form-group">
-                <label class="form-lbl">Komentarz</label>
-                <input type="text" class="form-inp" id="abs-comment" placeholder="np. Złamanie ręki, Choroba...">
+                <label class="form-lbl" data-i18n="druzyna.commentLabel">Komentarz</label>
+                <input type="text" class="form-inp" id="abs-comment" data-i18n-placeholder="druzyna.commentPlaceholder" placeholder="np. Złamanie ręki, Choroba...">
             </div>
         </div>
         <div class="sticky-save">
-            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()">Zapisz absencję</button>
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()" data-i18n="druzyna.saveAbsenceButton">Zapisz absencję</button>
         </div>
     </div><!-- /abs-panel -->
 
@@ -447,46 +488,46 @@
         <div class="add-player-hdr">
             <div class="dp-back" onclick="zamknijDodajZawodnika()">
                 <div class="dp-back-icon">‹</div>
-                Drużyna
+                <span data-i18n="nav.druzyna">Drużyna</span>
             </div>
-            <span class="add-player-tytul" id="add-player-tytul">Nowy zawodnik</span>
+            <span class="add-player-tytul" id="add-player-tytul" data-i18n="druzyna.newPlayerTitle">Nowy zawodnik</span>
         </div>
         <div class="add-player-body">
             <div class="form-group">
-                <label class="form-lbl">Imię *</label>
-                <input type="text" class="form-inp" id="ap-firstname" placeholder="Jan">
+                <label class="form-lbl" data-i18n="druzyna.firstNameRequired">Imię *</label>
+                <input type="text" class="form-inp" id="ap-firstname" data-i18n-placeholder="druzyna.firstNamePlaceholder" placeholder="Jan">
             </div>
             <div class="form-group">
-                <label class="form-lbl">Nazwisko *</label>
-                <input type="text" class="form-inp" id="ap-lastname" placeholder="Kowalski">
+                <label class="form-lbl" data-i18n="druzyna.lastNameRequired">Nazwisko *</label>
+                <input type="text" class="form-inp" id="ap-lastname" data-i18n-placeholder="druzyna.lastNamePlaceholder" placeholder="Kowalski">
             </div>
             <div class="form-group">
-                <label class="form-lbl">Data urodzenia *</label>
+                <label class="form-lbl" data-i18n="druzyna.birthDateLabel">Data urodzenia *</label>
                 <input type="date" class="form-inp" id="ap-urodziny">
             </div>
             <div class="form-group">
-                <label class="form-lbl">Grupa *</label>
+                <label class="form-lbl" data-i18n="druzyna.squadLabel">Grupa *</label>
                 <select class="form-select" id="ap-grupa">
-                    <option value="FIRST">Pierwsza</option>
-                    <option value="SECOND">Druga</option>
-                    <option value="THIRD">Trzecia</option>
+                    <option value="FIRST" data-i18n="druzyna.squadLabels.FIRST">Pierwsza</option>
+                    <option value="SECOND" data-i18n="druzyna.squadLabels.SECOND">Druga</option>
+                    <option value="THIRD" data-i18n="druzyna.squadLabels.THIRD">Trzecia</option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-lbl">Pozycja <span style="color:var(--szary);font-weight:600;">(opcjonalna)</span></label>
-                <input type="text" class="form-inp" id="ap-pozycja" placeholder="np. Napastnik, Bramkarz...">
+                <label class="form-lbl"><span data-i18n="druzyna.positionLabel">Pozycja</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.optionalFem">(opcjonalna)</span></label>
+                <input type="text" class="form-inp" id="ap-pozycja" data-i18n-placeholder="druzyna.positionPlaceholder" placeholder="np. Napastnik, Bramkarz...">
             </div>
             <div class="form-group">
-                <label class="form-lbl">Numer koszulki <span style="color:var(--szary);font-weight:600;">(opcjonalny)</span></label>
-                <input type="number" class="form-inp" id="ap-numer" placeholder="np. 10" min="1" max="99">
+                <label class="form-lbl"><span data-i18n="druzyna.jerseyNumberLabel">Numer koszulki</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.optionalMasc">(opcjonalny)</span></label>
+                <input type="number" class="form-inp" id="ap-numer" data-i18n-placeholder="druzyna.jerseyNumberPlaceholder" placeholder="np. 10" min="1" max="99">
             </div>
             <!-- TODO: Pole "Liga" konfigurowalne w Ustawieniach (nazwa i wartości) — do zaimplementowania w Priorytecie 4 (Ustawienia) -->
             <div class="form-group">
-                <label class="form-lbl">Liga <span style="color:var(--szary);font-weight:600;">(widoczna tylko dla trenera)</span></label>
-                <input type="text" class="form-inp" id="ap-liga" placeholder="np. Liga A, Liga B...">
+                <label class="form-lbl"><span data-i18n="druzyna.leagueLabel">Liga</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.coachOnlyHint">(widoczna tylko dla trenera)</span></label>
+                <input type="text" class="form-inp" id="ap-liga" data-i18n-placeholder="druzyna.leaguePlaceholder" placeholder="np. Liga A, Liga B...">
             </div>
             <div class="form-group">
-                <label class="form-lbl">Tel. rodzica 1 <span style="color:var(--szary);font-weight:600;">(do WhatsApp)</span></label>
+                <label class="form-lbl" data-i18n="druzyna.parentPhone1Label">Tel. rodzica 1</label>
                 <div class="phone-row">
                     <select class="phone-prefix-select" id="ap-guardian-prefix1">
                         <option value="+48">🇵🇱 +48</option>
@@ -496,12 +537,12 @@
                         <option value="+420">🇨🇿 +420</option>
                         <option value="+421">🇸🇰 +421</option>
                     </select>
-                    <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone1" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
+                    <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone1" data-i18n-placeholder="druzyna.phonePlaceholder" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
                 </div>
-                <div class="phone-error" id="ap-guardian-phone1-error">Nieprawidłowy numer (7–12 cyfr)</div>
+                <div class="phone-error" id="ap-guardian-phone1-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawidłowy numer (7–12 cyfr)</div>
             </div>
             <div class="form-group">
-                <label class="form-lbl">Tel. rodzica 2 <span style="color:var(--szary);font-weight:600;">(opcjonalny)</span></label>
+                <label class="form-lbl"><span data-i18n="druzyna.parentPhone2Label">Tel. rodzica 2</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.optionalMasc">(opcjonalny)</span></label>
                 <div class="phone-row">
                     <select class="phone-prefix-select" id="ap-guardian-prefix2">
                         <option value="+48">🇵🇱 +48</option>
@@ -511,66 +552,143 @@
                         <option value="+420">🇨🇿 +420</option>
                         <option value="+421">🇸🇰 +421</option>
                     </select>
-                    <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone2" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
+                    <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone2" data-i18n-placeholder="druzyna.phonePlaceholder" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
                 </div>
-                <div class="phone-error" id="ap-guardian-phone2-error">Nieprawidłowy numer (7–12 cyfr)</div>
+                <div class="phone-error" id="ap-guardian-phone2-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawidłowy numer (7–12 cyfr)</div>
             </div>
         </div>
         <div class="sticky-save">
-            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszZawodnika()">Zapisz zawodnika</button>
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszZawodnika()" data-i18n="druzyna.savePlayerButton">Zapisz zawodnika</button>
         </div>
     </div><!-- /add-player-panel -->
+
+    <!-- ═══ PANEL IMPORTU CSV ═══ -->
+    <div class="import-panel" id="import-panel">
+        <div class="import-hdr">
+            <div class="dp-back" onclick="zamknijImportCSV()">
+                <div class="dp-back-icon">‹</div>
+                <span data-i18n="common.back">← Wstecz</span>
+            </div>
+            <span class="import-tytul" data-i18n="druzyna.importCsvTitle">Import zawodników</span>
+            <div style="width:60px"></div>
+        </div>
+        <div class="import-body" id="import-body">
+        <div class="import-inner">
+
+            <!-- Krok 1: Pobierz przykład -->
+            <div class="import-step">
+                <div class="import-step-num"><span data-i18n="common.step">Krok</span> 1</div>
+                <div class="import-step-title" data-i18n="druzyna.importStep1Title">Pobierz szablon</div>
+                <div class="import-step-body">
+                    <span data-i18n="druzyna.importStep1Body">Przygotowaliśmy gotowy szablon w Excel z instrukcją. Wypełnij go danymi zawodników i zapisz jako CSV.</span>
+                    <div style="margin-top:10px;">
+                        <a id="import-template-link" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--tlo-karta2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:800;color:var(--bialy);text-decoration:none;">
+                            📄 <span data-i18n="druzyna.importDownloadTemplate">Pobierz szablon Excel</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Krok 2: Zapisz jako CSV -->
+            <div class="import-step">
+                <div class="import-step-num"><span data-i18n="common.step">Krok</span> 2</div>
+                <div class="import-step-title" data-i18n="druzyna.importStep2Title">Zapisz jako CSV w Excel</div>
+                <div class="import-step-body">
+                    <ol>
+                        <li data-i18n="druzyna.importStep2a">Otwórz wypełniony plik w Excel</li>
+                        <li data-i18n="druzyna.importStep2b">Kliknij <code>Plik</code> → <code>Zapisz jako</code></li>
+                        <li data-i18n="druzyna.importStep2c">W polu <strong>Typ pliku</strong> wybierz: <code>CSV UTF-8 (rozdzielany przecinkami)</code></li>
+                        <li data-i18n="druzyna.importStep2d">Kliknij <code>Zapisz</code> i potwierdź ewentualne ostrzeżenia</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Krok 3: Kolumny -->
+            <div class="import-step">
+                <div class="import-step-num"><span data-i18n="common.step">Krok</span> 3</div>
+                <div class="import-step-title" data-i18n="druzyna.importStep3Title">Wymagane kolumny</div>
+                <div class="import-step-body">
+                    <span data-i18n="druzyna.importStep3Body">Plik musi mieć nagłówki w pierwszym wierszu (kolejność nie ma znaczenia):</span>
+                    <div class="import-cols">
+                        <span class="import-col-tag req" data-i18n="druzyna.firstNameRequired">Imię *</span>
+                        <span class="import-col-tag req" data-i18n="druzyna.lastNameRequired">Nazwisko *</span>
+                        <span class="import-col-tag" data-i18n="druzyna.birthDateLabel">Data urodzenia</span>
+                        <span class="import-col-tag" data-i18n="druzyna.positionLabel">Pozycja</span>
+                        <span class="import-col-tag" data-i18n="druzyna.jerseyNumberLabel">Numer koszulki</span>
+                        <span class="import-col-tag" data-i18n="druzyna.leagueLabel">Poziom</span>
+                    </div>
+                    <div style="margin-top:8px;font-size:13px;color:var(--szary);" data-i18n="druzyna.importDateFormat">Data urodzenia: format RRRR-MM-DD lub DD.MM.RRRR (np. 2012-05-20 lub 20.05.2012)</div>
+                </div>
+            </div>
+
+            <!-- Krok 4: Wybierz plik -->
+            <div class="import-step">
+                <div class="import-step-num"><span data-i18n="common.step">Krok</span> 4</div>
+                <div class="import-step-title" data-i18n="druzyna.importStep4Title">Wybierz plik CSV</div>
+                <div class="import-file-zone" onclick="document.getElementById('import-file-input').click()">
+                    <div class="import-file-zone-icon">📂</div>
+                    <div class="import-file-zone-label" id="import-file-label" data-i18n="druzyna.importFilePlaceholder">Kliknij aby wybrać plik .csv</div>
+                    <div class="import-file-zone-sub" data-i18n="druzyna.importFileHint">Obsługiwane: CSV (UTF-8, separator , lub ;)</div>
+                </div>
+                <input type="file" id="import-file-input" accept=".csv,text/csv" style="display:none" onchange="onImportFileSelected(this)">
+            </div>
+
+            <!-- Podgląd danych (pojawia się po wyborze pliku) -->
+            <div id="import-preview-wrap" style="display:none">
+                <div class="import-preview">
+                    <div class="import-preview-hdr" id="import-preview-hdr"></div>
+                    <div class="import-preview-table" id="import-preview-table"></div>
+                </div>
+                <div id="import-errors" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;font-size:14px;color:#F87171;font-weight:700;margin-top:8px;"></div>
+                <button class="btn-primary" id="import-confirm-btn" style="width:100%;padding:14px;margin-top:4px;" onclick="doImportCSV()" data-i18n="druzyna.importConfirmButton">Importuj zawodników</button>
+            </div>
+
+        </div><!-- /import-inner -->
+        </div>
+    </div><!-- /import-panel -->
 
     <!-- ═══ PANEL PICKERA AWATARA ═══ -->
     <div class="avatar-picker-panel" id="avatar-picker-panel">
         <div class="avatar-picker-hdr">
             <div class="dp-back" onclick="zamknijPickerAwatara()">
                 <div class="dp-back-icon">‹</div>
-                Profil
+                <span data-i18n="druzyna.backToProfile">Profil</span>
             </div>
-            <span class="avatar-picker-tytul">Wybierz awatar</span>
+            <span class="avatar-picker-tytul" data-i18n="druzyna.chooseAvatarTitle">Wybierz awatar</span>
         </div>
 
         <!-- Styl + przycisk generuj -->
         <div class="av-styl-row">
-            <button class="av-styl-btn selected" onclick="wybierzStylGrid(this,'chlopiec')">⚽ Chłopiec</button>
-            <button class="av-styl-btn" onclick="wybierzStylGrid(this,'dziewczynka')">🌟 Dziewczynka</button>
-            <button class="av-generuj-btn" onclick="generujGrid()">🔀 Generuj ponownie</button>
+            <button class="av-styl-btn selected" onclick="wybierzStylGrid(this,'chlopiec')" data-i18n="druzyna.boyLabel">⚽ Chłopiec</button>
+            <button class="av-styl-btn" onclick="wybierzStylGrid(this,'dziewczynka')" data-i18n="druzyna.girlLabel">🌟 Dziewczynka</button>
+            <button class="av-generuj-btn" onclick="generujGrid()" data-i18n="druzyna.regenerateButton">🔀 Generuj ponownie</button>
         </div>
 
         <!-- Grid 20 miniaturek -->
         <div class="av-grid-scroll">
             <div class="av-grid" id="av-grid">
-                <div style="grid-column:1/-1;padding:30px 0;text-align:center;color:var(--szary);font-size:12px;">Generowanie...</div>
+                <div style="grid-column:1/-1;padding:30px 0;text-align:center;color:var(--szary);font-size: 17px;">Generowanie...</div>
             </div>
         </div>
 
         <div class="sticky-save">
-            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAwatar()" id="av-save-btn">Zapisz awatar</button>
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAwatar()" id="av-save-btn" data-i18n="druzyna.saveAvatarButton">Zapisz awatar</button>
         </div>
     </div><!-- /avatar-picker-panel -->
 
     <!-- ═══ MODAL POTWIERDZENIA KODU ═══ -->
     <div class="modal-overlay" id="modal-kod">
         <div class="modal-box">
-            <div class="modal-title">Aktywny kod istnieje</div>
+            <div class="modal-title" data-i18n="druzyna.activeCodeExistsTitle">Aktywny kod istnieje</div>
             <div class="modal-body" id="modal-kod-body">Dla tego zawodnika istnieje już aktywny kod dostępu. Co chcesz zrobić?</div>
             <div class="modal-btns">
-                <button class="modal-btn modal-btn-primary" onclick="modalKodAkcja('dezaktywuj')">Dezaktywuj stary · wygeneruj nowy</button>
-                <button class="modal-btn modal-btn-secondary" onclick="modalKodAkcja('zachowaj')">Zachowaj stary · wygeneruj drugi</button>
-                <button class="modal-btn modal-btn-cancel" onclick="modalKodAkcja('anuluj')">Anuluj</button>
+                <button class="modal-btn modal-btn-primary" onclick="modalKodAkcja('dezaktywuj')" data-i18n="druzyna.deactivateAndGenerate">Dezaktywuj stary · wygeneruj nowy</button>
+                <button class="modal-btn modal-btn-secondary" onclick="modalKodAkcja('zachowaj')" data-i18n="druzyna.keepAndGenerate">Zachowaj i wygeneruj kolejny</button>
+                <button class="modal-btn modal-btn-cancel" onclick="modalKodAkcja('anuluj')" data-i18n="modal.cancel">Anuluj</button>
             </div>
         </div>
     </div>
 
-    <!-- Bottom nav -->
-    <div class="bottom-nav">
-        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
-        <a class="nav-item active" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
-        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
-        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
-        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
-    </div>
 
     <!-- Login overlay -->
     <div class="login-overlay" id="login-ov">
@@ -584,10 +702,10 @@
                 <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
                 <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
                 <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
-                <div class="social-btns"><button class="social-btn"><span style="font-size:17px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size:17px">🍎</span> Apple</button></div>
+                <div class="social-btns"><button class="social-btn"><span style="font-size: 22px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size: 22px">🍎</span> Apple</button></div>
             </div>
             <div id="auth-register" style="display:none">
-                <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size:18px"></div>
+                <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size: 23px"></div>
                 <div class="form-group"><label class="form-lbl">Imię i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
                 <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
                 <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
@@ -607,26 +725,23 @@
             <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
         </div>
         <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
     </div>
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20260730a"></script>
+<script src="coachay-core.js?v=20260903d"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    DRUŻYNA — logika ekranu
 ═══════════════════════════════════════════════════ */
 
 // Stałe
-const SQUAD_LABELS = { FIRST: 'Pierwsza', SECOND: 'Druga', THIRD: 'Trzecia' };
-const TYPE_LABELS_HERO = { TRENING: 'Treningi', MECZ: 'Mecze', WYJAZD: 'Wyjazdy', INNE: 'Inne' };
-const TYPE_LABELS = { TRENING: 'Treningi', MECZ: 'Mecze', WYJAZD: 'Wyjazdy', INNE: 'Inne' };
+function getSquadLabel(sq) { return t('druzyna.squadLabels.' + sq) || sq; }
+function getTypeLabel(typ) { return t('druzyna.typeLabels.' + typ) || typ; }
 const TYPE_COLORS = { TRENING: 'freq-bar-trening', MECZ: 'freq-bar-mecz', WYJAZD: 'freq-bar-wyjazd', INNE: 'freq-bar-inne' };
 const TYPE_IDS = { TRENING: 'treningi', MECZ: 'mecze', WYJAZD: 'wyjazdy', INNE: 'inne' };
 // DiceBear — inicjały (fallback bez photoURL)
@@ -670,19 +785,10 @@ let aktualnyTypKodu = 'RODZIC';
 // z poprzedniej zakładki/zawodnika (race condition przy szybkim przełączaniu)
 let _kodLoadSeq = 0;
 
-const KOD_OPISY = {
-    RODZIC:   '👨‍👦 Rodzic przejmuje opiekę nad zawodnikiem. Może potwierdzać obecność i komunikować się z trenerem. Jeden kod = jeden rodzic (dziecko może mieć 2 rodziców).',
-    ZAWODNIK: '⚽ Zawodnik otrzymuje własne konto. Trener powinien mieć zgodę rodzica przed wygenerowaniem kodu.',
-    KIBIC:    '👴 Kibic widzi wyniki i statystyki wskazanego zawodnika. Może być wygenerowany przez trenera lub rodzica. Kod jednorazowy — babcia z dwójką wnuków potrzebuje 2 kodów.',
-    // TRENER: generowane w Ustawieniach → Dostęp do klubu (Priorytet 4)
-};
+function getKodOpis(typ) { return t('druzyna.kodOpisy.' + typ) || ''; }
 
 // Krótkie etykiety typu do wyświetlenia na pojedynczym kodzie (niezależnie od aktywnej zakładki)
-const KOD_TYP_LABEL = {
-    RODZIC:   '👨‍👦 Rodzic',
-    ZAWODNIK: '⚽ Zawodnik',
-    KIBIC:    '👴 Kibic',
-};
+function getKodTypLabel(typ) { return t('druzyna.kodTypLabel.' + typ) || typ; }
 
 // Stan pickera awatara (zachowany dla kompatybilności wstecznej)
 let pickerStan = { styl: 'chlopiec' };
@@ -796,7 +902,9 @@ async function initDruzyna() {
     // Pokaż FAB tylko trenerom
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
     const fab = document.getElementById('fab-dodaj');
-    if (fab) fab.style.display = isCoach ? '' : 'none';
+    if (fab) fab.style.display = isCoach ? 'flex' : 'none';
+    const importBtn = document.getElementById('import-csv-btn');
+    if (importBtn) importBtn.style.display = isCoach ? 'block' : 'none';
     const showDeletedRow = document.getElementById('zaw-show-deleted-row');
     if (showDeletedRow) showDeletedRow.style.display = isCoach ? '' : 'none';
 
@@ -811,7 +919,7 @@ async function initDruzyna() {
 /* ── Ładowanie zawodników ── */
 async function zaladujZawodnikow() {
     const lista = document.getElementById('zaw-lista');
-    lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">Ładowanie...</div>';
+    lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">Ładowanie...</div>';
 
     try {
         const snap = await db.collection('players').get();
@@ -828,7 +936,7 @@ async function zaladujZawodnikow() {
             .filter(p => !isKibic || myPlayerIds.includes(p.playerId || p.id));
     } catch (e) {
         console.error('Błąd ładowania zawodników:', e);
-        lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">Błąd ładowania danych.</div>';
+        lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">Błąd ładowania danych.</div>';
         return;
     }
 
@@ -846,8 +954,8 @@ function renderujListe() {
 
     if (widoczni.length === 0) {
         lista.innerHTML = wszyscyZawodnicy.length === 0
-            ? '<div class="zaw-empty">Brak zawodników w drużynie.<br>Trener może dodać pierwszego zawodnika.</div>'
-            : '<div class="zaw-empty">Brak aktywnych zawodników.</div>';
+            ? `<div class="zaw-empty">${t('druzyna.emptyNoPlayers')}</div>`
+            : `<div class="zaw-empty">${t('druzyna.emptyNoActive')}</div>`;
         return;
     }
 
@@ -922,6 +1030,13 @@ function tworzKarteZawodnika(player) {
 
 /* ── Profil zawodnika ── */
 async function otworzProfil(player) {
+    // Kontrola dostępu: trener/owner widzi wszystkich, pozostałe role tylko swoje
+    const _coachRoles = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'OWNER'];
+    if (!_coachRoles.includes(aktualnaRola)) {
+        const _pid = player.playerId || player.id;
+        if (!getMyPlayerIds().includes(_pid)) return;
+    }
+
     aktualnyZawodnik = player;
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
     const isParent = aktualnaRola === 'RODZIC';
@@ -951,7 +1066,7 @@ async function otworzProfil(player) {
     const squad = player.squad || 'FIRST';
     if (isCoach) {
         // Trener widzi grupę + ligę
-        badgesEl.innerHTML = `<span class="badge badge-dark">${SQUAD_LABELS[squad] || squad}</span>`;
+        badgesEl.innerHTML = `<span class="badge badge-dark">${getSquadLabel(squad)}</span>`;
         if (player.coachOnlyData?.level) {
             badgesEl.innerHTML += `<span class="badge badge-warn" style="background:rgba(251,191,36,0.12);color:var(--warn);">${player.coachOnlyData.level}</span>`;
         }
@@ -987,7 +1102,7 @@ async function otworzProfil(player) {
         aktualnyTypKodu = 'RODZIC';
         document.querySelectorAll('#dp-typ-kodu-row .sort-btn').forEach((b,i) => b.classList.toggle('active', i===0));
         const infoEl = document.getElementById('dp-typ-kodu-info');
-        if (infoEl) infoEl.textContent = KOD_OPISY['RODZIC'];
+        if (infoEl) infoEl.textContent = getKodOpis('RODZIC');
         const kodShowInactiveCb = document.getElementById('kod-show-inactive');
         if (kodShowInactiveCb) kodShowInactiveCb.checked = false;
     }
@@ -1030,7 +1145,7 @@ function zamknijProfil() {
 // sezon: opcjonalnie {start,end,name} wybrany z selectora; domyślnie aktualny sezon drużyny
 async function zaladujFrekwencje(player, sezon) {
     const el = document.getElementById('dp-frekwencja');
-    el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Liczenie...</div>';
+    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Liczenie...</div>';
 
     const pid = player.playerId || player.id;
     const todayStr = getLocalDateStr(new Date());
@@ -1054,7 +1169,7 @@ async function zaladujFrekwencje(player, sezon) {
         events = snap.docs.map(d => d.data())
             .filter(e => e.status !== 'DELETE' && e.date >= fromStr && e.date <= toStr);
     } catch (e) {
-        el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Brak danych.</div>';
+        el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Brak danych.</div>';
         return;
     }
 
@@ -1091,7 +1206,7 @@ async function zaladujFrekwencje(player, sezon) {
 
     // ── Paski frekwencji ──
     if (Object.keys(stats).length === 0) {
-        el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Brak eventów z udziałem zawodnika w tym okresie.</div>';
+        el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Brak eventów z udziałem zawodnika w tym okresie.</div>';
         return;
     }
 
@@ -1102,11 +1217,11 @@ async function zaladujFrekwencje(player, sezon) {
         const pctColor = pct >= 80 ? 'var(--sukces)' : pct >= 60 ? 'var(--warn)' : 'var(--blad)';
         html += `
             <div class="freq-row">
-                <span class="freq-label">${TYPE_LABELS[typ]}</span>
+                <span class="freq-label">${getTypeLabel(typ)}</span>
                 <div class="freq-bar-wrap"><div class="freq-bar ${colorClass}" style="width:${pct}%"></div></div>
                 <span class="freq-pct" style="color:${pctColor}">${pct}%</span>
             </div>
-            <div style="font-size:10px;color:var(--szary);padding-left:80px;margin-top:-4px;margin-bottom:8px;">${s.confirmed}/${s.invited} eventów</div>
+            <div style="font-size: 15px;color:var(--szary);padding-left:80px;margin-top:-4px;margin-bottom:8px;">${s.confirmed}/${s.invited} eventów</div>
         `;
     }
     el.innerHTML = html;
@@ -1123,7 +1238,7 @@ function zmienSezonFrekwencji() {
 /* ── Absencje ── */
 async function zaladujAbsencje(player) {
     const el = document.getElementById('dp-absencje');
-    el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Ładowanie...</div>';
+    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>';
 
     const pid = player.playerId || player.id;
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
@@ -1141,10 +1256,10 @@ async function zaladujAbsencje(player) {
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const monthEnd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
         aktualneAbsencje = aktualneAbsencje.filter(abs => abs.dateFrom <= monthEnd && abs.dateTo >= monthStart);
-    } catch (e) { el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Brak danych.</div>'; return; }
+    } catch (e) { el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Brak danych.</div>'; return; }
 
     if (aktualneAbsencje.length === 0) {
-        el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Brak aktywnych absencji.</div>';
+        el.innerHTML = `<div style="color:var(--szary);font-size: 17px;">${t('druzyna.noActiveAbsences')}</div>`;
         return;
     }
 
@@ -1256,7 +1371,7 @@ function wybierzTypKodu(btn, typ) {
     btn.classList.add('active');
     aktualnyTypKodu = typ;
     const info = document.getElementById('dp-typ-kodu-info');
-    if (info) info.textContent = KOD_OPISY[typ] || '';
+    if (info) info.textContent = getKodOpis(typ);
     // Przeładuj listę kodów dla nowego typu
     if (aktualnyZawodnik) zaladujKody(aktualnyZawodnik);
 }
@@ -1268,7 +1383,7 @@ async function zaladujKody(player) {
     const seq = ++_kodLoadSeq;
     const typRequest = aktualnyTypKodu;
     const pokazNieaktywne = document.getElementById('kod-show-inactive')?.checked || false;
-    el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Ładowanie...</div>';
+    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>';
 
     const pid = player.playerId || player.id;
     let kody = [];
@@ -1287,7 +1402,7 @@ async function zaladujKody(player) {
             return tb - ta;
         });
     } catch (e) {
-        if (seq === _kodLoadSeq) el.innerHTML = '<div style="color:var(--szary);font-size:12px;">Błąd ładowania.</div>';
+        if (seq === _kodLoadSeq) el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Błąd ładowania.</div>';
         return;
     }
 
@@ -1305,7 +1420,7 @@ async function zaladujKody(player) {
     }
 
     if (kody.length === 0) {
-        el.innerHTML = `<div style="color:var(--szary);font-size:12px;">Brak ${pokazNieaktywne ? 'wygenerowanych' : 'aktywnych'} kodów.</div>`;
+        el.innerHTML = `<div style="color:var(--szary);font-size: 17px;">${pokazNieaktywne ? t('druzyna.noCodesGenerated') : t('druzyna.noCodesActive')}</div>`;
         return;
     }
 
@@ -1317,7 +1432,7 @@ async function zaladujKody(player) {
         const createdDate = k.createdAt?.toDate?.() || new Date(k.createdAt || 0);
         const createdDateStr = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}-${String(createdDate.getDate()).padStart(2, '0')}`;
         const createdTimeStr = `${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}:${String(createdDate.getSeconds()).padStart(2, '0')}`;
-        const createdDayName = createdDate.toLocaleDateString('pl-PL', { weekday: 'long' });
+        const createdDayName = createdDate.toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'pl-PL', { weekday: 'long' });
         const createdDisplay = `${createdDateStr} ${createdTimeStr} (${createdDayName})`;
         const wygasly = !k.isUsed && expiresDate < now;
         const dniDo = !k.isUsed && !wygasly
@@ -1333,7 +1448,7 @@ async function zaladujKody(player) {
                     const u = uDoc.data();
                     const usedDate = k.usedAt?.toDate?.() || new Date(k.usedAt || 0);
                     rodziData = `<div class="kod-meta">👤 <strong>${u.displayName || k.usedBy}</strong></div>
-                        <div class="kod-meta">📅 Użyty: <strong>${formatDateDisplay(usedDate.toISOString().slice(0,10))}</strong></div>`;
+                        <div class="kod-meta">${t('druzyna.usedPrefix')}<strong>${formatDateDisplay(usedDate.toISOString().slice(0,10))}</strong></div>`;
                 }
             } catch (e) { }
         }
@@ -1343,12 +1458,12 @@ async function zaladujKody(player) {
 
         const statusClass = isDeactivated ? 'kod-nieaktywny' : isNaprawdeUzyty ? 'kod-uzyty' : wygasly ? 'kod-wygasly' : 'kod-aktywny';
         const statusBadge = isDeactivated
-            ? '<span class="kod-status-badge kod-status-nieaktywny">🚫 Dezaktywowany</span>'
+            ? `<span class="kod-status-badge kod-status-nieaktywny">🚫 ${t('druzyna.codeStatusDeactivated')}</span>`
             : isNaprawdeUzyty
-            ? '<span class="kod-status-badge kod-status-uzyty">✅ Użyty</span>'
+            ? `<span class="kod-status-badge kod-status-uzyty">✅ ${t('druzyna.codeStatusUsed')}</span>`
             : wygasly
-            ? '<span class="kod-status-badge kod-status-wygasly">⏰ Wygasły</span>'
-            : `<span class="kod-status-badge kod-status-aktywny">🔵 Aktywny</span>`;
+            ? `<span class="kod-status-badge kod-status-wygasly">⏰ ${t('druzyna.codeStatusExpired')}</span>`
+            : `<span class="kod-status-badge kod-status-aktywny">🔵 ${t('druzyna.codeStatusActive')}</span>`;
 
         const div = document.createElement('div');
         div.className = `kod-item ${statusClass}`;
@@ -1357,12 +1472,12 @@ async function zaladujKody(player) {
                 <span class="kod-val-big">${k.code}</span>
                 ${statusBadge}
             </div>
-            <div class="kod-meta">${KOD_TYP_LABEL[k.type] || k.type || '—'}</div>
-            <div class="kod-meta">📅 Wygenerowany: <strong>${createdDisplay}</strong></div>
-            ${dniDo !== null ? `<div class="kod-meta">⏳ Ważny jeszcze: <strong>${dniDo} dni</strong></div>` : ''}
+            <div class="kod-meta">${getKodTypLabel(k.type)}</div>
+            <div class="kod-meta">${t('druzyna.generatedPrefix')}<strong>${createdDisplay}</strong></div>
+            ${dniDo !== null ? `<div class="kod-meta">${t('druzyna.validForDays', { count: dniDo })}</div>` : ''}
             ${rodziData}
             <div class="kod-actions">
-                ${!k.isUsed && !wygasly ? `<button class="btn-ghost" style="font-size:10px;padding:4px 10px;" onclick="kopiujKod('${k.code}')">📋 Kopiuj</button>` : ''}
+                ${!k.isUsed && !wygasly ? `<button class="btn-ghost" style="font-size: 15px;padding:4px 10px;" onclick="kopiujKod('${k.code}')">${t('druzyna.copyButton')}</button>` : ''}
                 ${!k.isUsed && !wygasly ? wyslijWhatsAppBtn(k.code, player) : ''}
             </div>
         `;
@@ -1461,7 +1576,7 @@ async function generujKod() {
 function wyslijWhatsAppBtn(kod, player) {
     // Bez numeru — WhatsApp sam pozwala wybrać kontakt/czat, nie zgadujemy który rodzic
     const msg = encodeURIComponent(budujTrescKodu(kod));
-    return `<a href="https://wa.me/?text=${msg}" target="_blank" class="btn-ghost" style="font-size:10px;padding:4px 10px;color:#25D366;text-decoration:none;">💬 WhatsApp</a>`;
+    return `<a href="https://wa.me/?text=${msg}" target="_blank" class="btn-ghost" style="font-size: 15px;padding:4px 10px;color:#25D366;text-decoration:none;">💬 WhatsApp</a>`;
 }
 
 function kopiujKod(kod) {
@@ -1768,15 +1883,15 @@ function renderujPowiazane() {
     const kibice  = pokazNieaktywne ? _allKibice  : _allKibice.filter(isAktywne);
 
     let html = '';
-    html += `<div class="pow-group-label">👨‍👦 Rodzice / Opiekunowie</div>`;
+    html += `<div class="pow-group-label">${t('druzyna.parentsGroupLabel')}</div>`;
     if (rodzice.length === 0) {
-        html += `<div class="pow-empty">Brak ${pokazNieaktywne ? '' : 'aktywnych '}powiązanych rodziców</div>`;
+        html += `<div class="pow-empty">${pokazNieaktywne ? t('druzyna.noParentsAll') : t('druzyna.noParentsActive')}</div>`;
     } else {
         rodzice.forEach(m => { html += renderPowiazanyItem(m, _powUserMap, 'RODZIC'); });
     }
-    html += `<div class="pow-group-label" style="margin-top:14px;">👁️ Kibice</div>`;
+    html += `<div class="pow-group-label" style="margin-top:14px;">${t('druzyna.supportersGroupLabel')}</div>`;
     if (kibice.length === 0) {
-        html += `<div class="pow-empty">Brak ${pokazNieaktywne ? '' : 'aktywnych '}powiązanych kibiców</div>`;
+        html += `<div class="pow-empty">${pokazNieaktywne ? t('druzyna.noSupportersAll') : t('druzyna.noSupportersActive')}</div>`;
     } else {
         kibice.forEach(m => { html += renderPowiazanyItem(m, _powUserMap, 'KIBIC'); });
     }
@@ -1786,7 +1901,7 @@ function renderujPowiazane() {
 async function zaladujPowiazaneKonta(player) {
     const container = document.getElementById('dp-powiazane-content');
     if (!container) return;
-    container.innerHTML = '<div style="color:var(--szary);font-size:12px;">Ładowanie...</div>';
+    container.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>';
 
     // Reset checkboxa przy każdym otwarciu profilu
     const cb = document.getElementById('pow-show-inactive');
@@ -1810,14 +1925,14 @@ function renderPowiazanyItem(m, userMap, typ) {
     const isExpired = st === 'expired';
     const isActive  = st === 'active' || st === 'grace';
 
-    const nazwa = user?.displayName || (isPending ? 'Oczekuje na rejestrację' : 'Brak danych');
+    const nazwa = user?.displayName || (isPending ? t('druzyna.linkedPendingName') : t('druzyna.linkedNoData'));
     const ikona = typ === 'RODZIC' ? '👤' : '👁️';
 
     const statusChip = isActive
-        ? `<span class="pow-status pow-status-active">aktywny</span>`
+        ? `<span class="pow-status pow-status-active">${t('druzyna.linkedStatusActive')}</span>`
         : isPending
-        ? `<span class="pow-status pow-status-pending">oczekuje</span>`
-        : `<span class="pow-status pow-status-expired">wygasł</span>`;
+        ? `<span class="pow-status pow-status-pending">${t('druzyna.linkedStatusPending')}</span>`
+        : `<span class="pow-status pow-status-expired">${t('druzyna.linkedStatusExpired')}</span>`;
 
     // Kod dla oczekujących
     let kodRow = '';
@@ -1825,10 +1940,10 @@ function renderPowiazanyItem(m, userMap, typ) {
         const exp = m.codeExpiresAt
             ? (m.codeExpiresAt.toDate ? m.codeExpiresAt.toDate() : new Date(m.codeExpiresAt))
             : null;
-        const expStr = exp ? exp.toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+        const expStr = exp ? exp.toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
         kodRow = `<div class="pow-code-row">
             <span class="pow-code">${m.code}</span>
-            <span class="pow-exp">ważny do ${expStr}</span>
+            <span class="pow-exp">${t('druzyna.validUntilPrefix')}${expStr}</span>
         </div>`;
     }
 
@@ -1871,7 +1986,7 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
     const user = _powUserMap[userId];
     const player = aktualnyZawodnik;
     const ikona = typ === 'RODZIC' ? '👤' : '👁️';
-    const typLabel = typ === 'RODZIC' ? 'Rodzic / Opiekun' : 'Kibic';
+    const typLabel = typ === 'RODZIC' ? t('druzyna.linkedTypeParent') : t('druzyna.linkedTypeSupporter');
 
     // Dane kontaktowe — dla RODZIC z guardianData zawodnika, dla KIBIC z usera
     const gd = (typ === 'RODZIC' && player?.guardianData) ? player.guardianData : null;
@@ -1884,12 +1999,12 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
 
     if (email) rows += `<div class="pow-modal-row">
         <div class="pow-modal-icon">✉️</div>
-        <div><div class="pow-modal-label">Email</div><div class="pow-modal-val">${email}</div></div>
+        <div><div class="pow-modal-label">${t('druzyna.linkedEmail')}</div><div class="pow-modal-val">${email}</div></div>
     </div>`;
 
     if (tel) rows += `<div class="pow-modal-row">
         <div class="pow-modal-icon">📞</div>
-        <div><div class="pow-modal-label">Telefon</div><div class="pow-modal-val">${tel}</div></div>
+        <div><div class="pow-modal-label">${t('druzyna.linkedPhone')}</div><div class="pow-modal-val">${tel}</div></div>
     </div>`;
 
     if (adr) {
@@ -1899,18 +2014,18 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
         ].filter(Boolean).join('\n');
         if (adres) rows += `<div class="pow-modal-row">
             <div class="pow-modal-icon">📍</div>
-            <div><div class="pow-modal-label">Adres</div><div class="pow-modal-val" style="white-space:pre-line">${adres}</div></div>
+            <div><div class="pow-modal-label">${t('druzyna.linkedAddress')}</div><div class="pow-modal-val" style="white-space:pre-line">${adres}</div></div>
         </div>`;
     }
 
-    if (!rows) rows = `<div style="color:var(--szary);font-size:12px;padding:10px 0">Brak danych kontaktowych</div>`;
+    if (!rows) rows = `<div style="color:var(--szary);font-size: 17px;padding:10px 0">${t('druzyna.linkedNoContact')}</div>`;
 
     // Przyciski akcji — tylko dla trenera
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
     let btnAkcje = '';
     if (isCoach && membershipId) {
-        const btnStyle = `padding: 11px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; width: 100%;`;
-        const odlaczLabel = typ === 'RODZIC' ? 'Odłącz rodzica' : 'Odłącz kibica';
+        const btnStyle = `padding: 11px; border-radius: 12px; font-size: 18px; font-weight: 800; cursor: pointer; width: 100%;`;
+        const odlaczLabel = typ === 'RODZIC' ? t('druzyna.detachParent') : t('druzyna.detachSupporter');
         const btnOdlacz = `<button onclick="odlaczPowiazanego()" style="${btnStyle} background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #F87171;">${odlaczLabel}</button>`;
         btnAkcje = `<div style="display:flex;flex-direction:column;gap:8px;margin-top:20px;">${btnOdlacz}</div>`;
     }
@@ -1975,13 +2090,12 @@ async function odlaczOpiekunaOdZawodnika(userId, typ, membershipIdZnany) {
 
 async function odlaczPowiazanego() {
     if (!_powActiveMembershipId || !_powActiveUserId || !_powActiveTyp) return;
-    const label = _powActiveTyp === 'RODZIC' ? 'rodzica' : 'kibica';
-    const ok = await pokazDialog(`Odłączyć tego ${label} od zawodnika?`, { tak: 'Odłącz', nie: 'Anuluj' });
+    const ok = await pokazDialog(t('druzyna.detachConfirm'), { tak: t('druzyna.detachBtn'), nie: t('cancel') });
     if (!ok) return;
     try {
         await odlaczOpiekunaOdZawodnika(_powActiveUserId, _powActiveTyp, _powActiveMembershipId);
         zamknijPowModal();
-        pokazKomunikat('Użytkownik odłączony', 'sukces');
+        pokazKomunikat(t('druzyna.detachSuccess'), 'sukces');
         await zaladujPowiazaneKonta(aktualnyZawodnik);
     } catch (e) {
         pokazKomunikat('Błąd: ' + e.message, 'blad');
@@ -2068,12 +2182,274 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
             initDruzyna();
         } else {
-            if (!isDemoMode()) window.location.href = 'login.html';
+            if (!isDemoMode()) { requireAuth(); return; }
         }
     });
 });
+
+/* ═══════════════════════════════════════════════════
+   IMPORT CSV
+═══════════════════════════════════════════════════ */
+let _importRows = [];      // sparsowane wiersze gotowe do zapisu
+const IMPORT_TEMPLATE_URL = ''; // uzupełnij po przygotowaniu pliku
+
+function otworzImportCSV() {
+    _importRows = [];
+    document.getElementById('import-file-input').value = '';
+    document.getElementById('import-file-label').textContent =
+        typeof t === 'function' ? t('druzyna.importFilePlaceholder') : 'Kliknij aby wybrać plik .csv';
+    document.getElementById('import-preview-wrap').style.display = 'none';
+    document.getElementById('import-panel').classList.add('open');
+    // Ustaw URL szablonu
+    const link = document.getElementById('import-template-link');
+    if (link) link.href = IMPORT_TEMPLATE_URL || '#';
+}
+
+function zamknijImportCSV() {
+    document.getElementById('import-panel').classList.remove('open');
+}
+
+function onImportFileSelected(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('import-file-label').textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const text = e.target.result;
+            parseAndPreviewCSV(text);
+        } catch (err) {
+            alert('Błąd odczytu pliku: ' + err.message);
+        }
+    };
+    reader.readAsText(file, 'UTF-8');
+}
+
+function parseAndPreviewCSV(text) {
+    // Wykryj separator (, lub ;)
+    const firstLine = text.split('\n')[0] || '';
+    const sep = firstLine.includes(';') ? ';' : ',';
+
+    const lines = text.split('\n').map(l => l.replace(/\r$/, ''));
+    const nonEmpty = lines.filter(l => l.trim());
+    if (nonEmpty.length < 2) {
+        showImportError('Plik jest pusty lub nie zawiera danych.');
+        return;
+    }
+
+    // Nagłówki
+    const rawHeaders = splitCSVLine(nonEmpty[0], sep).map(h => h.trim().toLowerCase());
+    const COL_MAP = {
+        imie:            ['imię', 'imie', 'first name', 'firstname', 'name'],
+        nazwisko:        ['nazwisko', 'last name', 'lastname', 'surname'],
+        data_urodzenia:  ['data urodzenia', 'urodziny', 'data_urodzenia', 'birthdate', 'birth date', 'dob'],
+        pozycja:         ['pozycja', 'position'],
+        numer:           ['numer koszulki', 'numer', 'number', 'jersey', 'jersey number'],
+        poziom:          ['poziom', 'level', 'liga'],
+    };
+
+    const colIdx = {};
+    for (const [key, aliases] of Object.entries(COL_MAP)) {
+        const idx = rawHeaders.findIndex(h => aliases.includes(h));
+        colIdx[key] = idx >= 0 ? idx : -1;
+    }
+
+    if (colIdx.imie === -1 || colIdx.nazwisko === -1) {
+        showImportError('Brak wymaganych kolumn: "Imię" i/lub "Nazwisko". Sprawdź nagłówki w pliku.');
+        document.getElementById('import-preview-wrap').style.display = 'none';
+        return;
+    }
+
+    // Parsuj wiersze danych
+    const dataLines = nonEmpty.slice(1);
+    const rows = [];
+    for (const line of dataLines) {
+        const cells = splitCSVLine(line, sep);
+        const imie     = (cells[colIdx.imie]    || '').trim();
+        const nazwisko = (cells[colIdx.nazwisko] || '').trim();
+        if (!imie && !nazwisko) continue; // pomijaj puste wiersze
+
+        const rawDate = colIdx.data_urodzenia >= 0 ? (cells[colIdx.data_urodzenia] || '').trim() : '';
+        const birthDate = parseImportDate(rawDate);
+
+        rows.push({
+            imie, nazwisko,
+            birthDate,
+            pozycja: colIdx.pozycja >= 0 ? (cells[colIdx.pozycja] || '').trim() : '',
+            numer:   colIdx.numer   >= 0 ? parseInt(cells[colIdx.numer] || '') || null : null,
+            poziom:  colIdx.poziom  >= 0 ? (cells[colIdx.poziom] || '').trim() : '',
+            _ok: !!imie && !!nazwisko,
+        });
+    }
+
+    _importRows = rows.filter(r => r._ok);
+    renderImportPreview(rows);
+}
+
+function parseImportDate(raw) {
+    if (!raw) return '';
+    // RRRR-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    // DD.MM.RRRR
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(raw)) {
+        const [d, m, y] = raw.split('.');
+        return `${y}-${m}-${d}`;
+    }
+    return raw;
+}
+
+function splitCSVLine(line, sep) {
+    const result = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { inQ = !inQ; continue; }
+        if (c === sep && !inQ) { result.push(cur); cur = ''; continue; }
+        cur += c;
+    }
+    result.push(cur);
+    return result;
+}
+
+function renderImportPreview(rows) {
+    document.getElementById('import-errors').style.display = 'none';
+    const errCount = rows.filter(r => !r._ok).length;
+    const okCount  = rows.filter(r => r._ok).length;
+
+    const hdr = document.getElementById('import-preview-hdr');
+    hdr.innerHTML = `Podgląd: <strong>${okCount} zawodników</strong> gotowych do importu` +
+        (errCount ? `<span class="import-err-badge">⚠ ${errCount} błędów</span>` : '');
+
+    const preview = rows.slice(0, 8);
+    const _th = (key, fb) => typeof t === 'function' ? (t(key) || fb) : fb;
+    const tableHtml = `<table>
+        <tr>
+            <th>${_th('druzyna.firstNameRequired','Imię')}</th>
+            <th>${_th('druzyna.lastNameRequired','Nazwisko')}</th>
+            <th>${_th('druzyna.birthDateLabel','Data ur.')}</th>
+            <th>${_th('druzyna.positionLabel','Pozycja')}</th>
+            <th>${_th('druzyna.jerseyNumberLabel','Nr')}</th>
+        </tr>
+        ${preview.map(r => `<tr class="${r._ok ? '' : 'err'}">
+            <td>${r.imie || '<em>brak</em>'}</td>
+            <td>${r.nazwisko || '<em>brak</em>'}</td>
+            <td>${r.birthDate || '—'}</td>
+            <td>${r.pozycja || '—'}</td>
+            <td>${r.numer || '—'}</td>
+        </tr>`).join('')}
+        ${rows.length > 8 ? `<tr><td colspan="5" style="color:var(--szary);text-align:center;padding:8px;">… i ${rows.length - 8} więcej</td></tr>` : ''}
+    </table>`;
+
+    document.getElementById('import-preview-table').innerHTML = tableHtml;
+    document.getElementById('import-confirm-btn').disabled = okCount === 0;
+    document.getElementById('import-preview-wrap').style.display = '';
+}
+
+function showImportError(msg) {
+    const el = document.getElementById('import-errors');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = '';
+}
+
+async function doImportCSV() {
+    if (!_importRows.length) return;
+
+    const teamName = document.getElementById('ctx-team')?.textContent || aktualnyTeamId;
+    const confirmMsg = typeof t === 'function'
+        ? t('druzyna.importConfirmMsg', { count: _importRows.length, team: teamName })
+        : `Importujesz ${_importRows.length} zawodników do drużyny "${teamName}".\n\nPotwierdź import.`;
+
+    if (!await showConfirmSheet(confirmMsg)) return;
+
+    const btn = document.getElementById('import-confirm-btn');
+    btn.disabled = true;
+    btn.textContent = 'Importowanie...';
+
+    try {
+        // Pobierz istniejących zawodników do wykrycia duplikatów
+        const existingSnap = await db.collection('players').get();
+        const existingPlayers = existingSnap.docs
+            .map(d => d.data())
+            .filter(p => (p.teams || []).some(t => t.teamId === aktualnyTeamId && t.status === 'ACTIVE'));
+        const existingNames = new Set(existingPlayers.map(p => (p.name || `${p.firstName} ${p.lastName}`).trim().toLowerCase()));
+
+        if (existingPlayers.length > 0) {
+            const warnMsg = typeof t === 'function'
+                ? t('druzyna.importAlreadyHasPlayers', { team: teamName, existing: existingPlayers.length, count: _importRows.length })
+                : `W drużynie "${teamName}" jest już ${existingPlayers.length} zawodników.\n\nImport dopisze kolejnych ${_importRows.length}. Kontynuować?`;
+            if (!await showConfirmSheet(warnMsg)) {
+                btn.disabled = false;
+                btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodników';
+                return;
+            }
+        }
+
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
+        let added = 0, dupNames = [];
+
+        for (const row of _importRows) {
+            const rand = Math.floor(Math.random() * 9000000 + 1000000);
+            const pid  = `player_${dateStr}_${rand}`;
+            const fullName = `${row.imie} ${row.nazwisko}`.trim();
+
+            if (existingNames.has(fullName.toLowerCase())) {
+                dupNames.push(fullName);
+            }
+
+            const playerDoc = {
+                playerId: pid,
+                firstName: row.imie,
+                lastName:  row.nazwisko,
+                name:      fullName,
+                birthDate: row.birthDate || '',
+                squad:     '',
+                position:  row.pozycja || '',
+                number:    row.numer || null,
+                photoURL:  '',
+                photoConsent: false,
+                isActive:  true,
+                guardianIds: [],
+                guardianPhones: [],
+                guardianData: null,
+                history:   [],
+                teams:     [{ teamId: aktualnyTeamId, status: 'ACTIVE' }],
+                coachOnlyData: { coachNotes: '', level: row.poziom || '' },
+                publicData: { goals: 0, assists: 0, matches: 0, attendance: '0/0', yellowCards: 0, redCards: 0, cleanSheets: 0 },
+                userAccountId: null,
+                createdAt: firebase.firestore.Timestamp.now(),
+                createdBy: aktualnyUserId,
+                isDemo: false, demoSetId: '', demoVisibleFor: [], demoEditableBy: []
+            };
+
+            await db.collection('players').doc(pid).set(playerDoc);
+            added++;
+        }
+
+        zamknijImportCSV();
+        await zaladujZawodnikow();
+
+        let resultMsg = typeof t === 'function'
+            ? t('druzyna.importSuccessMsg', { count: added })
+            : `✅ Zaimportowano ${added} zawodników.`;
+        if (dupNames.length) {
+            resultMsg += '\n\n⚠ Możliwe duplikaty (to samo imię i nazwisko):\n' + dupNames.join(', ');
+        }
+        await showConfirmSheet(resultMsg, { okOnly: true });
+
+    } catch (err) {
+        console.error('❌ Import CSV:', err);
+        btn.disabled = false;
+        btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodników';
+        alert('Błąd importu: ' + err.message);
+    }
+}
 </script>
 
 
 </body>
 </html>
+
+
+

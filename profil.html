@@ -1,45 +1,55 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COACHAY — Mój profil</title>
 <link rel="stylesheet" href="_global.css?v=20260802d">
+<link rel="stylesheet" href="_desktop.css?v=20260821c">
+<script src="_i18n.js?v=20260820"></script>
+<script src="_sidebar.js?v=20260821b"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
-.screen-body { padding: 0 !important; gap: 0 !important; }
+.screen-body { padding: 0 !important; gap: 0 !important; overflow-y: auto; }
+
+/* ── Centred container (desktop) ── */
+.pr-container {
+    max-width: 1222px;
+    margin: 0 auto;
+    width: 100%;
+}
 
 /* ── Hero sekcja ── */
 .pr-hero { background: #000; padding: 20px 16px 24px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .pr-av-wrap { position: relative; width: 80px; height: 80px; cursor: pointer; }
 .pr-av { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2.5px solid var(--border2); background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; }
 .pr-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pr-av-initials { font-family: var(--font-d); font-size: 28px; font-weight: 800; color: var(--bialy); }
-.pr-av-edit { position: absolute; bottom: 0; right: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--akcent); border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-size: 11px; }
-.pr-hero-name { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); text-align: center; }
-.pr-hero-role { font-size: 12px; color: var(--szary); font-weight: 600; }
+.pr-av-initials { font-family: var(--font-d); font-size: 33px; font-weight: 800; color: var(--bialy); }
+.pr-av-edit { position: absolute; bottom: 0; right: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--akcent); border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.pr-hero-name { font-family: var(--font-d); font-size: 25px; font-weight: 800; color: var(--bialy); text-align: center; }
+.pr-hero-role { font-size: 17px; color: var(--szary); font-weight: 600; }
 
 /* ── Zawartość pod hero ── */
 .pr-scroll { padding: 16px 16px 90px; display: flex; flex-direction: column; gap: 12px; }
 
 /* ── Karty ── */
 .pr-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 0; overflow: hidden; }
-.pr-card-title { font-size: 10px; font-weight: 800; color: var(--szary); text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
+.pr-card-title { font-size: 15px; font-weight: 800; color: var(--szary); text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
 .pr-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; border-bottom: 1px solid var(--border); }
 .pr-row:last-child { border-bottom: none; }
-.pr-row-label { font-size: 12px; color: var(--szary); font-weight: 600; flex-shrink: 0; width: 90px; }
-.pr-row-value { font-size: 13px; color: var(--bialy); font-weight: 700; flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pr-row-input { flex: 1; background: none; border: none; outline: none; color: var(--bialy); font-size: 13px; font-weight: 700; text-align: right; font-family: inherit; }
+.pr-row-label { font-size: 17px; color: var(--szary); font-weight: 600; flex-shrink: 0; width: 90px; }
+.pr-row-value { font-size: 18px; color: var(--bialy); font-weight: 700; flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-row-input { flex: 1; background: none; border: none; outline: none; color: var(--bialy); font-size: 18px; font-weight: 700; text-align: right; font-family: inherit; }
 .pr-row-input::placeholder { color: var(--szary); }
 .pr-row-input:disabled { color: var(--szary); cursor: not-allowed; }
-.pr-row-btn { font-size: 11px; font-weight: 800; color: var(--akcent); cursor: pointer; margin-left: 10px; flex-shrink: 0; }
-.pr-title-btn { font-size: 11px; font-weight: 800; color: var(--akcent); background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; cursor: pointer; padding: 4px 10px; }
+.pr-row-btn { font-size: 16px; font-weight: 800; color: var(--akcent); cursor: pointer; margin-left: 10px; flex-shrink: 0; }
+.pr-title-btn { font-size: 16px; font-weight: 800; color: var(--akcent); background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; cursor: pointer; padding: 4px 10px; }
 .pr-title-btn:active { opacity: 0.7; }
 
 /* ── Subskrypcja chip ── */
-.sub-chip { font-size: 10px; font-weight: 800; border-radius: 999px; padding: 3px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sub-chip { font-size: 15px; font-weight: 800; border-radius: 999px; padding: 3px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
 .sub-chip.active  { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
 .sub-chip.trial   { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
 .sub-chip.expired { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
@@ -47,21 +57,21 @@
 
 /* ── Sub info wiersze ── */
 .sub-info-row { padding: 10px 14px 0; display: flex; flex-direction: column; gap: 4px; }
-.sub-info-line { font-size: 11px; color: var(--szary); font-weight: 600; }
+.sub-info-line { font-size: 16px; color: var(--szary); font-weight: 600; }
 .sub-info-line span { color: var(--bialy); }
 
 /* ── Family slots pasek ── */
 .sub-slots { display: flex; align-items: center; gap: 10px; padding: 8px 14px 12px; }
 .sub-slots-bar { flex: 1; height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
 .sub-slots-fill { height: 100%; background: var(--akcent); border-radius: 2px; transition: width 0.3s; }
-.sub-slots-txt { font-size: 11px; font-weight: 800; color: var(--szary-j); flex-shrink: 0; white-space: nowrap; }
+.sub-slots-txt { font-size: 16px; font-weight: 800; color: var(--szary-j); flex-shrink: 0; white-space: nowrap; }
 
 /* ── Zarejestrowany kibic ── */
 .pr-kibic-member { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--tlo-karta2); border-radius: 10px; }
-.pr-kibic-member-name { font-size: 12px; font-weight: 700; color: var(--bialy); }
-.pr-kibic-block-btn { font-size: 10px; font-weight: 800; color: var(--blad); background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+.pr-kibic-member-name { font-size: 17px; font-weight: 700; color: var(--bialy); }
+.pr-kibic-block-btn { font-size: 15px; font-weight: 800; color: var(--blad); background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
 .pr-kibic-block-btn:active { background: rgba(239,68,68,0.15); }
-.pr-kibic-section-lbl { font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--szary); padding: 0 2px 6px; }
+.pr-kibic-section-lbl { font-size: 15px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--szary); padding: 0 2px 6px; }
 
 
 /* ── PIN sheet ── */
@@ -70,41 +80,41 @@
 .pin-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: var(--tlo-karta); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 16px 16px 32px; z-index: 301; transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.32,0.72,0,1); }
 .pin-sheet.open { transform: translateY(0); }
 .pin-sheet-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 14px; }
-.pin-sheet-title { font-size: 14px; font-weight: 800; color: var(--bialy); margin-bottom: 16px; }
+.pin-sheet-title { font-size: 19px; font-weight: 800; color: var(--bialy); margin-bottom: 16px; }
 .pin-field { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); }
 .pin-field:last-of-type { border-bottom: none; }
-.pin-field-label { font-size: 12px; color: var(--szary); font-weight: 600; }
+.pin-field-label { font-size: 17px; color: var(--szary); font-weight: 600; }
 .pin-field-dots { display: flex; gap: 6px; }
 .pin-field-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border2); background: transparent; transition: background 0.1s; }
 .pin-field-dot.filled { background: var(--akcent); border-color: var(--akcent); }
-.pin-sheet-btn { width: 100%; margin-top: 16px; padding: 12px; background: var(--akcent); border: none; border-radius: 12px; color: #fff; font-size: 13px; font-weight: 900; cursor: pointer; }
+.pin-sheet-btn { width: 100%; margin-top: 16px; padding: 12px; background: var(--akcent); border: none; border-radius: 12px; color: #fff; font-size: 18px; font-weight: 900; cursor: pointer; }
 .pin-sheet-btn:disabled { background: var(--tlo-karta2); color: var(--szary); cursor: not-allowed; }
-.pin-sheet-msg { font-size: 11px; font-weight: 700; text-align: center; margin-top: 8px; min-height: 16px; }
+.pin-sheet-msg { font-size: 16px; font-weight: 700; text-align: center; margin-top: 8px; min-height: 16px; }
 .pin-sheet-msg.ok  { color: #34d399; }
 .pin-sheet-msg.err { color: #ef4444; }
 /* Klawiatura w sheet */
 .pin-sheet-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
-.psk { aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--border); background: var(--tlo-karta2); color: var(--bialy); font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-tap-highlight-color: transparent; }
+.psk { aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--border); background: var(--tlo-karta2); color: var(--bialy); font-size: 23px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-tap-highlight-color: transparent; }
 .psk:active { opacity: 0.6; }
 .psk.empty { border: none; background: none; pointer-events: none; }
-.psk.back { font-size: 14px; color: var(--szary); }
+.psk.back { font-size: 19px; color: var(--szary); }
 
 /* ── Wyloguj ── */
-.pr-logout-btn { width: 100%; padding: 14px; background: none; border: 1px solid rgba(239,68,68,0.25); border-radius: 16px; color: #ef4444; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.pr-logout-btn { width: 100%; padding: 14px; background: none; border: 1px solid rgba(239,68,68,0.25); border-radius: 16px; color: #ef4444; font-size: 19px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .pr-logout-btn:active { background: rgba(239,68,68,0.06); }
 
 /* ── Dzieci — kody dostępu (jak w druzyna.html, bez zakładki Rodzic) ── */
 .pr-child-block { padding: 12px 14px; border-bottom: 1px solid var(--border); }
 .pr-child-block:last-child { border-bottom: none; }
 .pr-child-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.pr-child-name { font-size: 13px; font-weight: 800; color: var(--bialy); }
-.pr-kod-empty { font-size: 12px; color: var(--szary); }
+.pr-child-name { font-size: 18px; font-weight: 800; color: var(--bialy); }
+.pr-kod-empty { font-size: 17px; color: var(--szary); }
 
-.dp-section-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
-.sort-btn { border-radius: var(--r-pill); padding: 5px 12px; font-size: 11px; font-weight: 800; background: var(--tlo-karta); border: 1px solid var(--border); color: var(--szary); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.dp-section-label { font-size: 15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
+.sort-btn { border-radius: var(--r-pill); padding: 5px 12px; font-size: 16px; font-weight: 800; background: var(--tlo-karta); border: 1px solid var(--border); color: var(--szary); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
 .sort-btn.active { background: var(--bialy); color: #000; border-color: var(--bialy); }
 .pow-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.pow-filter-row label { font-size: 11px; font-weight: 700; color: var(--szary); cursor: pointer; user-select: none; }
+.pow-filter-row label { font-size: 16px; font-weight: 700; color: var(--szary); cursor: pointer; user-select: none; }
 .pow-filter-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--akcent); }
 .kod-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .kod-item:last-child { margin-bottom: 0; }
@@ -114,23 +124,23 @@
 .kod-item.kod-nieaktywny { opacity: 0.5; }
 .kod-item-top { display: flex; align-items: center; justify-content: space-between; }
 .kod-val-big { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
-.kod-status-badge { font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 1px; }
+.kod-status-badge { font-size: 14px; font-weight: 900; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 1px; }
 .kod-status-aktywny { background: rgba(59,130,246,0.15); color: #3B82F6; }
 .kod-status-uzyty { background: rgba(74,222,128,0.12); color: var(--sukces); }
 .kod-status-wygasly { background: var(--tlo-karta2); color: var(--szary); }
 .kod-status-nieaktywny { background: rgba(251,191,36,0.12); color: var(--warn); }
-.kod-meta { font-size: 11px; color: var(--szary); font-weight: 600; line-height: 1.6; }
+.kod-meta { font-size: 16px; color: var(--szary); font-weight: 600; line-height: 1.6; }
 .kod-meta strong { color: var(--szary-j); }
 .kod-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 
 /* ── Kod zaproszenia ── */
 .pr-kod-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-.pr-kod-input { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 22px; font-weight: 900; font-family: var(--font-d); letter-spacing: 6px; text-transform: uppercase; text-align: center; box-sizing: border-box; outline: none; }
+.pr-kod-input { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 27px; font-weight: 900; font-family: var(--font-d); letter-spacing: 6px; text-transform: uppercase; text-align: center; box-sizing: border-box; outline: none; }
 .pr-kod-input:focus { border-color: var(--akcent); }
-.pr-kod-input::placeholder { font-size: 13px; font-weight: 600; letter-spacing: 0; color: var(--szary); text-transform: none; font-family: inherit; }
-.pr-kod-submit { width: 100%; padding: 13px; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: var(--r-pill); color: var(--szary-j); font-size: 14px; font-weight: 800; cursor: pointer; }
+.pr-kod-input::placeholder { font-size: 18px; font-weight: 600; letter-spacing: 0; color: var(--szary); text-transform: none; font-family: inherit; }
+.pr-kod-submit { width: 100%; padding: 13px; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: var(--r-pill); color: var(--szary-j); font-size: 19px; font-weight: 800; cursor: pointer; }
 .pr-kod-submit:active { border-color: var(--bialy); color: var(--bialy); }
-.pr-kod-msg { font-size: 12px; font-weight: 700; display: none; text-align: center; }
+.pr-kod-msg { font-size: 17px; font-weight: 700; display: none; text-align: center; }
 .pr-kod-msg.ok  { color: #34d399; display: block; }
 .pr-kod-msg.err { color: #ef4444; display: block; }
 
@@ -138,16 +148,16 @@
 .av-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--tlo-karta); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 16px; z-index: 200; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); max-height: 75%; display: flex; flex-direction: column; gap: 12px; }
 .av-panel.open { transform: translateY(0); }
 .av-panel-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto -4px; }
-.av-panel-title { font-size: 13px; font-weight: 800; color: var(--bialy); text-align: center; }
+.av-panel-title { font-size: 18px; font-weight: 800; color: var(--bialy); text-align: center; }
 .av-gender-row { display: flex; gap: 8px; }
-.av-gender-btn { flex: 1; padding: 8px; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--szary); font-size: 12px; font-weight: 700; cursor: pointer; }
+.av-gender-btn { flex: 1; padding: 8px; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--szary); font-size: 17px; font-weight: 700; cursor: pointer; }
 .av-gender-btn.selected { background: rgba(59,130,246,0.15); border-color: var(--akcent); color: var(--akcent); }
 .av-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; overflow-y: auto; }
 .av-thumb { border-radius: 12px; overflow: hidden; border: 2px solid var(--border); cursor: pointer; aspect-ratio: 1; background: var(--tlo-karta2); }
 .av-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .av-thumb.selected { border-color: var(--akcent); }
-.av-regen-btn { padding: 9px; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--szary); font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
-.av-save-btn { padding: 11px; background: var(--akcent); border: none; border-radius: 10px; color: #fff; font-size: 13px; font-weight: 900; cursor: pointer; }
+.av-regen-btn { padding: 9px; background: var(--tlo-karta2); border: 1px solid var(--border); border-radius: 10px; color: var(--szary); font-size: 17px; font-weight: 700; cursor: pointer; text-align: center; }
+.av-save-btn { padding: 11px; background: var(--akcent); border: none; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 900; cursor: pointer; }
 .av-save-btn:active { opacity: 0.8; }
 .av-panel-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 199; display: none; }
 .av-panel-overlay.open { display: block; }
@@ -175,7 +185,7 @@
     </div>
 
     <div class="ctx-overlay" id="ctx-ov">
-        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ov-label" data-i18n="common.selectClubAndTeam">Wybierz klub i zespół</div>
         <div class="ctx-klub-row" id="ctx-klub-row">
             <div class="ctx-klub-dot" id="ctx-ov-dot"></div>
             <span class="ctx-klub-name" id="ctx-ov-klub-name"></span>
@@ -183,14 +193,16 @@
         </div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
+    <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
         <div class="notif-hdr">
-            <span class="notif-tytul">Powiadomienia</span>
-            <span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span>
+            <span class="notif-tytul" data-i18n="common.notifications">Powiadomienia</span>
+            <span class="notif-clear" onclick="clearNotifs()" data-i18n="common.clearRead">Wyczyść przeczytane</span>
         </div>
     </div>
 
     <div class="screen-body">
+      <div class="pr-container">
 
         <!-- ── Hero ── -->
         <div class="pr-hero">
@@ -209,28 +221,28 @@
 
             <!-- Dane konta -->
             <div class="pr-card" id="pr-card-dane">
-                <div class="pr-card-title" style="display:flex;align-items:center;justify-content:space-between;">Dane konta<button class="pr-title-btn" onclick="saveName()">Zapisz</button></div>
+                <div class="pr-card-title" style="display:flex;align-items:center;justify-content:space-between;"><span data-i18n="profil.accountCardTitle">Dane konta</span><button class="pr-title-btn" onclick="saveName()" data-i18n="profil.saveButton">Zapisz</button></div>
                 <div class="pr-row">
-                    <span class="pr-row-label">Imię</span>
-                    <input class="pr-row-input" id="pr-input-fname" type="text" placeholder="np. Jan" autocomplete="off">
+                    <span class="pr-row-label" data-i18n="profil.firstNameLabel">Imię</span>
+                    <input class="pr-row-input" id="pr-input-fname" type="text" data-i18n-placeholder="profil.firstNamePlaceholder" placeholder="np. Jan" autocomplete="off">
                 </div>
                 <div class="pr-row">
-                    <span class="pr-row-label">Nazwisko</span>
-                    <input class="pr-row-input" id="pr-input-lname" type="text" placeholder="np. Kowalski" autocomplete="off">
+                    <span class="pr-row-label" data-i18n="profil.lastNameLabel">Nazwisko</span>
+                    <input class="pr-row-input" id="pr-input-lname" type="text" data-i18n-placeholder="profil.lastNamePlaceholder" placeholder="np. Kowalski" autocomplete="off">
                 </div>
                 <div class="pr-row">
-                    <span class="pr-row-label">Email</span>
+                    <span class="pr-row-label" data-i18n="profil.emailLabel">Email</span>
                     <span class="pr-row-value" id="pr-email-val" style="color:var(--szary);">—</span>
                 </div>
                 <div class="pr-row">
-                    <span class="pr-row-label">Rola</span>
+                    <span class="pr-row-label" data-i18n="profil.roleFieldLabel">Rola</span>
                     <span class="pr-row-value" id="pr-role-val">—</span>
                 </div>
             </div>
 
             <!-- Subskrypcja -->
             <div class="pr-card" id="pr-card-sub">
-                <div class="pr-card-title">Subskrypcja</div>
+                <div class="pr-card-title" data-i18n="profil.subscriptionTitle">Subskrypcja</div>
                 <div class="pr-row" style="border-bottom:none;">
                     <span class="pr-row-label" id="pr-sub-date" style="color:var(--szary);font-size:12px;font-weight:600;">—</span>
                     <span id="pr-sub-chip" class="sub-chip trial">Ładowanie</span>
@@ -240,32 +252,33 @@
 
             <!-- PIN -->
             <div class="pr-card" id="pr-card-pin">
-                <div class="pr-card-title" style="display:flex;align-items:center;justify-content:space-between;">PIN<button class="pr-title-btn" onclick="openPinSheet()">Zmień PIN</button></div>
+                <div class="pr-card-title" style="display:flex;align-items:center;justify-content:space-between;"><span data-i18n="profil.pinTitle">PIN</span><button class="pr-title-btn" onclick="openPinSheet()" data-i18n="profil.changePinButton">Zmień PIN</button></div>
                 <div class="pr-row" style="border-bottom:none;">
-                    <span class="pr-row-label" style="width:auto;">Blokada</span>
-                    <span class="pr-row-value" style="font-size:12px;color:var(--szary);">po 5 min nieaktywności</span>
+                    <span class="pr-row-label" style="width:auto;" data-i18n="profil.lockLabel">Blokada</span>
+                    <span class="pr-row-value" style="font-size:12px;color:var(--szary);" data-i18n="profil.lockDesc">po 5 min nieaktywności</span>
                 </div>
             </div>
 
             <!-- Kibice — widoczne tylko dla RODZIC -->
             <div class="pr-card" id="pr-card-kibice" style="display:none;">
-                <div class="pr-card-title">Dzieci — kody zaproszeń</div>
+                <div class="pr-card-title" data-i18n="profil.childrenCodesTitle">Dzieci — kody zaproszeń</div>
                 <div id="pr-kibice-body"><div style="padding:12px 14px;font-size:12px;color:var(--szary);">Ładowanie...</div></div>
             </div>
 
             <!-- Masz kod zaproszenia? — widoczne dla wszystkich -->
             <div class="pr-card" id="pr-card-kod">
-                <div class="pr-card-title">Masz kod zaproszenia?</div>
+                <div class="pr-card-title" data-i18n="profil.redeemTitle">Masz kod zaproszenia?</div>
                 <div class="pr-kod-body">
-                    <input class="pr-kod-input" id="pr-kod-input" type="text" maxlength="6" placeholder="np. ABC123" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); if(this.value.length===6) redeemInviteCode()">
+                    <input class="pr-kod-input" id="pr-kod-input" type="text" maxlength="6" data-i18n-placeholder="profil.redeemPlaceholder" placeholder="np. ABC123" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); if(this.value.length===6) redeemInviteCode()">
                     <div class="pr-kod-msg" id="pr-kod-msg"></div>
                 </div>
             </div>
 
             <!-- Wyloguj -->
-            <button class="pr-logout-btn" onclick="confirmLogout()">🚪 Wyloguj się</button>
+            <button class="pr-logout-btn" onclick="confirmLogout()">🚪 <span data-i18n="profil.logoutButton">Wyloguj się</span></button>
 
         </div><!-- /pr-scroll -->
+      </div><!-- /pr-container -->
 
     </div><!-- /screen-body -->
 
@@ -273,38 +286,38 @@
     <div class="av-panel-overlay" id="av-overlay" onclick="closeAvPanel()"></div>
     <div class="av-panel" id="av-panel">
         <div class="av-panel-handle"></div>
-        <div class="av-panel-title">Wybierz awatar</div>
+        <div class="av-panel-title" data-i18n="profil.selectAvatarTitle">Wybierz awatar</div>
         <div class="av-gender-row">
-            <button class="av-gender-btn selected" id="av-btn-m" onclick="selectGender('mezczyzna', this)">♂ Mężczyzna</button>
-            <button class="av-gender-btn" id="av-btn-k" onclick="selectGender('kobieta', this)">♀ Kobieta</button>
+            <button class="av-gender-btn selected" id="av-btn-m" onclick="selectGender('mezczyzna', this)" data-i18n="profil.genderMaleLabel">♂ Mężczyzna</button>
+            <button class="av-gender-btn" id="av-btn-k" onclick="selectGender('kobieta', this)" data-i18n="profil.genderFemaleLabel">♀ Kobieta</button>
         </div>
         <div class="av-grid" id="av-grid"></div>
-        <button type="button" class="av-regen-btn" onclick="regenAvatarGrid()">↺ Inne awatary</button>
-        <button type="button" class="av-save-btn" onclick="saveAvatar()">Zapisz awatar</button>
+        <button type="button" class="av-regen-btn" onclick="regenAvatarGrid()" data-i18n="profil.regenAvatarsButton">↺ Inne awatary</button>
+        <button type="button" class="av-save-btn" onclick="saveAvatar()" data-i18n="profil.saveAvatarButton">Zapisz awatar</button>
     </div>
 
     <!-- ── PIN sheet ── -->
     <div class="pin-sheet-overlay" id="pin-sheet-overlay" onclick="closePinSheet()"></div>
     <div class="pin-sheet" id="pin-sheet">
         <div class="pin-sheet-handle"></div>
-        <div class="pin-sheet-title">Zmień PIN</div>
+        <div class="pin-sheet-title" data-i18n="profil.pinSheetTitle">Zmień PIN</div>
         <!-- Pola z kropkami (aktywne pole podświetlone) -->
         <div class="pin-field" id="psf-old">
-            <span class="pin-field-label">Aktualny PIN</span>
+            <span class="pin-field-label" data-i18n="profil.pinOldLabel">Aktualny PIN</span>
             <div class="pin-field-dots" id="psd-old">
                 <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
                 <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
             </div>
         </div>
         <div class="pin-field" id="psf-new">
-            <span class="pin-field-label">Nowy PIN</span>
+            <span class="pin-field-label" data-i18n="profil.pinNewLabel">Nowy PIN</span>
             <div class="pin-field-dots" id="psd-new">
                 <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
                 <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
             </div>
         </div>
         <div class="pin-field" id="psf-conf">
-            <span class="pin-field-label">Potwierdź PIN</span>
+            <span class="pin-field-label" data-i18n="profil.pinConfirmLabel">Potwierdź PIN</span>
             <div class="pin-field-dots" id="psd-conf">
                 <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
                 <div class="pin-field-dot"></div><div class="pin-field-dot"></div>
@@ -316,17 +329,14 @@
             <div class="psk" onclick="psKey('7')">7</div><div class="psk" onclick="psKey('8')">8</div><div class="psk" onclick="psKey('9')">9</div>
             <div class="psk empty"></div><div class="psk" onclick="psKey('0')">0</div><div class="psk back" onclick="psBack()">⌫</div>
         </div>
-        <button class="pin-sheet-btn" id="pin-sheet-save" onclick="savePinSheet()" disabled>Zmień PIN</button>
+        <button class="pin-sheet-btn" id="pin-sheet-save" onclick="savePinSheet()" disabled data-i18n="profil.pinSheetSaveButton">Zmień PIN</button>
         <div class="pin-sheet-msg" id="pin-sheet-msg"></div>
     </div>
 
     <!-- ── Bottom nav ── -->
     <div class="bottom-nav">
-        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
-        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
-        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
-        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
-        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label" data-i18n="nav.team">Drużyna</span></a>
     </div>
 
     <!-- ── Menu panel ── -->
@@ -338,26 +348,24 @@
             <div class="menu-panel-role" id="menu-role"></div>
         </div>
         <div class="menu-panel-items">
-            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">👤</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
         </div>
         <div class="menu-panel-bottom">
             <div class="menu-logout" onclick="logout()">
                 <span class="menu-logout-icon">🚪</span>
-                <span class="menu-logout-txt">Wyloguj się</span>
+                <span class="menu-logout-txt" data-i18n="profil.logoutButton">Wyloguj się</span>
             </div>
         </div>
     </div>
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20260802d"></script>
+<script src="coachay-core.js?v=20260903d"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    PROFIL.HTML — Mój profil (wszystkie role)
@@ -385,7 +393,7 @@ const BG_COLORS   = ['b6e3f4','c0aede','d1d4f9','ffd5dc','ffdfbf','d4f7c5'];
 
 function losuj(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-const ROLE_LABELS = {
+const ROLE_LABELS_FALLBACK = {
     'TRENER_GLOWNY':    'Trener Główny',
     'TRENER_POMOCNICZY':'Trener Pomocniczy',
     'TRENER_ASYSTENT':  'Trener Asystent',
@@ -394,6 +402,11 @@ const ROLE_LABELS = {
     'ZAWODNIK':         'Zawodnik',
     'KIBIC':            'Kibic'
 };
+function getRoleLabel(role) {
+    return typeof t === 'function' ? (t('roles.' + role) || ROLE_LABELS_FALLBACK[role] || role) : (ROLE_LABELS_FALLBACK[role] || role);
+}
+const _tP = (key, fb) => typeof t === 'function' ? t(key) : fb;
+const _tPv = (key, vars, fb) => typeof t === 'function' ? t(key, vars) : fb;
 
 /* ── Inicjalizacja ── */
 async function initProfil() {
@@ -454,7 +467,7 @@ function renderProfile(user) {
 
     // Hero
     document.getElementById('pr-hero-name').textContent = name;
-    document.getElementById('pr-hero-role').textContent = ROLE_LABELS[currentUserRole] || currentUserRole;
+    document.getElementById('pr-hero-role').textContent = getRoleLabel(currentUserRole);
     renderAvatar(avatarUrl, name);
 
     // Dane konta — osobne pola imię/nazwisko z fallback na split displayName
@@ -462,8 +475,8 @@ function renderProfile(user) {
     const lName = user.lastName  || (name !== '—' ? name.split(' ').slice(1).join(' ') : '');
     document.getElementById('pr-input-fname').value = fName;
     document.getElementById('pr-input-lname').value = lName;
-    document.getElementById('pr-email-val').textContent = hasEmail ? email : 'Brak (konto bez emaila)';
-    document.getElementById('pr-role-val').textContent = ROLE_LABELS[currentUserRole] || currentUserRole;
+    document.getElementById('pr-email-val').textContent = hasEmail ? email : _tP('profil.emailFallbackNoEmail', 'Brak (konto bez emaila)');
+    document.getElementById('pr-role-val').textContent = getRoleLabel(currentUserRole);
 
     // Awatar zapamiętany
     if (avatarUrl) selectedAvatarUrl = avatarUrl;
@@ -558,10 +571,10 @@ async function saveAvatar() {
         // Odśwież hero
         renderAvatar(selectedAvatarUrl, document.getElementById('pr-hero-name').textContent);
         closeAvPanel();
-        showToast('Awatar zapisany ✓');
+        showToast(_tP('profil.avatarSavedToast', 'Awatar zapisany ✓'));
     } catch(e) {
         console.error('Błąd zapisu awatara:', e);
-        showToast('Błąd zapisu. Spróbuj ponownie.', true);
+        showToast(_tP('profil.avatarSaveError', 'Błąd zapisu. Spróbuj ponownie.'), true);
     }
 }
 
@@ -586,10 +599,10 @@ async function saveName() {
 
         await batch.commit();
         document.getElementById('pr-hero-name').textContent = displayName;
-        showToast('Dane zapisane ✓');
+        showToast(_tP('profil.nameSavedToast', 'Dane zapisane ✓'));
     } catch(e) {
         console.error('Błąd zapisu nazwy:', e);
-        showToast('Błąd zapisu.', true);
+        showToast(_tP('profil.nameSaveError', 'Błąd zapisu.'), true);
         return;
     }
 
@@ -620,14 +633,14 @@ async function renderSubscription() {
     const dateEl  = document.getElementById('pr-sub-date');
 
     if (currentUserRole === 'ZAWODNIK') {
-        chip.textContent = 'Bezpłatny';
+        chip.textContent = _tP('profil.subscriptionFreeChip', 'Bezpłatny');
         chip.className = 'sub-chip free';
         dateEl.textContent = '';
         return;
     }
 
     if (!currentClubId) {
-        chip.textContent = 'Brak klubu';
+        chip.textContent = _tP('profil.subNoClub', 'Brak klubu');
         chip.className = 'sub-chip expired';
         dateEl.textContent = '';
         return;
@@ -637,28 +650,28 @@ async function renderSubscription() {
     try {
         access = await getAccessStatus(currentUserId, currentClubId);
     } catch(e) {
-        chip.textContent = 'Błąd';
+        chip.textContent = _tP('profil.subLoadError', 'Błąd');
         chip.className = 'sub-chip expired';
         dateEl.textContent = '';
         return;
     }
 
     const STATUS_MAP = {
-        ACTIVE:  { txt: 'Aktywna',        cls: 'active' },
-        TRIAL:   { txt: 'Okres próbny',   cls: 'trial' },
-        GRACE:   { txt: 'Okres karencji', cls: 'trial' },
-        EXPIRED: { txt: 'Wygasła',        cls: 'expired' }
+        ACTIVE:  { txt: _tP('profil.subStatusActive', 'Aktywna'),        cls: 'active' },
+        TRIAL:   { txt: _tP('profil.subStatusTrial', 'Okres próbny'),    cls: 'trial' },
+        GRACE:   { txt: _tP('profil.subStatusGrace', 'Okres karencji'),  cls: 'trial' },
+        EXPIRED: { txt: _tP('profil.subStatusExpired', 'Wygasła'),       cls: 'expired' }
     };
     const s = STATUS_MAP[access.status] || { txt: access.status, cls: 'expired' };
     chip.textContent = s.txt;
     chip.className = `sub-chip ${s.cls}`;
 
     const SOURCE_MAP = {
-        individual: 'Własna licencja',
-        trial: 'Okres próbny',
-        club_license: 'Licencja klubowa',
-        family_license: 'Pakiet rodzinny',
-        admin_personal: 'Własna licencja (admina)'
+        individual:    _tP('profil.subSourceIndividual', 'Własna licencja'),
+        trial:         _tP('profil.subSourceTrial', 'Okres próbny'),
+        club_license:  _tP('profil.subSourceClubLicense', 'Licencja klubowa'),
+        family_license:_tP('profil.subSourceFamilyLicense', 'Pakiet rodzinny'),
+        admin_personal:_tP('profil.subSourceAdminPersonal', 'Własna licencja (admina)')
     };
     const fmtDate = d => d ? d.toISOString().slice(0, 10) : '';
     const sourceLabel = SOURCE_MAP[access.source] || '';
@@ -676,7 +689,7 @@ async function renderSubscription() {
             card.insertAdjacentHTML('beforeend', `
                 <div class="sub-slots" id="sub-slots-sub">
                     <div class="sub-slots-bar"><div class="sub-slots-fill" style="width:${pct}%"></div></div>
-                    <span class="sub-slots-txt">${used}/${total} kibiców</span>
+                    <span class="sub-slots-txt">${_tPv('profil.subSlotsCount', {used, total}, `${used}/${total} kibiców`)}</span>
                 </div>`);
         }
     } catch(e) {}
@@ -744,7 +757,7 @@ async function savePinSheet() {
     msgEl.textContent = '';
 
     if (_ps.new !== _ps.conf) {
-        msgEl.textContent = 'Nowy PIN i potwierdzenie nie są zgodne';
+        msgEl.textContent = _tP('profil.pinMismatch', 'Nowy PIN i potwierdzenie nie są zgodne');
         msgEl.className = 'pin-sheet-msg err';
         _ps.new = ''; _ps.conf = ''; _ps.active = 'new'; _psUpdateAll();
         return;
@@ -756,7 +769,7 @@ async function savePinSheet() {
         const storedHash = userDoc.data()?.pinHash;
         const oldHash = await sha256(_ps.old);
         if (oldHash !== storedHash) {
-            msgEl.textContent = 'Aktualny PIN jest nieprawidłowy';
+            msgEl.textContent = _tP('profil.pinWrongOld', 'Aktualny PIN jest nieprawidłowy');
             msgEl.className = 'pin-sheet-msg err';
             _ps.old = ''; _ps.active = 'old'; _psUpdateAll();
             return;
@@ -764,12 +777,12 @@ async function savePinSheet() {
         // Zapisz nowy hash
         const newHash = await sha256(_ps.new);
         await db.collection('users').doc(currentUserId).update({ pinHash: newHash });
-        msgEl.textContent = 'PIN zmieniony ✓';
+        msgEl.textContent = _tP('profil.pinChangedOk', 'PIN zmieniony ✓');
         msgEl.className = 'pin-sheet-msg ok';
         setTimeout(closePinSheet, 1200);
     } catch(e) {
         console.error('Błąd zmiany PIN:', e);
-        msgEl.textContent = 'Błąd zapisu — spróbuj ponownie';
+        msgEl.textContent = _tP('profil.pinSaveError', 'Błąd zapisu — spróbuj ponownie');
         msgEl.className = 'pin-sheet-msg err';
     }
 }
@@ -788,7 +801,7 @@ async function renderKibiceSection(allMemberships) {
 
     const dzieci = allMemberships.filter(m => m.role === 'RODZIC' && m.playerId);
     if (dzieci.length === 0) {
-        body.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:var(--szary);">Brak przypisanych zawodników.</div>';
+        body.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:var(--szary);">${_tP('profil.noAssignedPlayers', 'Brak przypisanych zawodników.')}</div>`;
         return;
     }
 
@@ -820,27 +833,27 @@ async function renderKibiceSection(allMemberships) {
             </div>
 
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <div class="dp-section-label" style="margin-bottom:0;">Kody dostępu</div>
+                <div class="dp-section-label" style="margin-bottom:0;">${_tP('profil.accessCodesLabel', 'Kody dostępu')}</div>
                 <div class="pow-filter-row" style="margin-bottom:0;">
                     <input type="checkbox" id="kod-show-inactive-${d.playerId}" onchange="zaladujKodyP('${d.playerId}')">
-                    <label for="kod-show-inactive-${d.playerId}">Pokaż nieaktywne</label>
+                    <label for="kod-show-inactive-${d.playerId}">${_tP('profil.showInactiveCodes', 'Pokaż nieaktywne')}</label>
                 </div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="kod-typ-row-${d.playerId}">
-                <button class="sort-btn active" data-typ="ZAWODNIK" onclick="wybierzTypKoduP('${d.playerId}',this,'ZAWODNIK')">⚽ Zawodnik</button>
-                <button class="sort-btn" data-typ="KIBIC" onclick="wybierzTypKoduP('${d.playerId}',this,'KIBIC')">👴 Kibic</button>
+                <button class="sort-btn active" data-typ="ZAWODNIK" onclick="wybierzTypKoduP('${d.playerId}',this,'ZAWODNIK')">${_tP('roles.ZAWODNIK', '⚽ Zawodnik')}</button>
+                <button class="sort-btn" data-typ="KIBIC" onclick="wybierzTypKoduP('${d.playerId}',this,'KIBIC')">${_tP('roles.KIBIC', '👴 Kibic')}</button>
             </div>
-            <div id="kod-typ-info-${d.playerId}" style="font-size:11px;color:var(--szary);margin-bottom:10px;line-height:1.5;">${KOD_OPISY_P.ZAWODNIK}</div>
-            <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size:12px;" onclick="generujKodP('${d.playerId}','${d.clubId}','${d.teamId}',this)">🔑 Wygeneruj nowy kod</button>
-            <div id="kod-content-${d.playerId}"><div class="pr-kod-empty">Ładowanie...</div></div>
+            <div id="kod-typ-info-${d.playerId}" style="font-size:11px;color:var(--szary);margin-bottom:10px;line-height:1.5;">${getKodOpisyP().ZAWODNIK}</div>
+            <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size:12px;" onclick="generujKodP('${d.playerId}','${d.clubId}','${d.teamId}',this)">${_tP('profil.generateCodeButton', '🔑 Wygeneruj nowy kod')}</button>
+            <div id="kod-content-${d.playerId}"><div class="pr-kod-empty">${_tP('profil.loadingLabel', 'Ładowanie...')}</div></div>
 
-            <div class="pr-kibic-section-lbl" style="margin-top:12px;">Zarejestrowani kibice</div>
-            <div id="pr-kibice-registered-${d.playerId}"><div style="font-size:12px;color:var(--szary);">Ładowanie...</div></div>
+            <div class="pr-kibic-section-lbl" style="margin-top:12px;">${_tP('profil.registeredKibiceLabel', 'Zarejestrowani kibice')}</div>
+            <div id="pr-kibice-registered-${d.playerId}"><div style="font-size:12px;color:var(--szary);">${_tP('profil.loadingLabel', 'Ładowanie...')}</div></div>
         </div>`).join('')}
         ${hasSlotsBar ? `
         <div class="sub-slots" id="sub-slots-kibic" style="padding:2px 14px 8px;">
             <div class="sub-slots-bar"><div class="sub-slots-fill" style="width:${pct}%"></div></div>
-            <span class="sub-slots-txt">${slotsUsed}/${slotsTotal} kibiców</span>
+            <span class="sub-slots-txt">${_tPv('profil.subSlotsCount', {used:slotsUsed,total:slotsTotal}, `${slotsUsed}/${slotsTotal} kibiców`)}</span>
         </div>` : ''}
     `;
 
@@ -854,10 +867,12 @@ async function renderKibiceSection(allMemberships) {
 const stanKoduDzieci = {}; // playerId -> { typ: 'ZAWODNIK'|'KIBIC' }
 let _kodLoadSeqP = 0;
 
-const KOD_OPISY_P = {
-    ZAWODNIK: '⚽ Zawodnik otrzymuje własne konto do potwierdzania obecności i widoku swojej drużyny.',
-    KIBIC:    '👴 Kibic widzi wyniki i statystyki wskazanego zawodnika. Kod jednorazowy — babcia z dwójką wnuków potrzebuje 2 kodów.',
-};
+function getKodOpisyP() {
+    return {
+        ZAWODNIK: _tP('profil.kodOpisyP.ZAWODNIK', '⚽ Zawodnik otrzymuje własne konto do potwierdzania obecności i widoku swojej drużyny.'),
+        KIBIC:    _tP('profil.kodOpisyP.KIBIC', '👴 Kibic widzi wyniki i statystyki wskazanego zawodnika. Kod jednorazowy — babcia z dwójką wnuków potrzebuje 2 kodów.'),
+    };
+}
 
 function wybierzTypKoduP(playerId, btn, typ) {
     const row = document.getElementById(`kod-typ-row-${playerId}`);
@@ -865,7 +880,7 @@ function wybierzTypKoduP(playerId, btn, typ) {
     btn.classList.add('active');
     stanKoduDzieci[playerId] = { ...(stanKoduDzieci[playerId] || {}), typ };
     const info = document.getElementById(`kod-typ-info-${playerId}`);
-    if (info) info.textContent = KOD_OPISY_P[typ] || '';
+    if (info) info.textContent = getKodOpisyP()[typ] || '';
     zaladujKodyP(playerId);
 }
 
@@ -891,7 +906,7 @@ function pokazModalKoduP(liczba, typ) {
         sheet.style.cssText = 'background:var(--tlo-karta,#161616);border:1px solid var(--border,#272727);border-radius:20px 20px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-width:480px;box-shadow:0 -10px 40px rgba(0,0,0,0.5);';
         const msgEl = document.createElement('div');
         msgEl.style.cssText = 'color:var(--bialy,#fff);font-size:15px;font-weight:600;line-height:1.5;margin-bottom:20px;';
-        msgEl.textContent = `Dla tego zawodnika istnieje już ${liczba} aktywny kod (typ: ${typ}). Co chcesz zrobić?`;
+        msgEl.textContent = _tPv('profil.existingCodeBody', {count: liczba, typ}, `Dla tego zawodnika istnieje już ${liczba} aktywny kod (typ: ${typ}). Co chcesz zrobić?`);
         const btns = document.createElement('div');
         btns.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
 
@@ -903,9 +918,9 @@ function pokazModalKoduP(liczba, typ) {
             return b;
         }
 
-        btns.appendChild(mkBtn('Dezaktywuj stary · wygeneruj nowy', true, 'dezaktywuj'));
-        btns.appendChild(mkBtn('Zachowaj stary · wygeneruj drugi', false, 'zachowaj'));
-        btns.appendChild(mkBtn('Anuluj', false, 'anuluj'));
+        btns.appendChild(mkBtn(_tP('profil.existingCodeDeactivate', 'Dezaktywuj stary · wygeneruj nowy'), true, 'dezaktywuj'));
+        btns.appendChild(mkBtn(_tP('profil.existingCodeKeep', 'Zachowaj stary · wygeneruj drugi'), false, 'zachowaj'));
+        btns.appendChild(mkBtn(_tP('common.cancel', 'Anuluj'), false, 'anuluj'));
 
         sheet.appendChild(msgEl);
         sheet.appendChild(btns);
@@ -921,7 +936,7 @@ async function zaladujKodyP(playerId) {
     const seq = ++_kodLoadSeqP;
     const typ = (stanKoduDzieci[playerId] && stanKoduDzieci[playerId].typ) || 'ZAWODNIK';
     const pokazNieaktywne = document.getElementById(`kod-show-inactive-${playerId}`)?.checked || false;
-    el.innerHTML = '<div class="pr-kod-empty">Ładowanie...</div>';
+    el.innerHTML = `<div class="pr-kod-empty">${_tP('profil.loadingLabel', 'Ładowanie...')}</div>`;
 
     let kody = [];
     try {
@@ -937,7 +952,7 @@ async function zaladujKodyP(playerId) {
             return tb - ta;
         });
     } catch(e) {
-        if (seq === _kodLoadSeqP) el.innerHTML = '<div class="pr-kod-empty">Błąd ładowania.</div>';
+        if (seq === _kodLoadSeqP) el.innerHTML = `<div class="pr-kod-empty">${_tP('profil.loadError', 'Błąd ładowania.')}</div>`;
         return;
     }
     if (seq !== _kodLoadSeqP) return;
@@ -951,7 +966,7 @@ async function zaladujKodyP(playerId) {
     }
 
     if (kody.length === 0) {
-        el.innerHTML = `<div class="pr-kod-empty">Brak ${pokazNieaktywne ? 'wygenerowanych' : 'aktywnych'} kodów.</div>`;
+        el.innerHTML = `<div class="pr-kod-empty">${pokazNieaktywne ? _tP('profil.noGeneratedCodes', 'Brak wygenerowanych kodów.') : _tP('profil.noActiveCodes', 'Brak aktywnych kodów.')}</div>`;
         return;
     }
 
@@ -979,12 +994,12 @@ async function zaladujKodyP(playerId) {
         const isNaprawdeUzyty = k.isUsed && !isDeactivated;
         const statusClass = isDeactivated ? 'kod-nieaktywny' : isNaprawdeUzyty ? 'kod-uzyty' : wygasly ? 'kod-wygasly' : 'kod-aktywny';
         const statusBadge = isDeactivated
-            ? '<span class="kod-status-badge kod-status-nieaktywny">🚫 Dezaktywowany</span>'
+            ? `<span class="kod-status-badge kod-status-nieaktywny">${_tP('profil.codeStatusDeactivated', '🚫 Dezaktywowany')}</span>`
             : isNaprawdeUzyty
-            ? '<span class="kod-status-badge kod-status-uzyty">✅ Użyty</span>'
+            ? `<span class="kod-status-badge kod-status-uzyty">${_tP('profil.codeStatusUsed', '✅ Użyty')}</span>`
             : wygasly
-            ? '<span class="kod-status-badge kod-status-wygasly">⏰ Wygasły</span>'
-            : `<span class="kod-status-badge kod-status-aktywny">🔵 ${dniDo}d</span>`;
+            ? `<span class="kod-status-badge kod-status-wygasly">${_tP('profil.codeStatusExpired', '⏰ Wygasły')}</span>`
+            : `<span class="kod-status-badge kod-status-aktywny">${_tPv('profil.codeActiveDays', {days: dniDo}, `🔵 ${dniDo}d`)}</span>`;
 
         const div = document.createElement('div');
         div.className = `kod-item ${statusClass}`;
@@ -993,10 +1008,10 @@ async function zaladujKodyP(playerId) {
                 <span class="kod-val-big">${k.code}</span>
                 ${statusBadge}
             </div>
-            <div class="kod-meta">📅 Wygenerowany: <strong>${createdDateStr} ${createdTimeStr}</strong></div>
+            <div class="kod-meta">${_tP('profil.generatedLabel', '📅 Wygenerowany:')} <strong>${createdDateStr} ${createdTimeStr}</strong></div>
             ${rodziData}
             <div class="kod-actions">
-                ${!k.isUsed && !wygasly ? `<button class="btn-ghost" style="font-size:10px;padding:4px 10px;" onclick="kopiujKodP('${k.code}')">📋 Kopiuj</button>` : ''}
+                ${!k.isUsed && !wygasly ? `<button class="btn-ghost" style="font-size:10px;padding:4px 10px;" onclick="kopiujKodP('${k.code}')">${_tP('profil.copyCodeButton', '📋 Kopiuj')}</button>` : ''}
                 ${!k.isUsed && !wygasly ? wyslijWhatsAppBtnP(k.code) : ''}
             </div>
         `;
@@ -1015,7 +1030,7 @@ async function generujKodP(playerId, clubId, teamId, btnEl) {
         try {
             const fs = await getFamilySlots(currentUserId, currentClubId);
             if (fs && fs.slotsUsed >= fs.slotsTotal) {
-                showToast('Wszystkie sloty licencji są zajęte.', true);
+                showToast(_tP('profil.allSlotsUsed', 'Wszystkie sloty licencji są zajęte.'), true);
                 btnEl.disabled = false;
                 btnEl.textContent = prevLabel;
                 return;
@@ -1085,9 +1100,9 @@ async function generujKodP(playerId, clubId, teamId, btnEl) {
         await db.collection('inviteCodes').doc(codeDoc.codeId).set(codeDoc);
         await zaladujKodyP(playerId);
         try { await navigator.clipboard?.writeText(budujTrescKoduP(kod)); } catch(e) {}
-        showToast(`Kod ${kod} skopiowany do schowka`);
+        showToast(_tPv('profil.codeCopiedToast', {code: kod}, `Kod ${kod} skopiowany do schowka`));
     } catch(e) {
-        showToast('Błąd generowania kodu.', true);
+        showToast(_tP('profil.codeGenerateError', 'Błąd generowania kodu.'), true);
     }
 
     btnEl.disabled = false;
@@ -1096,7 +1111,7 @@ async function generujKodP(playerId, clubId, teamId, btnEl) {
 
 async function loadRegisteredKibice(el, dzieciPlayerIds) {
     if (!dzieciPlayerIds || dzieciPlayerIds.length === 0) {
-        el.innerHTML = '<div style="font-size:12px;color:var(--szary);">Brak.</div>';
+        el.innerHTML = `<div style="font-size:12px;color:var(--szary);">${_tP('profil.noPlayersNote', 'Brak.')}</div>`;
         return;
     }
     try {
@@ -1112,7 +1127,7 @@ async function loadRegisteredKibice(el, dzieciPlayerIds) {
             docs = docs.concat(snap.docs);
         }
         if (docs.length === 0) {
-            el.innerHTML = '<div style="font-size:12px;color:var(--szary);">Brak zarejestrowanych kibiców.</div>';
+            el.innerHTML = `<div style="font-size:12px;color:var(--szary);">${_tP('profil.noRegisteredKibice', 'Brak zarejestrowanych kibiców.')}</div>`;
             return;
         }
         // Nazwa z users.displayName (aktualna), nie z membership.displayName (denormalizacja,
@@ -1132,18 +1147,18 @@ async function loadRegisteredKibice(el, dzieciPlayerIds) {
             const name = (userMap[data.userId]?.displayName || data.displayName || data.userId || '—').replace(/'/g, '&#39;');
             html += `<div class="pr-kibic-member">
                 <span class="pr-kibic-member-name">${name}</span>
-                <button class="pr-kibic-block-btn" onclick="blockKibic('${data.userId}','${d.id}','${name}',this)">Blokuj</button>
+                <button class="pr-kibic-block-btn" onclick="blockKibic('${data.userId}','${d.id}','${name}',this)">${_tP('profil.blockButton', 'Blokuj')}</button>
             </div>`;
         }
         html += '</div>';
         el.innerHTML = html;
     } catch(e) {
-        el.innerHTML = '<div style="font-size:12px;color:var(--szary);">Błąd ładowania.</div>';
+        el.innerHTML = `<div style="font-size:12px;color:var(--szary);">${_tP('profil.loadError', 'Błąd ładowania.')}</div>`;
     }
 }
 
 async function blockKibic(userId, membershipId, name, btn) {
-    if (!await showConfirmSheet(`Zablokować kibica "${name}"? Zwolni to slot licencji.`)) return;
+    if (!await showConfirmSheet(_tPv('profil.blockConfirmBody', {name}, `Zablokować kibica "${name}"? Zwolni to slot licencji.`))) return;
     btn.disabled = true;
     try {
         // Zablokuj WSZYSTKIE membership kibica w tym klubie (może mieć 2+ jeśli 2 dzieci)
@@ -1162,7 +1177,7 @@ async function blockKibic(userId, membershipId, name, btn) {
 
         // Zwolnij 1 slot (kibic to 1 osoba, nie per membership)
         await releaseFamilySlot(currentUserId, currentClubId);
-        showToast(`Kibic ${name} zablokowany ✓`);
+        showToast(_tPv('profil.blockedOk', {name}, `Kibic ${name} zablokowany ✓`));
         await refreshSlotsBar();
 
         const allMbr = await getUserMemberships(currentUserId);
@@ -1173,7 +1188,7 @@ async function blockKibic(userId, membershipId, name, btn) {
         }));
     } catch(e) {
         console.error('blockKibic:', e);
-        showToast('Błąd blokowania kibica.', true);
+        showToast(_tP('profil.blockError', 'Błąd blokowania kibica.'), true);
         btn.disabled = false;
     }
 }
@@ -1189,7 +1204,7 @@ async function refreshSlotsBar() {
         if (total <= 0) return;
         const pct = Math.min(100, Math.round((used / total) * 100));
         document.querySelectorAll('.sub-slots-fill').forEach(el => { el.style.width = pct + '%'; });
-        document.querySelectorAll('.sub-slots-txt').forEach(el => { el.textContent = `${used}/${total} kibiców`; });
+        document.querySelectorAll('.sub-slots-txt').forEach(el => { el.textContent = _tPv('profil.subSlotsCount', {used, total}, `${used}/${total} kibiców`); });
     } catch(e) {}
 }
 
@@ -1201,7 +1216,7 @@ async function redeemInviteCode() {
     msgEl.className = 'pr-kod-msg';
 
     if (code.length < 5) {
-        msgEl.textContent = 'Wpisz pełny kod zaproszenia.';
+        msgEl.textContent = _tP('profil.redeemTooShort', 'Wpisz pełny kod zaproszenia.');
         msgEl.className = 'pr-kod-msg err';
         msgEl.style.display = 'block';
         return;
@@ -1212,7 +1227,7 @@ async function redeemInviteCode() {
             .where('code', '==', code).where('isUsed', '==', false).limit(1).get();
 
         if (snap.empty) {
-            msgEl.textContent = 'Nieprawidłowy lub wygasły kod.';
+            msgEl.textContent = _tP('profil.redeemInvalid', 'Nieprawidłowy lub wygasły kod.');
             msgEl.className = 'pr-kod-msg err';
             msgEl.style.display = 'block';
             return;
@@ -1222,7 +1237,7 @@ async function redeemInviteCode() {
         const codeData = codeDoc.data();
 
         if (codeData.expiresAt && codeData.expiresAt.toDate() < new Date()) {
-            msgEl.textContent = 'Ten kod wygasł.';
+            msgEl.textContent = _tP('profil.redeemExpired', 'Ten kod wygasł.');
             msgEl.className = 'pr-kod-msg err';
             msgEl.style.display = 'block';
             return;
@@ -1275,7 +1290,7 @@ async function redeemInviteCode() {
 
             const dzieci = parentSnap.docs.map(d => d.data()).filter(m => m.playerId);
             if (dzieci.length === 0) {
-                msgEl.textContent = 'Brak zawodników powiązanych z tym kodem.';
+                msgEl.textContent = _tP('profil.redeemNoPlayers', 'Brak zawodników powiązanych z tym kodem.');
                 msgEl.className = 'pr-kod-msg err';
                 msgEl.style.display = 'block';
                 return;
@@ -1324,14 +1339,14 @@ async function redeemInviteCode() {
         }
 
         document.getElementById('pr-kod-input').value = '';
-        msgEl.textContent = 'Dodano! Odświeżam...';
+        msgEl.textContent = _tP('profil.redeemSuccess', 'Dodano! Odświeżam...');
         msgEl.className = 'pr-kod-msg ok';
         msgEl.style.display = 'block';
         setTimeout(() => window.location.reload(), 1200);
 
     } catch(e) {
         console.error('❌ redeemInviteCode:', e);
-        msgEl.textContent = 'Błąd połączenia. Spróbuj ponownie.';
+        msgEl.textContent = _tP('profil.redeemConnError', 'Błąd połączenia. Spróbuj ponownie.');
         msgEl.className = 'pr-kod-msg err';
         msgEl.style.display = 'block';
     }
@@ -1368,3 +1383,6 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
+

@@ -120,7 +120,7 @@ function requireAuth() {
     if (isDemoMode()) return true;
     const userId = getCurrentUserId();
     if (!userId) {
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
         return false;
     }
     return true;
@@ -231,13 +231,16 @@ function showConfirmSheet(message, opts = {}) {
         msgEl.textContent = message;
         const btns = document.createElement('div');
         btns.className = 'cs-btns';
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'cs-btn cs-btn-cancel';
-        cancelBtn.textContent = opts.cancelLabel || 'Anuluj';
         const okBtn = document.createElement('button');
         okBtn.className = 'cs-btn cs-btn-ok';
         okBtn.textContent = opts.okLabel || 'OK';
-        btns.appendChild(cancelBtn);
+        if (!opts.okOnly) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'cs-btn cs-btn-cancel';
+            cancelBtn.textContent = opts.cancelLabel || 'Anuluj';
+            btns.appendChild(cancelBtn);
+            cancelBtn.onclick = () => close(false);
+        }
         btns.appendChild(okBtn);
         sheet.appendChild(msgEl);
         sheet.appendChild(btns);
@@ -248,9 +251,8 @@ function showConfirmSheet(message, opts = {}) {
             overlay.remove();
             resolve(result);
         }
-        cancelBtn.onclick = () => close(false);
         okBtn.onclick = () => close(true);
-        overlay.onclick = (e) => { if (e.target === overlay) close(false); };
+        overlay.onclick = (e) => { if (e.target === overlay) close(opts.okOnly ? true : false); };
     });
 }
 
@@ -263,7 +265,7 @@ async function logout() {
     localStorage.removeItem('selectedTeamId'); // legacy
     localStorage.removeItem('appLastActive');   // reset PIN timer przy wylogowaniu
     try { if (auth) await auth.signOut(); } catch(e) {}
-    window.location.href = 'login.html';
+    window.location.href = 'index.html';
 }
 
 /* ═══════════════════════════════════════════════════
@@ -831,13 +833,48 @@ async function initSession() {
     if (!userId || !db) return null;
 
     try {
-        // 1. Pobierz dane usera
-        const userDoc = await db.collection('users').doc(userId).get();
+        // 1. Pobierz dane usera (source:server omija IndexedDB cache)
+        const userDoc = await db.collection('users').doc(userId).get({ source: 'server' });
         if (!userDoc.exists) { console.error('❌ Brak usera:', userId); return null; }
         const user = { id: userDoc.id, ...userDoc.data() };
 
+        // Sync języka localStorage → Firestore
+        const _localLang = localStorage.getItem('coachay_lang');
+        if (_localLang && _localLang !== user.language) {
+            db.collection('users').doc(userId).update({ language: _localLang }).catch(() => {});
+        }
+
+        // Gate RODO — brak zgody → rodo-consent.html
+        const _currentPage = window.location.pathname.split('/').pop() || '';
+        const _isRodoExempt = _RODO_EXEMPT.some(p => _currentPage.includes(p));
+        if (!user.termsAcceptedAt && !_isRodoExempt) {
+            sessionStorage.setItem('rodoReturnUrl', window.location.href);
+            window.location.replace('rodo-consent.html');
+            return null;
+        }
+
         // 2. Pobierz wszystkie aktywne memberships
         const allMemberships = await getUserMemberships(userId);
+
+        // Gate RODO trener — brak zgody na przetwarzanie danych zawodników
+        if (!_isRodoExempt && !user.coachConsentAcceptedAt) {
+            const isCoach = allMemberships.some(m => ['TRENER', 'TRENER_GLOWNY', 'TRENER_POMOCNICZY'].includes(m.role));
+            if (isCoach) {
+                sessionStorage.setItem('rodoReturnUrl', window.location.href);
+                window.location.replace('rodo-consent.html');
+                return null;
+            }
+        }
+
+        // Gate RODO rodzic — nowe dziecko bez parentDataConsentAt
+        if (!_isRodoExempt) {
+            const hasUnconsentedChild = allMemberships.some(m => m.role === 'RODZIC' && !m.parentDataConsentAt);
+            if (hasUnconsentedChild) {
+                sessionStorage.setItem('rodoReturnUrl', window.location.href);
+                window.location.replace('rodo-consent.html');
+                return null;
+            }
+        }
 
         // 3. Wybierz membership — z Firestore user doc lub localStorage (selectedMembershipId)
         //    Priorytet: user.selectedMembershipId (Firestore) > localStorage > pierwsze aktywne
@@ -1116,25 +1153,31 @@ async function getInviteCodes(userId) {
 ═══════════════════════════════════════════════════ */
 
 // Pobierz powiadomienia dla użytkownika
-async function getUserNotifications(userId, limit = 30) {
+async function getUserNotifications(userId) {
     if (!db || !userId) return [];
     try {
         const snapshot = await db.collection('notifications')
             .where('userId', '==', userId)
-            .limit(limit)
-            .get();
+            .get({ source: 'server' });
         const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(n => n.status !== 'DELETE');
-        // Sortuj: nieprzeczytane najpierw, potem po dacie (najnowsze wyżej)
+        console.log(`[NOTIF] userId=${userId} | Firestore zwróciło ${snapshot.docs.length} doc(s) | po filtrze status: ${notifs.length}`);
+        // Sortuj: nieprzeczytane najpierw, potem po dacie eventu (dla ATTENDANCE) lub createdAt
+        function eventDateFromRef(refId) {
+            const part = (refId || '').split('_')[1]; // 'event_20260824_xxx' → '20260824'
+            return part && part.length === 8
+                ? `${part.slice(0,4)}-${part.slice(4,6)}-${part.slice(6,8)}`
+                : null;
+        }
         notifs.sort((a, b) => {
             if (a.isRead !== b.isRead) return a.isRead ? 1 : -1;
-            const bTime = b.createdAt?.toMillis?.() ?? 0;
-            const aTime = a.createdAt?.toMillis?.() ?? 0;
-            return bTime - aTime;
+            const aDate = eventDateFromRef(a.referenceId) || (typeof a.createdAt === 'string' ? a.createdAt : a.createdAt?.toDate?.()?.toISOString?.() || '');
+            const bDate = eventDateFromRef(b.referenceId) || (typeof b.createdAt === 'string' ? b.createdAt : b.createdAt?.toDate?.()?.toISOString?.() || '');
+            return aDate.localeCompare(bDate); // najwcześniejszy event na górze
         });
         return notifs;
     } catch (error) {
-        console.error('Error fetching notifications:', error);
+        console.error('[NOTIF] Błąd Firestore:', error?.code, error?.message, error);
         return [];
     }
 }
@@ -1154,6 +1197,38 @@ function calcNotifDeleteAt(type, isRead, readAt) {
             : 60 * 24 * 60 * 60 * 1000; // nieprzeczytane → 60 dni
     }
     return firebase.firestore.Timestamp.fromDate(new Date(base.getTime() + ms));
+}
+
+// Buduje treść powiadomienia o evencie (nowy format: tytuł=kategoria, treść=szczegóły)
+function buildNotifBodyFE(event, { childName = null, childNames = null, requiresAction = false } = {}) {
+    const d = new Date(event.date + 'T00:00:00');
+    const dayName = d.toLocaleDateString('pl-PL', { weekday: 'short' });
+    const dateStr = d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+    const parts = [];
+    if (event.title) parts.push(event.title);
+    if (requiresAction) parts.push('potwierdź obecność');
+    const kids = childNames?.length ? childNames.join(', ') : (childName || null);
+    if (kids) parts.push(kids);
+    const timeStr = event.timeFrom ? `${event.timeFrom}${event.timeTo ? '–' + event.timeTo : ''}` : '';
+    parts.push(`${dayName} ${dateStr}${timeStr ? ', ' + timeStr : ''}`);
+    if (event.location?.venueName) parts.push(event.location.venueName);
+    return parts.join(' · ');
+}
+
+// Sprawdź czy powiadomienie już istnieje (anty-duplikat, mirror Cloud Function notifExists)
+async function notifExistsFE(userId, referenceId, forPlayerId) {
+    try {
+        let q = db.collection('notifications')
+            .where('userId', '==', userId)
+            .where('referenceId', '==', referenceId)
+            .where('actionDone', '==', false);
+        if (forPlayerId) {
+            const snap = await q.where('forPlayerId', '==', forPlayerId).get();
+            return !snap.empty;
+        }
+        const snap = await q.get();
+        return !snap.empty;
+    } catch (e) { return false; }
 }
 
 // Utwórz powiadomienie
@@ -1181,6 +1256,7 @@ async function createNotification(data) {
             createdAt: now.toISOString(),
             readAt: null,
             isRead: false,
+            status: 'ACTIVE',
             priority: data.priority || 'NORMAL',
             isDemo: false,
             demoSetId: null,
@@ -1189,7 +1265,7 @@ async function createNotification(data) {
         await db.collection('notifications').doc(notif.notificationId).set(notif);
         return notif;
     } catch (error) {
-        console.error('Error creating notification:', error);
+        console.error('❌ Błąd zapisu powiadomienia:', error);
         return null;
     }
 }
@@ -1203,13 +1279,10 @@ async function createNotificationsForEvent(event, absences) {
     const eventDate = event.date;
     const requiresAction = event.requireConfirmation || false;
 
-    const d = new Date(eventDate + 'T00:00:00');
-    const dayName = d.toLocaleDateString('pl-PL', { weekday: 'short' });
-    const dateStr = d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
-
+    const typeTitlesNew = { 'TRENING': 'Nowy trening', 'MECZ': 'Nowy mecz', 'WYJAZD': 'Nowy wyjazd', 'INNE': 'Nowe wydarzenie' };
+    const newTitle = typeTitlesNew[event.type] || 'Nowe wydarzenie';
     const typeNames = { 'TRENING': 'Trening', 'MECZ': 'Mecz', 'WYJAZD': 'Wyjazd', 'INNE': 'Wydarzenie' };
-    const typeName = typeNames[event.type] || 'Wydarzenie';
-    const bodyText = `${typeName} \u00B7 ${dayName} ${dateStr}, ${event.timeFrom || ''}\u2013${event.timeTo || ''} \u00B7 ${event.location?.venueName || ''}`;
+    const typeName = typeNames[event.type] || 'Wydarzenie'; // u\u017Cywany w else branch dla trenera
 
     // Pobierz rodziców i zawodników przez memberships (v4.1 — bez user.children / user.playerId)
     const parentChildMap = {};   // parentUserId → [playerId]
@@ -1226,10 +1299,11 @@ async function createNotificationsForEvent(event, absences) {
             .get();
         const members = mbrSnap.docs.map(doc => doc.data());
 
-        // Krok 1a: dla __TEAM__ — dodaj wszystkich zawodników do invited
+        // Krok 1a: dla __TEAM__ — dodaj wszystkich graczy do invited
+        // ZAWODNIK = gracz z kontem; RODZIC.playerId = gracz bez konta (tylko przez rodzica)
         if (isTeamScope) {
             members.forEach(m => {
-                if (m.role === 'ZAWODNIK' && m.playerId && !invited.includes(m.playerId)) {
+                if ((m.role === 'ZAWODNIK' || m.role === 'RODZIC') && m.playerId && !invited.includes(m.playerId)) {
                     invited.push(m.playerId);
                 }
             });
@@ -1239,7 +1313,7 @@ async function createNotificationsForEvent(event, absences) {
         const playerIds = invited.filter(id => id.includes('player_'));
         members.forEach(m => {
             if (!m.userId || !m.playerId) return;
-            if (m.role === 'RODZIC' && playerIds.includes(m.playerId)) {
+            if ((m.role === 'RODZIC' || m.role === 'KIBIC') && playerIds.includes(m.playerId)) {
                 if (!parentChildMap[m.userId]) parentChildMap[m.userId] = [];
                 if (!parentChildMap[m.userId].includes(m.playerId)) parentChildMap[m.userId].push(m.playerId);
             }
@@ -1249,62 +1323,31 @@ async function createNotificationsForEvent(event, absences) {
         });
     } catch (e) { console.error('❌ parentChildMap:', e); }
 
-    const notifiedParents = new Set();
-
     let created = 0;
-    for (const personId of invited) {
-        // Pomiń osoby z długą nieobecnością
-        if (absences && absences.length > 0) {
-            const hasAbsence = absences.some(a =>
-                a.playerId === personId && a.dateFrom <= eventDate && a.dateTo >= eventDate && a.isActive
-            );
-            if (hasAbsence) continue;
+    const absentPlayerIds = new Set();
+    if (absences?.length > 0) {
+        for (const a of absences) {
+            if (a.dateFrom <= eventDate && a.dateTo >= eventDate && a.isActive) absentPlayerIds.add(a.playerId);
         }
+    }
 
-        // Sprawdź czy to player
+    for (const personId of invited) {
+        if (absentPlayerIds.has(personId)) continue;
+
         const isPlayer = personId.includes('player_');
 
         if (isPlayer) {
-            // Dla playera — powiadomienie do zawodnika (jeśli ma konto w memberships)
+            // Powiadomienie dla zawodnika (jeśli ma konto)
             const playerUserId = playerUserMap[personId];
             if (playerUserId) {
-                const playerName = personId; // imię pobrane przy tworzeniu eventu
-                await createNotification({
-                    userId: playerUserId,
-                    teamId: event.teamId,
-                    type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
-                    title: requiresAction ? `${event.title || typeName} \u2014 potwierd\u017A obecno\u015B\u0107` : (event.title || typeName),
-                    body: bodyText,
-                    referenceId: event.eventId,
-                    referenceType: 'event',
-                    forPlayerId: personId,
-                    requiresAction: requiresAction,
-                    actionType: requiresAction ? 'ATTENDANCE' : null,
-                    priority: 'NORMAL'
-                });
-                created++;
-            }
-
-            // Dla playera — powiadomienie do rodzica (jeśli ma)
-            for (const [parentId, childIds] of Object.entries(parentChildMap)) {
-                if (childIds.includes(personId) && invited.includes(personId)) {
-                    const notifKey = `${parentId}_${personId}`;
-                    if (notifiedParents.has(notifKey)) continue;
-                    notifiedParents.add(notifKey);
-
-                    // Znajdź imię dziecka
-                    let childName = personId;
-                    try {
-                        const playerDoc = await db.collection('players').doc(personId).get();
-                        if (playerDoc.exists) childName = playerDoc.data().name || personId;
-                    } catch (e) { }
-
+                const exists = await notifExistsFE(playerUserId, event.eventId, personId);
+                if (!exists) {
                     await createNotification({
-                        userId: parentId,
+                        userId: playerUserId,
                         teamId: event.teamId,
                         type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
-                        title: requiresAction ? `${event.title || typeName} \u2014 potwierd\u017A obecno\u015B\u0107 (${childName})` : (event.title || typeName),
-                        body: bodyText,
+                        title: newTitle,
+                        body: buildNotifBodyFE(event, { requiresAction }),
                         referenceId: event.eventId,
                         referenceType: 'event',
                         forPlayerId: personId,
@@ -1316,14 +1359,18 @@ async function createNotificationsForEvent(event, absences) {
                 }
             }
         } else {
-            // Dla trenera/innego usera — zawsze informacyjne, bez "potwierdź obecność"
-            if (personId === event.createdBy) continue; // twórca nie dostaje o własnym evencie
+            // Trener/inny user — bez "potwierdź obecność"
+            if (personId === event.createdBy) continue;
+            // Rodzic/kibic dostaje zbiorcze powiadomienie poniżej
+            if (parentChildMap[personId]) continue;
+            const directExists = await notifExistsFE(personId, event.eventId, null);
+            if (directExists) continue;
             await createNotification({
                 userId: personId,
                 teamId: event.teamId,
                 type: 'EVENT_CREATED',
-                title: event.title || `${typeName} — ${dayName} ${dateStr}`,
-                body: bodyText,
+                title: newTitle,
+                body: buildNotifBodyFE(event),
                 referenceId: event.eventId,
                 referenceType: 'event',
                 forPlayerId: null,
@@ -1334,6 +1381,36 @@ async function createNotificationsForEvent(event, absences) {
             created++;
         }
     }
+
+    // Zbiorcze powiadomienie dla rodziców/kibiców — 1 na osobę, nawet przy 2+ dzieciach
+    for (const [parentId, childIds] of Object.entries(parentChildMap)) {
+        const presentChildIds = childIds.filter(cid => !absentPlayerIds.has(cid));
+        if (presentChildIds.length === 0) continue;
+        const parentExists = await notifExistsFE(parentId, event.eventId, null);
+        if (parentExists) continue;
+        const childNames = [];
+        for (const cid of presentChildIds) {
+            try {
+                const playerDoc = await db.collection('players').doc(cid).get();
+                childNames.push(playerDoc.exists ? (playerDoc.data().name || cid) : cid);
+            } catch (e) { childNames.push(cid); }
+        }
+        await createNotification({
+            userId: parentId,
+            teamId: event.teamId,
+            type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
+            title: newTitle,
+            body: buildNotifBodyFE(event, { childNames, requiresAction }),
+            referenceId: event.eventId,
+            referenceType: 'event',
+            forPlayerId: null,
+            requiresAction: requiresAction,
+            actionType: requiresAction ? 'ATTENDANCE' : null,
+            priority: 'NORMAL'
+        });
+        created++;
+    }
+
     console.log(`✅ Utworzono ${created} powiadomień`);
 }
 
@@ -1354,7 +1431,7 @@ async function manageNotifications(action, referenceType, referenceId, payload =
     if (action === 'delete') {
         try {
             const snap = await db.collection('notifications').where('referenceId', '==', referenceId).get();
-            for (const doc of snap.docs) await doc.ref.update({ status: 'DELETE' });
+            for (const doc of snap.docs) await doc.ref.delete();
         } catch (e) { console.warn('manageNotifications delete:', e); }
         return;
     }
@@ -1720,7 +1797,7 @@ async function loadAndRenderNotifications() {
         return !shouldDelete;
     });
     for (const n of toDelete) {
-        try { await db.collection('notifications').doc(n.notificationId || n.id).update({ status: 'DELETE' }); } catch (e) { }
+        try { await db.collection('notifications').doc(n.notificationId || n.id).delete(); } catch (e) { }
     }
     if (toDelete.length > 0) console.log(`📦 Auto-archiwizacja: ${toDelete.length} starych powiadomień`);
 
@@ -1889,19 +1966,28 @@ async function loadAndRenderNotifications() {
             }
             continue;
         }
-        // Ukryj aktywne ATTENDANCE jeśli event poza oknem przypomnienia
+        // Ukryj aktywne ATTENDANCE jeśli event odwołany lub dalej niż 7 dni
         if (n.actionType === 'ATTENDANCE' && !n.actionDone && n.referenceId) {
             try {
                 const evDoc = await db.collection('events').doc(n.referenceId).get();
                 if (evDoc.exists) {
                     const ev = evDoc.data();
-                    if (!isEventInReminderWindow(ev)) continue;
+                    // Event odwołany — dezaktywuj powiadomienie i ukryj
+                    if (ev.status === 'CANCELLED') {
+                        db.collection('notifications').doc(n.notificationId || n.id).update({
+                            actionDone: true, actionResult: 'expired', isRead: true, readAt: new Date().toISOString()
+                        }).catch(() => {});
+                        continue;
+                    }
+                    const evTime = new Date(ev.date + 'T' + (ev.timeFrom || '00:00')).getTime();
+                    if (evTime - Date.now() > 7 * 24 * 60 * 60 * 1000) continue;
                 }
             } catch (e) { }
         }
         visibleNotifData.push(n);
     }
     notifData = visibleNotifData;
+    console.log(`[NOTIF] Po visibleFilter: ${notifData.length} | typy: ${[...new Set(notifData.map(n=>n.actionType||n.type))].join(',')}`);
 
     const unread = notifData.filter(n => !n.isRead).length;
 
@@ -1917,6 +2003,7 @@ async function loadAndRenderNotifications() {
 
 function renderNotifOverlay() {
     const overlay = document.getElementById('notif-ov');
+    console.log(`[NOTIF render] overlay=${!!overlay} | notifData.length=${notifData.length}`);
     if (!overlay) return;
 
     const hdr = overlay.querySelector('.notif-hdr');
@@ -1924,7 +2011,7 @@ function renderNotifOverlay() {
     if (hdr) overlay.appendChild(hdr);
 
     if (notifData.length === 0) {
-        overlay.innerHTML += '<div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;">Brak powiadomień</div>';
+        overlay.innerHTML += '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:13px;">Brak powiadomień</div>';
         return;
     }
 
@@ -2015,6 +2102,20 @@ function renderNotifOverlay() {
         }
 
         const _nt = (s, max) => s && s.length > max ? s.substring(0, max) + '…' : (s || '');
+        // Kolorowy lewy border wg typu powiadomienia
+        const notifBorderColors = {
+            EVENT_CANCELLED: '#EF4444',
+            EVENT_UPDATED:   '#3B82F6',
+            EVENT_CREATED:   '#10B981',
+            EVENT_ATTENDANCE:'#F59E0B',
+            EVENT_REMINDER:  '#8B5CF6',
+        };
+        const borderColor = notifBorderColors[n.type] || null;
+        if (borderColor) {
+            item.style.borderLeft = `3px solid ${borderColor}`;
+            item.style.paddingLeft = '10px';
+        }
+
         item.innerHTML = `
             <div class="${dotClass}"></div>
             <div style="flex:1;min-width:0;overflow:hidden;">
@@ -2031,16 +2132,6 @@ function renderNotifOverlay() {
                 n.isRead = true;
                 n.readAt = new Date().toISOString();
                 loadAndRenderNotifications();
-            }
-            const rt = (n.referenceType || '').toLowerCase();
-            const rid = n.referenceId || '';
-            const t = n.type || '';
-            if (rt === 'message') {
-                window.location.href = `czat_detail.html?msgId=${rid}`;
-            } else if (rt === 'event') {
-                window.location.href = 'kalendarz.html' + (rid ? `?eventId=${rid}` : '');
-            } else if (rt === 'task') {
-                window.location.href = 'zadania.html';
             }
         };
 
@@ -2327,7 +2418,8 @@ function formatDateTimeDisplay(dateInput) {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    const dayName = d.toLocaleDateString('pl-PL', { weekday: 'long' });
+    const locale = typeof getLang === 'function' && getLang() === 'en' ? 'en-GB' : 'pl-PL';
+    const dayName = d.toLocaleDateString(locale, { weekday: 'long' });
     const hh = String(d.getHours()).padStart(2, '0');
     const min = String(d.getMinutes()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd} (${dayName}) ${hh}:${min}`;
@@ -2342,7 +2434,8 @@ function formatDateDisplay(dateInput) {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    const dayName = d.toLocaleDateString('pl-PL', { weekday: 'long' });
+    const locale = typeof getLang === 'function' && getLang() === 'en' ? 'en-GB' : 'pl-PL';
+    const dayName = d.toLocaleDateString(locale, { weekday: 'long' });
     return `${yyyy}-${mm}-${dd} (${dayName})`;
 }
 
@@ -2727,7 +2820,9 @@ function loadMenuPanel(user, membership, team) {
     const jakZaczacEl = document.getElementById('menu-jakzaczac');
     if (jakZaczacEl) jakZaczacEl.style.display = effectiveRole === 'ZAWODNIK' ? 'none' : '';
     const supportEl = document.getElementById('menu-support');
-    if (supportEl) supportEl.style.display = user.isPlatformAdmin === true ? '' : 'none';
+    if (supportEl) supportEl.style.display = user.isPlatformAdmin ? '' : 'none';
+    const sidebarSupportEl = document.getElementById('sidebar-support');
+    if (sidebarSupportEl) sidebarSupportEl.style.display = user.isPlatformAdmin ? '' : 'none';
 }
 
 
@@ -2746,14 +2841,18 @@ function pickCtx(el, klub, team, initial, color, rola) {
 function toggleNotifOv() {
     closeCtxOv();
     const ov = document.getElementById('notif-ov');
+    const bd = document.getElementById('notif-backdrop');
     const isOpening = !ov.classList.contains('open');
     ov.classList.toggle('open');
+    if (bd) bd.classList.toggle('open');
     if (isOpening) loadAndRenderNotifications();
 }
 
 function closeNotifOv() {
     const el = document.getElementById('notif-ov');
+    const bd = document.getElementById('notif-backdrop');
     if (el) el.classList.remove('open');
+    if (bd) bd.classList.remove('open');
 }
 async function clearNotifs() {
     if (!db) return;
@@ -2765,7 +2864,7 @@ async function clearNotifs() {
     for (const n of notifData) {
         const canDelete = n.isRead || (n.actionDone && n.requiresAction);
         if (canDelete) {
-            try { await db.collection('notifications').doc(n.notificationId || n.id).update({ status: 'DELETE' }); deleted++; } catch (e) { }
+            try { await db.collection('notifications').doc(n.notificationId || n.id).delete(); deleted++; } catch (e) { }
         }
     }
     console.log(`📦 Zarchiwizowano ${deleted} przeczytanych powiadomień`);
@@ -2915,7 +3014,9 @@ async function getClubMembers(clubId, teamId) {
 
 /* ── Zamknij overlaye tapem w tło ── */
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelector('.phone').addEventListener('click', function (e) {
+    var _phone = document.querySelector('.phone');
+    if (!_phone) return;
+    _phone.addEventListener('click', function (e) {
         const ctxOv = document.getElementById('ctx-ov');
         const notifOv = document.getElementById('notif-ov');
         if (ctxOv && ctxOv.classList.contains('open')
@@ -3095,6 +3196,7 @@ document.addEventListener('DOMContentLoaded', function () {
    ═══════════════════════════════════════════════════════════════ */
 
 const _PIN_EXEMPT   = ['pin.html', 'login.html', 'blocked.html', 'platnosci-banner.html'];
+const _RODO_EXEMPT  = ['login.html', 'rodo-consent.html', 'pin.html', 'blocked.html', 'platnosci-banner.html'];
 const _PIN_TIMEOUT  = 5 * 60 * 1000; // 5 min
 
 async function sha256(text) {
@@ -3112,6 +3214,9 @@ async function _checkPinLock(user) {
     if (_PIN_EXEMPT.some(p => page.includes(p))) return true;
     if (isDemoMode()) return true;
     if (localStorage.getItem('supportOriginalUserId')) return true;
+    // PIN tylko w natywnej aplikacji mobilnej — na webie pomijamy
+    const isNative = !!(window.Capacitor?.isNativePlatform?.());
+    if (!isNative) return true;
 
     const pinHash = user?.pinHash || null;
 
@@ -3309,12 +3414,6 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         const cd  = clubDoc.data();
         const lic = cd.license || null;
 
-        // Dane trialu
-        const createdAt = cd.createdAt?.toDate?.() ?? (cd.createdAt ? new Date(cd.createdAt) : null);
-        const trialEnd  = createdAt ? new Date(createdAt.getTime() + 90 * 86400 * 1000) : null;
-        const inTrial      = !!(trialEnd && trialEnd > now);
-        const inTrialGrace = !!(trialEnd && !inTrial && trialEnd > graceCutoff);
-
         // ── Membership i rola ─────────────────────────────────────
         // Rozwiń efektywną rolę: memberships.role dla trenerów to generyczne 'TRENER',
         // konkretny podtyp (TRENER_GLOWNY/TRENER_POMOCNICZY) siedzi w trainerRole —
@@ -3324,6 +3423,16 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         const mData   = mDoc?.data() || {};
         const rawRole = mData.role || '';
         const role    = rawRole === 'TRENER' ? (mData.trainerRole || 'TRENER_GLOWNY') : rawRole;
+
+        // Dane trialu — liczony od dołączenia usera do klubu (memberships.createdAt),
+        // nie od założenia klubu (clubs.createdAt). Fallback na clubs.createdAt dla
+        // starych membership bez tego pola.
+        const memberJoinedAt = mData.createdAt?.toDate?.() ?? (mData.createdAt ? new Date(mData.createdAt) : null);
+        const clubCreatedAt  = cd.createdAt?.toDate?.() ?? (cd.createdAt ? new Date(cd.createdAt) : null);
+        const trialStart = memberJoinedAt ?? clubCreatedAt;
+        const trialEnd  = trialStart ? new Date(trialStart.getTime() + 90 * 86400 * 1000) : null;
+        const inTrial      = !!(trialEnd && trialEnd > now);
+        const inTrialGrace = !!(trialEnd && !inTrial && trialEnd > graceCutoff);
 
         // ZAWODNIK — zawsze aktywny, nie uczestniczy w systemie płatności
         if (role === 'ZAWODNIK') return _r('ACTIVE', 'player', null, 999);
@@ -3436,7 +3545,11 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         }
 
         // ── Fallback: clubs.licenseStatus z CF (stare konta / role bez slotu) ──
+        // Tylko role uprawnione do licencji klubowej (P3): trenerzy + RODZIC
+        // KIBIC nie kwalifikuje się — dostaje EXPIRED
         if (cd.licenseStatus) {
+            const clubLicRoles = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'RODZIC'];
+            if (!clubLicRoles.includes(role)) return _r('EXPIRED', null, null);
             let expiryDate = null, daysLeft = 0;
             const raw = lic?.valid_until ?? lic?.expiresAt;
             if (raw) {

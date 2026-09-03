@@ -4,7 +4,7 @@
 */
 window.FIREBASE_CONFIG = {
     apiKey: "AIzaSyAillNLb60TbDdwHXqViWq2ssXkFpFvW94",
-    authDomain: "coachay-5c3c9.firebaseapp.com",
+    authDomain: "coachay.com",
     projectId: "coachay-5c3c9",
     storageBucket: "coachay-5c3c9.firebasestorage.app",
     messagingSenderId: "1009757133308",

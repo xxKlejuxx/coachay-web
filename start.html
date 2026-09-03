@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
@@ -8,9 +8,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<link rel="stylesheet" href="_desktop.css?v=20260818">
+<link rel="stylesheet" href="_desktop.css?v=20260821c">
 <script src="_i18n.js?v=20260820"></script>
-<script src="_sidebar.js?v=20260818b"></script>
+<script src="_sidebar.js?v=20260821b"></script>
 <style>
 :root { --phone-h: 750px; }
 
@@ -35,6 +35,15 @@ body:has(#app-sidebar) .hub-inner { padding: 28px 28px 80px; }
 }
 body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
+@media (max-width: 768px) {
+    .hub-inner { padding: 12px 12px calc(env(safe-area-inset-bottom, 0px) + 80px) !important; max-width: 100% !important; }
+    .hub-grid { grid-template-columns: 1fr !important; }
+    .hello-row { flex-wrap: wrap; gap: 4px; }
+    .hello-name { font-size: 22px !important; }
+    .hello-sub  { font-size: 13px !important; }
+    .hello-date { font-size: 13px !important; text-align: left !important; }
+}
+
 .hub-col { display: flex; flex-direction: column; gap: 20px; }
 
 .hub-widget {
@@ -55,17 +64,17 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     border-radius: 16px;
 }
 .mecz-card {
-    min-width: 100%; background: var(--tlo-karta); border: 1px solid var(--border);
-    border-radius: 16px; padding: 16px; scroll-snap-align: start;
-    cursor: pointer; transition: background 0.15s; position: relative; overflow: hidden;
+    min-width: 100%; background: #ffffff; border-radius: 16px; padding: 16px;
+    scroll-snap-align: start; cursor: default; transition: background 0.15s;
+    position: relative; overflow: hidden; color: #000;
 }
-.mecz-card.mc-finished { background: var(--tlo-karta2); }
+.mecz-card.mc-finished { background: #f5f5f5; }
 .mecz-card-bg { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 64px; opacity: 0.07; user-select: none; pointer-events: none; }
-.mc-label { font-size: 19px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
-.mc-tytul { font-family: var(--font-d); font-size: 26px; font-weight: 800; color: var(--bialy); line-height: 1.2; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mc-finished .mc-tytul { color: var(--szary-j); }
-.mc-desc { font-size: 21px; font-weight: 600; color: var(--szary); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mc-info { font-size: 19px; font-weight: 700; color: var(--szary-j); margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+.mc-label { font-size: 14px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 4px; }
+.mc-tytul { font-family: var(--font-d); font-size: 21px; font-weight: 800; color: #000; line-height: 1.2; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-finished .mc-tytul { color: #666; }
+.mc-desc { font-size: 16px; font-weight: 600; color: #666; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-info { font-size: 16px; font-weight: 700; color: #777; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
 .mc-info-venue { color: var(--szary); }
 .mc-wynik { font-size: 29px; font-weight: 900; color: var(--bialy); margin: 4px 0; }
 .mc-wynik-label { font-size: 19px; font-weight: 700; color: var(--szary); margin-right: 6px; }
@@ -75,17 +84,17 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-result-draw { background: rgba(107,114,128,0.12); color: #6B7280; }
 .mc-counts { display: flex; gap: 8px; margin-top: 8px; }
 .mcc { flex: 1; border-radius: 12px; padding: 8px; text-align: center; }
-.mcc-g { background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.15); }
-.mcc-r { background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.12); }
+.mcc-g { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25); }
+.mcc-r { background: rgba(248,113,113,0.10); border: 1px solid rgba(248,113,113,0.20); }
 .mcc-s { background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.10); }
 .mc-finished .mcc-g { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.15); }
 .mc-finished .mcc-r { background: rgba(248,113,113,0.06); border-color: rgba(248,113,113,0.12); }
-.mc-finished .mcc-s { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
-.mcc-n { font-family: var(--font-d); font-size: 28px; font-weight: 800; line-height: 1; }
+.mc-finished .mcc-s { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); }
+.mcc-n { font-family: var(--font-d); font-size: 23px; font-weight: 800; line-height: 1; }
 .mn-g { color: #16A34A; } .mn-r { color: #DC2626; } .mn-s { color: #777; }
-.mc-finished .mn-s { color: var(--szary); }
-.mcc-l { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #999; }
-.mc-finished .mcc-l { color: var(--szary); }
+.mc-finished .mn-s { color: #999; }
+.mcc-l { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #999; }
+.mc-finished .mcc-l { color: #bbb; }
 
 .mecz-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
 .mecz-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: all 0.2s; cursor: pointer; }
@@ -95,6 +104,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .sec-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .sec-hdr .s-label { margin: 0; font-size: 21px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: var(--szary); }
 .sec-more { font-size: 21px; font-weight: 800; color: var(--akcent); cursor: pointer; padding: 4px 0; }
+.sec-add { font-size: 18px; font-weight: 800; color: var(--akcent); border: 1.5px solid var(--akcent); border-radius: 999px; padding: 3px 12px; cursor: pointer; white-space: nowrap; }
+.sec-add:active { opacity: 0.7; }
+.cal-add { font-size: 19px; font-weight: 800; color: var(--akcent); cursor: pointer; padding: 4px 0; }
+.cal-add:active { opacity: 0.7; }
 
 /* ── Upcoming events ── */
 .events-list { display: flex; flex-direction: column; gap: 6px; }
@@ -172,14 +185,166 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-finished .mc-assistant strong { color: var(--szary-j); }
 .mc-assistant-free { color: var(--warn); font-style: italic; }
 
+/* ── Event detail panel (fixed overlay) ── */
+.ev-det-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 499; display: none; }
+.ev-det-overlay.open { display: block; }
+.ev-det-panel { position: fixed; top: 0; right: 0; width: 440px; max-width: 100vw; bottom: 0; background: var(--tlo); border-left: 1px solid var(--border); z-index: 500; transform: translateX(100%); transition: transform 0.38s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
+.ev-det-panel.open { transform: translateX(0); }
+.ev-det-hdr { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--tlo-karta); }
+.ev-det-back { width: 34px; height: 34px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--bialy); cursor: pointer; flex-shrink: 0; }
+.ev-det-title { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--txt-primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-det-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: none; }
+.ev-det-body::-webkit-scrollbar { display: none; }
+.ev-det-footer { padding: 10px 16px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.det-info-row { display: flex; align-items: flex-start; gap: 12px; padding: 5px 0; }
+.det-info-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; margin-top: 1px; }
+.det-info-body { flex: 1; }
+.det-info-label { font-size: 13px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--szary); }
+.det-info-val { font-size: 17px; font-weight: 700; color: var(--bialy); margin-top: 2px; line-height: 1.3; }
+.det-desc { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 16px; font-weight: 700; color: var(--szary-j); line-height: 1.5; }
+.att-section-label { font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); padding: 8px 0 4px; }
+.att-list { display: flex; flex-direction: column; gap: 6px; }
+.att-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 10px; }
+.att-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-family: var(--font-d); font-size: 13px; font-weight: 800; color: var(--szary-j); flex-shrink: 0; }
+.att-info { flex: 1; min-width: 0; }
+.att-name { font-size: 17px; font-weight: 800; color: var(--bialy); }
+.att-role { font-size: 14px; color: var(--szary); font-weight: 700; margin-top: 1px; }
+.att-reason { font-size: 13px; color: var(--szary); font-weight: 600; font-style: italic; }
+.att-status { font-size: 13px; font-weight: 900; padding: 4px 12px; border-radius: var(--r-pill); flex-shrink: 0; }
+.att-status.present { background: rgba(74,222,128,0.12); color: var(--sukces); }
+.att-status.absent  { background: rgba(248,113,113,0.10); color: var(--blad); }
+.att-status.pending { background: rgba(107,114,128,0.12); color: var(--szary); }
+.ev-att-box { padding: 4px 10px; border-radius: 8px; font-size: 15px; font-weight: 900; font-family: var(--font-d); min-width: 32px; text-align: center; }
+.ev-att-box.att-g { background: rgba(74,222,128,0.12); color: #16A34A; }
+.ev-att-box.att-r { background: rgba(248,113,113,0.10); color: #DC2626; }
+.ev-att-box.att-s { background: rgba(107,114,128,0.10); color: #6B7280; }
+
+/* ── Mecz panel (fixed overlay, slides from right) ── */
+.mecz-panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 499; display: none; }
+.mecz-panel-overlay.open { display: block; }
+.mecz-panel { position: fixed !important; top: 0; right: 0; width: 440px; max-width: 100vw; bottom: 0; background: #ffffff !important; border-left: 1px solid rgba(0,0,0,0.12); z-index: 500; transform: translateX(100%); transition: transform 0.38s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; color: #000 !important; }
+.mecz-panel.open { transform: translateX(0); }
+.mp-hdr { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; background: #ffffff !important; }
+.mp-back { width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.06) !important; border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #000 !important; cursor: pointer; flex-shrink: 0; }
+.mp-title { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: #000 !important; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-status-bar { padding: 8px 16px; border-bottom: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; background: #ffffff !important; min-height: 42px; }
+/* style jak karta meczu na starcie: białe tło, czarny tekst */
+.mp-badge { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; flex-shrink: 0; }
+.mp-badge-upcoming { background: rgba(59,130,246,0.12); color: #3B82F6; }
+.mp-badge-live { background: rgba(248,113,113,0.15); color: #DC2626; }
+.mp-badge-finished { background: rgba(74,222,128,0.12); color: #16A34A; }
+.mp-bar-info { font-size: 11px; font-weight: 700; color: #777; }
+.mp-bar-info strong { color: #444; }
+.mp-bar-btn { padding: 5px 14px; border-radius: 999px; font-size: 10px; font-weight: 900; cursor: pointer; border: 1px solid; margin-left: auto; }
+.mp-btn-start { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25); color: #16A34A; }
+.mp-btn-end { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.20); color: #DC2626; }
+.mp-btn-claim { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); color: #3B82F6; margin-left: 0; flex: 1; }
+.mp-btn-takeover { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); color: #3B82F6; margin-left: 0; }
+.mp-btn-request { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.25); color: #D97706; margin-left: 0; flex: 1; }
+.mp-btn-revert { background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.3); color: #D97706; }
+.mp-score { background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.08); padding: 14px 18px; flex-shrink: 0; }
+.mp-teams { display: flex; align-items: center; gap: 8px; }
+.mp-team { flex: 1; }
+.mp-team.away .mp-score-row { justify-content: flex-end; }
+.mp-team-name { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #999; margin-bottom: 6px; }
+.mp-team.away .mp-team-name { text-align: right; }
+.mp-score-row { display: flex; align-items: center; gap: 6px; }
+.mp-score-btn { width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #000; cursor: pointer; flex-shrink: 0; line-height: 1; }
+.mp-score-val { font-family: var(--font-d); font-size: 38px; font-weight: 900; color: #000; min-width: 48px; text-align: center; line-height: 1; }
+.mp-vs { font-family: var(--font-d); font-size: 13px; font-weight: 800; color: #ccc; padding-top: 20px; flex-shrink: 0; }
+.mp-result-badge { font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 999px; display: inline-block; margin-top: 8px; }
+.mp-result-win  { background: rgba(74,222,128,0.15); color: #16A34A; }
+.mp-result-loss { background: rgba(248,113,113,0.15); color: #DC2626; }
+.mp-result-draw { background: rgba(251,191,36,0.15); color: #D97706; }
+.mp-body { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; background: #ffffff !important; color: #000 !important; }
+.mp-body::-webkit-scrollbar { display: none; }
+.mp-player-card { background: #ffffff; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 12px 14px; }
+.mp-pc-hdr { display: flex; align-items: center; gap: 10px; }
+.mp-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; font-family: var(--font-d); font-size: 13px; font-weight: 800; color: #444; flex-shrink: 0; }
+.mp-pc-info { flex: 1; min-width: 0; }
+.mp-pc-name { font-size: 14px; font-weight: 800; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-pc-status { font-size: 10px; font-weight: 900; margin-top: 2px; }
+.mp-st-present { color: #16A34A; }
+.mp-st-absent  { color: #DC2626; }
+.mp-st-pending { color: #999; }
+.mp-pc-stats { display: flex; gap: 6px; margin-top: 10px; }
+.mp-pc-stat { flex: 1; border-radius: 10px; padding: 6px 4px; text-align: center; }
+.mp-pc-stat-lbl { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #999; }
+.mp-pc-stat-ctrl { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.mp-pc-btn { width: 26px; height: 26px; border-radius: 8px; background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.10); color: #000; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.mp-pc-val { font-family: var(--font-d); font-size: 20px; font-weight: 900; color: #D97706; min-width: 20px; text-align: center; }
+.mp-counts { display: flex; gap: 6px; margin-top: 8px; }
+.mp-mcc { flex: 1; border-radius: 10px; padding: 6px 4px; text-align: center; }
+.mp-mcc-g { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25); }
+.mp-mcc-r { background: rgba(248,113,113,0.10); border: 1px solid rgba(248,113,113,0.20); }
+.mp-mcc-s { background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.10); }
+.mp-mcc-n { font-family: var(--font-d); font-size: 18px; font-weight: 800; line-height: 1; }
+.mp-mn-g { color: #16A34A; } .mp-mn-r { color: #DC2626; } .mp-mn-s { color: #777; }
+.mp-mcc-l { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #999; }
+.mp-empty { padding: 32px 20px; text-align: center; color: #999; font-size: 14px; font-weight: 600; }
+.mp-info-row { font-size: 11px; font-weight: 700; color: #777; padding: 2px 0; }
+
 /* ── Slide panel ── */
 .slide-panel { position: absolute; top: 20px; left: 0; right: 0; bottom: 0; background: var(--tlo); border-top: 1px solid var(--border); z-index: 130; transform: translateY(-110%); transition: transform 0.38s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .slide-panel.open { transform: translateY(0); }
 .slide-panel-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.slide-panel-tytul { font-family: var(--font-d); font-size: 28px; font-weight: 800; color: var(--txt-primary); }
-.slide-panel-close { width: 30px; height: 30px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--szary); cursor: pointer; }
+.slide-panel-tytul { font-family: var(--font-d); font-size: 23px; font-weight: 800; color: var(--txt-primary); }
+.slide-panel-close { width: 30px; height: 30px; border-radius: 50%; background: var(--tlo-karta); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--szary); cursor: pointer; }
 .slide-panel-body { flex: 1; overflow-y: auto; padding: 14px 16px 24px; display: flex; flex-direction: column; gap: 6px; scrollbar-width: none; min-height: 0; }
 .slide-panel-body::-webkit-scrollbar { display: none; }
+
+/* ── Add-panel forms ── */
+.add-panel-footer { padding: 10px 16px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
+#panel-add-event .slide-panel-body, #panel-add-task .slide-panel-body { gap: 14px; padding-bottom: 8px; }
+.form-select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-textarea { min-height: 60px; resize: none; }
+.form-row { display: flex; gap: 10px; }
+.form-row > .form-group { flex: 1; }
+.char-count { font-size: 15px; font-weight: 700; color: var(--szary); margin-left: 6px; }
+.char-count.over { color: var(--blad); }
+.type-picker { display: flex; gap: 8px; }
+.type-opt { flex: 1; padding: 8px 4px; border-radius: 10px; background: var(--tlo-karta); border: 2px solid var(--border); text-align: center; cursor: pointer; transition: all 0.15s; }
+.type-opt.selected { border-color: var(--akcent); }
+.type-opt-icon { font-size: 23px; line-height: 1; }
+.type-opt-label { font-size: 14px; font-weight: 800; color: var(--szary); margin-top: 2px; }
+.type-opt.selected .type-opt-label { color: var(--bialy); }
+.cycle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; }
+.cycle-label { font-size: 17px; font-weight: 700; color: var(--bialy); }
+.cycle-sub { font-size: 15px; color: var(--szary); font-weight: 600; }
+.form-toggle { width: 38px; height: 22px; border-radius: 11px; background: var(--border2); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; border: none; }
+.form-toggle.on { background: var(--akcent); }
+.form-toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.form-toggle.on::after { transform: translateX(16px); }
+.days-picker { display: flex; gap: 6px; }
+.day-chip { width: 40px; height: 40px; border-radius: 50%; background: var(--tlo-karta); border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: var(--szary); cursor: pointer; transition: all 0.15s; }
+.day-chip.selected { background: var(--akcent); border-color: var(--akcent); color: #fff; }
+.vis-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.vis-chip { padding: 8px 14px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1.5px solid var(--border2); font-size: 17px; font-weight: 800; color: var(--szary); cursor: pointer; transition: all 0.15s; }
+.vis-chip.selected { border-color: var(--akcent); color: var(--akcent); background: rgba(59,130,246,0.08); }
+.person-list-wrap { margin-top: 8px; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; max-height: 260px; overflow-y: auto; scrollbar-width: none; }
+.person-list-wrap::-webkit-scrollbar { display: none; }
+.person-list-toolbar { display: flex; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.person-list-btn { font-size: 16px; font-weight: 800; color: var(--akcent); cursor: pointer; padding: 2px 0; }
+.person-list-count { margin-left: auto; font-size: 16px; font-weight: 800; color: var(--szary); }
+.person-check-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; transition: background 0.1s; }
+.person-check-row:active { background: var(--tlo-karta2); }
+.person-cb { width: 22px; height: 22px; border-radius: 5px; border: 1.5px solid var(--border2); background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; font-size: 14px; color: transparent; flex-shrink: 0; transition: all 0.15s; }
+.person-check-row.checked .person-cb { background: var(--akcent); border-color: var(--akcent); color: #fff; }
+.person-check-name { font-size: 17px; font-weight: 700; color: var(--bialy); flex: 1; }
+.person-check-role { font-size: 15px; color: var(--szary); font-weight: 600; }
+.drum-wrap { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; position: relative; }
+.drum-label-row { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 8px 0 0; }
+.drum-col-lbl { text-align: center; font-size: 14px; font-weight: 800; color: var(--szary); text-transform: uppercase; letter-spacing: 1px; }
+.drum-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 160px; position: relative; }
+.drum-cols::before, .drum-cols::after { content: ''; position: absolute; left: 12px; right: 12px; z-index: 2; pointer-events: none; }
+.drum-cols::before { top: 54px; height: 1px; background: var(--border); }
+.drum-cols::after { top: 104px; height: 1px; background: var(--border); }
+.drum-highlight { position: absolute; left: 0; right: 0; top: 57px; height: 46px; background: rgba(255,255,255,0.05); pointer-events: none; z-index: 1; }
+.drum-col { overflow: hidden; position: relative; }
+.drum-inner { display: flex; flex-direction: column; align-items: center; transition: transform 0.15s ease-out; padding: 57px 0; }
+.drum-item { height: 46px; display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 800; color: var(--szary); font-family: var(--font-d); cursor: pointer; user-select: none; flex-shrink: 0; transition: color 0.15s, font-size 0.15s; }
+.drum-item.active { color: var(--bialy); font-size: 25px; }
 
 /* ── Calendar widget ── */
 .cal-nav-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
@@ -195,6 +360,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .cal-day.other-month { color: var(--szary); opacity: 0.4; }
 .cal-day-dots { position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; }
 .cal-dot { width: 4px; height: 4px; border-radius: 50%; }
+.cal-dot.cancelled { background: #9CA3AF !important; opacity: 0.5; position: relative; overflow: visible; }
+.cal-dot.cancelled::after { content: ''; position: absolute; top: 50%; left: -1px; width: 6px; height: 1.5px; background: #6B7280; transform: rotate(-45deg); border-radius: 1px; }
 
 .cal-inspector { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
 .cal-inspector-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -250,6 +417,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
+    <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
         <div class="notif-hdr"><span class="notif-tytul" data-i18n="common.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="common.clearRead">Wyczyść przeczytane</span></div>
     </div>
@@ -280,10 +448,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     <div class="hub-widget">
                         <div class="sec-hdr">
                             <div class="s-label" data-i18n="start.upcomingEvents">Najbliższe wydarzenia</div>
-                            <div style="display:flex;gap:8px;align-items:center">
-                                <span class="sec-add" id="ev-add-btn" onclick="window.location.href='kalendarz.html'" data-i18n="common.addButton">+ Dodaj</span>
-                                <span class="sec-more" id="ev-more" onclick="openSlidePanel('panel-ev')">Wszystkie ›</span>
-                            </div>
+                            <span class="sec-more" id="ev-more" onclick="openSlidePanel('panel-ev')"></span>
                         </div>
                         <div class="events-list" id="ev-dashboard">
                             <div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;" data-i18n="common.loading">Ładowanie...</div>
@@ -293,8 +458,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                         <div class="sec-hdr">
                             <div class="s-label" data-i18n="start.tasks">Zadania</div>
                             <div style="display:flex;gap:8px;align-items:center">
-                                <span class="sec-add" onclick="window.location.href='zadania.html'" data-i18n="common.addButton">+ Dodaj</span>
-                                <span class="sec-more" id="task-more" onclick="openSlidePanel('panel-task')">Wszystkie ›</span>
+                                <span class="sec-add" id="task-add-btn" onclick="openAddTaskPanel()" data-i18n="common.addButton">+ Dodaj</span>
+                                <span class="sec-more" id="task-more" onclick="openSlidePanel('panel-task')"></span>
                             </div>
                         </div>
                         <div class="task-list" id="task-dashboard">
@@ -308,6 +473,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     <div class="hub-widget">
                         <div class="sec-hdr">
                             <div class="s-label" data-i18n="start.calendar">Kalendarz</div>
+                            <span class="sec-add" id="cal-add-btn" onclick="openAddEventPanel()" data-i18n="common.addButton">+ Dodaj</span>
                         </div>
                         <div class="cal-nav-row">
                             <button class="cal-nav-btn" onclick="navigateCalMonth(-1)">‹</button>
@@ -341,13 +507,205 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         <div class="slide-panel-body" id="task-panel-body"></div>
     </div>
 
+    <!-- Slide panel: dodaj wydarzenie -->
+    <div class="slide-panel" id="panel-add-event">
+        <div class="slide-panel-hdr">
+            <span class="slide-panel-tytul" data-i18n="addEvent.title">Dodaj wydarzenie</span>
+            <div class="slide-panel-close" onclick="closeSlidePanel('panel-add-event')">✕</div>
+        </div>
+        <div class="slide-panel-body">
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="addEvent.type">Typ wydarzenia</div>
+                <div class="type-picker" id="ev-type-picker">
+                    <div class="type-opt selected" data-type="TRENING" onclick="pickEvType(this)">
+                        <div class="type-opt-icon">⚽</div>
+                        <div class="type-opt-label" data-i18n="addEvent.typeTraining">Trening</div>
+                    </div>
+                    <div class="type-opt" data-type="MECZ" onclick="pickEvType(this)">
+                        <div class="type-opt-icon">🏆</div>
+                        <div class="type-opt-label" data-i18n="addEvent.typeMatch">Mecz</div>
+                    </div>
+                    <div class="type-opt" data-type="WYJAZD" onclick="pickEvType(this)">
+                        <div class="type-opt-icon">🚌</div>
+                        <div class="type-opt-label" data-i18n="addEvent.typeTrip">Wyjazd</div>
+                    </div>
+                    <div class="type-opt" data-type="INNE" onclick="pickEvType(this)">
+                        <div class="type-opt-icon">📋</div>
+                        <div class="type-opt-label" data-i18n="addEvent.typeOther">Inne</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Temat (tylko trening) -->
+            <div class="form-group" id="ev-topic-group">
+                <div class="form-lbl" data-i18n="addEvent.topicLabel">Temat treningu</div>
+                <select class="form-inp form-select" id="ev-add-topic" onchange="onEvTopicChange()">
+                    <option value="" data-i18n="addEvent.topicPlaceholder">Wybierz temat...</option>
+                </select>
+                <input type="text" class="form-inp" id="ev-add-topic-custom" placeholder="Wpisz nowy temat..." style="display:none;margin-top:8px;">
+            </div>
+            <div class="form-group">
+                <div class="form-lbl"><span data-i18n="addEvent.titleLabel">Tytuł</span> <span class="char-count" id="ev-title-count">0/40</span></div>
+                <input type="text" class="form-inp" id="ev-add-title" maxlength="40" oninput="updateEvTitleCount()" data-i18n-placeholder="addEvent.titlePlaceholder" placeholder="Nazwa wydarzenia">
+            </div>
+            <div class="form-group">
+                <div class="form-lbl"><span data-i18n="addEvent.descLabel">Opis</span> <span class="char-count" id="ev-desc-count">0/50</span></div>
+                <input type="text" class="form-inp" id="ev-add-desc" maxlength="50" oninput="updateEvDescCount()" placeholder="np. Mecz ligowy — runda wiosenna">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <div class="form-lbl" data-i18n="addEvent.dateFrom">Data od</div>
+                    <input type="date" class="form-inp" id="ev-date-from">
+                </div>
+                <div class="form-group">
+                    <div class="form-lbl" data-i18n="addEvent.dateTo">Data do</div>
+                    <input type="date" class="form-inp" id="ev-date-to">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <div class="form-lbl" data-i18n="addEvent.timeFrom">Godzina od</div>
+                    <input type="time" class="form-inp" id="ev-time-from" value="17:00">
+                </div>
+                <div class="form-group">
+                    <div class="form-lbl" data-i18n="addEvent.timeTo">Godzina do</div>
+                    <input type="time" class="form-inp" id="ev-time-to" value="18:30">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="cycle-row">
+                    <div>
+                        <div class="cycle-label" data-i18n="addEvent.cycle">Powtarzaj co tydzień</div>
+                        <div class="cycle-sub" data-i18n="addEvent.cycleSub">Tworzy wydarzenia w wybranych dniach</div>
+                    </div>
+                    <button class="form-toggle" id="ev-cycle-toggle" onclick="toggleEvCycle()"></button>
+                </div>
+                <div id="ev-cycle-days" style="display:none;margin-top:10px;">
+                    <div class="form-lbl" style="margin-bottom:8px;" data-i18n="addEvent.cycleDays">Które dni tygodnia?</div>
+                    <div class="days-picker">
+                        <div class="day-chip" data-day="1" onclick="toggleEvDay(this)">Pn</div>
+                        <div class="day-chip" data-day="2" onclick="toggleEvDay(this)">Wt</div>
+                        <div class="day-chip" data-day="3" onclick="toggleEvDay(this)">Śr</div>
+                        <div class="day-chip" data-day="4" onclick="toggleEvDay(this)">Cz</div>
+                        <div class="day-chip" data-day="5" onclick="toggleEvDay(this)">Pt</div>
+                        <div class="day-chip" data-day="6" onclick="toggleEvDay(this)">So</div>
+                        <div class="day-chip" data-day="0" onclick="toggleEvDay(this)">Nd</div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="addEvent.venue">Miejsce</div>
+                <input type="text" class="form-inp" id="ev-venue" placeholder="np. Orlik Praga Północ" maxlength="30">
+            </div>
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="addEvent.address">Adres</div>
+                <input type="text" class="form-inp" id="ev-address" placeholder="np. ul. Targowa 12, Warszawa" maxlength="30">
+            </div>
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="addEvent.vis">Kto widzi / zaproszeni</div>
+                <div class="vis-grid" id="ev-vis-grid">
+                    <div class="vis-chip selected" data-vis="DRUZYNA" onclick="toggleEvVis(this)" data-i18n="kalendarz.scopeTeam">Drużyna</div>
+                    <div class="vis-chip" data-vis="ZAWODNICY" onclick="toggleEvVis(this)" data-i18n="kalendarz.scopePlayers">Zawodnicy</div>
+                    <div class="vis-chip selected" data-vis="TRENERZY" onclick="toggleEvTrenerzy(this)" data-i18n="kalendarz.scopeTrainers">Trenerzy</div>
+                </div>
+                <div class="person-list-wrap" id="ev-person-list-wrap" style="display:none">
+                    <div class="person-list-toolbar">
+                        <div class="person-list-btn" onclick="selectAllEvPersons()" data-i18n="kalendarz.selectAllBtn">Zaznacz wszystkich</div>
+                        <div class="person-list-btn" onclick="deselectAllEvPersons()" data-i18n="kalendarz.deselectBtn">Odznacz</div>
+                        <div class="person-list-count" id="ev-person-count">0 wybranych</div>
+                    </div>
+                    <div id="ev-person-list"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="cycle-row">
+                    <div class="cycle-label" data-i18n="addEvent.announce">Wyświetlaj w ogłoszeniach</div>
+                    <button class="form-toggle on" id="ev-toggle-announce" onclick="this.classList.toggle('on')"></button>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="cycle-row">
+                    <div class="cycle-label" data-i18n="addEvent.confirm">Wymagaj potwierdzenia</div>
+                    <button class="form-toggle on" id="ev-toggle-confirm" onclick="this.classList.toggle('on')"></button>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="addEvent.reminder">Przypomnienie (dni przed)</div>
+                <input type="number" class="form-inp" id="ev-reminder-days" value="7" min="1" max="30" placeholder="np. 7 = 7 dni przed">
+            </div>
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="addEvent.displayPriority">Priorytet wyświetlania</div>
+                <select class="form-inp" id="ev-display-priority">
+                    <option value="0" data-i18n="addEvent.displayPrioritySuperImportant">Super ważne</option>
+                    <option value="1" data-i18n="addEvent.displayPriorityMatch">Mecz (1)</option>
+                    <option value="2" selected data-i18n="addEvent.displayPriorityTraining">Trening (2)</option>
+                    <option value="3" data-i18n="addEvent.displayPriorityTrip">Wyjazd (3)</option>
+                    <option value="999" data-i18n="addEvent.displayPriorityOther">Inne (999)</option>
+                </select>
+            </div>
+        </div>
+        <div class="add-panel-footer">
+            <button class="btn-primary" style="width:100%;padding:14px" onclick="saveEventFromPanel()" data-i18n="addEvent.submit">Zapisz wydarzenie →</button>
+        </div>
+    </div>
+
+    <!-- Slide panel: dodaj zadanie -->
+    <div class="slide-panel" id="panel-add-task">
+        <div class="slide-panel-hdr">
+            <span class="slide-panel-tytul" data-i18n="zadania.addTitle">Nowe zadanie</span>
+            <div class="slide-panel-close" onclick="closeSlidePanel('panel-add-task')">✕</div>
+        </div>
+        <div class="slide-panel-body">
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="zadania.taskTitleLabel">Tytuł zadania</div>
+                <input type="text" class="form-inp" id="task-add-title" data-i18n-placeholder="zadania.taskTitlePlaceholder" placeholder="np. Przynieś zaświadczenie lekarskie">
+            </div>
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="zadania.descLabel">Opis (opcjonalnie)</div>
+                <textarea class="form-inp form-textarea" id="task-add-desc" data-i18n-placeholder="zadania.descPlaceholder" placeholder="Dodatkowe informacje..."></textarea>
+            </div>
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="zadania.dueDateLabel">Termin wykonania</div>
+                <div class="drum-wrap">
+                    <div class="drum-label-row">
+                        <div class="drum-col-lbl" data-i18n="zadania.drumDayLabel">Dzień</div>
+                        <div class="drum-col-lbl" data-i18n="zadania.drumMonthLabel">Miesiąc</div>
+                        <div class="drum-col-lbl" data-i18n="zadania.drumYearLabel">Rok</div>
+                    </div>
+                    <div class="drum-cols">
+                        <div class="drum-highlight"></div>
+                        <div class="drum-col" id="drum-dzien"></div>
+                        <div class="drum-col" id="drum-miesiac"></div>
+                        <div class="drum-col" id="drum-rok"></div>
+                    </div>
+                </div>
+                <div id="drum-err" style="display:none;text-align:center;font-size:12px;font-weight:800;color:#F87171;padding:4px 0" data-i18n="zadania.dueDateInPastError">⚠ Termin nie może być w przeszłości</div>
+            </div>
+            <div class="form-group">
+                <div class="form-lbl" data-i18n="zadania.assignToLabel">Przypisz do</div>
+                <div class="vis-grid" id="task-vis-grid">
+                    <div class="vis-chip" data-vis="DRUZYNA" onclick="toggleTaskVis(this)" data-i18n="zadania.visChip.DRUZYNA">Drużyna</div>
+                    <div class="vis-chip" data-vis="RODZICE" onclick="toggleTaskVis(this)" data-i18n="zadania.visChip.RODZICE">Rodzice</div>
+                    <div class="vis-chip" data-vis="TRENERZY" onclick="toggleTaskVis(this)" data-i18n="zadania.visChip.TRENERZY">Trenerzy</div>
+                </div>
+                <div class="person-list-wrap" id="task-person-list-wrap" style="display:none">
+                    <div class="person-list-toolbar">
+                        <div class="person-list-btn" onclick="selectAllTaskPersons()" data-i18n="zadania.selectAll">Zaznacz wszystkich</div>
+                        <div class="person-list-btn" onclick="deselectAllTaskPersons()" data-i18n="zadania.deselectAll">Odznacz</div>
+                        <div class="person-list-count" id="task-person-count">0 wybranych</div>
+                    </div>
+                    <div id="task-person-list"></div>
+                </div>
+            </div>
+        </div>
+        <div class="add-panel-footer">
+            <button class="btn-primary" style="width:100%;padding:14px" onclick="saveTaskFromPanel()" data-i18n="addTask.submit">Wyślij zadanie →</button>
+        </div>
+    </div>
+
     <!-- Bottom nav -->
     <div class="bottom-nav">
         <a class="nav-item active" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
         <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label" data-i18n="nav.druzyna">Drużyna</span></a>
-        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label" data-i18n="nav.mecz">Mecz</span></a>
-        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label" data-i18n="nav.czat">Czat</span></a>
-        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label" data-i18n="nav.kalendarz">Kalendarz</span></a>
     </div>
 
     <div class="login-overlay" id="login-ov">
@@ -381,19 +739,51 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-support" onclick="window.location.href='support.html'" style="display:none"><div class="menu-item-icon">🛠️</div><span class="menu-item-label">Support</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-support" style="display:none" onclick="window.location.href='support.html'"><div class="menu-item-icon">🛠️</div><span class="menu-item-label">Support</span><span class="menu-item-arrow">›</span></div>
         </div>
         <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
     </div>
 </div>
 
-<script src="coachay-core.js?v=20260730a"></script>
+<!-- Event detail panel -->
+<div class="ev-det-overlay" id="ev-det-overlay" onclick="closeCalDetailPanel()"></div>
+<div class="ev-det-panel" id="ev-det-panel">
+    <div class="ev-det-hdr">
+        <div class="ev-det-back" onclick="closeCalDetailPanel()">←</div>
+        <div class="ev-det-title" id="ev-det-title">Szczegóły</div>
+    </div>
+    <div class="ev-det-body" id="ev-det-body"></div>
+    <div class="ev-det-footer" id="ev-det-footer" style="display:none;">
+        <div style="display:flex;gap:8px;">
+            <button class="btn-primary" style="flex:1;padding:13px;" onclick="alert('Edycja — wkrótce')" data-i18n="eventDetail.edit">✏️ Edytuj</button>
+            <button id="ev-cancel-btn" onclick="calCancelEvent()" style="flex:0;padding:13px 16px;font-weight:700;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:var(--r-pill);color:#EA580C;cursor:pointer;font-size:14px;" data-i18n="eventDetail.cancel">❌ Odwołaj</button>
+            <button onclick="calDeleteEvent()" style="flex:0;padding:13px 18px;font-weight:900;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:var(--r-pill);color:var(--blad);cursor:pointer;">🗑️</button>
+        </div>
+    </div>
+</div>
+
+<!-- Mecz panel -->
+<div class="mecz-panel-overlay" id="mecz-panel-overlay" onclick="closeMeczPanel()"></div>
+<div class="mecz-panel" id="mecz-panel">
+    <div class="mp-hdr">
+        <div class="mp-back" onclick="closeMeczPanel()">←</div>
+        <div class="mp-title" id="mp-title">Mecz</div>
+    </div>
+    <div class="mp-status-bar" id="mp-status-bar"></div>
+    <div class="mp-score" id="mp-score" style="display:none"></div>
+    <div class="mp-body" id="mp-body"></div>
+</div>
+
+<script src="coachay-core.js?v=20260903d"></script>
 <script>
+    /* ─────────────────────────────────────────────────────
+       i18n helpers
+    ───────────────────────────────────────────────────── */
+    const _tP = (key, fb) => typeof t === 'function' ? t(key) : fb;
+
     /* ─────────────────────────────────────────────────────
        i18n — TYPE_LABELS aktualizowane po załadowaniu locale
     ───────────────────────────────────────────────────── */
@@ -460,14 +850,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         if (!session) { console.error('Brak sesji'); return; }
         const { user, team, membership } = session;
         if (!user) { console.error('Brak danych'); return; }
-
-        if (!isDemoMode() && !user.onboardingDone) {
-            const _onbRole = getCurrentUserData()?.role;
-            if (_onbRole && _onbRole !== 'ZAWODNIK') {
-                window.location.href = 'onboarding.html';
-                return;
-            }
-        }
 
         if (!team) {
             sessionStorage.setItem('noTeamRedirect', '1');
@@ -536,12 +918,20 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         }
 
         const teamId = team.teamId || team.id;
+        _activeTeamId = teamId;
+        _activeClubId = clubId;
 
         if (db && teamId) {
             db.collection('messages').where('teamId', '==', teamId).get()
                 .then(() => console.log('✅ Cache wiadomości podgrzany'))
                 .catch(() => {});
         }
+
+        const isCoachRole = _effectiveRole === 'TRENER_GLOWNY' || _effectiveRole === 'TRENER_POMOCNICZY' || _isPlatformAdmin;
+        const taskAdd = document.getElementById('task-add-btn');
+        const calAdd  = document.getElementById('cal-add-btn');
+        if (taskAdd) taskAdd.style.display = isCoachRole ? '' : 'none';
+        if (calAdd)  calAdd.style.display  = isCoachRole ? '' : 'none';
 
         await Promise.all([
             loadNextMatch(teamId),
@@ -652,20 +1042,22 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             } catch (e) { userCache[uid] = { name: uid, role: '' }; }
         }
 
-        let parentsCanAssist = true;
+        _parentsCanAssist = true;
         try {
             const teamDoc = await db.collection('teams').doc(teamId).get();
             if (teamDoc.exists) {
                 const ml = teamDoc.data().settings?.matchLive;
-                if (ml && ml.parentsCanAssist === false) parentsCanAssist = false;
+                if (ml && ml.parentsCanAssist === false) _parentsCanAssist = false;
             }
         } catch (e) {}
+        const parentsCanAssist = _parentsCanAssist;
 
         const carousel = document.getElementById('mecz-carousel');
         const dotsEl   = document.getElementById('mecz-dots');
         carousel.innerHTML = '';
         dotsEl.innerHTML = '';
 
+        _mecze = visible;
         visible.forEach(match => { carousel.appendChild(renderMatchCard(match, todayStr, userCache, parentsCanAssist)); });
 
         if (visible.length > 1) {
@@ -771,21 +1163,17 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         card.innerHTML = `
             <div class="mecz-card-bg">${bg}</div>
-            <div class="mc-label">${label}</div>
             <div class="mc-tytul">${trunc(match.title || md.opponent || '', 22)}</div>
             ${descHtml}
             <div class="mc-info">${venueText ? `<span class="mc-info-venue">📍 ${venueText}</span>` : ''}<span class="mc-info-time">🕐 ${formatDateDisplay(match.date)} · ${match.timeFrom || ''}</span></div>
             ${resultHtml}${liveHtml}
-            ${coachListHtml}
-            ${assistantHtml}
             <div class="mc-counts">
-                <div class="mcc mcc-g"><div class="mcc-n mn-g">${conf}</div><div class="mcc-l">Obecni</div></div>
-                <div class="mcc mcc-r"><div class="mcc-n mn-r">${decl}</div><div class="mcc-l">Nieobecni</div></div>
-                <div class="mcc mcc-s"><div class="mcc-n mn-s">${noResp}</div><div class="mcc-l">Brak odp.</div></div>
+                <div class="mcc mcc-g"><div class="mcc-n mn-g">${conf}</div><div class="mcc-l">${_tP('home.presentLabel', 'Obecni')}</div></div>
+                <div class="mcc mcc-r"><div class="mcc-n mn-r">${decl}</div><div class="mcc-l">${_tP('home.absentLabel', 'Nieobecni')}</div></div>
+                <div class="mcc mcc-s"><div class="mcc-n mn-s">${noResp}</div><div class="mcc-l">${_tP('home.noResponseLabel', 'Brak odp.')}</div></div>
             </div>
-            ${statusRowHtml}
         `;
-        card.onclick = () => { sessionStorage.setItem('activeMatch', matchId); window.location.href = 'mecz.html'; };
+        // card.onclick = () => openMeczPanel(matchId);
         return card;
     }
 
@@ -859,6 +1247,348 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     /* ─────────────────────────────────────────────────────
+       PANEL MECZU
+    ───────────────────────────────────────────────────── */
+    let _mecze = [];
+    let _meczPanelMatch = null;
+    let _meczPanelUnsub = null;
+    let _meczPanelPlayers = [];
+    let _meczTeamName = '';
+
+    function openMeczPanel(matchId) {
+        const match = (_mecze || []).find(e => (e.eventId || e.id) === matchId) || (calAllEvents || []).find(e => (e.eventId || e.id) === matchId);
+        if (!match) return;
+        _meczPanelMatch = match;
+        _meczTeamName = '';
+        // Try to get team name from context
+        try { const t = document.getElementById('ctx-team'); if (t) _meczTeamName = t.textContent || ''; } catch(e) {}
+        document.getElementById('mecz-panel-overlay').classList.add('open');
+        document.getElementById('mecz-panel').classList.add('open');
+        _renderMeczPanel();
+        _loadMeczPlayers();
+        _meczSubscribe(matchId, (match.matchData || {}).matchStatus);
+    }
+
+    function closeMeczPanel() {
+        document.getElementById('mecz-panel-overlay').classList.remove('open');
+        document.getElementById('mecz-panel').classList.remove('open');
+        if (_meczPanelUnsub) { _meczPanelUnsub(); _meczPanelUnsub = null; }
+        _meczPanelMatch = null;
+        _meczPanelPlayers = [];
+    }
+
+    function _meczSubscribe(matchId, status) {
+        if (_meczPanelUnsub) { _meczPanelUnsub(); _meczPanelUnsub = null; }
+        if (!matchId || status === 'FINISHED') return;
+        if (!db) return;
+        let first = true;
+        _meczPanelUnsub = db.collection('events').doc(matchId).onSnapshot(doc => {
+            if (first) { first = false; return; }
+            if (!doc.exists || !_meczPanelMatch) return;
+            if ((doc.data().eventId || doc.id) !== ((_meczPanelMatch.eventId || _meczPanelMatch.id))) return;
+            _meczPanelMatch = { ...doc.data(), id: doc.id };
+            _renderMeczPanel();
+        });
+    }
+
+    async function _loadMeczPlayers() {
+        if (!_meczPanelMatch || !_activeTeamId) return;
+        const players = typeof getTeamPlayers === 'function' ? await getTeamPlayers(_activeTeamId) : (calAllPlayers || []);
+        _meczPanelPlayers = players;
+        _renderMeczPlayerList();
+    }
+
+    function _renderMeczPanel() {
+        if (!_meczPanelMatch) return;
+        const match = _meczPanelMatch;
+        const md = match.matchData || {};
+        const matchId = match.eventId || match.id;
+        const isCoach = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
+        const isParent = currentUserData.role === 'RODZIC';
+        const la = md.liveAssistant;
+        const isLiveAssist = la && la.userId === currentUserData.userId;
+        const canManage = isCoach || isLiveAssist;
+        const isLive = md.matchStatus === 'LIVE';
+        const isFinished = md.matchStatus === 'FINISHED';
+        const isUpcoming = !isLive && !isFinished;
+        const isMatchDay = match.date === getLocalDateStr();
+
+        // Title
+        document.getElementById('mp-title').textContent = match.title || (md.opponent ? `vs ${md.opponent}` : 'Mecz');
+
+        // Status bar
+        let barHtml = '';
+        if (isLive) barHtml += `<span class="mp-badge mp-badge-live">🔴 Na żywo</span>`;
+        else if (isFinished) barHtml += `<span class="mp-badge mp-badge-finished">✅ Zakończony</span>`;
+        else barHtml += `<span class="mp-badge mp-badge-upcoming">⏳ Przed meczem</span>`;
+
+        if (la && la.userId) {
+            barHtml += `<span class="mp-bar-info">📋 <strong>${la.displayName || la.userId}</strong></span>`;
+        } else if (!isFinished) {
+            barHtml += `<span class="mp-bar-info" style="color:var(--warn)">📋 Brak obsługi</span>`;
+        }
+
+        if (isFinished) {
+            if (canManage) barHtml += `<button class="mp-bar-btn mp-btn-revert" style="margin-left:auto" onclick="mpReopenMatch('${matchId}')">↩ Cofnij</button>`;
+        } else {
+            if (canManage) {
+                if (isLive) barHtml += `<button class="mp-bar-btn mp-btn-end" style="margin-left:auto" onclick="mpEndMatch('${matchId}')">⏹ Zakończ</button>`;
+                else barHtml += `<button class="mp-bar-btn mp-btn-start" style="margin-left:auto" onclick="mpStartMatch('${matchId}')">▶ Rozpocznij</button>`;
+            }
+            if (isCoach && la && la.userId && la.userId !== currentUserData.userId) {
+                barHtml += `<button class="mp-bar-btn mp-btn-takeover" onclick="mpTakeoverMatch('${matchId}')">🔄 Przejmij</button>`;
+            }
+            if (!la?.userId) {
+                if (isCoach) {
+                    barHtml += `<button class="mp-bar-btn mp-btn-claim" onclick="mpClaimMatch('${matchId}')">📋 Obsługuję</button>`;
+                } else if (isParent && _parentsCanAssist && isMatchDay) {
+                    barHtml += `<button class="mp-bar-btn mp-btn-claim" onclick="mpClaimMatch('${matchId}')">📋 Obsługuję</button>`;
+                }
+            } else if (isParent && _parentsCanAssist && la.userId !== currentUserData.userId) {
+                barHtml += `<button class="mp-bar-btn mp-btn-request" onclick="mpRequestTakeover('${matchId}')">🔄 Przejęcie</button>`;
+            }
+        }
+        document.getElementById('mp-status-bar').innerHTML = barHtml;
+
+        // Score — hidden, wynik pokazywany w liście zawodników jako badge
+        document.getElementById('mp-score').style.display = 'none';
+
+        // Info row in body header
+        const dateStr = match.date ? formatDateDisplay(match.date) : '';
+        const timeStr = match.timeFrom ? ` · ${match.timeFrom}` : '';
+        const venue = match.location?.venueName ? ` · 📍 ${match.location.venueName}` : '';
+        const bodyEl = document.getElementById('mp-body');
+        // Preserve player list if already rendered, else show loading
+        if (!bodyEl.querySelector('.mp-player-card') && !bodyEl.querySelector('.mp-empty')) {
+            bodyEl.innerHTML = `<div class="mp-info-row">${dateStr}${timeStr}${venue}</div><div class="mp-empty">Ładowanie zawodników…</div>`;
+        } else {
+            // Update info row only
+            const ir = bodyEl.querySelector('.mp-info-row');
+            if (ir) ir.textContent = `${dateStr}${timeStr}${venue}`;
+        }
+        _renderMeczPlayerList();
+    }
+
+    function _renderMeczPlayerList() {
+        if (!_meczPanelMatch) return;
+        const match = _meczPanelMatch;
+        const md = match.matchData || {};
+        const matchId = match.eventId || match.id;
+        const isLive = md.matchStatus === 'LIVE';
+        const isFinished = md.matchStatus === 'FINISHED';
+        const isCoach = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
+        const isLiveAssist = md.liveAssistant && md.liveAssistant.userId === currentUserData.userId;
+        const canManage = isCoach || isLiveAssist;
+        const att = match.attendance || {};
+        const invited = att.invited || [];
+
+        const playerMap = {};
+        (_meczPanelPlayers || []).forEach(p => { playerMap[p.playerId] = p; });
+
+        let playerIds;
+        const invitedPlayerIds = invited.filter(id => id.includes('player_'));
+        if (invited.includes('__TEAM__')) {
+            const teamIds = (_meczPanelPlayers || []).map(p => p.playerId);
+            playerIds = [...new Set([...teamIds, ...invitedPlayerIds])];
+        } else {
+            playerIds = invitedPlayerIds;
+        }
+
+        if (currentUserData.role === 'KIBIC' || currentUserData.role === 'OBSERWATOR') {
+            const myIds = currentUserData.childrenIds || [];
+            playerIds = myIds.length ? playerIds.filter(id => myIds.includes(id)) : [];
+        }
+
+        const bodyEl = document.getElementById('mp-body');
+        const dateStr = match.date ? formatDateDisplay(match.date) : '';
+        const timeStr = match.timeFrom ? ` · ${match.timeFrom}` : '';
+        const venue = match.location?.venueName ? ` · 📍 ${match.location.venueName}` : '';
+        const conf  = (att.confirmed || []).filter(id => id.includes('player_')).length;
+        const decl  = (att.declined  || []).filter(id => id.includes('player_')).length;
+        const noRsp = Math.max(0, playerIds.length - conf - decl);
+        const countersHtml = `<div class="mp-counts">
+            <div class="mp-mcc mp-mcc-g"><div class="mp-mcc-n mp-mn-g">${conf}</div><div class="mp-mcc-l">${_tP('home.presentLabel', 'Obecni')}</div></div>
+            <div class="mp-mcc mp-mcc-r"><div class="mp-mcc-n mp-mn-r">${decl}</div><div class="mp-mcc-l">${_tP('home.absentLabel', 'Nieobecni')}</div></div>
+            <div class="mp-mcc mp-mcc-s"><div class="mp-mcc-n mp-mn-s">${noRsp}</div><div class="mp-mcc-l">${_tP('home.noResponseLabel', 'Brak odp.')}</div></div>
+        </div>`;
+
+        // wynik dla LIVE / FINISHED
+        let wynikBadge = '';
+        if (md.matchStatus === 'LIVE' && md.result) {
+            wynikBadge = `<div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:#000;margin:4px 0;">🔴 ${md.result.our ?? 0} : ${md.result.opponent ?? 0}</div>`;
+        } else if (md.matchStatus === 'FINISHED' && md.result) {
+            const o = md.result.outcome;
+            const lbl = o === 'WIN' ? 'Wygrana' : o === 'LOSS' ? 'Przegrana' : 'Remis';
+            const cls = o === 'WIN' ? 'mp-result-win' : o === 'LOSS' ? 'mp-result-loss' : 'mp-result-draw';
+            wynikBadge = `<div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:#000;margin:4px 0;">${md.result.our} : ${md.result.opponent}</div><span class="mp-result-badge ${cls}">${lbl}</span>`;
+        }
+        let html = `<div class="mp-info-row">${dateStr}${timeStr}${venue}</div>${wynikBadge}${countersHtml}`;
+
+        if (playerIds.length === 0) {
+            html += `<div class="mp-empty">Brak powołanych zawodników</div>`;
+            bodyEl.innerHTML = html;
+            return;
+        }
+
+        const sortedPlayers = playerIds
+            .map(pid => ({
+                pid,
+                player: playerMap[pid],
+                goals: (md.playerEvents || []).filter(e => e.type === 'GOAL' && e.playerId === pid).length
+            }))
+            .filter(x => x.player)
+            .sort((a, b) => b.goals - a.goals || (a.player.firstName || a.player.name || '').localeCompare(b.player.firstName || b.player.name || '', 'pl'));
+
+        sortedPlayers.forEach(({ pid, player: p, goals }) => {
+            const confirmed = (att.confirmed || []).includes(pid);
+            const declined = (att.declined || []).includes(pid);
+            const statusClass = confirmed ? 'mp-st-present' : declined ? 'mp-st-absent' : 'mp-st-pending';
+            const statusLabel = confirmed ? _tP('mecz.attendancePresent', '● Obecny') : declined ? _tP('mecz.attendanceAbsent', '● Nieobecny') : _tP('mecz.attendanceNoResponse', '● Brak odp.');
+            const initials = _getInitials(p.firstName || p.name || pid);
+            const showGoals = isLive || isFinished || goals > 0;
+            let statsHtml = '';
+            if (showGoals) {
+                if (canManage && isLive) {
+                    statsHtml = `<div class="mp-pc-stats"><div class="mp-pc-stat"><div class="mp-pc-stat-lbl">Gole</div><div class="mp-pc-stat-ctrl"><button class="mp-pc-btn" onclick="mpRemoveGoal('${pid}','${matchId}')">−</button><span id="mp-goals-${pid}" class="mp-pc-val">${goals}</span><button class="mp-pc-btn" onclick="mpAddGoal('${pid}','${matchId}')">+</button></div></div></div>`;
+                } else {
+                    statsHtml = `<div class="mp-pc-stats"><div class="mp-pc-stat"><div class="mp-pc-stat-lbl">Gole</div><div class="mp-pc-stat-ctrl"><span class="mp-pc-val">${goals}</span></div></div></div>`;
+                }
+            }
+            html += `<div class="mp-player-card"><div class="mp-pc-hdr"><div class="mp-avatar">${initials}</div><div class="mp-pc-info"><div class="mp-pc-name">${p.firstName || p.name || pid}</div><div class="mp-pc-status ${statusClass}">${statusLabel}</div></div></div>${statsHtml}</div>`;
+        });
+
+        bodyEl.innerHTML = html;
+    }
+
+    /* ── Akcje meczu z panelu ── */
+    async function mpStartMatch(eventId) {
+        if (!db) return;
+        try {
+            await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE' });
+            const doc = await db.collection('events').doc(eventId).get();
+            if (doc.exists && _meczPanelMatch) { _meczPanelMatch = { ...doc.data(), id: doc.id }; _renderMeczPanel(); }
+            await refreshDashboard();
+        } catch(e) { alert('Błąd: ' + e.message); }
+    }
+
+    async function mpEndMatch(eventId) {
+        const input = prompt('Podaj wynik (nasz:przeciwnik), np. 3:1');
+        if (input === null) return;
+        const parts = input.split(':').map(s => parseInt(s.trim()));
+        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) { alert('Nieprawidłowy format. Użyj np. 3:1'); return; }
+        const our = parts[0], opp = parts[1];
+        const outcome = our > opp ? 'WIN' : our < opp ? 'LOSS' : 'DRAW';
+        if (!db) return;
+        try {
+            await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'FINISHED', 'matchData.endedAt': new Date().toISOString(), 'matchData.endedBy': currentUserData.userId, 'matchData.result': { our, opponent: opp, outcome, updatedBy: currentUserData.userId, updatedAt: new Date().toISOString() } });
+            const doc = await db.collection('events').doc(eventId).get();
+            if (doc.exists && _meczPanelMatch) { _meczPanelMatch = { ...doc.data(), id: doc.id }; _renderMeczPanel(); }
+            await refreshDashboard();
+        } catch(e) { alert('Błąd: ' + e.message); }
+    }
+
+    async function mpClaimMatch(eventId) {
+        if (!db) return;
+        try {
+            const doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) return;
+            if (doc.data().date !== getLocalDateStr()) { alert('Obsługę meczu można przejąć dopiero w dniu meczu.'); return; }
+            await db.collection('events').doc(eventId).update({ 'matchData.liveAssistant': { userId: currentUserData.userId, displayName: currentUserData.displayName, claimedAt: new Date().toISOString() } });
+            const d2 = await db.collection('events').doc(eventId).get();
+            if (d2.exists && _meczPanelMatch) { _meczPanelMatch = { ...d2.data(), id: d2.id }; _renderMeczPanel(); }
+            await refreshDashboard();
+        } catch(e) { alert('Błąd: ' + e.message); }
+    }
+
+    async function mpTakeoverMatch(eventId) {
+        if (!db) return;
+        try {
+            await db.collection('events').doc(eventId).update({ 'matchData.liveAssistant': { userId: currentUserData.userId, displayName: currentUserData.displayName, claimedAt: new Date().toISOString() }, 'matchData.takeoverRequest': null });
+            const doc = await db.collection('events').doc(eventId).get();
+            if (doc.exists && _meczPanelMatch) { _meczPanelMatch = { ...doc.data(), id: doc.id }; _renderMeczPanel(); }
+            await refreshDashboard();
+        } catch(e) { alert('Błąd: ' + e.message); }
+    }
+
+    async function mpRequestTakeover(eventId) {
+        if (!db) return;
+        try {
+            const doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) return;
+            const md = doc.data().matchData || {};
+            if (md.takeoverRequest && md.takeoverRequest.userId) { alert('Inna prośba o przejęcie już oczekuje.'); return; }
+            await db.collection('events').doc(eventId).update({ 'matchData.takeoverRequest': { userId: currentUserData.userId, displayName: currentUserData.displayName, requestedAt: new Date().toISOString() } });
+            alert('Prośba o przejęcie wysłana!');
+        } catch(e) { alert('Błąd: ' + e.message); }
+    }
+
+    async function mpReopenMatch(eventId) {
+        if (!await showConfirmSheet('Cofnąć zakończenie meczu? Status wróci do "Na żywo".')) return;
+        if (!db) return;
+        try {
+            await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE', 'matchData.endedAt': null, 'matchData.endedBy': null });
+            const doc = await db.collection('events').doc(eventId).get();
+            if (doc.exists && _meczPanelMatch) { _meczPanelMatch = { ...doc.data(), id: doc.id }; _renderMeczPanel(); }
+            await refreshDashboard();
+        } catch(e) { alert('Błąd: ' + e.message); }
+    }
+
+    async function mpChangeScore(side, delta, matchId) {
+        if (!_meczPanelMatch || !db) return;
+        const md = _meczPanelMatch.matchData || {};
+        if (md.matchStatus !== 'LIVE') return;
+        if (!md.result) md.result = { our: 0, opponent: 0 };
+        if (side === 'home') md.result.our = Math.max(0, (md.result.our || 0) + delta);
+        else md.result.opponent = Math.max(0, (md.result.opponent || 0) + delta);
+        const elH = document.getElementById('mp-score-home');
+        const elA = document.getElementById('mp-score-away');
+        if (elH) elH.textContent = md.result.our;
+        if (elA) elA.textContent = md.result.opponent;
+        try {
+            await db.collection('events').doc(matchId).update({ 'matchData.result.our': md.result.our, 'matchData.result.opponent': md.result.opponent, 'matchData.result.updatedBy': currentUserData.userId, 'matchData.result.updatedAt': new Date().toISOString() });
+        } catch(e) { console.error('❌ Błąd zapisu wyniku:', e); }
+    }
+
+    async function mpAddGoal(playerId, matchId) {
+        if (!_meczPanelMatch || !db) return;
+        const md = _meczPanelMatch.matchData || {};
+        if (md.matchStatus !== 'LIVE') return;
+        const event = { type: 'GOAL', playerId, minute: null, addedBy: currentUserData.userId, addedAt: new Date().toISOString() };
+        if (!md.playerEvents) md.playerEvents = [];
+        md.playerEvents.push(event);
+        if (!md.result) md.result = { our: 0, opponent: 0 };
+        md.result.our = md.playerEvents.filter(e => e.type === 'GOAL').length;
+        const goals = md.playerEvents.filter(e => e.type === 'GOAL' && e.playerId === playerId).length;
+        const el = document.getElementById(`mp-goals-${playerId}`);
+        if (el) el.textContent = goals;
+        const elH = document.getElementById('mp-score-home');
+        if (elH) elH.textContent = md.result.our;
+        try {
+            await db.collection('events').doc(matchId).update({ 'matchData.playerEvents': md.playerEvents, 'matchData.result.our': md.result.our, 'matchData.result.updatedBy': currentUserData.userId, 'matchData.result.updatedAt': new Date().toISOString() });
+        } catch(e) { console.error('❌ Błąd:', e); }
+    }
+
+    async function mpRemoveGoal(playerId, matchId) {
+        if (!_meczPanelMatch || !db) return;
+        const md = _meczPanelMatch.matchData || {};
+        if (md.matchStatus !== 'LIVE') return;
+        if (!md.playerEvents) return;
+        const idx = md.playerEvents.map((e,i) => e.type === 'GOAL' && e.playerId === playerId ? i : -1).filter(i => i >= 0).pop();
+        if (idx === undefined) return;
+        md.playerEvents.splice(idx, 1);
+        if (!md.result) md.result = { our: 0, opponent: 0 };
+        md.result.our = Math.max(0, md.playerEvents.filter(e => e.type === 'GOAL').length);
+        const goals = md.playerEvents.filter(e => e.type === 'GOAL' && e.playerId === playerId).length;
+        const el = document.getElementById(`mp-goals-${playerId}`);
+        if (el) el.textContent = goals;
+        const elH = document.getElementById('mp-score-home');
+        if (elH) elH.textContent = md.result.our;
+        try {
+            await db.collection('events').doc(matchId).update({ 'matchData.playerEvents': md.playerEvents, 'matchData.result.our': md.result.our, 'matchData.result.updatedBy': currentUserData.userId, 'matchData.result.updatedAt': new Date().toISOString() });
+        } catch(e) { console.error('❌ Błąd:', e); }
+    }
+
+    /* ─────────────────────────────────────────────────────
        NAJBLIŻSZE WYDARZENIA
     ───────────────────────────────────────────────────── */
     async function loadUpcomingEvents(teamId) {
@@ -870,7 +1600,17 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const myPlayerIds = getMyPlayerIds();
 
         const allEv = await getTeamEvents(teamId);
-        const upEv  = allEv.filter(e => e.date >= todayStr && e.date <= maxStr);
+        const upEv  = allEv.filter(e => {
+            if (e.status === 'CANCELLED') return false;
+            if (e.date < todayStr || e.date > maxStr) return false;
+            const reminder = e.reminderDays > 0 ? e.reminderDays : null;
+            if (reminder) {
+                const showFrom = new Date(e.date + 'T00:00:00');
+                showFrom.setDate(showFrom.getDate() - reminder);
+                if (getLocalDateStr(showFrom) > todayStr) return false;
+            }
+            return true;
+        });
 
         let activeAbsences = [];
         try {
@@ -936,10 +1676,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 description: e.description || '',
                 date: e.date, timeFrom: e.timeFrom || '', timeTo: e.timeTo || '',
                 location: e.location?.venueName || '',
-                priority: e.priority || 999,
+                priority: e.displayPriority != null ? e.displayPriority : (e.priority || 999),
                 needsConfirm, attendanceRows,
                 eventId, isPinned: false,
-                createdBy: orgNames[e.createdBy] || ''
+                createdBy: orgNames[e.createdBy] || '',
+                _ev: e
             });
         });
 
@@ -962,6 +1703,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             if (aIsEvent !== bIsEvent) return aIsEvent ? -1 : 1;
             if (aIsEvent && bIsEvent) {
                 if (a.date !== b.date) return a.date.localeCompare(b.date);
+                if (a.priority !== b.priority) return a.priority - b.priority;
                 return (a.timeFrom || '').localeCompare(b.timeFrom || '');
             }
             if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
@@ -1006,7 +1748,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             typeBadge = `<span class="ev-badge ev-badge-${tk}">${TYPE_ICONS[item.type] || '📋'} ${TYPE_LABELS[item.type] || item.type}</span>`;
         }
 
-        const confirmBadge = item.needsConfirm ? `<span class="ev-badge ev-badge-confirm">⏳ Potwierdź</span>` : '';
+        const confirmBadge = item.needsConfirm ? `<span class="ev-badge ev-badge-confirm">${_tP('home.confirmBadge', '⏳ Potwierdź')}</span>` : '';
 
         let subHtml = '';
         if (item.source === 'event') {
@@ -1019,13 +1761,13 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             subHtml = `<div class="ev-sub">${trunc(item.body, 80)}</div>`;
         }
 
-        const orgHtml   = item.createdBy ? `<div class="ev-org">Organizator: ${trunc(item.createdBy, 25)}</div>` : '';
+        const orgHtml   = item.createdBy ? `<div class="ev-org">${t('organizerLabel', {name: trunc(item.createdBy, 25)})}</div>` : '';
         const evDescHtml = item.description ? `<div class="ev-desc">${trunc(item.description, 60)}</div>` : '';
 
         let actHtml = '';
         const isParentRole = currentUserData.role === 'RODZIC';
-        const lblYes = isParentRole ? 'Będzie' : 'Będę';
-        const lblNo  = isParentRole ? 'Nie będzie' : 'Nie będę';
+        const lblYes = isParentRole ? _tP('home.willAttendParent', 'Będzie') : _tP('home.willAttendSelf', 'Będę');
+        const lblNo  = isParentRole ? _tP('home.willNotAttendParent', 'Nie będzie') : _tP('home.willNotAttendSelf', 'Nie będę');
 
         if (item.attendanceRows && item.attendanceRows.length > 0 && item.eventId) {
             for (const row of item.attendanceRows) {
@@ -1059,7 +1801,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             ${subHtml}${orgHtml}${actHtml}
         `;
 
-        if (item.eventId) { card.onclick = () => { sessionStorage.setItem('selectedDate', item.date); window.location.href = 'kalendarz.html'; }; }
+        if (item.eventId) { card.onclick = () => item._ev ? openCalDetailPanel(item._ev) : openCalDetailByEventId(item.eventId); }
         return card;
     }
 
@@ -1175,6 +1917,40 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         } catch (e) { console.error('❌ Błąd resetu zadania:', e); }
     }
 
+    async function rejectTaskFromDashboard(taskId, elementId) {
+        const reason = prompt(t('addTask.rejectPrompt') || 'Podaj powód odrzucenia (opcjonalnie):') ?? undefined;
+        if (reason === undefined) return; // user cancelled prompt
+        const userId = currentUserData?.userId;
+        if (!db || !userId) return;
+        try {
+            const taskDoc = await db.collection('tasks').doc(taskId).get();
+            if (!taskDoc.exists) return;
+            const task = taskDoc.data();
+            const completed = (task.completedBy || []).filter(id => id !== userId);
+            const rejected  = task.rejectedBy || [];
+            const reasons   = task.rejectReasons || {};
+            if (!rejected.includes(userId)) rejected.push(userId);
+            if (reason) reasons[userId] = reason;
+            const assigned = task.assignedTo || [];
+            const active   = assigned.filter(id => !rejected.includes(id));
+            const status   = (completed.length >= active.length && active.length > 0) ? 'DONE' : 'PENDING';
+            await db.collection('tasks').doc(taskId).update({ completedBy: completed, rejectedBy: rejected, rejectReasons: reasons, status });
+            // aktualizuj notyfikację
+            const notifSnap = await db.collection('notifications').where('userId', '==', userId).where('referenceId', '==', taskId).where('actionType', '==', 'TASK').limit(1).get();
+            if (!notifSnap.empty) {
+                await notifSnap.docs[0].ref.update({ actionDone: true, actionResult: 'rejected', actionComment: reason || null, isRead: true, readAt: new Date().toISOString() });
+            }
+            // powiadom trenera
+            if (task.createdBy && task.createdBy !== userId) {
+                const userName = currentUserData.displayName || userId;
+                const reasonText = reason ? ` · Powód: ${reason}` : '';
+                await createNotification({ userId: task.createdBy, teamId: task.teamId, type: 'TASK_REJECTED', title: `${userName} — ${t('addTask.rejectNotif')||'zadanie odrzucone'}`, body: `${task.title}${reasonText}`, referenceId: taskId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });
+            }
+            await reloadTasks();
+            await loadAndRenderNotifications();
+        } catch (e) { console.error('❌ Błąd odrzucenia zadania:', e); }
+    }
+
     async function syncTaskNotification(taskId, userId, result) {
         try {
             const snap = await db.collection('notifications').where('userId', '==', userId).where('referenceId', '==', taskId).where('actionType', '==', 'TASK').limit(1).get();
@@ -1197,43 +1973,96 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     function createTaskCard(task, userId, mm) {
         const completed = task.completedBy || [];
         const rejected  = task.rejectedBy  || [];
-        const isDone     = completed.includes(userId);
-        const isRejected = rejected.includes(userId);
+        const assigned  = task.assignedTo  || [];
         const tid    = 'task-' + (task.taskId || task.id);
         const taskId = task.taskId || task.id;
-        const from   = mm && mm[task.createdBy] ? mm[task.createdBy] : '';
-        const fh     = from ? `<span style="color:var(--akcent);">Od: ${from}</span> · ` : '';
         const meta   = task.dueDate ? `Termin: ${formatDateDisplay(task.dueDate)}` : '';
-
-        let statusHtml = '';
-        if (isDone) {
-            statusHtml = `<div class="task-status" onclick="event.stopPropagation()"><span class="task-status-txt" style="color:var(--sukces);">✅ Wykonane</span><button class="task-change-btn" onclick="resetTaskFromDashboard('${taskId}','${tid}')">Zmień</button></div>`;
-        } else if (isRejected) {
-            const reason = task.rejectReasons?.[userId] || '';
-            const reasonHtml = reason ? ` — <span style="font-style:italic;">${reason}</span>` : '';
-            statusHtml = `<div class="task-status" onclick="event.stopPropagation()"><span class="task-status-txt" style="color:var(--blad);">❌ Odrzucone${reasonHtml}</span><button class="task-change-btn" onclick="resetTaskFromDashboard('${taskId}','${tid}')">Zmień</button></div>`;
-        }
+        const isSender = task.createdBy === userId;
 
         const card = document.createElement('div');
-        const extraClass = isDone ? ' done-item' : isRejected ? ' rejected-item' : '';
-        card.className = 'task-item' + extraClass;
-        card.id = tid;
 
-        const showCheck = !isDone && !isRejected;
-        const checkHtml = showCheck
-            ? `<div class="task-check" onclick="toggleTask('${tid}')"></div>`
-            : `<div class="task-check done" style="${isRejected ? 'background:var(--blad);border-color:var(--blad);' : ''}">${isDone ? '✓' : '✕'}</div>`;
-
-        card.innerHTML = `${checkHtml}<div class="task-body"><div class="task-text${isDone ? ' done-text' : ''}">${task.title}</div><div class="task-meta">${fh}${meta}</div>${statusHtml}</div>`;
+        if (isSender) {
+            // Widok trenera (nadawcy) — pasek postępu
+            const total    = assigned.length;
+            const doneCount = completed.length;
+            const rejCount  = rejected.length;
+            const pct = total ? Math.round(doneCount / total * 100) : 0;
+            const allDone = task.status === 'DONE';
+            card.className = 'task-item' + (allDone ? ' done-item' : '');
+            let progressHtml = '';
+            if (total > 0) {
+                const lblParts = [];
+                if (doneCount) lblParts.push(`<span style="color:var(--sukces);">✓ ${doneCount} wykonało</span>`);
+                if (rejCount)  lblParts.push(`<span style="color:var(--blad);">✕ ${rejCount} odrzuciło</span>`);
+                const waiting = total - doneCount - rejCount;
+                if (waiting > 0) lblParts.push(`<span style="color:var(--szary);">${waiting} oczekuje</span>`);
+                progressHtml = `<div class="task-status" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:6px;">
+                    <div style="width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--sukces);border-radius:2px;transition:width .3s;"></div></div>
+                    <div style="font-size:16px;font-weight:700;color:var(--szary);">${lblParts.join(' · ')}</div>
+                </div>`;
+            }
+            card.innerHTML = `<div class="task-check done" style="background:var(--akcent);border-color:var(--akcent);color:#fff;font-size:10px;">↑</div><div class="task-body"><div class="task-text${allDone ? ' done-text' : ''}">${task.title}</div><div class="task-meta">${meta}</div>${progressHtml}</div>`;
+        } else {
+            // Widok odbiorcy (rodzic/zawodnik) — checkbox
+            const isDone     = completed.includes(userId);
+            const isRejected = rejected.includes(userId);
+            const from = mm && mm[task.createdBy] ? mm[task.createdBy] : '';
+            const fromLabel = t('addTask.from') || 'Od';
+            const fh   = from ? `<span style="color:var(--akcent);">${fromLabel}: ${from}</span> · ` : '';
+            const extraClass = isDone ? ' done-item' : isRejected ? ' rejected-item' : '';
+            card.className = 'task-item' + extraClass;
+            card.id = tid;
+            let statusHtml = '';
+            if (isDone) {
+                statusHtml = `<div class="task-status" onclick="event.stopPropagation()"><span class="task-status-txt" style="color:var(--sukces);">✅ Wykonane</span><button class="task-change-btn" onclick="resetTaskFromDashboard('${taskId}','${tid}')">Zmień</button></div>`;
+            } else if (isRejected) {
+                const reason = task.rejectReasons?.[userId] || '';
+                const reasonHtml = reason ? ` — <span style="font-style:italic;">${reason}</span>` : '';
+                statusHtml = `<div class="task-status" onclick="event.stopPropagation()"><span class="task-status-txt" style="color:var(--blad);">❌ Odrzucone${reasonHtml}</span><button class="task-change-btn" onclick="resetTaskFromDashboard('${taskId}','${tid}')">Zmień</button></div>`;
+            }
+            const showCheck = !isDone && !isRejected;
+            const checkHtml = showCheck
+                ? `<div class="task-check" onclick="toggleTask('${tid}')"></div>`
+                : `<div class="task-check done" style="${isRejected ? 'background:var(--blad);border-color:var(--blad);' : ''}">${isDone ? '✓' : '✕'}</div>`;
+            const rejectBtnHtml = showCheck
+                ? `<button onclick="event.stopPropagation();rejectTaskFromDashboard('${taskId}','${tid}')" style="margin-top:5px;padding:3px 10px;background:rgba(248,113,113,0.10);border:1px solid rgba(248,113,113,0.25);border-radius:999px;color:#DC2626;font-size:10px;font-weight:700;cursor:pointer;line-height:1.4;">❌ ${t('addTask.reject')||'Odrzuć'}</button>`
+                : '';
+            card.innerHTML = `${checkHtml}<div class="task-body"><div class="task-text${isDone ? ' done-text' : ''}">${task.title}</div><div class="task-meta">${fh}${meta}</div>${statusHtml}${rejectBtnHtml}</div>`;
+        }
         return card;
     }
 
     async function loadTasks(teamId, userId) {
         const tasks = await getTeamTasks(teamId);
-        const my    = tasks.filter(t => t.assignedTo && t.assignedTo.includes(userId));
-        const cids  = [...new Set(my.map(t => t.createdBy).filter(Boolean))];
-        const mm    = {};
-        for (const c of cids) { mm[c] = await getUserName(c); }
+        const role  = currentUserData?.role || '';
+        const isCoach = role === 'TRENER_GLOWNY' || role === 'TRENER_POMOCNICZY';
+        const _now = Date.now();
+        const _48h = 48 * 60 * 60 * 1000;
+        const my = isCoach
+            ? tasks.filter(t => t.createdBy === userId)
+            : tasks.filter(t => {
+                if (!t.assignedTo || !t.assignedTo.includes(userId)) return false;
+                const isDone     = (t.completedBy || []).includes(userId);
+                const isRejected = (t.rejectedBy  || []).includes(userId);
+                if (isDone || isRejected) {
+                    const dueMs = t.dueDate ? new Date(t.dueDate).getTime() : null;
+                    const cutoff = dueMs ? dueMs + _48h : null;
+                    if (cutoff && _now > cutoff) return false;
+                }
+                return true;
+            });
+
+        // Buduj mapę userId→name dla twórców zadań (potrzebne do "Od: ...")
+        const creatorIds = [...new Set(my.map(t => t.createdBy).filter(Boolean).filter(id => id !== userId))];
+        const mm = {};
+        if (creatorIds.length) {
+            await Promise.all(creatorIds.map(async id => {
+                try {
+                    const doc = await db.collection('users').doc(id).get();
+                    if (doc.exists) mm[id] = doc.data().displayName || id;
+                } catch (e) {}
+            }));
+        }
 
         const allLabel = typeof t === 'function' ? t('start.seeAll') : 'Wszystkie';
         const noLabel  = typeof t === 'function' ? t('start.noTasks') : 'Brak zadań';
@@ -1280,17 +2109,33 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     /* ─────────────────────────────────────────────────────
        WIDGET KALENDARZA
     ───────────────────────────────────────────────────── */
+    let _activeTeamId = null;
+    let _activeClubId = null;
+    let calDetailEvent = null;
+    let _parentsCanAssist = true;
     let calYear  = new Date().getFullYear();
     let calMonth = new Date().getMonth();
     let calSelectedDate = null;
     let calAllEvents    = [];
+    let calAllPlayers   = [];
 
     const CAL_DOT_COLORS = { 'TRENING': '#3B82F6', 'MECZ': '#10B981', 'WYJAZD': '#F59E0B', 'INNE': '#6B7280' };
 
     async function loadCalWidget(teamId) {
-        calAllEvents = await getTeamEvents(teamId);
+        try {
+            const [events, playersSnap] = await Promise.all([
+                getTeamEvents(teamId),
+                db.collection('players').get()
+            ]);
+            calAllEvents  = events;
+            calAllPlayers = playersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+                .filter(p => p.teams && p.teams.some(t => t.teamId === teamId && t.status === 'ACTIVE') && p.isActive !== false);
+        } catch(e) {
+            console.error('❌ loadCalWidget', e);
+        }
         renderCalGrid();
         selectCalDay(getLocalDateStr());
+        _loadAddPanelMembers();
     }
 
     function navigateCalMonth(delta) {
@@ -1352,7 +2197,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     const isSelected = ds === calSelectedDate;
                     const evs = eventMap[ds] || [];
                     const dotsHtml = evs.length > 0
-                        ? `<div class="cal-day-dots">${evs.slice(0, 3).map(e => `<div class="cal-dot" style="background:${CAL_DOT_COLORS[e.type] || '#6B7280'}"></div>`).join('')}</div>`
+                        ? `<div class="cal-day-dots">${evs.slice(0, 3).map(e => {
+                            const isCancDot = e.status === 'CANCELLED';
+                            const dotColor = isCancDot ? '#9CA3AF' : (CAL_DOT_COLORS[e.type] || '#6B7280');
+                            return `<div class="cal-dot${isCancDot ? ' cancelled' : ''}" style="background:${dotColor};"></div>`;
+                        }).join('')}</div>`
                         : '';
                     let cls = 'cal-day';
                     if (isToday) cls += ' today';
@@ -1391,15 +2240,30 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const countLabel = lang === 'en' ? `${evCount} event${evCount !== 1 ? 's' : ''}` : `${evCount} wydarzeni${evCount === 1 ? 'e' : 'a'}`;
 
         const evListHtml = dayEvs.map(ev => {
-            const att    = ev.attendance || {};
-            const conf   = (att.confirmed || []).length;
-            const decl   = (att.declined  || []).length;
-            const invP   = (att.invited   || []).filter(id => id.includes('player_'));
-            const noResp = invP.length > 0 ? Math.max(0, invP.length - conf - decl) : 0;
+            const att  = ev.attendance || {};
+            const invited = att.invited || [];
+            const invP = invited.includes('__TEAM__')
+                ? calAllPlayers.map(p => p.playerId)
+                : invited.filter(id => id.includes('player_'));
+            const conf   = (att.confirmed || []).filter(id => id.includes('player_')).length;
+            const decl   = (att.declined  || []).filter(id => id.includes('player_')).length;
+            const noResp = Math.max(0, invP.length - conf - decl);
             const tc    = (ev.type || '').toLowerCase();
+            const isCancEv = ev.status === 'CANCELLED';
             const color = CAL_DOT_COLORS[ev.type] || '#6B7280';
             const typeLabel = TYPE_LABELS[ev.type] || ev.type;
-            return `<div class="cal-ev-item cal-ev-${tc}" onclick="sessionStorage.setItem('selectedDate','${ev.date}');window.location.href='kalendarz.html'">
+            const eid = ev.eventId || ev.id || '';
+            if (isCancEv) {
+                return `<div class="cal-ev-item cal-ev-${tc}" style="cursor:pointer;border-left:3px solid #EF4444;opacity:0.7;" onclick="openCalDetailByEventId('${eid}')">
+                    <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+                        <span style="font-size:13px;line-height:1;">🚫</span>
+                        <span style="font-size:10px;font-weight:900;color:#EF4444;text-transform:uppercase;letter-spacing:0.8px;">${t('eventDetail.cancelled')||'Odwołano'}</span>
+                    </div>
+                    <div class="cal-ev-title" style="text-decoration:line-through;color:var(--szary);">${ev.title || typeLabel}</div>
+                    <div class="cal-ev-time" style="color:var(--szary);">${ev.timeFrom || ''}${ev.timeTo ? '–' + ev.timeTo : ''}</div>
+                </div>`;
+            }
+            return `<div class="cal-ev-item cal-ev-${tc}" style="cursor:pointer" onclick="openCalDetailByEventId('${eid}')">
                 <div class="cal-ev-badge" style="color:${color}">${typeLabel}</div>
                 <div class="cal-ev-title">${ev.title || typeLabel}</div>
                 <div class="cal-ev-time">${ev.timeFrom || ''}${ev.timeTo ? '–' + ev.timeTo : ''}</div>
@@ -1417,6 +2281,234 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 <div class="cal-inspector-count">${countLabel}</div>
             </div>
             <div class="cal-inspector-list">${evListHtml}</div>`;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       PANEL SZCZEGÓŁÓW WYDARZENIA
+    ───────────────────────────────────────────────────── */
+    function _getInitials(name) {
+        if (!name) return '?';
+        const parts = name.trim().split(' ');
+        return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.substring(0, 2).toUpperCase();
+    }
+
+    function openCalDetailByEventId(eventId) {
+        const ev = calAllEvents.find(e => (e.eventId || e.id) === eventId);
+        if (ev) openCalDetailPanel(ev);
+    }
+
+    async function openCalDetailPanel(ev) {
+        if (!ev) return;
+        const evId = ev.eventId || ev.id;
+        if (evId) {
+            try {
+                const snap = await db.collection('events').doc(evId).get();
+                if (snap.exists) ev = { id: snap.id, eventId: snap.id, ...snap.data() };
+            } catch(e) { /* fallback to cached ev */ }
+        }
+        calDetailEvent = ev;
+        const body    = document.getElementById('ev-det-body');
+        const titleEl = document.getElementById('ev-det-title');
+        const footer  = document.getElementById('ev-det-footer');
+        if (!body) return;
+
+        const isCoach = getCurrentUserData()?.role === 'TRENER_GLOWNY' || getCurrentUserData()?.role === 'TRENER_POMOCNICZY';
+        const TYPE_COLORS = { TRENING: '#3B82F6', MECZ: '#F59E0B', WYJAZD: '#8B5CF6', INNE: '#6B7280' };
+        const TYPE_ICONS  = { TRENING: '⚽', MECZ: '🏆', WYJAZD: '🚌', INNE: '📋' };
+        const TYPE_NAMES  = { TRENING: 'Trening', MECZ: 'Mecz', WYJAZD: 'Wyjazd', INNE: 'Inne' };
+
+        const TYPE_NAMES2 = t('eventDetail.types') || { TRENING:'Trening', MECZ:'Mecz', WYJAZD:'Wyjazd', INNE:'Inne' };
+        titleEl.textContent = ev.title || TYPE_NAMES2[ev.type] || TYPE_NAMES[ev.type] || 'Wydarzenie';
+        const color     = TYPE_COLORS[ev.type] || '#6B7280';
+        const typeLabel = TYPE_NAMES2[ev.type] || TYPE_NAMES[ev.type] || ev.type;
+        const typeIcon  = TYPE_ICONS[ev.type]  || '📋';
+        const lang2     = typeof getLang === 'function' ? getLang() : 'pl';
+        const locale2   = lang2 === 'en' ? 'en-GB' : 'pl-PL';
+        const d         = new Date(ev.date + 'T00:00:00');
+        const dateStr   = d.toLocaleDateString(locale2, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+        let seriesInfo = '';
+        if (ev.seriesId) {
+            const dayNames2 = t('eventDetail.dayNames') || ['niedziela','poniedziałek','wtorek','środa','czwartek','piątek','sobota'];
+            const seriesEvents = calAllEvents.filter(e => e.seriesId === ev.seriesId).sort((a,b) => a.date.localeCompare(b.date));
+            const lastDate    = seriesEvents.length > 0 ? seriesEvents[seriesEvents.length-1].date : ev.date;
+            const lastDateStr = new Date(lastDate+'T00:00:00').toLocaleDateString(locale2, { day:'numeric', month:'short' });
+            seriesInfo = t('eventDetail.series', { day: dayNames2[d.getDay()], until: lastDateStr });
+        }
+
+        const isCancelled = ev.status === 'CANCELLED';
+        let html = '';
+        if (isCancelled) {
+            html += `<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:4px;"><span style="font-size:20px;">❌</span><span style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#EF4444;">${t('eventDetail.cancelled')||'Odwołano'}</span></div>`;
+        }
+        html += `
+            <div style="background:${color}18;border:1px solid ${color}30;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+                <span style="font-size:24px;">${typeIcon}</span>
+                <span style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:${color};">${typeLabel}</span>
+                ${seriesInfo ? `<span style="font-size:13px;font-weight:700;color:var(--szary);margin-left:auto;">${seriesInfo}</span>` : ''}
+            </div>
+            <div class="det-info-row"><div class="det-info-icon">📅</div><div class="det-info-body"><div class="det-info-label">${t('eventDetail.date')}</div><div class="det-info-val">${dateStr}</div></div></div>
+            <div class="det-info-row"><div class="det-info-icon">🕐</div><div class="det-info-body"><div class="det-info-label">${t('eventDetail.time')}</div><div class="det-info-val">${ev.timeFrom||'—'} — ${ev.timeTo||'—'}</div></div></div>
+            <div class="det-info-row"><div class="det-info-icon">📍</div><div class="det-info-body"><div class="det-info-label">${t('eventDetail.place')}</div><div class="det-info-val">${ev.location?.venueName||'—'}<br><span style="color:var(--szary);font-size:14px">${ev.location?.address||''}</span></div></div></div>`;
+
+        if (ev.description) html += `<div class="det-desc">${ev.description}</div>`;
+
+        if (ev.requireConfirmation) {
+            const invited     = ev.attendance?.invited || [];
+            const confirmed   = ev.attendance?.confirmed || [];
+            const declined    = ev.attendance?.declined || [];
+            const markedAbsent = ev.attendance?.markedAbsent || [];
+            const playerIds   = invited.includes('__TEAM__') ? calAllPlayers.map(p => p.playerId).filter(Boolean) : invited.filter(id => id.includes('player_'));
+            let green = 0, red = 0, grey = 0;
+            playerIds.forEach(id => {
+                if (confirmed.includes(id)) green++;
+                else if (declined.includes(id) || markedAbsent.includes(id)) red++;
+                else grey++;
+            });
+            html += `
+                <div class="att-section-label">${t('eventDetail.attendance')}</div>
+                <div style="display:flex;gap:8px;margin-bottom:4px;">
+                    <div class="ev-att-box att-g">${green} ✓</div>
+                    <div class="ev-att-box att-r">${red} ✕</div>
+                    <div class="ev-att-box att-s">${grey} ?</div>
+                    <div style="padding:8px 0;font-size:14px;color:var(--szary);font-weight:700;align-self:center;">/ ${playerIds.length}</div>
+                </div>
+                <div class="att-list">${_buildCalAttendanceList(ev, isCoach)}</div>`;
+        }
+
+        body.innerHTML = html;
+        if (footer) footer.style.display = (isCoach && !isCancelled) ? '' : 'none';
+        const cancelBtn = document.getElementById('ev-cancel-btn');
+        if (cancelBtn) cancelBtn.style.display = isCancelled ? 'none' : '';
+        document.getElementById('ev-det-overlay').classList.add('open');
+        document.getElementById('ev-det-panel').classList.add('open');
+    }
+
+    function closeCalDetailPanel() {
+        document.getElementById('ev-det-overlay').classList.remove('open');
+        document.getElementById('ev-det-panel').classList.remove('open');
+        calDetailEvent = null;
+    }
+
+    function _buildCalAttendanceList(ev, isCoach) {
+        const invited      = ev.attendance?.invited || [];
+        const confirmed    = ev.attendance?.confirmed || [];
+        const declined     = ev.attendance?.declined || [];
+        const reasons      = ev.attendance?.declineReasons || {};
+        const markedAbsent = ev.attendance?.markedAbsent || [];
+        if (invited.length === 0) return `<div style="padding:12px;text-align:center;color:var(--warn);font-size:15px;font-weight:700;">${t('eventDetail.noInvited')}</div>`;
+
+        const members = _addPanelMembers || [];
+        let filteredInvited = invited.includes('__TEAM__') ? [
+            ...members.filter(m => m.role === 'TRENER_GLOWNY' || m.role === 'TRENER_POMOCNICZY').map(m => m.userId),
+            ...calAllPlayers.map(p => p.playerId).filter(Boolean)
+        ] : [...invited];
+
+        const ROLE_LABEL = t('eventDetail.roleLabels') || { TRENER_GLOWNY: 'Trener główny', TRENER_POMOCNICZY: 'Trener', ZAWODNIK: 'Zawodnik' };
+        const coaches = [], others = [], processed = new Set();
+        filteredInvited.forEach(pid => {
+            if (processed.has(pid)) return; processed.add(pid);
+            let name = pid, role = '—', isCoachRole = false;
+            const u = members.find(m => m.userId === pid);
+            if (u) { name = u.displayName || pid; role = ROLE_LABEL[u.role] || u.role; isCoachRole = u.role === 'TRENER_GLOWNY' || u.role === 'TRENER_POMOCNICZY'; }
+            const p = calAllPlayers.find(pl => pl.playerId === pid);
+            if (p) { name = p.name || name; if (!u) role = (t('eventDetail.roleLabels') || {}).ZAWODNIK || 'Zawodnik'; }
+            const person = { id: pid, name, role, initials: _getInitials(name), isCoachRole };
+            if (isCoachRole) coaches.push(person); else others.push(person);
+        });
+
+        const isReadOnly = ev.status === 'CANCELLED';
+        function renderPerson(p) {
+            let statusClass, statusText, reasonHtml = '';
+            if (confirmed.includes(p.id))     { statusClass='present'; statusText=t('eventDetail.present'); }
+            else if (declined.includes(p.id)) { statusClass='absent';  statusText=t('eventDetail.absent'); if (reasons[p.id]) reasonHtml=`<div class="att-reason">"${reasons[p.id]}"</div>`; }
+            else if (markedAbsent.includes(p.id)) { statusClass='absent'; statusText=t('eventDetail.absentCoach'); }
+            else { statusClass='pending'; statusText=t('eventDetail.pending'); }
+            let actionBtns = '';
+            if (isCoach && !isReadOnly) {
+                const gS = statusClass==='present', rS = statusClass==='absent';
+                actionBtns = `<div style="display:flex;gap:4px;margin-left:8px;">
+                    <button onclick="setCalAttendance('${p.id}','confirmed')" style="width:32px;height:32px;border-radius:50%;border:1.5px solid ${gS?'var(--sukces)':'var(--border2)'};background:${gS?'rgba(74,222,128,0.15)':'var(--tlo-karta2)'};color:${gS?'var(--sukces)':'var(--szary)'};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✓</button>
+                    <button onclick="setCalAttendance('${p.id}','declined')" style="width:32px;height:32px;border-radius:50%;border:1.5px solid ${rS?'var(--blad)':'var(--border2)'};background:${rS?'rgba(248,113,113,0.12)':'var(--tlo-karta2)'};color:${rS?'var(--blad)':'var(--szary)'};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+                </div>`;
+            }
+            return `<div class="att-row"><div class="att-avatar">${p.initials}</div><div class="att-info"><div class="att-name">${p.name}</div><div class="att-role">${p.role}</div>${reasonHtml}</div><div class="att-status ${statusClass}">${statusText}</div>${actionBtns}</div>`;
+        }
+
+        let html = '';
+        function attSort(arr) {
+            return arr.sort((a, b) => {
+                const aConf = confirmed.includes(a.id) ? 0 : 1;
+                const bConf = confirmed.includes(b.id) ? 0 : 1;
+                if (aConf !== bConf) return aConf - bConf;
+                return a.name.localeCompare(b.name);
+            });
+        }
+        if (coaches.length > 0) { html += `<div class="att-section-label" style="padding:4px 0;">${t('eventDetail.coaches')}</div>`; attSort(coaches).forEach(c => { html += renderPerson(c); }); }
+        if (others.length  > 0) { html += `<div class="att-section-label" style="padding:8px 0 4px;">${t('eventDetail.players')}</div>`; attSort(others).forEach(p => { html += renderPerson(p); }); }
+        return html || `<div style="padding:12px;text-align:center;color:var(--szary);font-size:14px;">${t('eventDetail.noPersons')}</div>`;
+    }
+
+    async function setCalAttendance(personId, status) {
+        if (!calDetailEvent) return;
+        if (calDetailEvent.status === 'CANCELLED') return;
+        const ev = calDetailEvent;
+        const isCoach = getCurrentUserData()?.role === 'TRENER_GLOWNY' || getCurrentUserData()?.role === 'TRENER_POMOCNICZY';
+        const att = JSON.parse(JSON.stringify(ev.attendance || { confirmed:[], declined:[], declineReasons:{}, markedAbsent:[], decidedBy:{} }));
+        att.confirmed    = (att.confirmed    || []).filter(id => id !== personId);
+        att.declined     = (att.declined     || []).filter(id => id !== personId);
+        att.markedAbsent = (att.markedAbsent || []).filter(id => id !== personId);
+        if (att.declineReasons) delete att.declineReasons[personId];
+        if (status === 'confirmed') att.confirmed.push(personId);
+        else if (status === 'declined') { if (isCoach) att.markedAbsent.push(personId); else att.declined.push(personId); }
+        const me = (getCurrentUserData ? getCurrentUserData() : null);
+        if (!att.decidedBy) att.decidedBy = {};
+        att.decidedBy[personId] = { by: me?.userId||'', byName: me?.displayName||'', byRole: isCoach?'trener':'zawodnik', at: new Date().toISOString() };
+        ev.attendance = att;
+        try {
+            await db.collection('events').doc(ev.eventId || ev.id).update({ attendance: att });
+            const idx = calAllEvents.findIndex(e => (e.eventId||e.id) === (ev.eventId||ev.id));
+            if (idx >= 0) calAllEvents[idx] = ev;
+            openCalDetailPanel(ev);
+        } catch(e) { console.error('❌ setCalAttendance', e); }
+    }
+
+    async function calDeleteEvent() {
+        if (!calDetailEvent) return;
+        if (!confirm(t('eventDetail.deleteConfirm') || 'Usunąć to wydarzenie?')) return;
+        const ev = calDetailEvent;
+        const evId = ev.eventId || ev.id;
+        try {
+            await db.collection('events').doc(evId).update({
+                status: 'DELETE',
+                deletedAt: new Date().toISOString(),
+                deletedBy: getCurrentUserId(),
+            });
+            calAllEvents = calAllEvents.filter(e => (e.eventId||e.id) !== evId);
+            closeCalDetailPanel();
+            renderCalGrid();
+            const d = calSelectedDate;
+            if (d) renderDayInspector(d);
+        } catch(e) { console.error('❌ calDeleteEvent', e); alert('Błąd: ' + e.message); }
+    }
+
+    async function calCancelEvent() {
+        if (!calDetailEvent) return;
+        if (!confirm('Odwołać to wydarzenie? Wszyscy zaproszeni dostaną powiadomienie.')) return;
+        const ev = calDetailEvent;
+        const evId = ev.eventId || ev.id;
+        try {
+            await db.collection('events').doc(evId).update({ status: 'CANCELLED', cancelledAt: new Date().toISOString(), cancelledBy: getCurrentUserId() });
+            const idx = calAllEvents.findIndex(e => (e.eventId||e.id) === evId);
+            if (idx >= 0) calAllEvents[idx] = { ...calAllEvents[idx], status: 'CANCELLED' };
+            openCalDetailPanel({ ...ev, status: 'CANCELLED' });
+            renderCalGrid();
+            const d = calSelectedDate;
+            if (d) renderDayInspector(d);
+            // Odśwież hub (sekcja Najbliższe wydarzenia) i wyczyść cache eventów
+            if (typeof clearTeamEventsCache === 'function') clearTeamEventsCache(_activeTeamId);
+            await refreshDashboard();
+        } catch(e) { console.error('❌ calCancelEvent', e); alert('Błąd: ' + e.message); }
     }
 
     /* ─────────────────────────────────────────────────────
@@ -1443,6 +2535,490 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             refreshDashboard();
         }
     });
+
+    /* ─────────────────────────────────────────────────────
+       ADD PANELS — wspólny cache członków
+    ───────────────────────────────────────────────────── */
+    let _addPanelMembers = null;
+
+    async function _loadAddPanelMembers() {
+        if (_addPanelMembers) return _addPanelMembers;
+        const teamId = getCurrentUserData ? getCurrentUserData()?.teamId : null;
+        if (!db || !teamId) return [];
+        try {
+            const members = await getTeamMembers(teamId);
+            _addPanelMembers = members;
+            return members;
+        } catch (e) { console.error('❌ _loadAddPanelMembers', e); return []; }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       DODAJ WYDARZENIE
+    ───────────────────────────────────────────────────── */
+    let _evTrainingTopics = null;
+
+    async function _loadEvTopics() {
+        const clubId = _activeClubId || '';
+        if (!db || !clubId) return;
+        try {
+            const snap = await db.collection('trainingTopics')
+                .where('clubId', '==', clubId)
+                .where('isActive', '==', true)
+                .get();
+            _evTrainingTopics = snap.docs.map(d => ({ ...d.data(), id: d.id }))
+                .sort((a, b) => (a.priority || 999) - (b.priority || 999));
+            const select = document.getElementById('ev-add-topic');
+            if (!select) return;
+            select.innerHTML = `<option value="">${t('addEvent.topicPlaceholder') || 'Wybierz temat...'}</option>`;
+            _evTrainingTopics.forEach(tp => {
+                select.innerHTML += `<option value="${tp.topicId}">${tp.title}</option>`;
+            });
+            select.innerHTML += `<option value="__custom__">✏️ Wpisz nowy temat...</option>`;
+        } catch (e) { console.error('❌ _loadEvTopics', e); }
+    }
+
+    function onEvTopicChange() {
+        const select = document.getElementById('ev-add-topic');
+        const custom = document.getElementById('ev-add-topic-custom');
+        if (!custom) return;
+        if (select.value === '__custom__') { custom.style.display = ''; custom.value = ''; custom.focus(); }
+        else { custom.style.display = 'none'; }
+    }
+
+    async function _resolveEvTopic(selectedValue, customText) {
+        if (!selectedValue) return { topicId: null, title: '' };
+        if (selectedValue !== '__custom__') {
+            const topic = (_evTrainingTopics || []).find(t => t.topicId === selectedValue);
+            return { topicId: selectedValue, title: topic ? topic.title : '' };
+        }
+        const title = (customText || '').trim();
+        if (!title) return { topicId: null, title: '' };
+        const existing = (_evTrainingTopics || []).find(t => t.title.toLowerCase() === title.toLowerCase());
+        if (existing) return { topicId: existing.topicId, title: existing.title };
+        const clubId = _activeClubId || '';
+        const topicId = `topic_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${Date.now().toString().slice(-5)}`;
+        try {
+            await db.collection('trainingTopics').doc(topicId).set({ topicId, clubId, title, isActive: true, priority: 999, createdAt: new Date().toISOString() });
+        } catch (e) { console.warn('⚠️ Nie udało się zapisać tematu', e); }
+        return { topicId, title };
+    }
+
+    function openAddEventPanel() {
+        openSlidePanel('panel-add-event');
+        const todayVal = calSelectedDate || getLocalDateStr(new Date());
+        document.getElementById('ev-date-from').value = todayVal;
+        document.getElementById('ev-date-to').value   = todayVal;
+        _loadAddPanelMembers().then(() => {
+            _evRefreshPersonListWrap();
+            renderEvPersonList();
+        });
+        _loadEvTopics();
+    }
+
+    function pickEvType(el) {
+        document.querySelectorAll('#ev-type-picker .type-opt').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        const type = el.dataset.type;
+        document.getElementById('ev-topic-group').style.display = type === 'TRENING' ? '' : 'none';
+        const PRIO_MAP = { MECZ: 1, TRENING: 2, WYJAZD: 3, INNE: 999 };
+        const prioSel = document.getElementById('ev-display-priority');
+        if (prioSel) prioSel.value = PRIO_MAP[type] || 999;
+        updateEvTitleCount();
+    }
+
+    function toggleEvCycle() {
+        const toggle = document.getElementById('ev-cycle-toggle');
+        toggle.classList.toggle('on');
+        document.getElementById('ev-cycle-days').style.display = toggle.classList.contains('on') ? '' : 'none';
+    }
+
+    function toggleEvDay(el) { el.classList.toggle('selected'); }
+
+    const EV_TITLE_MAX = { MECZ: 20, TRENING: 40, WYJAZD: 40, INNE: 40 };
+
+    function updateEvTitleCount() {
+        const input = document.getElementById('ev-add-title');
+        const counter = document.getElementById('ev-title-count');
+        if (!input || !counter) return;
+        const type = document.querySelector('#ev-type-picker .type-opt.selected')?.dataset.type || 'TRENING';
+        const max = EV_TITLE_MAX[type] || 40;
+        input.maxLength = max;
+        if (input.value.length > max) input.value = input.value.substring(0, max);
+        const len = input.value.length;
+        counter.textContent = `${len}/${max}`;
+        counter.classList.toggle('over', len > max);
+    }
+
+    function updateEvDescCount() {
+        const input = document.getElementById('ev-add-desc');
+        const counter = document.getElementById('ev-desc-count');
+        if (!input || !counter) return;
+        const len = input.value.length;
+        counter.textContent = `${len}/50`;
+        counter.classList.toggle('over', len > 50);
+    }
+
+    function toggleEvVis(el) {
+        document.querySelectorAll('#ev-vis-grid .vis-chip[data-vis="DRUZYNA"], #ev-vis-grid .vis-chip[data-vis="ZAWODNICY"]')
+            .forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        _evRefreshPersonListWrap();
+        renderEvPersonList();
+    }
+
+    function toggleEvTrenerzy(el) {
+        el.classList.toggle('selected');
+        _evRefreshPersonListWrap();
+        renderEvPersonList();
+    }
+
+    function _evRefreshPersonListWrap() {
+        const hasZaw  = document.querySelector('#ev-vis-grid .vis-chip[data-vis="ZAWODNICY"]')?.classList.contains('selected');
+        const hasTren = document.querySelector('#ev-vis-grid .vis-chip[data-vis="TRENERZY"]')?.classList.contains('selected');
+        document.getElementById('ev-person-list-wrap').style.display = (hasZaw || hasTren) ? '' : 'none';
+    }
+
+    function renderEvPersonList() {
+        const container = document.getElementById('ev-person-list');
+        if (!container) return;
+        const members = _addPanelMembers || [];
+        const selectedVis = Array.from(document.querySelectorAll('#ev-vis-grid .vis-chip.selected')).map(c => c.dataset.vis);
+        const rows = [];
+        if (selectedVis.includes('ZAWODNICY')) {
+            calAllPlayers.forEach(p => {
+                rows.push({ id: p.playerId, name: p.name || p.playerId, role: 'ZAWODNIK', sortKey: 2 });
+            });
+        }
+        if (selectedVis.includes('TRENERZY')) {
+            members.filter(m => m.role === 'TRENER_GLOWNY' || m.role === 'TRENER_POMOCNICZY').forEach(m => {
+                rows.push({ id: m.userId, name: m.displayName || m.userId, role: m.role, sortKey: m.role === 'TRENER_GLOWNY' ? 0 : 1 });
+            });
+        }
+        const ROLE_LABEL = { TRENER_GLOWNY: 'Trener główny', TRENER_POMOCNICZY: 'Trener', ZAWODNIK: 'Zawodnik' };
+        rows.sort((a, b) => a.sortKey - b.sortKey || a.name.localeCompare(b.name));
+        container.innerHTML = '';
+        rows.forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'person-check-row checked';
+            row.dataset.personId = p.id;
+            row.onclick = () => { row.classList.toggle('checked'); row.querySelector('.person-cb').textContent = row.classList.contains('checked') ? '✓' : ''; updateEvPersonCount(); };
+            row.innerHTML = `<div class="person-cb">✓</div><div class="person-check-name">${p.name}</div><div class="person-check-role">${ROLE_LABEL[p.role] || p.role}</div>`;
+            container.appendChild(row);
+        });
+        updateEvPersonCount();
+    }
+
+    function updateEvPersonCount() {
+        const c = document.querySelectorAll('#ev-person-list .person-check-row.checked').length;
+        const t = document.querySelectorAll('#ev-person-list .person-check-row').length;
+        const el = document.getElementById('ev-person-count');
+        if (el) el.textContent = `${c}/${t} wybranych`;
+    }
+
+    function selectAllEvPersons() {
+        document.querySelectorAll('#ev-person-list .person-check-row').forEach(r => { r.classList.add('checked'); r.querySelector('.person-cb').textContent = '✓'; });
+        updateEvPersonCount();
+    }
+
+    function deselectAllEvPersons() {
+        document.querySelectorAll('#ev-person-list .person-check-row').forEach(r => { r.classList.remove('checked'); r.querySelector('.person-cb').textContent = ''; });
+        updateEvPersonCount();
+    }
+
+    function _evGetSelectedPersonIds() {
+        const isDruzyna = document.querySelector('#ev-vis-grid .vis-chip[data-vis="DRUZYNA"]')?.classList.contains('selected');
+        const members = _addPanelMembers || [];
+        const checkedIds = Array.from(document.querySelectorAll('#ev-person-list .person-check-row.checked')).map(r => r.dataset.personId);
+        const checkedTrainers = checkedIds.filter(id => {
+            const m = members.find(x => x.userId === id);
+            return m && (m.role === 'TRENER_GLOWNY' || m.role === 'TRENER_POMOCNICZY');
+        });
+        if (isDruzyna) {
+            const playerIds = calAllPlayers.map(p => p.playerId).filter(Boolean);
+            return ['__TEAM__', ...playerIds, ...checkedTrainers];
+        }
+        return checkedIds;
+    }
+
+    function _resetAddEventForm() {
+        document.getElementById('ev-add-title').value = '';
+        document.getElementById('ev-add-desc').value = '';
+        document.getElementById('ev-date-from').value = '';
+        document.getElementById('ev-date-to').value = '';
+        document.getElementById('ev-time-from').value = '17:00';
+        document.getElementById('ev-time-to').value = '18:30';
+        document.getElementById('ev-venue').value = '';
+        document.getElementById('ev-address').value = '';
+        document.getElementById('ev-title-count').textContent = '0/40';
+        document.getElementById('ev-desc-count').textContent = '0/50';
+        const cycleToggle = document.getElementById('ev-cycle-toggle');
+        cycleToggle.classList.remove('on');
+        document.getElementById('ev-cycle-days').style.display = 'none';
+        document.querySelectorAll('#ev-cycle-days .day-chip').forEach(c => c.classList.remove('selected'));
+        document.querySelectorAll('#ev-type-picker .type-opt').forEach((o, i) => o.classList.toggle('selected', i === 0));
+        document.getElementById('ev-topic-group').style.display = '';
+        const topicSel = document.getElementById('ev-add-topic');
+        if (topicSel) topicSel.value = '';
+        const topicCus = document.getElementById('ev-add-topic-custom');
+        if (topicCus) { topicCus.value = ''; topicCus.style.display = 'none'; }
+        document.querySelectorAll('#ev-vis-grid .vis-chip').forEach(c => {
+            c.classList.toggle('selected', c.dataset.vis === 'DRUZYNA' || c.dataset.vis === 'TRENERZY');
+        });
+        document.getElementById('ev-toggle-announce').classList.add('on');
+        document.getElementById('ev-toggle-confirm').classList.add('on');
+        document.getElementById('ev-person-list').innerHTML = '';
+        document.getElementById('ev-person-list-wrap').style.display = 'none';
+    }
+
+    async function saveEventFromPanel() {
+        if (!_activeTeamId) { alert('Błąd: brak sesji. Odśwież stronę.'); return; }
+
+        const type     = document.querySelector('#ev-type-picker .type-opt.selected')?.dataset.type || 'TRENING';
+        const dateFrom = document.getElementById('ev-date-from').value;
+        if (!dateFrom) { alert(t('addEvent.validationError') || 'Podaj tytuł i datę'); return; }
+
+        // Temat treningu
+        let topicId = null, topicTitle = '';
+        if (type === 'TRENING') {
+            const topicSel = document.getElementById('ev-add-topic').value;
+            const topicCus = document.getElementById('ev-add-topic-custom').value;
+            if (topicSel === '__custom__' && !topicCus.trim()) { alert('Wpisz temat treningu'); return; }
+            const resolved = await _resolveEvTopic(topicSel, topicCus);
+            topicId = resolved.topicId;
+            topicTitle = resolved.title;
+        }
+
+        const title = document.getElementById('ev-add-title').value.trim() || topicTitle;
+        if (!title) { alert(t('addEvent.validationError') || 'Podaj tytuł i datę'); return; }
+        const dateTo   = document.getElementById('ev-date-to').value || dateFrom;
+        const timeFrom = document.getElementById('ev-time-from').value || '';
+        const timeTo   = document.getElementById('ev-time-to').value || '';
+        const venue    = document.getElementById('ev-venue').value.trim();
+        const address  = document.getElementById('ev-address').value.trim();
+        const desc     = document.getElementById('ev-add-desc').value.trim();
+        const showAnn       = document.getElementById('ev-toggle-announce').classList.contains('on');
+        const reqConf       = document.getElementById('ev-toggle-confirm').classList.contains('on');
+        const reminderDays  = parseInt(document.getElementById('ev-reminder-days').value) || 0;
+        const displayPriority = parseInt(document.getElementById('ev-display-priority').value) || 5;
+        const isCycle  = document.getElementById('ev-cycle-toggle').classList.contains('on');
+        const invited  = _evGetSelectedPersonIds();
+
+        const PRIO_MAP = { MECZ: 1, TRENING: 2, WYJAZD: 3, INNE: 999 };
+        const priority = PRIO_MAP[type] || 999;
+        const dates = [];
+
+        if (isCycle && dateTo !== dateFrom) {
+            const selectedDays = Array.from(document.querySelectorAll('#ev-cycle-days .day-chip.selected')).map(c => parseInt(c.dataset.day));
+            if (!selectedDays.length) { alert('Wybierz dni tygodnia'); return; }
+            const start = new Date(dateFrom + 'T00:00:00');
+            const end   = new Date(dateTo   + 'T00:00:00');
+            const seriesId = 'series_' + dateFrom.replace(/-/g, '') + '_' + Date.now().toString().slice(-7);
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                if (selectedDays.includes(d.getDay())) {
+                    const iso = d.toISOString().slice(0, 10);
+                    dates.push({ date: iso, seriesId });
+                }
+            }
+        } else {
+            dates.push({ date: dateFrom, seriesId: null });
+        }
+
+        const isDruzynaScope = document.querySelector('#ev-vis-grid .vis-chip[data-vis="DRUZYNA"]')?.classList.contains('selected');
+        const scope = isDruzynaScope ? 'DRUZYNA' : 'ZAWODNICY';
+        const visInvPlayerIds = invited.includes('__TEAM__') ? calAllPlayers.map(p => p.playerId).filter(Boolean) : invited.filter(id => id.includes('player_'));
+        const visibleTo = [];
+        calAllPlayers.forEach(p => { if (visInvPlayerIds.includes(p.playerId) && p.guardianId && !visibleTo.includes(p.guardianId)) visibleTo.push(p.guardianId); });
+
+        const createdBy = getCurrentUserData ? getCurrentUserData()?.userId : (currentUserData?.userId || '');
+
+        try {
+            for (const item of dates) {
+                const eventData = {
+                    eventId:    'event_' + item.date.replace(/-/g, '') + '_' + Date.now().toString().slice(-7),
+                    teamId:     _activeTeamId,
+                    clubId:     _activeClubId || '',
+                    type, priority, title: title || topicTitle, topicId, description: desc,
+                    date:       item.date,
+                    timeFrom, timeTo,
+                    location:   { venueName: venue, address },
+                    scope, visibility: Array.from(document.querySelectorAll('#ev-vis-grid .vis-chip.selected')).map(c => c.dataset.vis),
+                    visibleTo,
+                    showInAnnouncements:  showAnn,
+                    requireConfirmation:  reqConf,
+                    reminderDays,
+                    displayPriority,
+                    attendance: { invited, confirmed: [], declined: [], declineReasons: {}, markedAbsent: [], decidedBy: {} },
+                    seriesId:   item.seriesId,
+                    createdBy, createdAt: new Date().toISOString(),
+                    isDemo: false, demoSetId: null
+                };
+                if (type === 'MECZ') {
+                    eventData.matchData = { opponent: '', homeAway: 'HOME', matchStatus: 'UPCOMING', result: null, endedAt: null, endedBy: null, liveAssistant: null, takeoverRequest: null, playerEvents: [], lineup: [] };
+                }
+                await db.collection('events').doc(eventData.eventId).set(eventData);
+                await manageNotifications('create', 'event', eventData.eventId, { event: eventData });
+            }
+            closeSlidePanel('panel-add-event');
+            _resetAddEventForm();
+            if (typeof clearTeamEventsCache === 'function') clearTeamEventsCache(_activeTeamId);
+            await refreshDashboard();
+        } catch (e) { console.error('❌ saveEventFromPanel', e); alert('Błąd zapisu: ' + e.message); }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       DODAJ ZADANIE
+    ───────────────────────────────────────────────────── */
+    function openAddTaskPanel() {
+        openSlidePanel('panel-add-task');
+        initTaskDrums();
+        _loadAddPanelMembers().then(() => { /* person list shown only when vis chip selected */ });
+    }
+
+    function toggleTaskVis(el) {
+        el.classList.toggle('selected');
+        const anySelected = !!document.querySelector('#task-vis-grid .vis-chip.selected');
+        document.getElementById('task-person-list-wrap').style.display = anySelected ? '' : 'none';
+        renderTaskPersonList();
+    }
+
+    function renderTaskPersonList() {
+        const container = document.getElementById('task-person-list');
+        if (!container) return;
+        const members = _addPanelMembers || [];
+        const sel = Array.from(document.querySelectorAll('#task-vis-grid .vis-chip.selected')).map(c => c.dataset.vis);
+        const persons = [], added = new Set();
+        const ROLE_LABEL = { TRENER_GLOWNY: 'Trener główny', TRENER_POMOCNICZY: 'Trener', ZAWODNIK: 'Zawodnik', RODZIC: 'Rodzic', KIBIC: 'Kibic' };
+        const ROLE_ORDER = { TRENER_GLOWNY: 0, TRENER_POMOCNICZY: 1, ZAWODNIK: 2, RODZIC: 3, KIBIC: 4 };
+        members.forEach(m => {
+            const r = m.role || '';
+            if (added.has(m.userId)) return;
+            if (sel.includes('TRENERZY') && (r === 'TRENER_GLOWNY' || r === 'TRENER_POMOCNICZY')) { persons.push(m); added.add(m.userId); }
+            if (sel.includes('DRUZYNA') && r === 'ZAWODNIK') { persons.push(m); added.add(m.userId); }
+            if (sel.includes('RODZICE') && r === 'RODZIC') { persons.push(m); added.add(m.userId); }
+            if (sel.includes('KIBICE') && r === 'KIBIC') { persons.push(m); added.add(m.userId); }
+        });
+        persons.sort((a, b) => (ROLE_ORDER[a.role] || 9) - (ROLE_ORDER[b.role] || 9) || (a.displayName || '').localeCompare(b.displayName || ''));
+        container.innerHTML = '';
+        persons.forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'person-check-row checked';
+            row.dataset.personId = p.userId;
+            row.onclick = () => { row.classList.toggle('checked'); row.querySelector('.person-cb').textContent = row.classList.contains('checked') ? '✓' : ''; updateTaskPersonCount(); };
+            row.innerHTML = `<div class="person-cb">✓</div><div class="person-check-name">${p.displayName || p.userId}</div><div class="person-check-role">${ROLE_LABEL[p.role] || p.role}</div>`;
+            container.appendChild(row);
+        });
+        updateTaskPersonCount();
+    }
+
+    function updateTaskPersonCount() {
+        const c = document.querySelectorAll('#task-person-list .person-check-row.checked').length;
+        const t = document.querySelectorAll('#task-person-list .person-check-row').length;
+        const el = document.getElementById('task-person-count');
+        if (el) el.textContent = `${c}/${t} wybranych`;
+    }
+
+    function selectAllTaskPersons() {
+        document.querySelectorAll('#task-person-list .person-check-row').forEach(r => { r.classList.add('checked'); r.querySelector('.person-cb').textContent = '✓'; });
+        updateTaskPersonCount();
+    }
+
+    function deselectAllTaskPersons() {
+        document.querySelectorAll('#task-person-list .person-check-row').forEach(r => { r.classList.remove('checked'); r.querySelector('.person-cb').textContent = ''; });
+        updateTaskPersonCount();
+    }
+
+    function _resetAddTaskForm() {
+        document.getElementById('task-add-title').value = '';
+        document.getElementById('task-add-desc').value = '';
+        document.querySelectorAll('#task-vis-grid .vis-chip').forEach(c => c.classList.remove('selected'));
+        document.getElementById('task-person-list').innerHTML = '';
+        document.getElementById('task-person-list-wrap').style.display = 'none';
+        document.getElementById('drum-err').style.display = 'none';
+        const today = new Date();
+        drumState.dzien = today.getDate();
+        drumState.miesiac = today.getMonth() + 1;
+        drumState.rok = today.getFullYear();
+        initTaskDrums();
+    }
+
+    async function saveTaskFromPanel() {
+        const title = document.getElementById('task-add-title').value.trim();
+        if (!title) { alert(t('addTask.validationError') || 'Podaj tytuł zadania'); return; }
+        const desc = document.getElementById('task-add-desc').value.trim();
+        const d = drumState.dzien, m = drumState.miesiac, r = drumState.rok;
+        const dueDate = `${r}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const chosen = new Date(r, m - 1, d), today = new Date(); today.setHours(0, 0, 0, 0);
+        if (chosen < today) { document.getElementById('drum-err').style.display = 'block'; setTimeout(() => document.getElementById('drum-err').style.display = 'none', 3000); return; }
+        const assignedTo = Array.from(document.querySelectorAll('#task-person-list .person-check-row.checked')).map(r => r.dataset.personId);
+        if (!assignedTo.length) { alert('Wybierz co najmniej jedną osobę'); return; }
+
+        if (!_activeTeamId) { alert('Błąd: brak sesji. Odśwież stronę.'); return; }
+
+        const taskId = 'task_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '_' + Date.now().toString().slice(-5);
+        const taskData = {
+            taskId, teamId: _activeTeamId, title, description: desc || null,
+            createdBy: currentUserData.userId, assignedTo,
+            completedBy: [], rejectedBy: [], rejectReasons: {},
+            status: 'PENDING', dueDate, completedAt: null,
+            createdAt: new Date().toISOString(), isDemo: false, demoSetId: null
+        };
+        try {
+            await db.collection('tasks').doc(taskId).set(taskData);
+            await manageNotifications('create', 'task', taskId, { teamId: _activeTeamId, assignees: assignedTo, title, dueDate });
+            closeSlidePanel('panel-add-task');
+            _resetAddTaskForm();
+            await refreshDashboard();
+        } catch (e) { console.error('❌ saveTaskFromPanel', e); alert('Błąd zapisu. Spróbuj ponownie.'); }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       DRUM PICKER (termin zadania)
+    ───────────────────────────────────────────────────── */
+    const MIESIACE_FULL = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+    const _drumToday = new Date();
+    const drumState = { dzien: _drumToday.getDate(), miesiac: _drumToday.getMonth() + 1, rok: _drumToday.getFullYear() };
+    function _getDniWMiesiacu(m, r) { return new Date(r, m, 0).getDate(); }
+
+    function buildDrum(colId, items, si) {
+        const col = document.getElementById(colId); if (!col) return;
+        col.innerHTML = `<div class="drum-inner" id="${colId}-inner">${items.map((item, i) => `<div class="drum-item ${i === si ? 'active' : ''}" data-index="${i}">${item}</div>`).join('')}</div>`;
+        document.getElementById(`${colId}-inner`).style.transform = `translateY(${-si * 46}px)`;
+        let sy = 0, sIdx = si, drag = false;
+        const onS = y => { sy = y; sIdx = si; drag = true; };
+        const onM = y => { if (!drag) return; const diff = Math.round((sy - y) / 46); const ni = Math.max(0, Math.min(items.length - 1, sIdx + diff)); if (ni !== si) { si = ni; updateDrum(colId, items, si); } };
+        const onE = () => { drag = false; };
+        col.addEventListener('touchstart', e => onS(e.touches[0].clientY), { passive: true });
+        col.addEventListener('touchmove',  e => onM(e.touches[0].clientY), { passive: true });
+        col.addEventListener('touchend', onE);
+        col.addEventListener('mousedown', e => onS(e.clientY));
+        col.addEventListener('mousemove', e => onM(e.clientY));
+        col.addEventListener('mouseup', onE);
+        col.addEventListener('mouseleave', onE);
+        col.addEventListener('click', e => { const it = e.target.closest('.drum-item'); if (!it) return; si = parseInt(it.dataset.index); updateDrum(colId, items, si); });
+    }
+
+    function updateDrum(colId, items, si) {
+        const inner = document.getElementById(`${colId}-inner`); if (!inner) return;
+        inner.style.transform = `translateY(${-si * 46}px)`;
+        inner.querySelectorAll('.drum-item').forEach((el, i) => el.classList.toggle('active', i === si));
+        if (colId === 'drum-dzien') drumState.dzien = parseInt(items[si]);
+        else if (colId === 'drum-miesiac') {
+            drumState.miesiac = si + 1;
+            const dn = _getDniWMiesiacu(drumState.miesiac, drumState.rok);
+            buildDrum('drum-dzien', Array.from({ length: dn }, (_, i) => String(i + 1).padStart(2, '0')), Math.min(drumState.dzien, dn) - 1);
+        }
+        else if (colId === 'drum-rok') drumState.rok = parseInt(items[si]);
+    }
+
+    function initTaskDrums() {
+        const dn = _getDniWMiesiacu(drumState.miesiac, drumState.rok);
+        buildDrum('drum-dzien',   Array.from({ length: dn }, (_, i) => String(i + 1).padStart(2, '0')), drumState.dzien - 1);
+        buildDrum('drum-miesiac', (Array.isArray(t('kalendarz.monthNames')) ? t('kalendarz.monthNames') : MIESIACE_FULL), drumState.miesiac - 1);
+        buildDrum('drum-rok',     Array.from({ length: 5 }, (_, i) => String(_drumToday.getFullYear() + i)), 0);
+    }
 </script>
 </body>
 </html>
+
+
+

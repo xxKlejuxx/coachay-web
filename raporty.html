@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COACHAY — Raporty</title>
 <link rel="stylesheet" href="_global.css?v=20260730a">
+<link rel="stylesheet" href="_desktop.css?v=20260821c">
+<script src="_i18n.js?v=20260820"></script>
+<script src="_sidebar.js?v=20260821b"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -14,7 +17,9 @@
 <style>
 .screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
 
-.rap-scroll { flex:1; overflow-y:auto; padding:16px 16px 100px; scrollbar-width:none; }
+.rap-scroll { flex:1; overflow-y:auto; padding:0; scrollbar-width:none; }
+.rap-scroll::-webkit-scrollbar { display:none; }
+.rap-wrap { max-width: 1222px; margin: 0 auto; width: 100%; padding: 20px 28px 80px; }
 
 .rap-select {
     width: 100%;
@@ -23,7 +28,7 @@
     border-radius: 14px;
     padding: 14px 16px;
     color: var(--bialy);
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 600;
     font-family: var(--font);
     appearance: none;
@@ -47,7 +52,7 @@
     cursor: pointer;
 }
 .rap-chk-row input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--akcent); flex-shrink:0; }
-.rap-chk-row span { font-size: 14px; font-weight: 700; color: var(--bialy); }
+.rap-chk-row span { font-size: 19px; font-weight: 700; color: var(--bialy); }
 
 .rap-radio-row {
     display: flex;
@@ -61,9 +66,9 @@
     cursor: pointer;
 }
 .rap-radio-row input[type=radio] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--akcent); flex-shrink:0; }
-.rap-radio-row span { font-size: 14px; font-weight: 700; color: var(--bialy); }
+.rap-radio-row span { font-size: 19px; font-weight: 700; color: var(--bialy); }
 
-.rap-msg { font-size: 12px; font-weight: 700; margin-top: 10px; min-height: 16px; }
+.rap-msg { font-size: 17px; font-weight: 700; margin-top: 10px; min-height: 16px; }
 .rap-msg.err { color: var(--blad); }
 .rap-msg.ok { color: var(--sukces); }
 
@@ -72,7 +77,7 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 14px;
-    font-size: 12px;
+    font-size: 17px;
     color: var(--szary);
     line-height: 1.6;
     margin-top: 18px;
@@ -109,6 +114,7 @@
         </div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
+    <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
         <div class="notif-hdr">
             <span class="notif-tytul">Powiadomienia</span>
@@ -118,21 +124,23 @@
 
     <div class="screen-body">
         <div class="rap-scroll" id="rap-scroll">
+        <div class="rap-wrap">
+            <div style="font-family:var(--font-d);font-size:27px;font-weight:800;color:var(--bialy);margin-bottom:8px;" data-i18n="raporty.headerTitle">Raporty</div>
 
-            <div id="brak-dostepu" style="display:none;padding:60px 20px;text-align:center;color:var(--szary);font-size:13px;font-weight:600;">
+            <div id="brak-dostepu" style="display:none;padding:60px 0;text-align:center;color:var(--szary);font-size:18px;font-weight:600;" data-i18n="raporty.accessDeniedBody">
                 Raporty są dostępne tylko dla trenerów.
             </div>
 
             <div id="raport-form" style="display:none;">
 
                 <div class="form-group">
-                    <label class="form-lbl">Lista raportów:</label>
+                    <label class="form-lbl" data-i18n="raporty.reportTypeLabel">Lista raportów:</label>
                     <select class="rap-select" id="rap-typ-raportu"></select>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-lbl">Okres</label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span>📅 Na dzień</span></label>
+                    <label class="form-lbl" data-i18n="raporty.periodLabel">Okres</label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span data-i18n="raporty.periodSingleDay">📅 Na dzień</span></label>
                     <div class="rap-row2" id="rap-okres-miesiac">
                         <div>
                             <select class="rap-select" id="rap-miesiac"></select>
@@ -147,38 +155,32 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-lbl">Rodzaj zajęć</label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-trening" checked><span>⚽ Treningi</span></label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-mecz"><span>🏆 Mecze</span></label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-wyjazd"><span>🚌 Wyjazdy</span></label>
+                    <label class="form-lbl" data-i18n="raporty.eventTypeLabel">Rodzaj zajęć</label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-trening" checked><span data-i18n="raporty.checkTraining">⚽ Treningi</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-mecz"><span data-i18n="raporty.checkMatch">🏆 Mecze</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-wyjazd"><span data-i18n="raporty.checkTrip">🚌 Wyjazdy</span></label>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-lbl">Format pliku</label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-pdf" checked><span>📄 PDF</span></label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-csv"><span>📋 CSV</span></label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-xlsx"><span>📊 Excel (XLSX)</span></label>
+                    <label class="form-lbl" data-i18n="raporty.formatLabel">Format pliku</label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-pdf" checked><span data-i18n="raporty.formatPdf">📄 PDF</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-csv"><span data-i18n="raporty.formatCsv">📋 CSV</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-xlsx"><span data-i18n="raporty.formatXlsx">📊 Excel (XLSX)</span></label>
                 </div>
 
-                <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="generujRaport()" id="rap-btn-generuj">Generuj raport</button>
+                <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="generujRaport()" id="rap-btn-generuj" data-i18n="raporty.generateButton">Generuj raport</button>
                 <div class="rap-msg" id="rap-msg"></div>
 
-                <div class="rap-info-box">
-                    <strong>Legenda:</strong> 1 = obecny, 0 = nieobecny (bez zgłoszenia), 2 = absencja zgłoszona z wyprzedzeniem, puste pole = brak zajęć tego dnia.
+                <div class="rap-info-box" data-i18n="raporty.infoLegend">
+                    Legenda: 1 = obecny, 0 = nieobecny (bez zgłoszenia), 2 = absencja zgłoszona z wyprzedzeniem, puste pole = brak zajęć tego dnia.
                 </div>
 
             </div>
 
+        </div><!-- /rap-wrap -->
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label">Start</span></a>
-        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label">Drużyna</span></a>
-        <a class="nav-item nav-mecz" href="mecz.html"><div class="nav-mecz-bubble">🏆</div><span class="nav-label">Mecz</span></a>
-        <a class="nav-item" href="czat.html"><span class="nav-icon">💬</span><span class="nav-label">Czat</span></a>
-        <a class="nav-item" href="kalendarz.html"><span class="nav-icon">📅</span><span class="nav-label">Kalendarz</span></a>
-    </div>
 
     <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
     <div class="menu-panel" id="menu-panel">
@@ -188,14 +190,12 @@
             <div class="menu-panel-role" id="menu-role"></div>
         </div>
         <div class="menu-panel-items">
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='zadania.html'"><div class="menu-item-icon">✅</div><span class="menu-item-label">Zadania</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-jakzaczac" onclick="window.location.href='onboarding.html'"><div class="menu-item-icon">🧭</div><span class="menu-item-label">Jak zacząć</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
         </div>
         <div class="menu-panel-bottom">
             <div class="menu-logout" onclick="logout()">
@@ -207,15 +207,23 @@
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20260730a"></script>
+<script src="coachay-core.js?v=20260903d"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    RAPORTY — logika ekranu
 ═══════════════════════════════════════════════════ */
 
-const MIESIACE = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
-const TYP_LABELS = { TRENING: 'Treningi', MECZ: 'Mecze', WYJAZD: 'Wyjazdy' };
-const LEGENDA_PL = 'Legenda: 1 = obecny, 0 = nieobecny, 2 = absencja zgłoszona, puste = brak zajęć';
+function getMiesiace() {
+    const lang = typeof getLang === 'function' ? getLang() : 'pl';
+    return Array.from({length: 12}, (_, i) =>
+        new Intl.DateTimeFormat(lang, {month: 'long'}).format(new Date(2000, i, 1))
+            .replace(/^./, c => c.toUpperCase())
+    );
+}
+function getTYP_LABELS() {
+    const _t = (key, fb) => typeof t === 'function' ? t(key) : fb;
+    return { TRENING: _t('raporty.checkTraining', 'Treningi'), MECZ: _t('raporty.checkMatch', 'Mecze'), WYJAZD: _t('raporty.checkTrip', 'Wyjazdy') };
+}
 
 let currentUserId = '', currentUserName = '', currentRole = '';
 let currentTeamId = null, currentClubId = null;
@@ -232,11 +240,11 @@ let currentTeamId = null, currentClubId = null;
 ═══════════════════════════════════════════════════════ */
 const RAPORTY_REJESTR = {
     obecnosc: {
-        label: 'Lista obecności (dzień po dniu)',
+        get label() { return typeof t === 'function' ? t('raporty.typeAttendance') : 'Lista obecności (dzień po dniu)'; },
         generujDane: (ctx) => ctx.typy.map(typ => budujPakietObecnoscDzien(typ, ctx))
     },
     szczegolowy: {
-        label: 'Szczegółowy raport zajęć (per trening/mecz)',
+        get label() { return typeof t === 'function' ? t('raporty.typeDetailed') : 'Szczegółowy raport zajęć (per trening/mecz)'; },
         generujDane: (ctx) => ctx.typy.map(typ => budujPakietSzczegolowy(typ, ctx))
     }
 };
@@ -295,8 +303,9 @@ function wypelnijSelektory() {
     const selT = document.getElementById('rap-typ-raportu');
     selT.innerHTML = Object.entries(RAPORTY_REJESTR).map(([key, r]) => `<option value="${key}">${r.label}</option>`).join('');
 
+    const miesiace = getMiesiace();
     const selM = document.getElementById('rap-miesiac');
-    selM.innerHTML = MIESIACE.map((m, i) => `<option value="${i+1}">${m}</option>`).join('');
+    selM.innerHTML = miesiace.map((m, i) => `<option value="${i+1}">${m}</option>`).join('');
 
     const now = new Date();
     selM.value = String(now.getMonth() + 1);
@@ -326,9 +335,10 @@ function nazwaZawodnika(p) {
 
 // Dokłada kolumnę Lp (numer wiersza) na początku — wspólne dla każdego raportu, dodawane raz przed eksportem
 function dodajLp(pak) {
+    const lpLabel = typeof t === 'function' ? t('raporty.colLp') : 'Lp';
     return {
         ...pak,
-        kolumny: ['Lp', ...pak.kolumny],
+        kolumny: [lpLabel, ...pak.kolumny],
         wiersze: pak.wiersze.map((w, i) => [i + 1, ...w]),
         wyrownajLewo: (pak.wyrownajLewo || [0]).map(i => i + 1)
     };
@@ -353,8 +363,10 @@ async function generujRaport() {
     if (document.getElementById('rap-typ-trening').checked) typy.push('TRENING');
     if (document.getElementById('rap-typ-mecz').checked) typy.push('MECZ');
     if (document.getElementById('rap-typ-wyjazd').checked) typy.push('WYJAZD');
+    const _tR = (key, fb) => typeof t === 'function' ? t(key) : fb;
+
     if (typy.length === 0) {
-        msgEl.textContent = 'Wybierz przynajmniej jeden rodzaj zajęć.';
+        msgEl.textContent = _tR('raporty.noTypeSelectedBody', 'Wybierz co najmniej jeden rodzaj zajęć.');
         msgEl.className = 'rap-msg err';
         return;
     }
@@ -365,7 +377,7 @@ async function generujRaport() {
     if (naDzien) {
         const dataStr = document.getElementById('rap-data').value;
         if (!dataStr) {
-            msgEl.textContent = 'Wybierz datę.';
+            msgEl.textContent = _tR('raporty.noDayBody', 'Wybierz datę.');
             msgEl.className = 'rap-msg err';
             return;
         }
@@ -377,7 +389,8 @@ async function generujRaport() {
         const miesiac = parseInt(document.getElementById('rap-miesiac').value, 10);
         dataOd = `${rok}-${pad(miesiac)}-01`;
         dataDo = `${rok}-${pad(miesiac)}-${pad(new Date(rok, miesiac, 0).getDate())}`;
-        okresLabel = `${MIESIACE[miesiac - 1]} ${rok}`;
+        const miesiace = getMiesiace();
+        okresLabel = `${miesiace[miesiac - 1]} ${rok}`;
         nazwaOkres = `${rok}-${pad(miesiac)}`;
     }
 
@@ -386,7 +399,7 @@ async function generujRaport() {
 
     const btn = document.getElementById('rap-btn-generuj');
     btn.disabled = true;
-    btn.textContent = 'Generuję...';
+    btn.textContent = _tR('raporty.generatingLabel', 'Generowanie...');
 
     try {
         const [players, events, absences, tematy] = await Promise.all([
@@ -397,7 +410,7 @@ async function generujRaport() {
         ]);
 
         if (players.length === 0) {
-            msgEl.textContent = 'Brak aktywnych zawodników w drużynie.';
+            msgEl.textContent = _tR('raporty.noTeamBody', 'Brak aktywnych zawodników w drużynie.');
             msgEl.className = 'rap-msg err';
             return;
         }
@@ -410,15 +423,15 @@ async function generujRaport() {
         else if (format === 'xlsx') pobierzXLSX(pakiety, nazwaZbiorcza);
         else pobierzPDF(pakiety, nazwaZbiorcza);
 
-        msgEl.textContent = 'Raport wygenerowany ✓';
+        msgEl.textContent = '✓ ' + _tR('raporty.generateButton', 'Generuj raport');
         msgEl.className = 'rap-msg ok';
     } catch (e) {
         console.error('Błąd generowania raportu:', e);
-        msgEl.textContent = 'Błąd generowania raportu.';
+        msgEl.textContent = _tR('raporty.generateErrorBody', 'Nie udało się wygenerować raportu — spróbuj ponownie.');
         msgEl.className = 'rap-msg err';
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Generuj raport';
+        btn.textContent = _tR('raporty.generateButton', 'Generuj raport');
     }
 }
 
@@ -498,13 +511,18 @@ function budujPakietObecnoscDzien(typ, ctx) {
         return [nazwaZawodnika(p), ...cells, obecny, nieobecny, absencjaLiczba];
     });
 
+    const _tP = (key, fb) => typeof t === 'function' ? t(key) : fb;
+    const typLabels = getTYP_LABELS();
     return {
-        tytul: `Raport obecności — ${TYP_LABELS[typ]}`,
-        naglowek: [`Trener: ${currentUserName}`, `Okres: ${okresLabel}`],
-        kolumny: ['Zawodnik', ...dni.map(d => d.slice(8, 10)), 'Obecny', 'Nieobecny', 'Absencja'],
+        tytul: typeof t === 'function' ? t('raporty.attendanceTitle', {type: typLabels[typ]}) : `Raport obecności — ${typLabels[typ]}`,
+        naglowek: [
+            typeof t === 'function' ? t('raporty.headerCoach', {name: currentUserName}) : `Trener: ${currentUserName}`,
+            typeof t === 'function' ? t('raporty.headerPeriod', {period: okresLabel}) : `Okres: ${okresLabel}`
+        ],
+        kolumny: [_tP('raporty.colPlayer','Zawodnik'), ...dni.map(d => d.slice(8, 10)), _tP('raporty.colPresent','Obecności'), _tP('raporty.colAbsent','Nieobecności'), _tP('raporty.colExcused','Absencje')],
         wiersze,
         wyrownajLewo: [0],
-        legenda: LEGENDA_PL,
+        legenda: _tP('raporty.exportLegend', 'Legenda: 1 = obecny, 0 = nieobecny (bez zgłoszenia), 2 = absencja zgłoszona z wyprzedzeniem, puste pole = brak zajęć tego dnia.'),
         orientacja: 'poziomo',
         nazwaBazowa: `obecnosc_${typ}_${nazwaOkres}`
     };
@@ -529,20 +547,26 @@ function budujPakietSzczegolowy(typ, ctx) {
 
             const potwierdzony = (e.attendance?.confirmed || []).includes(pid);
             let status;
-            if (potwierdzony) status = 'Obecny';
+            const _tS = (key, fb) => typeof t === 'function' ? t(key) : fb;
+            if (potwierdzony) status = _tS('raporty.statusPresent', 'Obecny');
             else {
                 const maAbsencje = absences.some(a => a.playerId === pid && a.dateFrom <= e.date && a.dateTo >= e.date);
-                status = maAbsencje ? 'Absencja zgłoszona' : 'Nieobecny';
+                status = maAbsencje ? _tS('raporty.statusExcused', 'Absencja zgłoszona') : _tS('raporty.statusAbsent', 'Nieobecny');
             }
 
             wiersze.push([nazwaZawodnika(p), formatujDatePl(e.date), tresc, status]);
         });
     });
 
+    const _tPk = (key, fb) => typeof t === 'function' ? t(key) : fb;
+    const typLabels2 = getTYP_LABELS();
     return {
-        tytul: `Raport szczegółowy — ${TYP_LABELS[typ]}`,
-        naglowek: [`Trener: ${currentUserName}`, `Okres: ${okresLabel}`],
-        kolumny: ['Zawodnik', 'Data', 'Treść', 'Status'],
+        tytul: typeof t === 'function' ? t('raporty.detailedTitle', {type: typLabels2[typ]}) : `Raport szczegółowy — ${typLabels2[typ]}`,
+        naglowek: [
+            typeof t === 'function' ? t('raporty.headerCoach', {name: currentUserName}) : `Trener: ${currentUserName}`,
+            typeof t === 'function' ? t('raporty.headerPeriod', {period: okresLabel}) : `Okres: ${okresLabel}`
+        ],
+        kolumny: [_tPk('raporty.colPlayer','Zawodnik'), _tPk('raporty.colDate','Data'), _tPk('raporty.colContent','Treść zajęć'), _tPk('raporty.colStatus','Status')],
         wiersze,
         wyrownajLewo: [0, 2, 3],
         legenda: null,
@@ -665,7 +689,10 @@ function pobierzXLSX(pakiety, nazwaZbiorcza) {
 function usunPolskieZnaki(str) {
     const mapa = { 'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z',
                    'Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z' };
-    return String(str).replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, ch => mapa[ch] || ch);
+    return String(str)
+        .replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, ch => mapa[ch] || ch)
+        .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{FE00}-\u{FEFF}]/gu, '')
+        .replace(/\s{2,}/g, ' ').trim();
 }
 
 function pobierzPDF(pakiety, nazwaZbiorcza) {
@@ -725,3 +752,6 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
+

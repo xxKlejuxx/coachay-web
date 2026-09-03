@@ -5,7 +5,7 @@
 ═══════════════════════════════════════════════════ */
 
 /* ── Fonty ── */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap');
+/* Czcionki ładowane przez _sidebar.js lub bezpośrednio w <head> */
 
 @keyframes splashPulse {
     0%, 100% { opacity: 0.3; transform: scale(0.8); }
@@ -124,7 +124,7 @@ body {
     border-radius: var(--r-pill);
     padding: 7px 12px 7px 8px;
     cursor: pointer;
-    max-width: 220px;
+    max-width: 260px;
     transition: background 0.2s;
 }
 
@@ -141,7 +141,7 @@ body {
     align-items: center;
     justify-content: center;
     font-family: var(--font-d);
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 800;
     color: #fff;
     flex-shrink: 0;
@@ -154,14 +154,14 @@ body {
 }
 
 .ctx-klub {
-    font-size: 10px;
+    font-size: 13px;
     color: var(--szary);
     font-weight: 700;
     line-height: 1;
 }
 
 .ctx-team {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 800;
     color: var(--bialy);
     line-height: 1.3;
@@ -172,7 +172,7 @@ body {
 
 .ctx-arrow {
     color: var(--szary);
-    font-size: 10px;
+    font-size: 13px;
     flex-shrink: 0;
 }
 
@@ -569,8 +569,8 @@ body {
     transform: scale(0.92);
 }
 
-/* ── Overlaye kontekst / powiadomienia ── */
-.ctx-overlay, .notif-overlay {
+/* ── Overlay kontekst (z góry) ── */
+.ctx-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -585,16 +585,51 @@ body {
     box-shadow: 0 8px 30px rgba(0,0,0,0.7);
 }
 
-    .ctx-overlay.open, .notif-overlay.open {
+    .ctx-overlay.open {
         transform: translateY(0);
     }
 
+/* ── Panel powiadomień (z prawej) ── */
 .notif-overlay {
-    max-height: 55%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 320px;
+    background: var(--tlo-karta);
+    border-left: 1px solid var(--border);
+    z-index: 160;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
-    border-radius: 0 0 18px 18px;
-    border-bottom: 2px solid var(--akcent);
+    scrollbar-width: none;
+    padding: 0;
 }
+
+    .notif-overlay::-webkit-scrollbar {
+        display: none;
+    }
+
+    .notif-overlay.open {
+        transform: translateX(0);
+    }
+
+.notif-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 155;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s;
+}
+
+    .notif-backdrop.open {
+        opacity: 1;
+        pointer-events: all;
+    }
 
 .ov-label {
     font-size: 10px;
@@ -622,20 +657,20 @@ body {
     align-items: center;
     justify-content: center;
     font-family: var(--font-d);
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 800;
     color: #fff;
 }
 
 .ctx-klub-name {
-    font-size: 14px;
+    font-size: 17px;
     font-weight: 800;
     color: var(--bialy);
     flex: 1;
 }
 
 .ctx-klub-role {
-    font-size: 11px;
+    font-size: 14px;
     color: var(--szary);
     font-weight: 600;
 }
@@ -670,20 +705,20 @@ body {
 }
 
 .ctx-team-name {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 800;
     color: var(--bialy);
     flex: 1;
 }
 
 .ctx-team-role {
-    font-size: 10px;
+    font-size: 13px;
     color: var(--szary);
     font-weight: 700;
 }
 
 .ctx-team-check {
-    font-size: 14px;
+    font-size: 17px;
     color: var(--sukces);
     opacity: 0;
 }
@@ -701,7 +736,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    padding: 48px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
 }
 
 .notif-tytul {
@@ -721,7 +758,7 @@ body {
 .notif-item {
     display: flex;
     gap: 12px;
-    padding: 10px 0;
+    padding: 12px 20px;
     border-bottom: 1px solid var(--border);
     align-items: flex-start;
 }

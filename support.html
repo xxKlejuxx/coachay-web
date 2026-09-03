@@ -4,19 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COACHAY — Support</title>
-<link rel="stylesheet" href="_global.css?v=20260730a">
+<link rel="stylesheet" href="_global.css?v=20260826e">
+<link rel="stylesheet" href="_desktop.css?v=20260826e">
+<script src="_sidebar.js?v=20260826e"></script>
+<script src="_i18n.js?v=20260826e"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
-:root { --phone-h: 844px; }
-
 .screen-body {
     flex: 1; display: flex; flex-direction: column;
     overflow-y: auto; scrollbar-width: none;
-    padding-bottom: 40px;
 }
 .screen-body::-webkit-scrollbar { display: none; }
+
+.sup-container { max-width: 1222px; margin: 0 auto; width: 100%; padding: 0 28px 80px; }
 
 /* ── Top bar ── */
 .sup-topbar {
@@ -52,12 +54,12 @@
 .s-label {
     font-size: 10px; font-weight: 900; letter-spacing: 2px;
     text-transform: uppercase; color: var(--szary);
-    padding: 20px 18px 8px;
+    padding: 20px 0 8px;
 }
 
 /* ── Stats row ── */
 .sup-stats {
-    display: flex; gap: 8px; padding: 0 18px 4px;
+    display: flex; gap: 8px; padding: 0 0 4px;
 }
 .sup-stat {
     flex: 1; background: var(--tlo-karta); border: 1px solid var(--border);
@@ -78,7 +80,7 @@
 }
 
 /* ── Szukaj klubu ── */
-.sup-search-wrap { padding: 4px 18px 0; }
+.sup-search-wrap { padding: 4px 0 0; }
 .sup-search {
     width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border);
     border-radius: var(--r); padding: 12px 16px;
@@ -89,7 +91,7 @@
 .sup-search:focus { border-color: var(--akcent); outline: none; }
 
 /* ── Lista klubów ── */
-.sup-clubs { padding: 8px 18px 0; display: flex; flex-direction: column; gap: 8px; }
+.sup-clubs { padding: 8px 0 0; display: flex; flex-direction: column; gap: 8px; }
 
 .sup-club-card {
     background: var(--tlo-karta); border: 1.5px solid var(--border);
@@ -125,7 +127,7 @@
 
 /* ── Ekspandowany panel akcji ── */
 .sup-club-actions {
-    margin: 0 18px; padding: 14px 16px;
+    margin: 0; padding: 14px 16px;
     background: var(--tlo-karta2); border: 1.5px solid var(--border2);
     border-top: none; border-radius: 0 0 var(--r) var(--r);
     display: none; flex-direction: column; gap: 8px;
@@ -156,7 +158,7 @@
 }
 
 /* ── Impersonacja ── */
-.sup-imp-row { display: flex; gap: 8px; padding: 0 18px; }
+.sup-imp-row { display: flex; gap: 8px; padding: 0; }
 .sup-imp-input {
     flex: 1; background: var(--tlo-karta); border: 1.5px solid var(--border);
     border-radius: 12px; padding: 11px 14px;
@@ -172,21 +174,36 @@
     white-space: nowrap;
 }
 .sup-imp-btn:active { opacity: 0.8; }
-.sup-imp-msg { padding: 0 18px; font-size: 11px; font-weight: 700; display: none; margin-top: 2px; }
+.sup-imp-msg { padding: 0; font-size: 11px; font-weight: 700; display: none; margin-top: 2px; }
 .sup-imp-msg.ok  { color: var(--sukces); display: block; }
 .sup-imp-msg.err { color: var(--blad);   display: block; }
 
-/* ── Bottom sheet aktywacji licencji ── */
+/* ── Panel aktywacji licencji (wysuwa z prawej) ── */
 .sup-sheet-overlay {
-    position: absolute; inset: 0; background: rgba(0,0,0,0.7);
-    z-index: 200; display: none; align-items: flex-end;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 200; display: none; justify-content: flex-end;
 }
 .sup-sheet-overlay.open { display: flex; }
 .sup-sheet {
-    width: 100%; background: var(--tlo-karta);
-    border-radius: 24px 24px 0 0; border-top: 1px solid var(--border2);
-    padding: 20px 20px 36px;
-    animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) both;
+    width: min(440px, 100%); height: 100%; background: var(--tlo-karta);
+    border-left: 1px solid var(--border2);
+    padding: 28px 24px 48px; overflow-y: auto;
+    animation: slideInRight 0.28s cubic-bezier(0.16,1,0.3,1) both;
+    display: flex; flex-direction: column; gap: 4px;
+}
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+}
+/* mobile — nadal od dołu */
+@media (max-width: 767px) {
+    .sup-sheet-overlay { align-items: flex-end; justify-content: stretch; }
+    .sup-sheet {
+        width: 100%; height: auto; max-height: 88vh;
+        border-left: none; border-top: 1px solid var(--border2);
+        border-radius: 24px 24px 0 0;
+        animation: slideUp 0.28s cubic-bezier(0.16,1,0.3,1) both;
+    }
 }
 @keyframes slideUp {
     from { transform: translateY(100%); }
@@ -261,15 +278,41 @@
 .sup-sheet-msg.err { color: var(--blad);   display: block; }
 
 /* ── Empty state ── */
-.sup-empty { padding: 40px 18px; text-align: center; }
+.sup-empty { padding: 40px 0; text-align: center; }
 .sup-empty-icon { font-size: 36px; margin-bottom: 10px; }
 .sup-empty-txt { font-size: 13px; font-weight: 600; color: var(--szary); }
+
+/* ── Pakiety licencji ── */
+.sup-packages { display: flex; gap: 12px; flex-wrap: wrap; padding: 0 0 8px; }
+.sup-package-card {
+    flex: 1; min-width: 180px;
+    background: var(--tlo-karta); border: 1.5px solid var(--border);
+    border-radius: var(--r); padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 5px;
+}
+.sup-package-card.highlighted { border-color: rgba(59,130,246,0.3); }
+.sup-package-card.selected { border-color: var(--akcent) !important; background: rgba(59,130,246,0.1) !important; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
+.sup-pkg-input {
+    width: 100%; background: var(--tlo-karta2); border: 1.5px solid var(--border2);
+    border-radius: 10px; padding: 10px 12px; margin-top: 4px;
+    color: var(--bialy); font-size: 16px; font-weight: 800;
+    font-family: var(--font-d); transition: border-color 0.2s;
+}
+.sup-pkg-input:focus { border-color: var(--akcent); outline: none; }
+.sup-pkg-input::placeholder { color: var(--szary); font-size: 13px; font-family: var(--font); font-weight: 600; }
+.sup-package-name { font-size: 15px; font-weight: 900; color: var(--bialy); }
+.sup-package-duration { font-size: 22px; font-weight: 800; color: var(--bialy); font-family: var(--font-d); line-height: 1.1; margin-top: 4px; }
+.sup-package-sub { font-size: 11px; font-weight: 600; color: var(--szary); line-height: 1.5; margin-top: 2px; }
+.sup-package-tag {
+    display: inline-block; padding: 3px 9px; margin-top: 8px; align-self: flex-start;
+    border-radius: var(--r-pill); font-size: 9px; font-weight: 900;
+    letter-spacing: 1px; text-transform: uppercase;
+    background: rgba(59,130,246,0.12); color: #60A5FA;
+    border: 1px solid rgba(59,130,246,0.25);
+}
 </style>
 </head>
 <body>
-<div class="phone">
-    <div class="notch"></div>
-
     <!-- Top bar -->
     <div class="sup-topbar">
         <div class="sup-logo-name">COACHAY</div>
@@ -313,7 +356,7 @@
         </div>
     </div>
 
-    <!-- Bottom sheet aktywacji licencji -->
+    <!-- Dialog aktywacji licencji -->
     <div class="sup-sheet-overlay" id="sheet-overlay" onclick="closeSheet(event)">
         <div class="sup-sheet" id="sup-sheet">
             <div class="sup-sheet-handle"></div>
@@ -321,12 +364,25 @@
             <div class="sup-sheet-sub" id="sheet-sub">Ręczna aktywacja dostępu dla klubu.</div>
 
             <div class="sup-sheet-field">
-                <div class="sup-sheet-label">Czas trwania (dni)</div>
-                <input type="number" id="sheet-days" class="sup-sheet-input" value="365" min="1" max="3650" placeholder="365">
+                <div class="sup-sheet-label">Liczba licencji</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+                    <button class="extend-period-btn" onclick="selectSheetLic(this,50)">50</button>
+                    <button class="extend-period-btn selected" onclick="selectSheetLic(this,100)">100</button>
+                    <button class="extend-period-btn" onclick="selectSheetLic(this,200)">200</button>
+                    <button class="extend-period-btn" onclick="selectSheetLic(this,0)">Inne</button>
+                </div>
+                <input type="number" id="sheet-total" class="sup-sheet-input" value="100" min="1" max="9999" placeholder="lub wpisz własną liczbę">
             </div>
 
-            <div class="sup-sheet-plans" id="sheet-plans">
-                <!-- renderowane przez JS -->
+            <div class="sup-sheet-field">
+                <div class="sup-sheet-label">Czas trwania</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+                    <button class="extend-period-btn" data-days="30"  onclick="selectSheetDays(this,30)">30 dni</button>
+                    <button class="extend-period-btn" data-days="90"  onclick="selectSheetDays(this,90)">90 dni</button>
+                    <button class="extend-period-btn selected" data-days="365" onclick="selectSheetDays(this,365)">365 dni</button>
+                    <button class="extend-period-btn" data-days="730" onclick="selectSheetDays(this,730)">730 dni</button>
+                </div>
+                <input type="number" id="sheet-days" class="sup-sheet-input" value="365" min="1" max="3650" placeholder="Liczba dni">
             </div>
 
             <button class="sup-sheet-confirm" id="sheet-confirm" onclick="confirmActivation()">Aktywuj →</button>
@@ -337,6 +393,7 @@
 
     <!-- Główna zawartość -->
     <div class="screen-body">
+    <div class="sup-container">
 
         <!-- Stats -->
         <div class="s-label">Przegląd platformy</div>
@@ -373,9 +430,10 @@
             </div>
         </div>
 
+
         <!-- Impersonacja -->
         <div class="s-label">Impersonacja użytkownika</div>
-        <div id="imp-active-banner" style="display:none; margin:0 18px 8px; padding:12px 16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:14px; align-items:center; gap:10px;">
+        <div id="imp-active-banner" style="display:none; margin:0 0 8px; padding:12px 16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:14px; align-items:center; gap:10px;">
             <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">⚠ Jesteś w trybie impersonacji</span>
             <button onclick="exitImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">Wróć →</button>
         </div>
@@ -385,10 +443,10 @@
         </div>
         <div class="sup-imp-msg" id="imp-msg"></div>
 
+    </div><!-- /sup-container -->
     </div><!-- /screen-body -->
-</div><!-- /phone -->
 
-<script src="coachay-core.js?v=20260730a"></script>
+<script src="coachay-core.js?v=20260826e"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    SUPPORT — panel ADMIN_PLATFORMY
@@ -396,12 +454,39 @@
 
 let allClubs    = [];   // { id, name, color, memberCount, teamCount, licenseStatus, licenseExpiry }
 let sheetClubId = '';
-let sheetPlanSelected = 'club_yearly';
+let sheetPlanSelected = 'club_klub';
+
+// Wybrany pakiet (z kafelków na górze)
+let _pkgId    = 'club_klub';
+let _pkgCount = 100;
+let _pkgDays  = 365;
+
+function selectPkg(card, id, count) {
+    document.querySelectorAll('.sup-package-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    _pkgId = id;
+    _pkgCount = count > 0 ? count : (parseInt(document.getElementById('pkg-custom-count').value) || 0);
+}
+
+function onCustomCountInput() {
+    const card = document.getElementById('pkg-custom');
+    card.classList.add('selected');
+    document.querySelectorAll('.sup-package-card:not(#pkg-custom)').forEach(c => c.classList.remove('selected'));
+    _pkgId    = 'club_custom';
+    _pkgCount = parseInt(document.getElementById('pkg-custom-count').value) || 0;
+}
+
+function selectPkgDuration(btn, days) {
+    btn.closest('div').querySelectorAll('.extend-period-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    _pkgDays = days;
+}
 
 const SHEET_PLANS = [
-    { id: 'club_monthly', name: 'Miesięczny',  sub: '30 dni · floating license' },
-    { id: 'club_yearly',  name: 'Roczny',      sub: '365 dni · floating license' },
-    { id: 'club_2year',   name: '2-letni',     sub: '730 dni' },
+    { id: 'club_starter', name: 'Starter',      sub: '50 licencji · floating license',  total: 50  },
+    { id: 'club_klub',    name: 'Klub',          sub: '100 licencji · floating license', total: 100 },
+    { id: 'club_pro',     name: 'Pro',           sub: '200 licencji · floating license', total: 200 },
+    { id: 'club_custom',  name: 'Indywidualny',  sub: 'Własna liczba licencji',          total: 0   },
 ];
 
 /* ── Init ── */
@@ -426,7 +511,7 @@ window.addEventListener('DOMContentLoaded', () => {
             checkImpersonationBanner();
             loadClubs();
         } else {
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
     });
 });
@@ -596,6 +681,7 @@ function renderClubs(clubs) {
                 <div class="sup-club-info">
                     <div class="sup-club-name">${club.name}</div>
                     <div class="sup-club-meta" id="meta-${club.id}">${club.teamCount} drużyn · ${club.memberCount} członków</div>
+                    <div style="font-size:10px;font-weight:700;color:var(--szary);margin-top:2px;font-family:monospace;opacity:0.7">${club.id}</div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
                     <span class="sup-club-status ${badgeClass}">${statusLabel}</span>
@@ -657,20 +743,38 @@ function toggleActions(clubId) {
 /* ── Filtrowanie ── */
 function filterClubs() {
     const q = document.getElementById('sup-search').value.toLowerCase();
-    const filtered = allClubs.filter(c => c.name.toLowerCase().includes(q));
+    const filtered = allClubs.filter(c => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
     renderClubs(filtered);
 }
 
-/* ══ BOTTOM SHEET — Aktywacja licencji ══ */
+/* ── Helpery przycisków sheetu ── */
+function selectSheetLic(btn, count) {
+    btn.closest('div').querySelectorAll('.extend-period-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    if (count > 0) document.getElementById('sheet-total').value = count;
+}
+
+function selectSheetDays(btn, days) {
+    btn.closest('div').querySelectorAll('.extend-period-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('sheet-days').value = days;
+}
+
+/* ══ PANEL — Aktywacja licencji ══ */
 function openSheet(clubId, clubName) {
     sheetClubId = clubId;
-    sheetPlanSelected = 'club_yearly';
-    document.getElementById('sheet-title').textContent = `Aktywuj: ${clubName}`;
-    document.getElementById('sheet-sub').textContent   = `Ręczna aktywacja licencji klubowej dla "${clubName}".`;
-    document.getElementById('sheet-days').value = 365;
-    document.getElementById('sheet-msg').className = 'sup-sheet-msg';
-    document.getElementById('sheet-msg').textContent  = '';
-    renderSheetPlans();
+    document.getElementById('sheet-title').textContent = `Aktywuj licencję`;
+    document.getElementById('sheet-sub').innerHTML     = `${clubName}<br><span style="font-family:monospace;font-size:11px;opacity:0.6">${clubId}</span>`;
+    document.getElementById('sheet-days').value  = _pkgDays;
+    document.getElementById('sheet-total').value = _pkgCount > 0 ? _pkgCount : 100;
+    document.getElementById('sheet-msg').className  = 'sup-sheet-msg';
+    document.getElementById('sheet-msg').textContent = '';
+
+    // Zaznacz presety pasujące do _pkgDays
+    document.querySelectorAll('#sheet-overlay .sup-sheet-field:last-of-type .extend-period-btn').forEach(b => {
+        b.classList.toggle('selected', parseInt(b.dataset.days || 0) === _pkgDays);
+    });
+
     document.getElementById('sheet-overlay').classList.add('open');
 }
 
@@ -680,17 +784,25 @@ function renderSheetPlans() {
     SHEET_PLANS.forEach(plan => {
         const div = document.createElement('div');
         div.className = 'sup-sheet-plan' + (plan.id === sheetPlanSelected ? ' selected' : '');
+        const customInput = plan.id === 'club_custom'
+            ? `<input type="number" id="sheet-custom-count" placeholder="liczba licencji" min="1" max="9999"
+                style="margin-top:6px;width:100%;background:var(--tlo-karta);border:1.5px solid var(--border2);
+                border-radius:8px;padding:8px 10px;color:var(--bialy);font-size:13px;font-weight:700;font-family:var(--font);"
+                value="${plan.id === sheetPlanSelected && _pkgCount > 0 ? _pkgCount : ''}"
+                onclick="event.stopPropagation()" oninput="_pkgCount=parseInt(this.value)||0">`
+            : '';
         div.innerHTML = `
             <div class="sup-sheet-plan-radio"></div>
-            <div>
+            <div style="flex:1">
                 <div class="sup-sheet-plan-name">${plan.name}</div>
                 <div class="sup-sheet-plan-sub">${plan.sub}</div>
+                ${customInput}
             </div>
         `;
         div.addEventListener('click', () => {
             sheetPlanSelected = plan.id;
-            const daysMap = { club_monthly: 30, club_yearly: 365, club_2year: 730 };
-            document.getElementById('sheet-days').value = daysMap[plan.id] || 365;
+            _pkgId = plan.id;
+            if (plan.total > 0) _pkgCount = plan.total;
             renderSheetPlans();
         });
         container.appendChild(div);
@@ -719,12 +831,14 @@ async function confirmActivation() {
         const now    = new Date();
         const expiry = new Date(now.getTime() + days * 86400 * 1000);
 
+        const pkgTotal = parseInt(document.getElementById('sheet-total').value) || 100;
+
         await db.collection('clubs').doc(sheetClubId).set({
             license: {
                 product_id:  sheetPlanSelected,
                 valid_until: firebase.firestore.Timestamp.fromDate(expiry),
                 used:        0,
-                total:       9999,    // nieograniczona pula — aktywacja manualna przez support
+                total:       pkgTotal,
                 scope:       'all',
                 provider:    'manual_support',
                 auto_renew:  false,
@@ -768,7 +882,8 @@ async function extendLicense(clubId, clubName) {
     extendClubId = clubId;
     extendDays   = 30;
 
-    document.getElementById('extend-title').textContent = `Przedłuż: ${clubName}`;
+    document.getElementById('extend-title').textContent = `Przedłuż licencję`;
+    document.getElementById('extend-sub').innerHTML = `${clubName}<br><span style="font-family:monospace;font-size:11px;opacity:0.6">${clubId}</span>`;
     document.getElementById('extend-msg').className     = 'sup-sheet-msg';
     document.getElementById('extend-msg').textContent   = '';
 
@@ -797,8 +912,6 @@ async function extendLicense(clubId, clubName) {
             expiryEl.style.color = 'var(--szary)';
         }
 
-        document.getElementById('extend-sub').textContent =
-            `Przedłuż licencję klubową dla "${clubName}". Liczba licencji z poprzedniego zakupu jest pre-wypełniona.`;
 
     } catch (e) {
         document.getElementById('extend-total-hint').textContent = 'Błąd odczytu danych.';
@@ -889,7 +1002,7 @@ async function confirmExtend() {
 
 /* ── Cofnij dostęp ── */
 async function revokeLicense(clubId, clubName) {
-    if (!await showConfirmSheet(`Cofnąć dostęp dla klubu "${clubName}"? Użytkownicy zostaną przeniesieni do blocked.html.`)) return;
+    if (!await showConfirmSheet(`Cofnąć dostęp dla klubu "${clubName}"? Użytkownicy zostaną zablokowani.`)) return;
 
     const infoEl = document.getElementById(`action-info-${clubId}`);
     infoEl.textContent = 'Cofam...';

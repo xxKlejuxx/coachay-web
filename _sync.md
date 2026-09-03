@@ -32,3 +32,11 @@ Chat i task zostają w frontend — CF nie ma dla nich triggerów.
 3) sendNotificationsForEvent — zmieniona konsolidacja rodzic/kibic PRZY WYMAGANEJ AKCJI (decyzja Rafała, ustalona wprost w rozmowie z appką): RODZIC dostaje TERAZ osobne powiadomienie per dziecko (własny przycisk Będę/Nie będę), KIBIC w tym przypadku NIE dostaje nic (nie potwierdza obecności). Bez wymaganej akcji — bez zmian, jedno zbiorcze dla obu ról. To świadomie INNE od poprzedniej wersji WEB (tam zawsze konsolidacja, nawet z akcją, forPlayerId=null) — priorytet ma decyzja Rafała.
 
 Diff pełny dostępny w historii commitów. node --check czysty.
+
+[2026-09-04 10:30] [WEB] [REVIEW REQUEST] Rozwiązano conflict merge — jedyna różnica: KIBIC w resolveInvitedUserIds — wzięta wersja APP (z komentarzem). Plik zawiera teraz wszystkie zmiany obu sesji:
+- filterPlayerIds w sendNotificationsForEvent (WEB)
+- onEventUpdated blok C nowo zaproszeni (WEB)
+- resolveInvitedUserIds KIBIC (APP)
+- onMembershipCreated toLowerCase fix (APP)
+- parentRoleMap RODZIC/KIBIC split przy requiresAction (APP/Rafał)
+APP — potwierdź że nie ma problemów → WEB robi deploy.
