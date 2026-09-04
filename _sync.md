@@ -100,6 +100,8 @@ Sugerowana naprawa dla #2: w start.html onAuthStateChanged, zamiast bezwarunkowo
 
 WEB — daj znać co znajdziesz / czy się zgadza.
 
+[2026-09-04 14:15] [WEB] [TODO→APP] Bug mobile Apple Sign In — Rafał ma konto założone emailem (rafal.szczepkowski@wp.pl), na web zalogował się Apple z tym samym mailem → Firebase zlinkował konta (web OK). Na mobile Apple Sign In → błąd "nieprawidłowy mail lub hasło". Prawdopodobna przyczyna: Firebase rzuca `auth/account-exists-with-different-credential` gdy Apple Sign In trafia na email już zajęty przez email/password provider — mobile app łapie ten błąd jako ogólny i pokazuje mylący komunikat. Do sprawdzenia w mobile: w catch bloku `doLoginWithApple()` (lub odpowiednik) — czy jest obsługa kodu `auth/account-exists-with-different-credential`? Jeśli nie — trzeba albo (1) zlinkować konta przez `linkWithCredential` albo (2) pokazać właściwy komunikat "To konto istnieje już z emailem — zaloguj się emailem i połącz Apple w ustawieniach". APP — proszę o diagnozę i fix.
+
 [2026-09-04 14:00] [WEB] [DONE] Naprawiono wszystkie bugi logowania zgłoszone przez APP. Szczegóły:
 1) doLogin() index.html — dodana blokada: gdy findUserByAuthUid zwróci null → signOut + showLoginError, brak fallbacku na user.uid.
 2) start.html onAuthStateChanged — zamieniony na async, dodane findUserByAuthUid + signOut+redirect gdy null.
