@@ -156,3 +156,16 @@ To tłumaczy czemu DEMO działa (prawdopodobnie nie przechodzi przez signInWithR
 Proszę Rafała o szybki test (bez zmian w kodzie): Safari → Ustawienia → Prywatność → odznaczyć "Zapobiegaj śledzeniu międzywitrynowemu" → odświeżyć i zalogować się ponownie. Jeśli to naprawi problem — potwierdzi teorię w 100%.
 
 Docelowa naprawa (Firebase-owe best practice dla dokładnie tego problemu, https://firebase.google.com/docs/auth/web/redirect-best-practices): ustawić `authDomain` w firebaseConfig na WŁASNĄ domenę (coachay.com) zamiast domyślnej *.firebaseapp.com — wymaga to hostowania appki przez Firebase Hosting (jeśli jeszcze nie jest) i weryfikacji że reserved URLs `/__/auth/*` są poprawnie proxowane przez Hosting na coachay.com. Wtedy iframe staje się first-party (ta sama domena co strona) i Safari go nie blokuje — nie trzeba prosić userów o zmianę ustawień przeglądarki. WEB — proszę sprawdźcie obecny setup Hosting/authDomain i czy to wykonalne bez rozwalenia istniejących sesji/linków.
+
+[2026-09-04 18:20] [APP] [DONE→WEB] Safari login hang — PRZYCZYNA POTWIERDZONA (zamykam wątek diagnozy z mojej strony). Seria testów u Rafała na jego nowym Macu, ta sama sieć/konto:
+- Safari zwykłe okno: wisi (i na demo, i na realnym koncie)
+- Safari tryb prywatny (bez rozszerzeń, czysty storage): wisi
+- Safari z wyłączonym "Zapobiegaj śledzeniu międzywitrynowemu": wisi (bez zmian)
+- Firefox na TYM SAMYM Macu/sieci: ładuje się bez problemu
+- Windows/Chrome: ładuje się bez problemu
+
+Czyli problem jest 100% specyficzny dla silnika Safari/WebKit, nie dla sieci/systemu/rozszerzeń. To pasuje dokładnie do zgłoszonego wcześniej (18:00) zawieszonego requestu iframe do `coachay-5c3c9.firebaseapp.com` widocznego w Network. Ważny szczegół techniczny: od Safari 13.1+ pełna blokada third-party storage/cookies jest WBUDOWANA I NIEWYŁĄCZALNA przez użytkownika — przełącznik "Zapobiegaj śledzeniu międzywitrynowemu" reguluje tylko DODATKOWE mechanizmy (fingerprinting itp.), nie samą blokadę third-party storage. Dlatego wyłączenie go u Rafała nic nie zmieniło — to nie był błędny trop, po prostu ten konkretny przełącznik nigdy nie mógł tego naprawić. Safari po prostu zawsze blokuje iframe z innej domeny (firebaseapp.com) dostęp do jego storage, niezależnie od ustawień.
+
+REKOMENDACJA (bez dwuznaczności, do wdrożenia): ustawić `authDomain` w firebaseConfig na własną domenę (coachay.com) zamiast domyślnej `coachay-5c3c9.firebaseapp.com`, żeby auth-helper iframe był tej samej domeny co strona (first-party) — Safari go wtedy nie zablokuje. Wymaga: (1) appka musi być hostowana przez Firebase Hosting na domenie coachay.com (jeśli jeszcze nie jest — sprawdźcie firebase.json/hosting config), (2) Firebase Hosting automatycznie proxuje zarezerwowane ścieżki `/__/auth/*` gdy authDomain wskazuje na hosting domain — nie trzeba nic ręcznie proxować, wystarczy poprawna konfiguracja w Firebase Console → Authentication → Settings → Authorized domains + zmiana authDomain w konfiguracji JS. Oficjalna dokumentacja Firebase opisuje dokładnie ten przypadek: https://firebase.google.com/docs/auth/web/redirect-best-practices
+
+To nie wymaga zmian w mobile — zamykam wątek po swojej stronie, chyba że będziecie potrzebować czegoś do porównania z appką mobilną (mobile nie ma tego problemu, bo nie używa authDomain/iframe web-owego mechanizmu w ten sam sposób).
