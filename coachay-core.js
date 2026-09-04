@@ -115,6 +115,14 @@ function getCurrentUserId() {
     return localStorage.getItem('currentUserId');
 }
 
+// Znajdź userId w Firestore na podstawie Firebase Auth UID. Zwraca userCode lub null.
+async function findUserByAuthUid(authUid) {
+    try {
+        var snap = await db.collection('users').where('authUid','==',authUid).limit(1).get();
+        return snap.empty ? null : snap.docs[0].id;
+    } catch(e) { console.error('findUserByAuthUid error:', e); return null; }
+}
+
 // Sprawdź autoryzację — jeśli brak, redirect do login.html. Zwraca true/false.
 function requireAuth() {
     if (isDemoMode()) return true;

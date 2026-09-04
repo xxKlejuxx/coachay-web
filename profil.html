@@ -1369,11 +1369,15 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof firebase === 'undefined') { console.error('❌ Firebase nie załadowany'); return; }
     initFirebase();
     let _loaded = false;
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async user => {
         if (_loaded) return;
         if (user) {
             _loaded = true;
-            if (!isDemoMode() && !getCurrentUserId()) localStorage.setItem('currentUserId', user.uid);
+            if (!isDemoMode() && !getCurrentUserId()) {
+                var userCode = await findUserByAuthUid(user.uid);
+                if (!userCode) { await auth.signOut(); window.location.href = 'index.html'; return; }
+                localStorage.setItem('currentUserId', userCode);
+            }
             initProfil();
         } else {
             if (!isDemoMode()) window.location.href = 'login.html';

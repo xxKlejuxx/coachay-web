@@ -1521,9 +1521,10 @@ async function doLogin() {
             setLoginLoading(false); return;
         }
         var userCode = await findUserByAuthUid(cred.user.uid);
+        if (!userCode) { await auth.signOut(); showLoginError('Nie znaleziono konta Coachay — zarejestruj się lub skontaktuj z administratorem.'); setLoginLoading(false); return; }
         localStorage.removeItem('selectedMembershipId');
         localStorage.removeItem('demoMode'); localStorage.removeItem('demoRole');
-        localStorage.setItem('currentUserId', userCode || cred.user.uid);
+        localStorage.setItem('currentUserId', userCode);
         sessionStorage.setItem('showSplash','1');
         window.location.href = 'start.html';
     } catch(e) { showLoginError(mapAuthError(e.code)); setLoginLoading(false); }
