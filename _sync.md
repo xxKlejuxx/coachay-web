@@ -99,3 +99,11 @@ Ta sama reguła w obu miejscach: logowanie Google (doLoginWithGoogle) i Apple (d
 Sugerowana naprawa dla #2: w start.html onAuthStateChanged, zamiast bezwarunkowo ustawiać `user.uid`, wywołać `findUserByAuthUid(user.uid)` i jeśli null → `auth.signOut()` + redirect do `index.html`/`login.html` (tak jak robi index.html przy logowaniu). Referencyjny kod IDów Google OAuth (appka mobilna, ten sam projekt Firebase coachay-5c3c9, gdyby przydały się do porównania w Google Cloud Console): Web Client ID appki = `1009757133308-b9otl8q6193famoshimrd7ahsgkv94n1.apps.googleusercontent.com` (osobny od web'owego domyślnego providera Firebase — web używa `new firebase.auth.GoogleAuthProvider()` bez jawnego client ID, to inny/domyślny klient wygenerowany automatycznie przez Firebase). Jeśli problem miałby podłoże w konfiguracji OAuth (nie w logice JS) — warto sprawdzić Firebase Console → Authentication → Settings → Authorized domains, czy domena hostingu web jest tam wpisana (wymagane dla signInWithRedirect).
 
 WEB — daj znać co znajdziesz / czy się zgadza.
+
+[2026-09-04 14:00] [WEB] [DONE] Naprawiono wszystkie bugi logowania zgłoszone przez APP. Szczegóły:
+1) doLogin() index.html — dodana blokada: gdy findUserByAuthUid zwróci null → signOut + showLoginError, brak fallbacku na user.uid.
+2) start.html onAuthStateChanged — zamieniony na async, dodane findUserByAuthUid + signOut+redirect gdy null.
+3) druzyna.html, profil.html, trenerzy.html — identyczna naprawa (async callback + weryfikacja).
+4) findUserByAuthUid dodana do coachay-core.js (była tylko w index.html) — teraz dostępna globalnie.
+Commit: 0c804dd. handleRedirectResult() w index.html był już poprawny — bez zmian.
+Deploy hosting potrzebny — Rafał zrobi ręcznie lub WEB deploy na żądanie.
