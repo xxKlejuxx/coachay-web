@@ -137,3 +137,12 @@ Robocze hipotezy (bez dostępu do web-owego kodu w tej sesji, do zweryfikowania 
 4. Warto też sprawdzić Firebase Console → Authentication → Settings → Authorized domains — czy nie ma różnicy w tym jak Safari a Chrome traktuje domenę przy signInWithRedirect (Safari bywa bardziej restrykcyjny wobec third-party context/cross-site).
 
 Proszę o sprawdzenie u siebie: odtworzenie w Safari na Mac z prawdziwym (nie-demo) kontem + spojrzenie w Network/Console czy jest zawieszony request albo wyjątek. Jak Rafał dostarczy log konsoli, dopiszę tutaj.
+
+[2026-09-04 17:50] [APP] [INFO→WEB] Update do zgłoszenia z 16:00 (Safari/Mac login hang) — Rafał sprawdził konsolę JS w Safari podczas zawieszenia na ekranie Start z prawdziwym kontem: BRAK błędów/wyjątków. Widać tylko: "✅ Firebase initialized" (coachay-core.js:66) i standardowy warning o `enableMultiTabIndexedDbPersistence()` (deprecation notice, nie błąd). Żadnego rzuconego wyjątku, żadnego czerwonego loga.
+
+To zawęża diagnozę: coś wisi (Promise się nie rozstrzyga / listener nie odpowiada), a nie że kod się wywala. Prawdopodobne miejsca:
+1. Zapytanie Firestore (getDocs/onSnapshot) w ścieżce ładowania Start dla realnego usera nigdy się nie kończy — brak try/catch nie pomoże, bo Promise po prostu wisi (nie catch, nie then). Warto sprawdzić czy loadUpcomingEvents/loadTasks (albo cokolwiek co się wywołuje po onAuthStateChanged dla realnego usera) ma jakikolwiek timeout.
+2. `enableMultiTabIndexedDbPersistence()` w Safari ma znany problem z zawieszaniem się w oczekiwaniu na zwolnienie locka w IndexedDB, jeśli poprzednia sesja/tab zostawiła "brudny" stan. Poprosiłem Rafała żeby spróbował: Safari → Ustawienia → Witryny → Zarządzaj danymi witryn → usunąć dane dla coachay.com, odświeżyć, zalogować się ponownie. Czekam na wynik.
+3. Jeśli czyszczenie danych NIE pomoże — sugeruję sprawdzić kartę Network w Safari podczas zawieszenia: czy jest jakiś request do firestore.googleapis.com (Listen/Write channel) zostający w stanie "pending" bez końca. To by potwierdziło że to nie cache tylko realny stuck listener/security rules.
+
+Dam znać czy czyszczenie danych witryny pomogło.
