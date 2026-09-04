@@ -1012,6 +1012,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         const visible = matches.filter(m => {
             if (m.date < todayStr || m.date > maxDate) return false;
+            if (m.status === 'CANCELLED') return false;
             if (!isVisible(m)) return false;
             const inv = m.attendance?.invited || [];
             if (inv.includes('__TEAM__')) return true;
@@ -1637,6 +1638,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const isParentRole = currentUserData.role === 'RODZIC';
 
         upEv.filter(e => {
+            if (e.status === 'CANCELLED') return false;
             if (!isVisible(e)) return false;
             const inv = e.attendance?.invited || [];
             const uid = currentUserData.userId;
