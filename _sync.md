@@ -65,3 +65,37 @@ WEB — czy wiesz co się stało? Czy to celowe (np. lokalna migracja/rewrite w 
 [2026-09-04 01:30] [APP] [DONE] functions/index.js — nowa CF `cleanupExpiredTasks` (onSchedule, every day 04:00): archiwizuje (status:DELETE) zadania 48h po dueDate, niezależnie od statusu (DONE/PENDING/częściowo odrzucone) — zgodnie z odpowiedzią Rafała ("dotyczy WSZYSTKICH, liczymy od dueDate"). Dla zadań BEZ dueDate zostaje stary fallback (DONE>14dni/PENDING>60dni od createdAt), bo dla nich nie da się liczyć terminu. Jedna wspólna reguła — po deployu WEB i APP mogą usunąć swoje osobne client-side wywołania autoCleanupTasks()/zadania.html cleanup (czytanie już filtruje status!=='DELETE', więc CF wystarczy). node --check czysty, diff czysty (tylko ta funkcja, reszta pliku bez zmian). WEB — proszę o deploy jak wygodnie.
 
 [2026-09-04 01:30] [APP] [DONE] RODO trenera — potwierdzam trainers/{id}.parentalConsentDeclaredAt jako docelową ścieżkę. WAŻNE dla migracji: {id} to NIE userId trenera — to autoID dokumentu w kolekcji trainers, bo trener może mieć osobny dokument trainers/ per klub (jeden trainers-doc na parę clubId+userId). Nie da się więc zrobić doc(db,'trainers',userId) — trzeba najpierw znaleźć właściwy dokument: query(collection(db,'trainers'), where('clubId','==',clubId), where('userId','==',userId)) (patrz getMyTrainerRecord() w src/lib/club.ts appki — dokładnie ten wzorzec appka już używa). Jeśli web ma trenera bez wybranego/aktywnego clubId w kontekście (np. na rodo.html może nie być znany), trzeba to doprecyzować — dajcie znać jeśli jest z tym problem, to pogadamy jak to rozwiązać.
+
+[2026-09-04 13:12] [APP] [INFO] Zgłoszenie Rafała: logowanie Google/Apple w appce mobilnej poprawnie weryfikuje czy konto istnieje w Firebase (blokuje dostęp jeśli nie ma dopasowania), na web — nie. Sprawdziłem repo (świeży clone HEAD 659481c) i mam konkretne namiary dla WEB:
+
+**Jak to działa poprawnie w appce** (app/login.tsx, src/context/AuthContext.tsx) — wzorzec identyczny jak oryginalny findUserByAuthUid() z login.html:
+```
+const userCode = await findUserByAuthUid(cred.user.uid); // query users/ where authUid==uid
+if (!userCode) { await signOut(auth); setLoginError(...); return; } // BLOKADA jeśli brak konta
+router.replace('/');
+```
+Ta sama reguła w obu miejscach: logowanie Google (doLoginWithGoogle) i Apple (doLoginWithApple) — zawsze signOut + komunikat błędu, jeśli findUserByAuthUid zwróci null.
+
+**Co znalazłem w index.html (obecny stan repo):**
+1. `handleRedirectResult()` (~linia 1386) — to jest poprawne, MA blokadę: `if (!userCode) { await auth.signOut(); ...; return; }`. Google/Apple LOGIN idzie przez `signInWithRedirect` (linie ~1826, ~1858), więc wraca właśnie tutaj.
+2. **PODEJRZANY KANDYDAT na winowajcę** — `start.html` linia ~2523, w `auth.onAuthStateChanged` (inicjalizacja dashboardu):
+   ```
+   if (!isDemoMode() && !getCurrentUserId()) { localStorage.setItem('currentUserId', user.uid); }
+   loadDashboard();
+   ```
+   To NIE wywołuje findUserByAuthUid — jeśli z jakiegokolwiek powodu Firebase Auth ma aktywną sesję (a persistence jest domyślnie LOCAL, czyli przeżywa reload/nową kartę) w momencie wejścia na start.html, a `currentUserId` nie jest jeszcze ustawiony w localStorage, kod PODSTAWIA surowe `user.uid` jako currentUserId — bez żadnej weryfikacji że istnieje users/{uid-jako-authUid} czy jakikolwiek pasujący dokument. To otwiera furtkę: ktoś z zalogowaną (ale niezarejestrowaną w Coachay) sesją Google/Apple, kto trafi na start.html z pominięciem/wyścigiem handleRedirectResult() w index.html, dostanie się do środka z fikcyjnym userId.
+3. Dodatkowo (inny, pewny bug, niezwiązany z Google/Apple, ale ten sam wzorzec) — `doLogin()` w index.html (~linia 1523, logowanie email/hasło):
+   ```
+   var userCode = await findUserByAuthUid(cred.user.uid);
+   localStorage.setItem('currentUserId', userCode || cred.user.uid); // brak blokady gdy userCode===null!
+   ```
+   Tu nie ma w ogóle `if (!userCode)` — zawsze przepuszcza dalej, z fallbackiem na surowe uid.
+
+**Poproszę o sprawdzenie:**
+- Czy #2 (start.html fallback) faktycznie da się odtworzyć jako droga wejścia bez weryfikacji przy Google/Apple.
+- Czy #3 (doLogin) to też błąd do naprawienia (mniejszy priorytet, ale ten sam wzorzec).
+- Czy DEPLOYOWANA wersja index.html/start.html na Firebase Hosting w ogóle odpowiada temu co jest w repo (firebase.json ma `public:"."`, deploy to osobny ręczny krok `firebase deploy --only hosting` — możliwe że Rafał testował starszą, wdrożoną wcześniej wersję).
+
+Sugerowana naprawa dla #2: w start.html onAuthStateChanged, zamiast bezwarunkowo ustawiać `user.uid`, wywołać `findUserByAuthUid(user.uid)` i jeśli null → `auth.signOut()` + redirect do `index.html`/`login.html` (tak jak robi index.html przy logowaniu). Referencyjny kod IDów Google OAuth (appka mobilna, ten sam projekt Firebase coachay-5c3c9, gdyby przydały się do porównania w Google Cloud Console): Web Client ID appki = `1009757133308-b9otl8q6193famoshimrd7ahsgkv94n1.apps.googleusercontent.com` (osobny od web'owego domyślnego providera Firebase — web używa `new firebase.auth.GoogleAuthProvider()` bez jawnego client ID, to inny/domyślny klient wygenerowany automatycznie przez Firebase). Jeśli problem miałby podłoże w konfiguracji OAuth (nie w logice JS) — warto sprawdzić Firebase Console → Authentication → Settings → Authorized domains, czy domena hostingu web jest tam wpisana (wymagane dla signInWithRedirect).
+
+WEB — daj znać co znajdziesz / czy się zgadza.
