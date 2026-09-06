@@ -6,6 +6,21 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 [2026-09-07 12:00] [WEB] [DONE] druzyna.html — zapiszZawodnika(): dodano clubId: aktualnyClubId do players document — brakowało pola, nowi zawodnicy nie mieli clubId w Firestore
 
+[2026-09-07 12:00] [WEB] [TODO] Bezpieczeństwo — pozostałe punkty z sesji 2026-09-06/07:
+
+1. App Check (reCAPTCHA v3) — ochrona SMS pumping. Do zrobienia:
+   a) Rafał: stwórz klucz reCAPTCHA v3 w Google reCAPTCHA Admin Console (score-based, nie checkbox)
+   b) Rafał: zarejestruj aplikację w Firebase Console → App Check → Web
+   c) WEB: wpiąć `firebase.appCheck().activate(siteKey, true)` w coachay-core.js
+   Bez tego kroku Firebase może wysyłać SMS do dowolnego numeru bez weryfikacji.
+
+2. SMS daily limit — Rafał ustawia ręcznie: Firebase Console → Authentication → Settings → SMS usage limits → 100/dzień.
+
+3. authIndex dla Ewa Testowa (gagetov465@availors.com, userId=authUid=a8NP9Q9PZAgFDxMmCsZBoKAMTco2) — brakuje dokumentu w kolekcji authIndex. Rafał tworzy ręcznie w Firestore Console:
+   - Document ID: a8NP9Q9PZAgFDxMmCsZBoKAMTco2
+   - userId (string): a8NP9Q9PZAgFDxMmCsZBoKAMTco2
+   - clubIds (array): club_orly_praga
+
 [2026-09-04 10:00] [WEB] [DONE] functions/index.js — sendNotificationsForEvent: dodano param filterPlayerIds (null = wszyscy, array player_xxx = tylko ci)
 
 [2026-09-04 10:00] [WEB] [DONE] functions/index.js — onEventUpdated: dodano blok C — wykrywa nowo zaproszonych graczy (diff attendance.invited before/after) i wysyła im EVENT_ATTENDANCE/EVENT_CREATED przez sendNotificationsForEvent z filterem
