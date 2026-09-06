@@ -42,11 +42,11 @@ service cloud.firestore {
       allow update, delete: if isVerified() && inMyClub(clubId);
     }
 
-    // memberships — izolacja po clubId z pola dokumentu
+    // memberships — izolacja po clubId; legacy docs z clubId==null dostępne dla zweryfikowanych
     match /memberships/{membershipId} {
-      allow read: if isVerified() && inMyClub(resource.data.clubId);
-      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
-      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+      allow read: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
+      allow create: if isVerified() && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
+      allow update, delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
     }
 
     // teams — izolacja po clubId
@@ -63,11 +63,11 @@ service cloud.firestore {
       allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
 
-    // players — izolacja po clubId
+    // players — izolacja po clubId; legacy docs z clubId==null dostępne dla zweryfikowanych
     match /players/{playerId} {
-      allow read: if isVerified() && inMyClub(resource.data.clubId);
-      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
-      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+      allow read: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
+      allow create: if isVerified() && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
+      allow update, delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
     }
 
     // inviteCodes — odczyt publiczny (weryfikacja kodu przed rejestracją), zapis przez zweryfikowanych
