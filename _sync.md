@@ -4,6 +4,8 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-07 12:00] [WEB] [DONE] druzyna.html — zapiszZawodnika(): dodano clubId: aktualnyClubId do players document — brakowało pola, nowi zawodnicy nie mieli clubId w Firestore
+
 [2026-09-04 10:00] [WEB] [DONE] functions/index.js — sendNotificationsForEvent: dodano param filterPlayerIds (null = wszyscy, array player_xxx = tylko ci)
 
 [2026-09-04 10:00] [WEB] [DONE] functions/index.js — onEventUpdated: dodano blok C — wykrywa nowo zaproszonych graczy (diff attendance.invited before/after) i wysyła im EVENT_ATTENDANCE/EVENT_CREATED przez sendNotificationsForEvent z filterem

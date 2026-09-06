@@ -1709,6 +1709,7 @@ async function zapiszZawodnika() {
 
         const playerDoc = {
             playerId: pid,
+            clubId: aktualnyClubId || null,
             firstName, lastName, name: fullName,
             birthDate: urodziny,
             squad: grupa,
