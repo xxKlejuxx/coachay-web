@@ -1248,6 +1248,8 @@ async function redeemInviteCode() {
         const now = new Date();
         const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
 
+        const _authUid = auth.currentUser?.uid;
+
         if (codeData.type === 'KIBIC' && codeData.playerId) {
             // Kod przypisany do konkretnego dziecka — wzorzec zgodny z druzyna.html (2026-08-02)
             let clubId = codeData.clubId || null;
@@ -1264,6 +1266,9 @@ async function redeemInviteCode() {
                     }
                 } catch(e) {}
             }
+
+            if (_authUid && clubId) await db.collection('authIndex').doc(_authUid).set(
+                { userId: currentUserId, clubIds: firebase.firestore.FieldValue.arrayUnion(clubId) }, { merge: true });
 
             const mbrId = makeMbrId(codeData.type);
             await db.collection('memberships').doc(mbrId).set({
@@ -1296,6 +1301,10 @@ async function redeemInviteCode() {
                 return;
             }
 
+            const _legacyClubId = dzieci[0]?.clubId || codeData.clubId || null;
+            if (_authUid && _legacyClubId) await db.collection('authIndex').doc(_authUid).set(
+                { userId: currentUserId, clubIds: firebase.firestore.FieldValue.arrayUnion(_legacyClubId) }, { merge: true });
+
             let lastMbrId = null;
             for (const parentMbr of dzieci) {
                 const mbrId = makeMbrId(codeData.type);
@@ -1320,6 +1329,9 @@ async function redeemInviteCode() {
             }
         } else {
             // Standardowe membership (1 kod = 1 membership)
+            if (_authUid && codeData.clubId) await db.collection('authIndex').doc(_authUid).set(
+                { userId: currentUserId, clubIds: firebase.firestore.FieldValue.arrayUnion(codeData.clubId) }, { merge: true });
+
             const mbrId = makeMbrId(codeData.type);
             await db.collection('memberships').doc(mbrId).set({
                 membershipId: mbrId,
