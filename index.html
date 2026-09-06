@@ -1340,7 +1340,7 @@ function esc(s) {
     <div style="font-size:13px;font-weight:600;color:var(--szary-j);line-height:1.7;" id="verify-msg"></div>
     <button class="btn-primary-dr" style="width:100%;margin-top:8px;" onclick="checkEmailVerified()" data-i18n="auth.verifiedButton">Już zweryfikowałem →</button>
     <div style="font-size:12px;color:var(--szary);cursor:pointer;text-decoration:underline;" onclick="resendVerification()" data-i18n="auth.resendEmail">Wyślij ponownie</div>
-    <div style="font-size:12px;color:var(--szary);cursor:pointer;" onclick="closeAuthPanel()" data-i18n="auth.backButton">← Wróć</div>
+    <div style="font-size:12px;color:var(--szary);cursor:pointer;" onclick="backFromVerify()" data-i18n="auth.backButton">← Wróć</div>
   </div>
 
 </div><!-- /auth-drawer -->
@@ -1367,6 +1367,12 @@ function closeAuthPanel() {
     document.getElementById('auth-overlay').classList.remove('open');
     document.getElementById('auth-drawer').classList.remove('open');
     document.body.style.overflow = '';
+}
+async function backFromVerify() {
+    document.getElementById('verify-screen').classList.remove('visible');
+    try { if (auth.currentUser) await auth.signOut(); } catch(e) {}
+    showTab('register');
+    openAuthPanel();
 }
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeAuthPanel();
@@ -1403,7 +1409,7 @@ initFirebase();
             localStorage.removeItem('authRedirectInviteCode');
             localStorage.removeItem('authRedirectRegName');
             localStorage.removeItem('authRedirectRodzicConsent');
-            if (!ic) { showRegError('Błąd — spróbuj ponownie'); openAuthPanel(); return; }
+            if (!ic) { showRegError(t('authErrors.generic')); openAuthPanel(); return; }
             var existing = await findUserByAuthUid(result.user.uid);
             if (existing) { await auth.signOut(); showRegError('To konto jest już zarejestrowane'); openAuthPanel(); return; }
             if (!rn.fname) {
@@ -1454,17 +1460,17 @@ function clearRegError() {
 }
 function setLoginLoading(bool) {
     var btn = document.getElementById('login-btn');
-    btn.disabled = bool; btn.textContent = bool ? 'Ładowanie...' : 'Zaloguj się →';
+    btn.disabled = bool; btn.textContent = bool ? t('loading') : t('login.loginButton');
     var smsBtn = document.getElementById('login-sms-confirm-btn');
-    if (smsBtn) { smsBtn.disabled = bool; smsBtn.textContent = bool ? 'Ładowanie...' : 'Zaloguj →'; }
+    if (smsBtn) { smsBtn.disabled = bool; smsBtn.textContent = bool ? t('loading') : t('login.smsLoginButton'); }
     var phoneBtn = document.getElementById('login-phone-btn');
     if (phoneBtn) phoneBtn.disabled = bool;
 }
 function setRegLoading(bool) {
     var trenerBtn = document.getElementById('reg-trener-btn');
-    if (trenerBtn) { trenerBtn.disabled = bool; trenerBtn.textContent = bool ? 'Ładowanie...' : 'Utwórz konto trenera →'; }
+    if (trenerBtn) { trenerBtn.disabled = bool; trenerBtn.textContent = bool ? t('loading') : t('auth.createCoachAccount'); }
     var joinBtn = document.getElementById('reg-join-btn');
-    if (joinBtn) { joinBtn.disabled = bool; joinBtn.textContent = bool ? 'Ładowanie...' : 'Dołącz do drużyny →'; }
+    if (joinBtn) { joinBtn.disabled = bool; joinBtn.textContent = bool ? t('loading') : t('auth.joinTeam'); }
     var checkBtn = document.getElementById('check-code-btn');
     if (checkBtn) checkBtn.disabled = bool;
     var phoneBtn = document.getElementById('reg-phone-btn');
@@ -1499,11 +1505,11 @@ function showTab(tab) {
 /* ══ LOGOWANIE — EMAIL ════════════════════════════════════════ */
 async function doForgotPassword() {
     var email = document.getElementById('login-email').value.trim();
-    if (!email) { showLoginError('Wpisz adres email'); return; }
+    if (!email) { showLoginError(t('login.fillEmailPassword')); return; }
     clearLoginError(); setLoginLoading(true);
     try {
         await auth.sendPasswordResetEmail(email);
-        showLoginError('✅ Link do resetu hasła wysłany na ' + email);
+        showLoginError(t('login.resetLinkSent', {email: email}));
     } catch(e) { showLoginError(mapAuthError(e.code)); }
     setLoginLoading(false);
 }
@@ -1511,13 +1517,13 @@ async function doLogin() {
     clearLoginError();
     var email = document.getElementById('login-email').value.trim();
     var pass  = document.getElementById('login-pass').value;
-    if (!email || !pass) { showLoginError('Wypełnij email i hasło'); return; }
+    if (!email || !pass) { showLoginError(t('login.fillEmailPassword')); return; }
     setLoginLoading(true);
     try {
         var cred = await auth.signInWithEmailAndPassword(email, pass);
         if (!cred.user.emailVerified) {
             await auth.signOut();
-            showLoginError('Potwierdź adres email przed zalogowaniem.');
+            showLoginError(t('login.verifyEmailFirst'));
             setLoginLoading(false); return;
         }
         var userCode = await findUserByAuthUid(cred.user.uid);
@@ -1584,14 +1590,14 @@ function autoCheckCode(val) { if (val.length===6) checkInviteCode(); }
 async function checkInviteCode() {
     clearRegError();
     var code = document.getElementById('reg-code').value.trim().toUpperCase();
-    if (code.length!==6) { showRegError('Kod musi mieć 6 znaków'); return; }
+    if (code.length!==6) { showRegError(t('login.codeMinLength')); return; }
     setRegLoading(true);
     try {
         var snap = await db.collection('inviteCodes').where('code','==',code).where('isUsed','==',false).get();
-        if (snap.empty) { showRegError('Nieprawidłowy lub wygasły kod'); setRegLoading(false); return; }
+        if (snap.empty) { showRegError(t('login.codeInvalid')); setRegLoading(false); return; }
         var codeDoc = snap.docs[0].data();
         var expires = codeDoc.expiresAt?.toDate ? codeDoc.expiresAt.toDate() : new Date(codeDoc.expiresAt);
-        if (expires < new Date()) { showRegError('Kod wygasł — poproś o nowy'); setRegLoading(false); return; }
+        if (expires < new Date()) { showRegError(t('login.codeExpired')); setRegLoading(false); return; }
         window._inviteCode = { ...codeDoc, docId: snap.docs[0].id };
         var teamName = '';
         try {
@@ -1614,18 +1620,18 @@ async function checkInviteCode() {
             fnameEl.readOnly = true; lnameEl.readOnly = true;
             fnameEl.style.opacity = '0.6'; lnameEl.style.opacity = '0.6';
             window._regName = { fname: parts[0]||'', lname: parts.slice(1).join(' ')||'' };
-            document.getElementById('welcome-hi').textContent = 'Witaj, '+prefilledName+'! 👋';
+            document.getElementById('welcome-hi').textContent = t('greetingWithName', {name: prefilledName}) + ' 👋';
         } else {
             fnameEl.value=''; lnameEl.value='';
             fnameEl.readOnly=false; lnameEl.readOnly=false;
             fnameEl.style.opacity=''; lnameEl.style.opacity='';
             window._regName = null;
-            document.getElementById('welcome-hi').textContent = 'Witaj! 👋';
+            document.getElementById('welcome-hi').textContent = t('auth.joinWelcomeTitle');
         }
-        var roleLabels = {TRENER:'Trener',RODZIC:'Opiekun / Rodzic',ZAWODNIK:'Zawodnik',OBSERWATOR:'Obserwator'};
+        var roleLabels = {TRENER:t('auth.roles.TRENER'),RODZIC:t('auth.roles.RODZIC'),ZAWODNIK:t('auth.roles.ZAWODNIK'),OBSERWATOR:t('auth.roles.OBSERWATOR')};
         var roleIcons  = {TRENER:'🎽',RODZIC:'👨‍👦',ZAWODNIK:'⚽',OBSERWATOR:'👴'};
-        document.getElementById('welcome-role-badge').innerHTML = (roleIcons[codeDoc.type]||'👤')+' Rejestrujesz się jako <strong style="margin-left:4px">'+(roleLabels[codeDoc.type]||codeDoc.type)+'</strong>';
-        document.getElementById('welcome-team').textContent = teamName ? '📍 Drużyna: '+teamName : '';
+        document.getElementById('welcome-role-badge').innerHTML = (roleIcons[codeDoc.type]||'👤')+' '+t('auth.registeringAs')+' <strong style="margin-left:4px">'+(roleLabels[codeDoc.type]||codeDoc.type)+'</strong>';
+        document.getElementById('welcome-team').textContent = teamName ? '📍 '+t('auth.teamLabel')+': '+teamName : '';
         window._rodzicConsentChecked = false;
         var consentRow = document.getElementById('rodzic-consent-row');
         if (consentRow) {
@@ -1645,7 +1651,7 @@ async function checkInviteCode() {
         welcome.style.display = 'flex';
         setRegLoading(false);
         setTimeout(function(){ document.getElementById('auth-drawer-scroll').scrollTop = 0; }, 100);
-    } catch(e) { showRegError('Błąd sprawdzania kodu'); setRegLoading(false); }
+    } catch(e) { showRegError(t('login.checkCodeError')); setRegLoading(false); }
 }
 function toggleRodzicConsent() {
     window._rodzicConsentChecked = !window._rodzicConsentChecked;
@@ -1683,8 +1689,8 @@ async function doRegisterTrainer() {
     var email = document.getElementById('reg-trener-email').value.trim();
     var pass  = document.getElementById('reg-trener-pass').value;
     var klubName = document.getElementById('reg-klub-name').value.trim();
-    if (!fname||!lname||!email||!pass||!klubName) { showRegError('Wypełnij wszystkie pola'); return; }
-    if (pass.length<8) { showRegError('Hasło min. 8 znaków'); return; }
+    if (!fname||!lname||!email||!pass||!klubName) { showRegError(t('login.fillAllFields')); return; }
+    if (pass.length<8) { showRegError(t('login.passwordMinLength')); return; }
     var displayName = fname+' '+lname;
     setRegLoading(true);
     try {
@@ -1709,19 +1715,19 @@ async function doRegisterTrainer() {
 /* ══ REJESTRACJA — KOD EMAIL ══════════════════════════════════ */
 async function doRegisterWithCode() {
     clearRegError();
-    if (!window._inviteCode) { showRegError('Najpierw sprawdź kod'); return; }
+    if (!window._inviteCode) { showRegError(t('login.checkCodeFirst')); return; }
     var email = document.getElementById('reg-kod-email').value.trim();
     var pass  = document.getElementById('reg-kod-pass').value;
     var needsName = ['RODZIC','OBSERWATOR'].includes(window._inviteCode?.type);
     if (needsName) {
         var fname = document.getElementById('reg-kod-fname').value.trim();
         var lname = document.getElementById('reg-kod-lname').value.trim();
-        if (!fname||!lname) { showRegError('Podaj imię i nazwisko'); return; }
+        if (!fname||!lname) { showRegError(t('login.fillName')); return; }
         window._regName = { fname, lname };
     }
-    if (!email||!pass) { showRegError('Wypełnij wszystkie pola'); return; }
-    if (pass.length<8) { showRegError('Hasło min. 8 znaków'); return; }
-    if (window._inviteCode?.type==='RODZIC' && !window._rodzicConsentChecked) { showRegError('Zaznacz zgodę'); return; }
+    if (!email||!pass) { showRegError(t('login.fillAllFields')); return; }
+    if (pass.length<8) { showRegError(t('login.passwordMinLength')); return; }
+    if (window._inviteCode?.type==='RODZIC' && !window._rodzicConsentChecked) { showRegError(t('login.consentCheck')); return; }
     setRegLoading(true);
     try {
         var cred = await auth.createUserWithEmailAndPassword(email, pass);
@@ -1733,7 +1739,7 @@ async function doRegisterWithCode() {
 async function doRegisterPhoneSend() {
     clearRegError();
     var phone = document.getElementById('reg-phone').value.trim();
-    if (!phone) { showRegError('Podaj numer telefonu'); return; }
+    if (!phone) { showRegError(t('login.fillPhone')); return; }
     var fullPhone = phone.startsWith('+') ? phone : '+48'+phone.replace(/\s/g,'');
     setRegLoading(true);
     try {
@@ -1747,9 +1753,9 @@ async function doRegisterPhoneSend() {
 }
 async function doRegisterPhoneConfirm() {
     clearRegError();
-    if (!window._confirmationReg) { showRegError('Najpierw wyślij SMS'); return; }
+    if (!window._confirmationReg) { showRegError(t('login.sendSmsFirst')); return; }
     var code = document.getElementById('reg-sms-code').value.trim();
-    if (!code||code.length!==6) { showRegError('Podaj 6-cyfrowy kod SMS'); return; }
+    if (!code||code.length!==6) { showRegError(t('login.fillSmsCode')); return; }
     setRegLoading(true);
     try {
         var phone = document.getElementById('reg-phone').value.trim();
@@ -1805,17 +1811,17 @@ async function _createFirestoreDocsFromPending(pending) {
 function showVerifyScreen(email) {
     var vs = document.getElementById('verify-screen');
     vs.classList.add('visible');
-    if (email) document.getElementById('verify-msg').innerHTML = 'Wysłaliśmy link weryfikacyjny na:<br><strong style="color:var(--bialy)">'+email+'</strong><br><br>Kliknij go, żeby aktywować konto.';
+    if (email) document.getElementById('verify-msg').innerHTML = t('login.verifyBody', {email: '<strong style="color:var(--bialy)">'+email+'</strong>'}).replace(/\n/g, '<br>');
     setRegLoading(false); setLoginLoading(false);
 }
 async function checkEmailVerified() {
     var user = auth.currentUser;
-    if (!user) { alert('Zaloguj się ponownie'); return; }
+    if (!user) { alert(t('login.loginAgain')); return; }
     await user.reload();
-    if (!user.emailVerified) { alert('Email jeszcze nie potwierdzony. Sprawdź skrzynkę i kliknij link.'); return; }
+    if (!user.emailVerified) { alert(t('login.notVerifiedYet')); return; }
     var pendingStr = localStorage.getItem('pendingRegistration');
     if (pendingStr) {
-        try { var pending = JSON.parse(pendingStr); await _createFirestoreDocsFromPending(pending); localStorage.removeItem('pendingRegistration'); localStorage.setItem('currentUserId', pending.userCode); } catch(e) { alert('Błąd: '+e.message); return; }
+        try { var pending = JSON.parse(pendingStr); await _createFirestoreDocsFromPending(pending); localStorage.removeItem('pendingRegistration'); localStorage.setItem('currentUserId', pending.userCode); } catch(e) { alert(t('authErrors.generic')+': '+e.message); return; }
     } else {
         var userCode = await findUserByAuthUid(user.uid);
         if (userCode) localStorage.setItem('currentUserId', userCode);
@@ -1825,8 +1831,8 @@ async function checkEmailVerified() {
 }
 async function resendVerification() {
     var user = auth.currentUser;
-    if (!user) { alert('Brak aktywnej sesji'); return; }
-    try { await user.sendEmailVerification(); alert('Link weryfikacyjny wysłany ponownie!'); } catch(e) { alert('Błąd: '+e.message); }
+    if (!user) { alert(t('login.loginAgain')); return; }
+    try { await user.sendEmailVerification(); alert(t('login.resendEmailConfirm')); } catch(e) { alert(t('authErrors.generic')+': '+e.message); }
 }
 
 /* ══ GOOGLE ═══════════════════════════════════════════════════ */
@@ -1839,9 +1845,9 @@ function doLoginWithGoogle() {
 }
 async function doRegisterWithGoogle() {
     clearRegError();
-    if (!window._inviteCode) { showRegError('Najpierw sprawdź kod'); return; }
+    if (!window._inviteCode) { showRegError(t('login.checkCodeFirst')); return; }
     var btn = document.getElementById('reg-google-btn');
-    btn.disabled = true; btn.textContent = 'Ładowanie...';
+    btn.disabled = true; btn.textContent = t('loading');
     try {
         var provider = new firebase.auth.GoogleAuthProvider();
         var cred = await auth.signInWithPopup(provider);
@@ -1867,9 +1873,9 @@ function doLoginWithApple() {
 }
 async function doRegisterWithApple() {
     clearRegError();
-    if (!window._inviteCode) { showRegError('Najpierw sprawdź kod'); return; }
+    if (!window._inviteCode) { showRegError(t('login.checkCodeFirst')); return; }
     var btn = document.getElementById('reg-apple-btn');
-    btn.disabled = true; btn.textContent = 'Ładowanie...';
+    btn.disabled = true; btn.textContent = t('loading');
     try {
         var provider = new firebase.auth.OAuthProvider('apple.com');
         provider.addScope('email'); provider.addScope('name');

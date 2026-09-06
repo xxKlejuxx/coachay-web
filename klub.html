@@ -336,8 +336,13 @@ window.addEventListener('DOMContentLoaded', () => {
     let _loaded = false;
     auth.onAuthStateChanged(async user => {
         if (_loaded) return;
-        if (user) { _loaded = true; await initKlub(); }
-        else { if (!isDemoMode()) window.location.href = 'login.html'; }
+        if (user) {
+            _loaded = true;
+            if (!isDemoMode() && user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+                await auth.signOut(); window.location.href = 'index.html'; return;
+            }
+            await initKlub();
+        } else { if (!isDemoMode()) window.location.href = 'login.html'; }
     });
 });
 

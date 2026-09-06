@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COACHAY — Akceptacja polityki</title>
+<link rel="stylesheet" href="_global.css?v=20260826e">
+<link rel="stylesheet" href="_desktop.css?v=20260826e">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="_i18n.js?v=20260826e"></script>
+<style>
+.consent-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 48px 16px 80px; background: var(--tlo); }
+.consent-wrap { width: min(560px, 100%); display: flex; flex-direction: column; gap: 14px; }
+.consent-logo { text-align: center; font-family: var(--font-d); font-size: 30px; font-weight: 900; color: var(--bialy); margin-bottom: 4px; }
+.consent-sub { text-align: center; font-size: 14px; color: var(--szary); margin-bottom: 8px; }
+.consent-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; }
+.consent-card-title { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: var(--szary); margin-bottom: 10px; }
+.consent-card-text { font-size: 14px; font-weight: 500; color: var(--szary-j); line-height: 1.7; }
+.consent-card-admin { font-size: 12px; color: var(--szary); margin-top: 10px; line-height: 1.5; }
+.consent-check-row { display: flex; align-items: flex-start; gap: 14px; padding: 16px; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: border-color 0.15s; }
+.consent-check-row:hover { border-color: var(--szary); }
+.consent-check-row.checked { border-color: var(--akcent); }
+.consent-cb { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border2); background: var(--tlo-karta2); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 2px; transition: all 0.15s; }
+.consent-check-row.checked .consent-cb { background: var(--akcent); border-color: var(--akcent); color: #fff; }
+.consent-check-label { font-size: 14px; font-weight: 600; color: var(--bialy); line-height: 1.5; flex: 1; }
+.consent-check-label span { font-size: 11px; color: var(--szary); font-weight: 600; display: block; margin-top: 4px; }
+.consent-player-name { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--szary); padding-left: 2px; margin-top: 4px; }
+.consent-policy-link { text-align: center; font-size: 13px; color: var(--szary); cursor: pointer; text-decoration: underline; padding: 4px 0; }
+.consent-policy-link:hover { color: var(--bialy); }
+.consent-btn { width: 100%; padding: 16px; border-radius: 14px; background: var(--akcent); color: #fff; font-size: 15px; font-weight: 900; border: none; cursor: pointer; opacity: 0.4; transition: opacity 0.15s; margin-top: 4px; }
+.consent-btn.ready { opacity: 1; }
+.consent-btn:disabled { cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="consent-page">
+    <div class="consent-wrap">
+        <div class="consent-logo">COACHAY</div>
+        <div class="consent-sub" id="consent-greeting" data-i18n="consent.subTitle">Zanim przejdziesz dalej, potrzebujemy Twojej zgody.</div>
+
+        <div class="consent-card">
+            <div class="consent-card-title" data-i18n="consent.whatWeProcessTitle">Co przetwarzamy</div>
+            <div class="consent-card-text" data-i18n="consent.whatWeProcessBody">
+                Przechowujemy Twoje dane konta (imię, e-mail) oraz dane związane
+                z uczestnictwem w drużynie (obecności, wyniki). Dane nie są
+                sprzedawane ani udostępniane podmiotom trzecim.
+            </div>
+            <div class="consent-card-admin" data-i18n="consent.adminText">Administrator: Operator serwisu Coachay · support@coachay.com</div>
+        </div>
+
+        <div class="consent-check-row" id="row-terms" onclick="toggleCheck('terms')" style="display:none">
+            <div class="consent-cb" id="cb-terms"></div>
+            <div class="consent-check-label">
+                <span data-i18n="consent.termsLabel">Akceptuję politykę prywatności Coachay i wyrażam zgodę na przetwarzanie moich danych osobowych w celu korzystania z aplikacji.</span>
+                <span data-i18n="consent.termsRequired">Wymagane</span>
+            </div>
+        </div>
+
+        <div class="consent-check-row" id="row-coach" onclick="toggleCheck('coach')" style="display:none">
+            <div class="consent-cb" id="cb-coach"></div>
+            <div class="consent-check-label">
+                <span data-i18n="consent.coachLabel">Oświadczam, że posiadam zgody rodziców lub opiekunów prawnych na przetwarzanie danych zawodników niepełnoletnich w celach organizacyjnych klubu.</span>
+                <span data-i18n="consent.coachRequired">Wymagane dla trenerów</span>
+            </div>
+        </div>
+
+        <div id="children-section"></div>
+
+        <div class="consent-policy-link" onclick="window.open('rodo.html','_blank')" data-i18n="consent.fullPolicyLink">Pełna polityka prywatności →</div>
+
+        <button class="consent-btn" id="consent-btn" onclick="zapiszZgode()" disabled data-i18n="consent.acceptButton">
+            Akceptuj i przejdź dalej
+        </button>
+    </div>
+</div>
+
+<script src="coachay-core.js?v=20260826e"></script>
+<script>
+let _needTerms  = false;
+let _needCoach  = false;
+let _childMemberships = []; // [{id, playerName}]
+const _checkedChildren = new Set();
+const _checked = { terms: false, coach: false };
+
+function toggleCheck(key) {
+    _checked[key] = !_checked[key];
+    document.getElementById('row-' + key).classList.toggle('checked', _checked[key]);
+    document.getElementById('cb-' + key).textContent = _checked[key] ? '✓' : '';
+    updateBtn();
+}
+
+function toggleChild(membershipId) {
+    if (_checkedChildren.has(membershipId)) {
+        _checkedChildren.delete(membershipId);
+    } else {
+        _checkedChildren.add(membershipId);
+    }
+    const checked = _checkedChildren.has(membershipId);
+    document.getElementById('row-child-' + membershipId).classList.toggle('checked', checked);
+    document.getElementById('cb-child-' + membershipId).textContent = checked ? '✓' : '';
+    updateBtn();
+}
+
+function updateBtn() {
+    const termsOk    = !_needTerms || _checked.terms;
+    const coachOk    = !_needCoach  || _checked.coach;
+    const childrenOk = _childMemberships.every(m => _checkedChildren.has(m.id));
+    const ok = termsOk && coachOk && childrenOk;
+    const btn = document.getElementById('consent-btn');
+    btn.disabled = !ok;
+    btn.classList.toggle('ready', ok);
+}
+
+function renderChildCheckboxes() {
+    const section = document.getElementById('children-section');
+    section.innerHTML = '';
+    const consentTpl  = t('consent.parentConsentLabel') || 'Wyrażam zgodę na przetwarzanie danych osobowych zawodnika {{name}} w celach organizacyjnych i sportowych klubu.';
+    const requiredLbl = t('consent.parentConsentRequired') || 'Wymagane dla rodzica';
+    _childMemberships.forEach(m => {
+        const label = consentTpl.replace('{{name}}', m.playerName);
+        const wrap = document.createElement('div');
+        wrap.innerHTML =
+            `<div class="consent-player-name">${m.playerName}</div>
+             <div class="consent-check-row" id="row-child-${m.id}" onclick="toggleChild('${m.id}')">
+                 <div class="consent-cb" id="cb-child-${m.id}"></div>
+                 <div class="consent-check-label">
+                     <span>${label}</span>
+                     <span>${requiredLbl}</span>
+                 </div>
+             </div>`;
+        section.appendChild(wrap);
+    });
+}
+
+async function zapiszZgode() {
+    const btn = document.getElementById('consent-btn');
+    btn.disabled = true;
+    btn.textContent = t('consent.savingButton') || 'Zapisywanie...';
+    try {
+        const uid = getCurrentUserId();
+        const now = firebase.firestore.Timestamp.now();
+        const batch = db.batch();
+
+        if (_needTerms || _needCoach) {
+            const updates = {};
+            if (_needTerms) updates.termsAcceptedAt = now;
+            if (_needCoach && _checked.coach) updates.coachConsentAcceptedAt = now;
+            batch.update(db.collection('users').doc(uid), updates);
+        }
+
+        _checkedChildren.forEach(mid => {
+            batch.update(db.collection('memberships').doc(mid), { parentDataConsentAt: now });
+        });
+
+        await batch.commit();
+
+        const ret = sessionStorage.getItem('rodoReturnUrl');
+        sessionStorage.removeItem('rodoReturnUrl');
+        window.location.replace(ret || 'start.html');
+    } catch(e) {
+        const btn2 = document.getElementById('consent-btn');
+        btn2.disabled = false;
+        btn2.textContent = t('consent.acceptButton') || 'Akceptuj i przejdź dalej';
+        updateBtn();
+        console.error(e);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') return;
+    initFirebase();
+    let _loaded = false;
+    auth.onAuthStateChanged(async authUser => {
+        if (_loaded || !authUser) {
+            if (!authUser) window.location.replace('index.html');
+            return;
+        }
+        _loaded = true;
+        const uid = getCurrentUserId();
+        if (!uid) { window.location.replace('index.html'); return; }
+        try {
+            const uDoc = await db.collection('users').doc(uid).get();
+            if (!uDoc.exists) { window.location.replace('index.html'); return; }
+            const u = uDoc.data();
+
+            // Spersonalizowane powitanie
+            const firstName = (u.displayName || '').split(' ')[0];
+            if (firstName) {
+                const greet = (t('consent.greeting') || 'Witaj, {{name}}!').replace('{{name}}', firstName);
+                const intro = t('consent.greetingIntro') || 'Zanim przejdziesz dalej, potrzebujemy Twojego potwierdzenia.';
+                document.getElementById('consent-greeting').textContent = greet + ' ' + intro;
+            }
+
+            _needTerms = !u.termsAcceptedAt;
+
+            // Pobierz aktywne memberships
+            const mSnap = await db.collection('memberships')
+                .where('userId', '==', uid)
+                .where('status', 'in', ['active', 'ACTIVE'])
+                .get();
+
+            const isCoachRole = mSnap.docs.some(d => {
+                const r = d.data().role || '';
+                return r === 'TRENER' || r === 'TRENER_GLOWNY' || r === 'TRENER_POMOCNICZY';
+            });
+            _needCoach = isCoachRole && !u.coachConsentAcceptedAt;
+
+            const unconsentedDocs = mSnap.docs.filter(d =>
+                d.data().role === 'RODZIC' && !d.data().parentDataConsentAt
+            );
+
+            // Wszystko ok → redirect
+            if (!_needTerms && !_needCoach && unconsentedDocs.length === 0) {
+                const ret = sessionStorage.getItem('rodoReturnUrl');
+                sessionStorage.removeItem('rodoReturnUrl');
+                window.location.replace(ret || 'start.html');
+                return;
+            }
+
+            if (_needTerms)  document.getElementById('row-terms').style.display = 'flex';
+            if (_needCoach)  document.getElementById('row-coach').style.display = 'flex';
+
+            // Pobierz imiona zawodników i wyrenderuj checkboxy
+            if (unconsentedDocs.length > 0) {
+                _childMemberships = await Promise.all(unconsentedDocs.map(async d => {
+                    const pid = d.data().playerId || '';
+                    let playerName = pid;
+                    if (pid) {
+                        try {
+                            const pDoc = await db.collection('players').doc(pid).get();
+                            if (pDoc.exists) playerName = pDoc.data().name || pid;
+                        } catch(e) {}
+                    }
+                    return { id: d.id, playerName };
+                }));
+                renderChildCheckboxes();
+            }
+
+            updateBtn();
+        } catch(e) { console.error(e); }
+    });
+});
+</script>
+</body>
+</html>

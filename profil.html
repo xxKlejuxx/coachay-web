@@ -1373,6 +1373,9 @@ window.addEventListener('DOMContentLoaded', () => {
         if (_loaded) return;
         if (user) {
             _loaded = true;
+            if (!isDemoMode() && user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+                await auth.signOut(); window.location.href = 'index.html'; return;
+            }
             if (!isDemoMode() && !getCurrentUserId()) {
                 var userCode = await findUserByAuthUid(user.uid);
                 if (!userCode) { await auth.signOut(); window.location.href = 'index.html'; return; }

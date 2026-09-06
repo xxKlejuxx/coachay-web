@@ -1,0 +1,289 @@
+﻿/* ═══════════════════════════════════════════════════════════
+   _desktop.css — wspólne overrides dla wszystkich ekranów
+   Ładowany automatycznie przez _sidebar.js
+═══════════════════════════════════════════════════════════ */
+
+/* ── Layout ─────────────────────────────────────────────── */
+html, body { height: 100%; }
+body {
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    background: var(--tlo) !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--tlo-karta);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+.sidebar::-webkit-scrollbar { display: none; }
+
+.sidebar-brand {
+    padding: 22px 20px 2px;
+    font-family: var(--font-d);
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--bialy);
+    letter-spacing: 2.5px;
+}
+.sidebar-brand-sub {
+    padding: 0 20px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--szary);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+.sidebar-section {
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.sidebar-flex { flex: 1; }
+.sidebar-sep { height: 1px; background: var(--border); margin: 6px 12px; }
+.sidebar-bottom {
+    padding: 8px;
+    border-top: 1px solid var(--border);
+}
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--szary-j);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+.sidebar-link:hover { background: var(--tlo-karta2); color: var(--bialy); }
+.sidebar-link.active { background: rgba(59,130,246,0.12); color: #60A5FA; }
+.sidebar-link-icon { width: 20px; text-align: center; font-size: 19px; flex-shrink: 0; }
+.sidebar-logout { color: var(--szary) !important; }
+.sidebar-logout:hover { background: rgba(248,113,113,0.08) !important; color: #F87171 !important; }
+
+/* ── Kill phone frame ────────────────────────────────────── */
+.phone {
+    flex: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background: var(--tlo) !important;
+}
+.notch        { display: none !important; }
+.bottom-nav   { display: none !important; }
+.menu-btn     { display: none !important; }
+.menu-panel-overlay, .menu-panel { display: none !important; }
+.login-overlay { display: none !important; }
+
+/* ── Top bar ─────────────────────────────────────────────── */
+.top-bar { padding: 12px 24px !important; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
+/* ── Overlays — fixed dropdowns ──────────────────────────── */
+.ctx-overlay {
+    position: fixed !important;
+    top: 62px; left: 220px;
+    width: 300px;
+    z-index: 400;
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+    transform: none !important;
+    display: none !important;
+    border-radius: 0 0 14px 14px;
+}
+.notif-overlay {
+    position: fixed !important;
+    top: 62px; right: 0;
+    width: 380px;
+    z-index: 400;
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+    transform: none !important;
+    display: none !important;
+    border-radius: 0 0 14px 14px;
+}
+.ctx-overlay.open  { display: block !important; }
+.notif-overlay.open { display: block !important; }
+
+/* ── Slide panels — right drawer ─────────────────────────── */
+.slide-panel {
+    position: fixed !important;
+    top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
+    width: 480px !important;
+    border-left: 1px solid var(--border);
+    border-top: none !important;
+    transform: translateX(110%) !important;
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1) !important;
+    z-index: 300;
+}
+.slide-panel.open { transform: translateX(0) !important; }
+
+/* ── Add/edit panels — right drawer (ta sama szerokość co detail) ── */
+.add-player-panel {
+    position: fixed !important;
+    top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
+    width: min(760px, calc(100vw - 220px)) !important;
+    border-left: 1px solid var(--border);
+    transform: translateX(110%) !important;
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1) !important;
+    z-index: 310 !important;
+}
+.add-player-panel.open { transform: translateX(0) !important; }
+
+/* ── Detail panels — right drawer (szerszy) ──────────────── */
+.detail-panel {
+    position: fixed !important;
+    top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
+    width: min(760px, calc(100vw - 220px)) !important;
+    border-left: 1px solid var(--border);
+    transform: translateX(110%) !important;
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1) !important;
+    z-index: 300;
+}
+.detail-panel.open { transform: translateX(0) !important; }
+
+/* ── Screen body — scrollable main area ──────────────────── */
+.screen-body {
+    flex: 1 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* ── Hamburger + logout (desktop: ukryte) ────────────────── */
+#sidebar-hamburger  { display: none; }
+#sidebar-logout-btn { display: none; }
+#sidebar-overlay    { display: none; }
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 0 !important;
+    }
+    .phone {
+        flex: 1 !important;
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    /* Sidebar jako drawer z lewej */
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important; left: 0 !important; bottom: 0 !important;
+        width: 260px !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s cubic-bezier(0.32,0.72,0,1) !important;
+        z-index: 600 !important;
+    }
+    .sidebar.mobile-open {
+        transform: translateX(0) !important;
+    }
+    /* Overlay za sidebar */
+    #sidebar-overlay {
+        display: block !important;
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(0,0,0,0.6) !important;
+        z-index: 599 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.3s !important;
+    }
+    #sidebar-overlay.open {
+        opacity: 1 !important;
+        pointer-events: all !important;
+    }
+    /* Hamburger w top-bar */
+    #sidebar-hamburger {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 36px !important;
+        height: 36px !important;
+        background: var(--tlo-karta) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 10px !important;
+        font-size: 18px !important;
+        color: var(--bialy) !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+    /* Stare menu-btn — zawsze ukryte na mobile (belt+suspenders) */
+    #menu-btn, .menu-btn { display: none !important; }
+    /* Logout w top-barze */
+    #sidebar-logout-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 36px !important;
+        height: 36px !important;
+        background: var(--tlo-karta) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 10px !important;
+        font-size: 18px !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+    .ctx-overlay {
+        position: fixed !important;
+        top: 62px !important; left: 0 !important;
+        width: 100% !important;
+    }
+    .notif-overlay {
+        position: fixed !important;
+        top: 62px !important; right: 0 !important;
+        width: 100% !important;
+    }
+    .slide-panel, .detail-panel, .add-player-panel {
+        position: absolute !important;
+        left: 0 !important;
+        width: 100% !important;
+    }
+    /* Top-bar — mniejszy padding, ctx-switcher elastyczny */
+    .top-bar { padding: 8px 12px !important; }
+    .ctx-switcher { max-width: calc(100vw - 120px) !important; min-width: 0 !important; }
+    .ctx-text { min-width: 0 !important; overflow: hidden !important; }
+    /* Ogólna ochrona przed overflow w poziomie */
+    .phone, .screen-body { overflow-x: hidden !important; }
+    /* Bezpieczna strefa dolna (pasek przeglądarki) */
+    .screen-body { padding-bottom: env(safe-area-inset-bottom, 0px) !important; }
+}

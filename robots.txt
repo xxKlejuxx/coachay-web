@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /polityka-prywatnosci.html
+Allow: /rodo.html
+
+Disallow: /start.html
+Disallow: /druzyna.html
+Disallow: /trenerzy.html
+Disallow: /profil.html
+Disallow: /raporty.html
+Disallow: /ustawienia.html
+Disallow: /klub.html
+Disallow: /platnosci.html
+Disallow: /support.html
+Disallow: /rodo-consent.html
+
+Sitemap: https://coachay.com/sitemap.xml

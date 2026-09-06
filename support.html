@@ -497,6 +497,9 @@ window.addEventListener('DOMContentLoaded', () => {
         if (_loaded) return;
         if (user) {
             _loaded = true;
+            if (!isDemoMode() && user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+                await auth.signOut(); window.location.href = 'index.html'; return;
+            }
             const session = await initSession();
 
             // Sprawdź isPlatformAdmin bezpośrednio z session.user (Firestore doc)
