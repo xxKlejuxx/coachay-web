@@ -1701,6 +1701,7 @@ async function doRegisterTrainer() {
         var userCode = generateUserId('TRENER_GLOWNY');
         var clubId = 'club_'+dateStr+'_'+Math.floor(Math.random()*9000000+1000000);
         var membershipId = makeMbrId('TRENER_GLOWNY');
+        await db.collection('authIndex').doc(uid).set({ userId: userCode, clubIds: [clubId] });
         await db.collection('users').doc(userCode).set({ userId:userCode, authUid:uid, email, phone:null, firstName:fname, lastName:lname, displayName, createdAt:now, isDemo:false });
         await db.collection('clubs').doc(clubId).set({ clubId, clubName:klubName, owner:userCode, createdBy:userCode, createdAt:now });
         await db.collection('memberships').doc(membershipId).set({ membershipId, userId:userCode, teamId:null, clubId, playerId:null, role:'TRENER_GLOWNY', status:'active', displayName, joinedAt:now, isDemo:false });
@@ -1794,6 +1795,7 @@ async function _finishCodeRegistration(uid, phone, isPhone, isGoogle) {
 async function _createFirestoreDocsFromPending(pending) {
     var { userCode, membershipId, dateStr, firstName, lastName, displayName, authUid, email, phone, ic, parentConsentGiven } = pending;
     var now = new Date().toISOString();
+    if (ic.clubId) await db.collection('authIndex').doc(authUid).set({ userId: userCode, clubIds: firebase.firestore.FieldValue.arrayUnion(ic.clubId) }, { merge: true });
     await db.collection('users').doc(userCode).set({ userId:userCode, authUid, email:email||null, phone:phone||null, firstName, lastName, displayName, createdAt:now, isDemo:false });
     if (ic.type==='KIBIC' && ic.playerId) {
         await db.collection('memberships').doc(membershipId).set({ membershipId, userId:userCode, clubId:ic.clubId||null, teamId:ic.teamId||null, playerId:ic.playerId, role:'KIBIC', trainerRole:null, status:'ACTIVE', displayName, joinedAt:now, isDemo:false });

@@ -2,7 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Zweryfikowany = email potwierdzony LUB logowanie telefonem LUB tryb demo (anonymous)
     function isVerified() {
       return request.auth != null && (
         request.auth.token.email_verified == true ||
@@ -11,28 +10,74 @@ service cloud.firestore {
       );
     }
 
-    // Users
+    function isAnonymous() {
+      return request.auth != null &&
+        request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    function inMyClub(clubId) {
+      return isAnonymous() || (
+        clubId != null &&
+        exists(/databases/$(database)/documents/authIndex/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/authIndex/$(request.auth.uid)).data.clubIds.hasAny([clubId])
+      );
+    }
+
+    // authIndex — tylko własny dokument
+    match /authIndex/{authUid} {
+      allow read, write: if request.auth != null && request.auth.uid == authUid;
+    }
+
+    // users — odczyt przez zweryfikowanych (niska wrażliwość, potrzebny cross-club lookup w apce)
     match /users/{userId} {
-      allow read, write: if isVerified();
+      allow read: if isVerified();
+      allow create: if isVerified() && request.resource.data.authUid == request.auth.uid;
+      allow update, delete: if isVerified();
     }
 
-    // Memberships
+    // clubs — izolacja po clubId (= document ID)
+    match /clubs/{clubId} {
+      allow read: if isVerified() && inMyClub(clubId);
+      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(clubId);
+    }
+
+    // memberships — izolacja po clubId z pola dokumentu
     match /memberships/{membershipId} {
-      allow read, write: if isVerified();
+      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
 
-    // Invite codes — read publiczny (weryfikacja kodu przed rejestracją)
+    // teams — izolacja po clubId
+    match /teams/{teamId} {
+      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+    }
+
+    // trainers — izolacja po clubId
+    match /trainers/{trainerId} {
+      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+    }
+
+    // players — izolacja po clubId
+    match /players/{playerId} {
+      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+    }
+
+    // inviteCodes — odczyt publiczny (weryfikacja kodu przed rejestracją), zapis przez zweryfikowanych
     match /inviteCodes/{codeId} {
       allow read: if true;
-      allow write: if isVerified();
+      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
 
-    // Drużyny
-    match /teams/{teamId} {
-      allow read, write: if isVerified();
-    }
-
-    // Wszystkie pozostałe — tylko zweryfikowani
+    // Wszystkie pozostałe kolekcje — tylko zweryfikowani (events, notifications, itp.)
     match /{document=**} {
       allow read, write: if isVerified();
     }
