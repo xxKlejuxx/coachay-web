@@ -3,7 +3,7 @@
    Obsługa powiadomień server-side
    ═══════════════════════════════════════════════════ */
 
-const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentUpdated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onRequest } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
@@ -1581,6 +1581,78 @@ exports.revenuecatWebhook = onRequest(
         }
     }
 );
+
+/* ═══════════════════════════════════════════════════
+   FILTR WULGARYZMÓW — moderacja treści DEMO (UGC)
+   Trigger cofa zapis jeśli wykryje niedozwolone słowo.
+   Dotyczy wyłącznie dokumentów z isDemo: true.
+   ═══════════════════════════════════════════════════ */
+
+const PROFANITY_PL = [
+    'kurwa','chuj','pizda','jebac','jebać','pierdolic','pierdolić',
+    'skurwysyn','skurwiel','suka','cipa','cwel','fiut','pojeb',
+    'jebany','zajebany','pierdolony','kurewski','huj','dupa','dupek',
+    'kutas','spierdalac','spierdalać','opierdolic','opierdolić',
+    'rozjebac','rozjebać','wykurwic','wykurwić','pedalski','ciota',
+    'pedal','pedał','wkurwic','wkurwić','zjebac','zjebać',
+    'jebanie','kurwic','kurwić','kurwisko','pizdzic','pizdzić',
+    'skurwic','skurwić','zalajdaczyc','chujowy','chujnia',
+];
+
+function stripDiacritics(str) {
+    return str.normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function containsProfanity(text) {
+    if (!text || typeof text !== 'string') return false;
+    const base    = stripDiacritics(text.toLowerCase());
+    const compact = base.replace(/[^a-z]/g, ''); // catches k.u.r.w.a
+    return PROFANITY_PL.some(word => {
+        const w = stripDiacritics(word);
+        return base.includes(w) || compact.includes(w);
+    });
+}
+
+function docHasProfanity(data, fields) {
+    if (!data) return false;
+    return fields.some(f => containsProfanity(data[f]));
+}
+
+async function moderateDemo(event, fields) {
+    const after  = event.data.after;
+    const before = event.data.before;
+    if (!after.exists) return; // zdarzenie delete — pomijamy
+    const data = after.data();
+    if (!data.isDemo) return;  // tylko środowisko DEMO
+    if (!docHasProfanity(data, fields)) return;
+
+    const violating = fields.filter(f => containsProfanity(data[f])).map(f => `${f}="${data[f]}"`).join(', ');
+    console.warn(`[profanity] blocked ${after.ref.path} — ${violating}`);
+
+    if (before.exists) {
+        await after.ref.set(before.data()); // update → przywróć poprzednie dane
+    } else {
+        await after.ref.delete();           // create → usuń dokument
+    }
+}
+
+exports.moderatePlayers = onDocumentWritten('players/{id}', (event) =>
+    moderateDemo(event, ['firstName', 'lastName', 'name', 'displayName'])
+);
+exports.moderateClubs = onDocumentWritten('clubs/{id}', (event) =>
+    moderateDemo(event, ['clubName', 'name'])
+);
+exports.moderateTeams = onDocumentWritten('teams/{id}', (event) =>
+    moderateDemo(event, ['name', 'teamName'])
+);
+exports.moderateTrainers = onDocumentWritten('trainers/{id}', (event) =>
+    moderateDemo(event, ['firstName', 'lastName', 'displayName'])
+);
+exports.moderateEvents = onDocumentWritten('events/{id}', (event) =>
+    moderateDemo(event, ['title', 'description', 'location'])
+);
+
+/* ─────────────────────────────────────────────────── */
 
 async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS) {
     const isActive = ACTIVE_EVENTS.includes(type);
