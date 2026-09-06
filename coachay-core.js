@@ -56,7 +56,7 @@ function initFirebase() {
         db = firebase.firestore();
         auth = firebase.auth();
         // Offline persistence — dane w IndexedDB, kolejne wizyty błyskawiczne
-        _persistenceReady = db.enablePersistence({ synchronizeTabs: true })
+        _persistenceReady = db.enablePersistence()
             .then(() => console.log('✅ Persistence: IndexedDB aktywny'))
             .catch(err => {
                 if (err.code === 'failed-precondition') console.warn('⚠️ Persistence: wiele kart — wyłączone');
