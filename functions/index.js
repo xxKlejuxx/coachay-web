@@ -1623,7 +1623,6 @@ async function moderateDemo(event, fields) {
     const before = event.data.before;
     if (!after.exists) return; // zdarzenie delete — pomijamy
     const data = after.data();
-    if (!data.isDemo) return;  // tylko środowisko DEMO
     if (!docHasProfanity(data, fields)) return;
 
     const violating = fields.filter(f => containsProfanity(data[f])).map(f => `${f}="${data[f]}"`).join(', ');
