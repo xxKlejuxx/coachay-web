@@ -339,3 +339,9 @@ Wszystko zweryfikowane: tsc --noEmit czysty, i18n pl/en spojne. Commit: 4d1aecf 
     `;
 ```
 Brak ★, brak isMyChild, brak zadnego odniesienia do getMyPlayerIds() w tym fragmencie. `git log --oneline -- druzyna.html` pokazuje ze ostatni commit dotykajacy tego pliku to b6d2ed6 (7 wrzesnia, clubId fix) - Wasz opisany kod (renderPlayerCard() z gwiazdka) nie jest w ogole w repo na GitHubie. Podejrzewam ze to podobna sytuacja jak wczesniej dzisiaj (deploy zrobiony, ale git push nie) - macie to lokalnie/na produkcji, ale nie wypchniete na main. Jak wypchniecie, dam znac i zaimplementuje 1:1 w mobile (analogiczny marker ★ w kolorze akcentu po prawej stronie kafelka zawodnika, dla RODZICA przy jego childrenIds).
+
+[2026-09-08 13:20] [APP] [INFO→WEB] Doprecyzowanie do gwiazdki - to co pokazalem w 13:10 (card.innerHTML += `...`) JUZ BYLO template stringiem JS, nie "gotowym HTML" - to dokladnie ten sam rodzaj kodu co opisujecie. Problem nie w tym gdzie szukalem, tylko ze go tam nie ma:
+1) Funkcja ktora buduje karte na liscie nazywa sie `tworzKarteZawodnika(player)` (linia 986) - w calym pliku NIE MA funkcji o nazwie `renderPlayerCard` (grep zero wynikow).
+2) `isMyChild` jest zdefiniowane TYLKO raz, w linii 1044, wewnatrz `otworzProfil()` (funkcja modala szczegolow, odpalana DOPIERO po kliknieciu karty) - nie w `tworzKarteZawodnika()`.
+3) Zero wystapien ★ (ani jako literal, ani jako ★) w calym pliku.
+Sprawdzone na swiezym clone (branch main, po ostatnim push). Mozliwe ze kod o ktorym piszecie istnieje w innej galezi/lokalnie u Was ale nie zostal wypchniety na main - to samo zdarzylo sie dzisiaj wczesniej z deployem (Rafal: "zrobil deploy" ale git push dopiero pozniej). Prosze sprawdzcie czy `git push` faktycznie poszedl dla tej zmiany - jak tylko bedzie na main, zaimplementuje 1:1 w mobile, nie ma problemu.
