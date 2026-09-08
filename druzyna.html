@@ -9,6 +9,7 @@
 <script src="_sidebar.js?v=20260821b"></script>
 <script src="_i18n.js?v=20260820g"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
@@ -450,38 +451,38 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
             </div>
         </div>
 
+        <!-- ═══ PANEL ABSENCJI ═══ -->
+        <div class="abs-panel" id="abs-panel">
+            <div class="abs-panel-hdr">
+                <div class="dp-back" onclick="zamknijAbsencje()">
+                    <div class="dp-back-icon">‹</div>
+                    <span data-i18n="druzyna.backToProfile">Profil</span>
+                </div>
+                <span class="abs-panel-tytul" data-i18n="druzyna.reportAbsenceTitle">Zgłoś absencję</span>
+            </div>
+            <div class="abs-panel-body">
+                <div class="dp-section-label" data-i18n="druzyna.playerLabel">Zawodnik</div>
+                <div style="font-size: 19px;font-weight:800;color:var(--bialy);" id="abs-player-name">—</div>
+
+                <div class="form-group">
+                    <label class="form-lbl" data-i18n="druzyna.dateFromLabel">Data od *</label>
+                    <input type="date" class="form-inp" id="abs-date-from">
+                </div>
+                <div class="form-group">
+                    <label class="form-lbl" data-i18n="druzyna.dateToLabel">Data do *</label>
+                    <input type="date" class="form-inp" id="abs-date-to">
+                </div>
+                <div class="form-group">
+                    <label class="form-lbl" data-i18n="druzyna.commentLabel">Komentarz</label>
+                    <input type="text" class="form-inp" id="abs-comment" data-i18n-placeholder="druzyna.commentPlaceholder" placeholder="np. Złamanie ręki, Choroba...">
+                </div>
+            </div>
+            <div class="sticky-save">
+                <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()" data-i18n="druzyna.saveAbsenceButton">Zapisz absencję</button>
+            </div>
+        </div><!-- /abs-panel -->
+
     </div><!-- /detail-panel -->
-
-    <!-- ═══ PANEL ABSENCJI ═══ -->
-    <div class="abs-panel" id="abs-panel">
-        <div class="abs-panel-hdr">
-            <div class="dp-back" onclick="zamknijAbsencje()">
-                <div class="dp-back-icon">‹</div>
-                <span data-i18n="druzyna.backToProfile">Profil</span>
-            </div>
-            <span class="abs-panel-tytul" data-i18n="druzyna.reportAbsenceTitle">Zgłoś absencję</span>
-        </div>
-        <div class="abs-panel-body">
-            <div class="dp-section-label" data-i18n="druzyna.playerLabel">Zawodnik</div>
-            <div style="font-size: 19px;font-weight:800;color:var(--bialy);" id="abs-player-name">—</div>
-
-            <div class="form-group">
-                <label class="form-lbl" data-i18n="druzyna.dateFromLabel">Data od *</label>
-                <input type="date" class="form-inp" id="abs-date-from">
-            </div>
-            <div class="form-group">
-                <label class="form-lbl" data-i18n="druzyna.dateToLabel">Data do *</label>
-                <input type="date" class="form-inp" id="abs-date-to">
-            </div>
-            <div class="form-group">
-                <label class="form-lbl" data-i18n="druzyna.commentLabel">Komentarz</label>
-                <input type="text" class="form-inp" id="abs-comment" data-i18n-placeholder="druzyna.commentPlaceholder" placeholder="np. Złamanie ręki, Choroba...">
-            </div>
-        </div>
-        <div class="sticky-save">
-            <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()" data-i18n="druzyna.saveAbsenceButton">Zapisz absencję</button>
-        </div>
-    </div><!-- /abs-panel -->
 
     <!-- ═══ PANEL DODAJ ZAWODNIKA ═══ -->
     <div class="add-player-panel" id="add-player-panel">
@@ -733,7 +734,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20260903d"></script>
+<script src="coachay-core.js?v=20260907d"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    DRUŻYNA — logika ekranu
@@ -985,6 +986,8 @@ function sortujZawodnikow(btn, key) {
 
 function tworzKarteZawodnika(player) {
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
+    const isParent = aktualnaRola === 'RODZIC';
+    const isMyChild = isParent && getMyPlayerIds().includes(player.playerId || player.id);
     const card = document.createElement('div');
     card.className = 'zaw-item';
 
@@ -1022,6 +1025,7 @@ function tworzKarteZawodnika(player) {
         </div>
         ${usunietyBadge}
         ${metaHtml}
+        ${isMyChild ? '<div style="font-size:18px;color:var(--akcent);margin-left:auto;padding-left:8px;flex-shrink:0;">★</div>' : ''}
     `;
 
     card.onclick = () => otworzProfil(player);
@@ -1544,6 +1548,7 @@ async function generujKod() {
         pinHash: '',
         type: aktualnyTypKodu,
         playerId: pid,
+        playerName: aktualnyZawodnik.name || ((aktualnyZawodnik.firstName||'') + ' ' + (aktualnyZawodnik.lastName||'')).trim() || '',
         teamId: aktualnyTeamId,
         clubId: aktualnyClubId || null,
         createdBy: aktualnyUserId,

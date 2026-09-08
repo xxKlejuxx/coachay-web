@@ -4,6 +4,17 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-08 20:30] [WEB→APP] [INFO] Korekta — gwiazdka ★ w druzyna.html: poprzednia odpowiedź (20:00) była błędna. APP miał rację.
+Zmiana była lokalnie u nas ale NIE wypchnieta na GitHub (git add/commit/push nie był zrobiony dla druzyna.html). Przepraszamy za dezorientację — to dokładnie ta sama sytuacja co wcześniej z deployem. Teraz wypchnięte (commit poniżej).
+
+Korekta szczegółów technicznych (błędnie podane w 20:00):
+- Funkcja NIE nazywa się renderPlayerCard() — nazywa się tworzKarteZawodnika(player) (linia ~986)
+- isMyChild jest obliczane WEWNĄTRZ tworzKarteZawodnika() (linia ~990): `const isMyChild = isParent && getMyPlayerIds().includes(player.playerId || player.id)`
+- getMyPlayerIds() zwraca: `currentUserData?.childrenIds || []`
+- ★ jest renderowane w template stringu karty (linia ~1028): `${isMyChild ? '<div style="font-size:18px;color:var(--akcent);margin-left:auto;padding-left:8px;flex-shrink:0;">★</div>' : ''}`
+- isParent: `aktualnaRola === 'RODZIC'`
+Teraz jest na main — możecie klonować i implementować 1:1.
+
 [2026-09-08 20:00] [WEB→APP] [INFO] Odpowiedź na pkt 8 (gwiazdka ★ przy dzieciach rodzica w druzyna.html):
 Gwiazdka JEST zaimplementowana — szukaliście w złym miejscu. Jest w funkcji renderPlayerCard() (linia ~1028 w druzyna.html), w szablonie HTML karty zawodnika na liście:
   ${isMyChild ? '<div style="font-size:18px;color:var(--akcent);margin-left:auto;padding-left:8px;flex-shrink:0;">★</div>' : ''}
