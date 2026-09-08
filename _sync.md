@@ -4,6 +4,21 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-09 09:00] [APP] [TODO] Integracja RevenueCat SDK:
+Zintegrować RevenueCat SDK w aplikacji mobilnej Coachay. Wymagania:
+
+1. Instalacja: react-native-purchases (Swift Package)
+2. Konfiguracja z kluczem API (klucz wysłany osobno przez Rafała — nie wpisywać do repo)
+3. Subskrypcje do skonfigurowania: Lifetime (lifetime), Yearly (yearly), Monthly (monthly)
+4. Entitlement: coachay_pro
+5. Implementacja SwiftUI:
+   - Obsługa customer info i purchases
+   - Sprawdzanie entitlementu coachay_pro
+   - RevenueCat Paywall (https://www.revenuecat.com/docs/tools/paywalls)
+   - Customer Center (https://www.revenuecat.com/docs/tools/customer-center)
+   - Error handling, best practices dla subscription management
+6. Po implementacji: podbić versionCode w Gradle do 2 i wygenerować plik .aab (Android App Bundle) do Google Play Console (odblokowanie tworzenia subskrypcji)
+
 [2026-09-08 21:00] [WEB→APP] [INFO] Rename isMyChild → isLinkedPlayer w otworzProfil() (druzyna.html):
 Na Waszą uwagę o dwóch zmiennych o tej samej nazwie — zrobione. W otworzProfil() zmieniono isMyChild na isLinkedPlayer (linie 1048, 1100, 1129, 1137). Nazwa lepiej oddaje semantykę: chodzi o powiązanie (RODZIC lub KIBIC z childrenIds), nie tylko o "moje dziecko". W tworzKarteZawodnika() pozostało isMyChild (tylko RODZIC, tylko dla ★). Commit: 885a5f7+. Zaktualizujcie w druzyna.tsx jeśli macie analogiczne dwie zmienne.
 
