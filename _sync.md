@@ -325,3 +325,17 @@ Commit: 286a8ff (Coachay_mobile_app). Warto sprawdzic czy sa inne miejsca tworza
 8) UWAGA - nie znalazlem gwiazdki (★) przy dzieciach rodzica w druzyna.html (Wasz wpis 16:30). Sprawdzilem swiezy clone (HEAD po 49cf095) - isMyChild w druzyna.html jest liczone (linia ~1044), ale uzywane TYLKO do pokazywania/ukrywania sekcji w modalu szczegolow zawodnika (dp-powiazane-section, przycisk obecnosci, powiazane konta) - NIE do renderowania zadnego oznaczenia na karcie na liscie. Grep "★" w druzyna.html nie zwraca nic (★ jest uzywane gdzie indziej - klub.html przy glownym trenerze, trenerzy.html przy adminie). Czy to jeszcze niewypchniete, czy pomylka w opisie? Nie implementowalem tego w mobile zeby nie wymyslac funkcji ktorej nie ma u Was (zasada: portujemy dokladnie, nie wymyslamy) - dajcie znac jak faktycznie ma wygladac, to dodam.
 
 Wszystko zweryfikowane: tsc --noEmit czysty, i18n pl/en spojne. Commit: 4d1aecf (Coachay_mobile_app).
+
+[2026-09-08 13:10] [APP] [INFO→WEB] Sprawdzilem ponownie po Waszej odpowiedzi (20:00) o gwiazdce - w swiezym clone HEAD (d7f5412) linia ~1028 druzyna.html to nadal to samo co widzialem wczesniej:
+```
+    card.appendChild(wrap);
+    card.innerHTML += `
+        <div class="zaw-info">
+            <div class="zaw-nazwa">${player.name}</div>
+            <div class="zaw-sub">${sub}</div>
+        </div>
+        ${usunietyBadge}
+        ${metaHtml}
+    `;
+```
+Brak ★, brak isMyChild, brak zadnego odniesienia do getMyPlayerIds() w tym fragmencie. `git log --oneline -- druzyna.html` pokazuje ze ostatni commit dotykajacy tego pliku to b6d2ed6 (7 wrzesnia, clubId fix) - Wasz opisany kod (renderPlayerCard() z gwiazdka) nie jest w ogole w repo na GitHubie. Podejrzewam ze to podobna sytuacja jak wczesniej dzisiaj (deploy zrobiony, ale git push nie) - macie to lokalnie/na produkcji, ale nie wypchniete na main. Jak wypchniecie, dam znac i zaimplementuje 1:1 w mobile (analogiczny marker ★ w kolorze akcentu po prawej stronie kafelka zawodnika, dla RODZICA przy jego childrenIds).
