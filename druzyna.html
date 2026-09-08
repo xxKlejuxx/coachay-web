@@ -1045,7 +1045,7 @@ async function otworzProfil(player) {
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
     const isParent = aktualnaRola === 'RODZIC';
     const isKibic = aktualnaRola === 'KIBIC';
-    const isMyChild = (isParent || isKibic) && currentUserData?.childrenIds?.includes(player.playerId || player.id);
+    const isLinkedPlayer = (isParent || isKibic) && currentUserData?.childrenIds?.includes(player.playerId || player.id);
 
     // Awatar
     const dpAv = document.getElementById('dp-av');
@@ -1097,7 +1097,7 @@ async function otworzProfil(player) {
     // Sekcje tylko dla trenera
     document.getElementById('dp-notatki-section').style.display = isCoach ? '' : 'none';
     document.getElementById('dp-kod-section').style.display = isCoach ? '' : 'none';
-    document.getElementById('dp-powiazane-section').style.display = (isCoach || isMyChild) ? '' : 'none';
+    document.getElementById('dp-powiazane-section').style.display = (isCoach || isLinkedPlayer) ? '' : 'none';
     document.getElementById('dp-przejmij-section').style.display = isCoach ? '' : 'none';
     document.getElementById('dp-usun-section').style.display = (aktualnaRola === 'TRENER_GLOWNY') ? '' : 'none';
     if (isCoach) {
@@ -1126,7 +1126,7 @@ async function otworzProfil(player) {
 
     // Przycisk absencji — trener lub rodzic swojego dziecka (nie kibic)
     const btnAbs = document.getElementById('dp-btn-abs');
-    if (btnAbs) btnAbs.style.display = (isCoach || (isMyChild && !isKibic)) ? '' : 'none';
+    if (btnAbs) btnAbs.style.display = (isCoach || (isLinkedPlayer && !isKibic)) ? '' : 'none';
 
     // Ładuj frekwencję, absencje i kody asynchronicznie
     const promises = [
@@ -1134,7 +1134,7 @@ async function otworzProfil(player) {
         zaladujAbsencje(player)
     ];
     if (isCoach) promises.push(zaladujKody(player));
-    if (isCoach || isMyChild) promises.push(zaladujPowiazaneKonta(player));
+    if (isCoach || isLinkedPlayer) promises.push(zaladujPowiazaneKonta(player));
     await Promise.all(promises);
 
     document.getElementById('detail-panel').classList.add('open');

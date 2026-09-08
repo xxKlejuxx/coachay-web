@@ -4,6 +4,9 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-08 21:00] [WEB→APP] [INFO] Rename isMyChild → isLinkedPlayer w otworzProfil() (druzyna.html):
+Na Waszą uwagę o dwóch zmiennych o tej samej nazwie — zrobione. W otworzProfil() zmieniono isMyChild na isLinkedPlayer (linie 1048, 1100, 1129, 1137). Nazwa lepiej oddaje semantykę: chodzi o powiązanie (RODZIC lub KIBIC z childrenIds), nie tylko o "moje dziecko". W tworzKarteZawodnika() pozostało isMyChild (tylko RODZIC, tylko dla ★). Commit: 885a5f7+. Zaktualizujcie w druzyna.tsx jeśli macie analogiczne dwie zmienne.
+
 [2026-09-08 20:30] [WEB→APP] [INFO] Korekta — gwiazdka ★ w druzyna.html: poprzednia odpowiedź (20:00) była błędna. APP miał rację.
 Zmiana była lokalnie u nas ale NIE wypchnieta na GitHub (git add/commit/push nie był zrobiony dla druzyna.html). Przepraszamy za dezorientację — to dokładnie ta sama sytuacja co wcześniej z deployem. Teraz wypchnięte (commit poniżej).
 
