@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════
    COACHAY — GLOBAL JS
    Importuj ten plik w każdym ekranie:
    <script src="_global.js"></script>
@@ -53,6 +53,14 @@ let _persistenceReady = Promise.resolve(); // Promise gotowości IndexedDB
 function initFirebase() {
     if (typeof firebase !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
+        // App Check (reCAPTCHA Enterprise) — blokuje niezautoryzowane klienty przed Firebase API
+        // Enforce włączyć w Firebase Console → App Check po weryfikacji że nie blokuje ruchu
+        if (typeof firebase.appCheck === 'function') {
+            firebase.appCheck().activate(
+                new firebase.appCheck.ReCaptchaEnterpriseProvider('6Lc1QbEtAAAAABhpy26xwWVgR61YUJl7ETZGUThu'),
+                true
+            );
+        }
         db = firebase.firestore();
         auth = firebase.auth();
         // Offline persistence — dane w IndexedDB, kolejne wizyty błyskawiczne
@@ -123,7 +131,7 @@ async function findUserByAuthUid(authUid) {
     } catch(e) { console.error('findUserByAuthUid error:', e); return null; }
 }
 
-// Sprawdź autoryzację — jeśli brak, redirect do login.html. Zwraca true/false.
+// Sprawdź autoryzację — jeśli brak, redirect do index.html. Zwraca true/false.
 function requireAuth() {
     if (isDemoMode()) return true;
     const userId = getCurrentUserId();
@@ -264,7 +272,7 @@ function showConfirmSheet(message, opts = {}) {
     });
 }
 
-// Wyloguj (wyczyść tryb demo i wróć do login.html)
+// Wyloguj (wyczyść tryb demo i wróć do index.html)
 async function logout() {
     localStorage.removeItem('demoMode');
     localStorage.removeItem('demoRole');
@@ -833,7 +841,7 @@ async function getCurrentMembership() {
 
    Użycie w każdym ekranie:
      const session = await initSession();
-     if (!session) { window.location.href = 'login.html'; return; }
+     if (!session) { window.location.href = 'index.html'; return; }
      const { user, membership, team } = session;
 ══════════════════════════════════════════════════════════════════ */
 async function initSession() {
@@ -843,7 +851,16 @@ async function initSession() {
     try {
         // 1. Pobierz dane usera (source:server omija IndexedDB cache)
         const userDoc = await db.collection('users').doc(userId).get({ source: 'server' });
-        if (!userDoc.exists) { console.error('❌ Brak usera:', userId); return null; }
+        if (!userDoc.exists) {
+            console.error('❌ Brak usera:', userId);
+            if (!isDemoMode()) {
+                localStorage.removeItem('currentUserId');
+                localStorage.removeItem('selectedMembershipId');
+                if (auth && auth.currentUser) { try { await auth.signOut(); } catch(e) {} }
+                window.location.replace('index.html');
+            }
+            return null;
+        }
         const user = { id: userDoc.id, ...userDoc.data() };
 
         // Sync języka localStorage → Firestore
@@ -3202,8 +3219,8 @@ document.addEventListener('DOMContentLoaded', function () {
    PIN LOCK — _checkPinLock / sha256
    ═══════════════════════════════════════════════════════════════ */
 
-const _PIN_EXEMPT   = ['pin.html', 'login.html', 'blocked.html', 'platnosci-banner.html'];
-const _RODO_EXEMPT  = ['login.html', 'rodo-consent.html', 'pin.html', 'blocked.html', 'platnosci-banner.html'];
+const _PIN_EXEMPT   = ['pin.html', 'index.html', 'blocked.html', 'platnosci-banner.html'];
+const _RODO_EXEMPT  = ['index.html', 'rodo-consent.html', 'pin.html', 'blocked.html', 'platnosci-banner.html'];
 const _PIN_TIMEOUT  = 5 * 60 * 1000; // 5 min
 
 async function sha256(text) {
