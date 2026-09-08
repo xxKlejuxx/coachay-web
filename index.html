@@ -939,6 +939,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
       <div class="footer-logo">COACHAY</div>
       <div class="footer-links">
         <a href="polityka-prywatnosci.html" data-i18n="landing.footerPrivacy">Polityka prywatności</a>
+        <a href="rodo2.html">RODO</a>
       </div>
       <div class="footer-copy" data-i18n="landing.footerRights">© 2026 Coachay. Wszelkie prawa zastrzeżone.</div>
     </div>
@@ -1349,9 +1350,10 @@ function esc(s) {
 <!-- Firebase -->
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="coachay-core.js?v=20260903d"></script>
+<script src="coachay-core.js?v=20260907d"></script>
 <script>
 /* ══ AUTH DRAWER ══════════════════════════════════════════════ */
 function isMobile() {
@@ -1620,13 +1622,13 @@ async function checkInviteCode() {
             fnameEl.readOnly = true; lnameEl.readOnly = true;
             fnameEl.style.opacity = '0.6'; lnameEl.style.opacity = '0.6';
             window._regName = { fname: parts[0]||'', lname: parts.slice(1).join(' ')||'' };
-            document.getElementById('welcome-hi').textContent = t('greetingWithName', {name: prefilledName}) + ' 👋';
+            document.getElementById('welcome-hi').textContent = t('login.greetingWithName', {name: prefilledName}) + ' 👋';
         } else {
             fnameEl.value=''; lnameEl.value='';
             fnameEl.readOnly=false; lnameEl.readOnly=false;
             fnameEl.style.opacity=''; lnameEl.style.opacity='';
             window._regName = null;
-            document.getElementById('welcome-hi').textContent = t('auth.joinWelcomeTitle');
+            document.getElementById('welcome-hi').textContent = t('login.joinWelcomeTitle');
         }
         var roleLabels = {TRENER:t('auth.roles.TRENER'),RODZIC:t('auth.roles.RODZIC'),ZAWODNIK:t('auth.roles.ZAWODNIK'),OBSERWATOR:t('auth.roles.OBSERWATOR')};
         var roleIcons  = {TRENER:'🎽',RODZIC:'👨‍👦',ZAWODNIK:'⚽',OBSERWATOR:'👴'};
@@ -1635,14 +1637,13 @@ async function checkInviteCode() {
         window._rodzicConsentChecked = false;
         var consentRow = document.getElementById('rodzic-consent-row');
         if (consentRow) {
+            var joinBtn = document.getElementById('reg-join-btn');
             if (codeDoc.type==='RODZIC' && codeDoc.playerId) {
-                try {
-                    var pDocR = await db.collection('players').doc(codeDoc.playerId).get();
-                    var pName = pDocR.exists ? (pDocR.data().name||pDocR.data().displayName||'zawodnika') : 'zawodnika';
-                    document.getElementById('rodzic-consent-player').textContent = pName;
-                } catch(e) {}
+                var pName = codeDoc.playerName || 'zawodnika';
+                document.getElementById('rodzic-consent-player').textContent = pName;
                 consentRow.style.display = '';
-            } else { consentRow.style.display = 'none'; }
+                if (joinBtn) joinBtn.disabled = true;
+            } else { consentRow.style.display = 'none'; if (joinBtn) joinBtn.disabled = false; }
             var cb = document.getElementById('rodzic-cb');
             if (cb) { cb.textContent=''; cb.style.background=''; cb.style.borderColor=''; }
         }
@@ -1657,8 +1658,10 @@ function toggleRodzicConsent() {
     window._rodzicConsentChecked = !window._rodzicConsentChecked;
     var cb  = document.getElementById('rodzic-cb');
     var row = document.getElementById('rodzic-consent-row');
+    var btn = document.getElementById('reg-join-btn');
     if (cb) { cb.textContent = window._rodzicConsentChecked ? '✓' : ''; cb.style.background = window._rodzicConsentChecked ? 'var(--akcent)' : ''; cb.style.borderColor = window._rodzicConsentChecked ? 'var(--akcent)' : ''; }
     if (row) row.style.borderColor = window._rodzicConsentChecked ? 'var(--akcent)' : '';
+    if (btn) btn.disabled = !window._rodzicConsentChecked;
 }
 function resetCodeStep() {
     window._inviteCode = null; window._rodzicConsentChecked = false;
@@ -1801,7 +1804,7 @@ async function _createFirestoreDocsFromPending(pending) {
         await db.collection('memberships').doc(membershipId).set({ membershipId, userId:userCode, clubId:ic.clubId||null, teamId:ic.teamId||null, playerId:ic.playerId, role:'KIBIC', trainerRole:null, status:'ACTIVE', displayName, joinedAt:now, isDemo:false });
     } else {
         var mbrData = { membershipId, userId:userCode, clubId:ic.clubId||null, teamId:ic.teamId||null, playerId:ic.playerId||null, role:ic.type, trainerRole:ic.type==='TRENER'?(ic.role||'TRENER_GLOWNY'):null, status:'active', displayName, joinedAt:now, isDemo:false };
-        if (ic.type==='RODZIC' && parentConsentGiven) mbrData.parentConsentAcceptedAt = firebase.firestore.Timestamp.now();
+        if (ic.type==='RODZIC' && parentConsentGiven) mbrData.parentDataConsentAt = firebase.firestore.Timestamp.now();
         await db.collection('memberships').doc(membershipId).set(mbrData);
     }
     if (ic.type==='TRENER' && ic.trainerId) await db.collection('trainers').doc(ic.trainerId).update({ userId:userCode, displayName, firstName, lastName, registrationStatus:'ACTIVE', registeredAt:now });
@@ -1821,6 +1824,7 @@ async function checkEmailVerified() {
     if (!user) { alert(t('login.loginAgain')); return; }
     await user.reload();
     if (!user.emailVerified) { alert(t('login.notVerifiedYet')); return; }
+    await user.getIdToken(true); // wymuś odświeżenie tokenu — stary ma email_verified:false
     var pendingStr = localStorage.getItem('pendingRegistration');
     if (pendingStr) {
         try { var pending = JSON.parse(pendingStr); await _createFirestoreDocsFromPending(pending); localStorage.removeItem('pendingRegistration'); localStorage.setItem('currentUserId', pending.userCode); } catch(e) { alert(t('authErrors.generic')+': '+e.message); return; }

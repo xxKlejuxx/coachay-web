@@ -4,6 +4,34 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-08 19:00] [WEB+APP] [TODO] rodo2 — publiczna strona usunięcia konta (wymóg Google Play / App Store):
+- WEB: gotowe jako rodo2.html (https://coachay-5c3c9.web.app/rodo2.html) — strona publiczna, bez logowania, z tłumaczeniami PL/EN. Dwie metody: przycisk w app (rodo.html / blocked.html) i e-mail na support@coachay.com z danymi weryfikacyjnymi per metoda logowania (email, Google, Apple, telefon). Link w stopce index.html.
+- APP: Google Play i App Store wymagają linku do strony usunięcia konta w ustawieniach app store oraz (Google) w ustawieniach aplikacji. Dodać link do rodo2.html:
+  1. W App Store Connect — pole "Privacy Policy URL" uzupełnić / dodać osobny link "Data deletion" → https://coachay-5c3c9.web.app/rodo2.html
+  2. W Google Play Console — sekcja "Data safety" → "Account deletion" → podać URL rodo2.html
+  3. W aplikacji mobilnej — w ustawieniach / menu konta dodać przycisk/link "Usuń konto i dane" prowadzący do rodo2.html (lub analogiczny ekran natywny z tą samą logiką mailto)
+  4. Na ekranie blocked (brak dostępu) — dodać przycisk "Usuń moje konto i dane" analogiczny do WEB: najpierw dialog potwierdzenia, potem mailto na support@coachay.com z danymi: email, telefon, userId, clubId, rola. WEB: blocked.html ma to już zaimplementowane (requestDeleteBlocked() z showConfirmSheet).
+
+[2026-09-08 18:00] [WEB→APP] [INFO] blocked.html — pytanie do APP: jak mobile sprawdza dostęp/licencję na ekranie blocked?
+- WEB: blocked.html korzysta z initBlocked() + getAccessStatus(uid, clubId, { claimSlot: true }) z coachay-core.js
+- Pytanie do APP: czy na mobile blocked screen też wołasz getAccessStatus() czy inną funkcję? Jakie pola z Firestore sprawdzasz (access_rights, clubs.license, memberships.status)? Czy blocked decyduje coachay-core.js (redirect), czy natywny ekran ma własną logikę weryfikacji? Odpiszcie tu — chcemy zsynchronizować logikę sprawdzania.
+
+[2026-09-08 17:30] [WEB+APP] [DONE] Usunięcie konta — mail z danymi użytkownika:
+- WEB: requestDelete() w rodo.html zbiera email, displayName, userId, clubId, rolę z sesji i przekazuje do t('rodo.deleteMailBody', vars). Locale (pl+en) zaktualizowane: treść maila zawiera wszystkie pola identyfikujące usera.
+- APP: przy wysyłaniu prośby o usunięcie konta dołączyć w treści maila: email, displayName, userId, clubId, rolę (analogicznie do web)
+
+[2026-09-08 16:30] [WEB+APP] [DONE] Lista zawodników — oznaczenie dzieci rodzica gwiazdką:
+- WEB: na karcie zawodnika po prawej stronie pojawia się ★ (kolor akcentu) gdy zalogowany RODZIC i dany zawodnik jest w jego getMyPlayerIds() / childrenIds
+- APP: dodać analogiczne oznaczenie w liście zawodników dla roli RODZIC
+
+[2026-09-08 16:00] [WEB+APP] [DONE] membership RODZIC — pole zgody rodzica: poprawna nazwa to parentDataConsentAt (było parentConsentAcceptedAt w web → niespójność powodowała podwójną zgodę na rodo-consent.html). APP: sprawdzić czy używa parentDataConsentAt czy innego pola.
+
+[2026-09-08 15:30] [WEB+APP] [DONE] Rejestracja kodem RODZIC — przycisk "Dołącz do drużyny" blokowany dopóki zgoda niepotwierdzona:
+- WEB: przycisk reg-join-btn disabled=true przy wyświetleniu ekranu zgody; toggleRodzicConsent() odblokowuje po zaznaczeniu
+- APP: sprawdzić czy przycisk join jest blokowany przed zaznaczeniem checkboxa zgody rodzica
+
+[2026-09-08 15:00] [WEB+APP] [DONE] auth.consentText — dodano słowo "zawodnika" (PL) / "player" (EN) do tekstu zgody RODZIC przy rejestracji kodem. APP: zmienić odpowiedni string w mobile.
+
 [2026-09-07 12:00] [WEB] [DONE] druzyna.html — zapiszZawodnika(): dodano clubId: aktualnyClubId do players document — brakowało pola, nowi zawodnicy nie mieli clubId w Firestore
 
 [2026-09-07 12:00] [WEB] [TODO] Bezpieczeństwo — pozostałe punkty z sesji 2026-09-06/07:

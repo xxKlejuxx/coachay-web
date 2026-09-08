@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usunięcie konta — Coachay</title>
+<link rel="stylesheet" href="_global.css?v=20260826e">
+<script src="_i18n.js?v=20260908a"></script>
+<style>
+:root { --phone-h: unset; }
+body { min-height: 100vh; background: var(--tlo); overflow-y: auto; }
+.phone { max-width: 680px; min-height: unset; height: auto; border-radius: 0; border: none; box-shadow: none; }
+
+.r2-topbar { background: #000; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; padding: 14px 20px; }
+.r2-back { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1px solid var(--border2); color: var(--szary-j); font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; }
+.r2-back:active { opacity: 0.7; }
+.r2-logo { font-family: var(--font-d); font-size: 18px; font-weight: 900; color: var(--bialy); letter-spacing: 3px; margin-left: auto; }
+
+.r2-wrap { padding: 24px 20px 80px; display: flex; flex-direction: column; gap: 20px; }
+
+.r2-hero { padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.r2-eyebrow { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 10px; }
+.r2-title { font-family: var(--font-d); font-size: 26px; font-weight: 800; color: var(--bialy); margin: 0 0 10px; line-height: 1.2; }
+.r2-lead { font-size: 13px; color: var(--szary-j); font-weight: 600; line-height: 1.75; }
+
+.r2-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 8px; }
+
+.r2-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.r2-method-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.r2-method-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.r2-method-name { font-size: 14px; font-weight: 800; color: var(--bialy); }
+.r2-method-sub  { font-size: 11px; color: var(--szary); font-weight: 600; margin-top: 2px; }
+
+.r2-body { padding: 14px 16px; }
+.r2-body p { margin: 0 0 10px; font-size: 13px; color: var(--szary-j); font-weight: 600; line-height: 1.65; }
+.r2-body p:last-child { margin-bottom: 0; }
+
+.r2-step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.r2-step:last-child { border-bottom: none; }
+.r2-step-n { width: 22px; height: 22px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: var(--szary); flex-shrink: 0; margin-top: 1px; }
+.r2-step-t { font-size: 13px; color: var(--szary-j); font-weight: 600; line-height: 1.6; }
+.r2-step-t strong { color: var(--bialy); font-weight: 800; }
+
+.r2-verify { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.r2-verify:last-child { border-bottom: none; }
+.r2-verify-icon { width: 22px; height: 22px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: var(--szary); flex-shrink: 0; margin-top: 1px; }
+.r2-verify-type { font-size: 13px; font-weight: 800; color: var(--bialy); margin-bottom: 2px; }
+.r2-verify-req  { font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.55; }
+
+.r2-alert { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; }
+.r2-alert-warn { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); }
+.r2-alert-ok   { background: rgba(52,211,153,0.07); border: 1px solid rgba(52,211,153,0.2); }
+.r2-alert-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
+.r2-alert-text { font-size: 13px; font-weight: 700; line-height: 1.6; }
+.r2-alert-warn .r2-alert-text { color: #fca5a5; }
+.r2-alert-ok   .r2-alert-text { color: #6ee7b7; }
+
+.r2-link { color: var(--akcent, #3b82f6); font-weight: 800; text-decoration: none; }
+.r2-link:hover { text-decoration: underline; }
+
+.r2-footer { padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.8; }
+.r2-footer a { color: var(--szary); text-decoration: none; }
+.r2-footer a:hover { color: var(--szary-j); }
+</style>
+</head>
+<body>
+<div class="phone">
+
+    <div class="r2-topbar">
+        <a class="r2-back" id="r2-back-btn" href="https://coachay.com">← Wróć</a>
+        <span class="r2-logo">COACHAY</span>
+    </div>
+
+    <div class="r2-wrap">
+
+        <!-- Hero -->
+        <div class="r2-hero">
+            <div class="r2-eyebrow" id="r2-eyebrow">Prawo do bycia zapomnianym · art. 17 RODO</div>
+            <h1 class="r2-title" id="r2-title">Usunięcie konta i danych</h1>
+            <p class="r2-lead" id="r2-lead">Masz prawo do usunięcia swojego konta oraz wszystkich powiązanych danych z aplikacji Coachay w dowolnym momencie. Poniżej znajdziesz dwa sposoby — wybierz ten, który jest dla Ciebie wygodniejszy.</p>
+        </div>
+
+        <!-- Metoda 1 -->
+        <div>
+            <div class="r2-label" id="r2-m1-label">Metoda 1 — przez aplikację</div>
+            <div class="r2-card">
+                <div class="r2-method-head">
+                    <div class="r2-method-icon">📱</div>
+                    <div>
+                        <div class="r2-method-name" id="r2-m1-name">Przycisk w ustawieniach</div>
+                        <div class="r2-method-sub" id="r2-m1-sub">Najszybszy sposób — dane wypełniają się automatycznie</div>
+                    </div>
+                </div>
+                <div class="r2-body">
+                    <div class="r2-step"><div class="r2-step-n">1</div><div class="r2-step-t" id="r2-m1-s1">Zaloguj się do aplikacji Coachay</div></div>
+                    <div class="r2-step"><div class="r2-step-n">2</div><div class="r2-step-t" id="r2-m1-s2">Przejdź do <strong>Ustawienia → Polityka i RODO</strong></div></div>
+                    <div class="r2-step"><div class="r2-step-n">3</div><div class="r2-step-t" id="r2-m1-s3">Kliknij <strong>„Usuń moje konto i dane"</strong> na dole strony</div></div>
+                    <div class="r2-step"><div class="r2-step-n">4</div><div class="r2-step-t" id="r2-m1-s4">Aplikacja otworzy gotowego maila z Twoimi danymi. Wyślij go — i gotowe.</div></div>
+                </div>
+            </div>
+            <div class="r2-alert r2-alert-ok" style="margin-top:8px;">
+                <span class="r2-alert-icon">✓</span>
+                <span class="r2-alert-text" id="r2-m1-alert">Jeśli Twoje konto jest zablokowane, przycisk usunięcia znajdziesz też na ekranie blokady — bez potrzeby wchodzenia do pełnej aplikacji.</span>
+            </div>
+        </div>
+
+        <!-- Metoda 2 -->
+        <div>
+            <div class="r2-label" id="r2-m2-label">Metoda 2 — przez e-mail</div>
+            <div class="r2-card">
+                <div class="r2-method-head">
+                    <div class="r2-method-icon">✉️</div>
+                    <div>
+                        <div class="r2-method-name" id="r2-m2-name">Zgłoszenie e-mail</div>
+                        <div class="r2-method-sub" id="r2-m2-sub">Jeśli nie możesz zalogować się do aplikacji</div>
+                    </div>
+                </div>
+                <div class="r2-body">
+                    <p id="r2-m2-intro">Wyślij wiadomość na <a class="r2-link" href="mailto:support@coachay.com">support@coachay.com</a> z tytułem <strong style="color:var(--bialy)">„Prośba o usunięcie konta i danych"</strong>.</p>
+                    <p id="r2-m2-intro2">W treści podaj dane weryfikacyjne zgodne z metodą logowania:</p>
+
+                    <div class="r2-verify">
+                        <div class="r2-verify-icon">📧</div>
+                        <div>
+                            <div class="r2-verify-type" id="r2-v-email-t">E-mail &amp; hasło</div>
+                            <div class="r2-verify-req"  id="r2-v-email-r">Adres e-mail zarejestrowany w aplikacji</div>
+                        </div>
+                    </div>
+                    <div class="r2-verify">
+                        <div class="r2-verify-icon" style="font-size:12px;font-weight:900;">G</div>
+                        <div>
+                            <div class="r2-verify-type" id="r2-v-google-t">Google</div>
+                            <div class="r2-verify-req"  id="r2-v-google-r">Adres e-mail konta Google powiązanego z Coachay</div>
+                        </div>
+                    </div>
+                    <div class="r2-verify">
+                        <div class="r2-verify-icon">🍎</div>
+                        <div>
+                            <div class="r2-verify-type" id="r2-v-apple-t">Apple</div>
+                            <div class="r2-verify-req"  id="r2-v-apple-r">Adres e-mail Apple ID lub adres przekierowania @privaterelay.appleid.com (widoczny w ustawieniach iPhone → Apple ID → Coachay)</div>
+                        </div>
+                    </div>
+                    <div class="r2-verify">
+                        <div class="r2-verify-icon">📞</div>
+                        <div>
+                            <div class="r2-verify-type" id="r2-v-phone-t">Numer telefonu</div>
+                            <div class="r2-verify-req"  id="r2-v-phone-r">Numer użyty do rejestracji w formacie +48…</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="r2-alert r2-alert-warn" style="margin-top:8px;">
+                <span class="r2-alert-icon">⚠️</span>
+                <span class="r2-alert-text" id="r2-m2-alert">Ze względów bezpieczeństwa rozpatrzymy wyłącznie zgłoszenia z poprawnymi danymi weryfikacyjnymi. Nie możemy usunąć konta na podstawie samego adresu e-mail — musi on zgadzać się z metodą logowania.</span>
+            </div>
+        </div>
+
+        <!-- Co usuwamy -->
+        <div>
+            <div class="r2-label" id="r2-del-label">Co zostaje usunięte</div>
+            <div class="r2-card">
+                <div class="r2-body">
+                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">✓</div><div class="r2-step-t" id="r2-d1">Konto użytkownika — profil, zdjęcie, dane kontaktowe</div></div>
+                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">✓</div><div class="r2-step-t" id="r2-d2">Historia obecności, zadań i aktywności w drużynach</div></div>
+                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">✓</div><div class="r2-step-t" id="r2-d3">Przynależność do wszystkich drużyn i klubów</div></div>
+                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">✓</div><div class="r2-step-t" id="r2-d4">Wiadomości i powiadomienia powiązane z kontem</div></div>
+                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">✓</div><div class="r2-step-t" id="r2-d5">Dane dostępu i licencja przypisana do konta</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Czas realizacji -->
+        <div class="r2-alert r2-alert-ok">
+            <span class="r2-alert-icon">🕐</span>
+            <span class="r2-alert-text" id="r2-time-alert"><strong>Czas realizacji:</strong> do 30 dni roboczych od potwierdzenia zgłoszenia, zgodnie z art. 12 RODO.</span>
+        </div>
+
+        <!-- Stopka -->
+        <div class="r2-footer">
+            Coachay · NIP 771-222-88-03 · <a href="mailto:support@coachay.com">support@coachay.com</a><br>
+            <a href="polityka-prywatnosci.html" id="r2-f-privacy">Polityka prywatności</a> &nbsp;·&nbsp; <a href="rodo.html" id="r2-f-rodo">RODO (po zalogowaniu)</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function renderRodo2() {
+    const _t = (key, fb) => {
+        if (typeof t !== 'function') return fb;
+        const v = t('rodo2.' + key);
+        return (v && v !== 'rodo2.' + key) ? v : fb;
+    };
+    const set = (id, html, fb) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = _t(html, fb !== undefined ? fb : el.innerHTML);
+    };
+    const txt = (id, key, fb) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = _t(key, fb !== undefined ? fb : el.textContent);
+    };
+
+    document.title = _t('pageTitle', document.title);
+
+    const back = document.getElementById('r2-back-btn');
+    if (back) back.textContent = _t('back', '← Wróć');
+
+    txt('r2-eyebrow',  'eyebrow',  'Prawo do bycia zapomnianym · art. 17 RODO');
+    txt('r2-title',    'title',    'Usunięcie konta i danych');
+    txt('r2-lead',     'lead',     null);
+
+    txt('r2-m1-label', 'method1Label', null);
+    txt('r2-m1-name',  'method1Name',  null);
+    txt('r2-m1-sub',   'method1Sub',   null);
+    txt('r2-m1-s1',    'method1Step1', null);
+    set('r2-m1-s2',    'method1Step2', null);
+    set('r2-m1-s3',    'method1Step3', null);
+    txt('r2-m1-s4',    'method1Step4', null);
+    txt('r2-m1-alert', 'method1Alert', null);
+
+    txt('r2-m2-label', 'method2Label', null);
+    txt('r2-m2-name',  'method2Name',  null);
+    txt('r2-m2-sub',   'method2Sub',   null);
+    set('r2-m2-intro',  'method2Intro',  null);
+    txt('r2-m2-intro2', 'method2Intro2', null);
+
+    set('r2-v-email-t',  'verifyEmailType',  null);
+    txt('r2-v-email-r',  'verifyEmailReq',   null);
+    set('r2-v-google-t', 'verifyGoogleType', null);
+    txt('r2-v-google-r', 'verifyGoogleReq',  null);
+    txt('r2-v-apple-t',  'verifyAppleType',  null);
+    txt('r2-v-apple-r',  'verifyAppleReq',   null);
+    txt('r2-v-phone-t',  'verifyPhoneType',  null);
+    txt('r2-v-phone-r',  'verifyPhoneReq',   null);
+
+    txt('r2-m2-alert',  'method2Alert', null);
+
+    txt('r2-del-label', 'deletedLabel', null);
+    txt('r2-d1', 'deleted1', null);
+    txt('r2-d2', 'deleted2', null);
+    txt('r2-d3', 'deleted3', null);
+    txt('r2-d4', 'deleted4', null);
+    txt('r2-d5', 'deleted5', null);
+
+    set('r2-time-alert', 'timeAlert', null);
+    txt('r2-f-privacy',  'footerPrivacy', null);
+    txt('r2-f-rodo',     'footerRodo',    null);
+}
+
+if (typeof onI18nReady === 'function') {
+    onI18nReady(renderRodo2);
+} else {
+    renderRodo2();
+}
+</script>
+</body>
+</html>
