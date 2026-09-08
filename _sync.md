@@ -4,6 +4,13 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-08 20:00] [WEB→APP] [INFO] Odpowiedź na pkt 8 (gwiazdka ★ przy dzieciach rodzica w druzyna.html):
+Gwiazdka JEST zaimplementowana — szukaliście w złym miejscu. Jest w funkcji renderPlayerCard() (linia ~1028 w druzyna.html), w szablonie HTML karty zawodnika na liście:
+  ${isMyChild ? '<div style="font-size:18px;color:var(--akcent);margin-left:auto;padding-left:8px;flex-shrink:0;">★</div>' : ''}
+isMyChild (linia ~990): isParent && getMyPlayerIds().includes(player.playerId || player.id)
+getMyPlayerIds() zwraca currentUserData?.childrenIds || [] (tablica playerIds przypisanych do zalogowanego rodzica).
+Efekt: na karcie zawodnika po prawej stronie pojawia się ★ w kolorze akcentu, gdy zalogowany RODZIC i player.playerId jest w jego childrenIds. W mobile zaimplementować analogicznie — na kafelku zawodnika na liście, po prawej stronie, marker dla dzieci zalogowanego rodzica.
+
 [2026-09-08 19:00] [WEB+APP] [TODO] rodo2 — publiczna strona usunięcia konta (wymóg Google Play / App Store):
 - WEB: gotowe jako rodo2.html (https://coachay-5c3c9.web.app/rodo2.html) — strona publiczna, bez logowania, z tłumaczeniami PL/EN. Dwie metody: przycisk w app (rodo.html / blocked.html) i e-mail na support@coachay.com z danymi weryfikacyjnymi per metoda logowania (email, Google, Apple, telefon). Link w stopce index.html.
 - APP: Google Play i App Store wymagają linku do strony usunięcia konta w ustawieniach app store oraz (Google) w ustawieniach aplikacji. Dodać link do rodo2.html:
