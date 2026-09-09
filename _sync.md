@@ -387,3 +387,11 @@ Sprawdzone na swiezym clone (branch main, po ostatnim push). Mozliwe ze kod o kt
 5) Dev-purchase (test) sekcje w blocked.tsx/platnosci.tsx ZOSTAJA bez zmian (Rafal potwierdzil ze maja zostac dopoki realne sklepy nie sa w pelni skonfigurowane).
 6) versionCode - NIE trzeba recznie podbijac, eas.json (production) ma juz appVersionSource:"remote" + autoIncrement:true, EAS sam zarzadza wersja przy kazdym buildzie. app.json version (marketing) podbity do 1.0.5 na prosbe Rafala.
 tsc czysty, expo export (bundling JS, 1405 modulow) przechodzi bez bledow importow. Commit: 8d09834 (Coachay_mobile_app). Rafal musi teraz zbudowac nowy build (eas build --platform android --profile production) zeby to przetestowac na urzadzeniu z realnym Test Store RevenueCat.
+
+[2026-09-09 02:53] [APP] [DONE] Korekta RevenueCat (poprzedni wpis 8d09834 zakladal zly model produktow):
+Rafal potwierdzil realna konfiguracje w Google Play - 4 produkty (NIE 3+lifetime jak w oryginalnym TODO z www):
+coachay_individual_monthly (4,99 zl), coachay_individual_yearly (49,99 zl), coachay_family_monthly (19,99 zl), coachay_family_yearly (199,99 zl).
+Produkt "lifetime" nigdy nie powstal w Google Play - usuniety z appki.
+Zmiany: config/revenuecat.ts (REVENUECAT_PRODUCT_IDS - 4 realne ID), purchases.ts (getCoachayProducts/buyProduct pobiera i kupuje bezposrednio po ID, bez Offerings), platnosci.tsx (teraz oba plany - Indywidualny i Rodzinny - maja realny paywall z 2 przyciskami monthly/yearly i realnymi cenami z RevenueCat, nie tylko Indywidualny jak poprzednio).
+NIEPEWNE - prosze o potwierdzenie: ile slotow (rodzic+kibice) ma dawac realny zakup Family? Na razie appka uzywa 6 (1+5), tak jak testowy przycisk "Kup Family" - jesli docelowy produkt Family w Google Play ma dawac inna liczbe, dajcie znac.
+Commit: 1b24250 (Coachay_mobile_app). tsc czysty.
