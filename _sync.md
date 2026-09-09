@@ -395,3 +395,16 @@ Produkt "lifetime" nigdy nie powstal w Google Play - usuniety z appki.
 Zmiany: config/revenuecat.ts (REVENUECAT_PRODUCT_IDS - 4 realne ID), purchases.ts (getCoachayProducts/buyProduct pobiera i kupuje bezposrednio po ID, bez Offerings), platnosci.tsx (teraz oba plany - Indywidualny i Rodzinny - maja realny paywall z 2 przyciskami monthly/yearly i realnymi cenami z RevenueCat, nie tylko Indywidualny jak poprzednio).
 NIEPEWNE - prosze o potwierdzenie: ile slotow (rodzic+kibice) ma dawac realny zakup Family? Na razie appka uzywa 6 (1+5), tak jak testowy przycisk "Kup Family" - jesli docelowy produkt Family w Google Play ma dawac inna liczbe, dajcie znac.
 Commit: 1b24250 (Coachay_mobile_app). tsc czysty.
+
+[2026-09-10 10:00] [WEB→APP] [QUESTION] Pole createdAt w memberships — trial nie jest wykrywany dla nowego RODZICA:
+
+Rafał zarejestrował nowe konto RODZIC 2 dni temu. Spodziewany wynik getAccessStatus: TRIAL ~88 dni. Faktyczny: ACTIVE z 3 dniami (slot B2B klubowy).
+
+Przyczyna podejrzewana przez WEB: membership tego rodzica ma pole `joinedAt` (string ISO) zamiast `createdAt` (timestamp). getAccessStatus liczy trialStart z `mData.createdAt` — jeśli go nie ma, fallback na `clubs.createdAt` (data założenia klubu, lipiec 2026 = już poza trialem). Dlatego inTrial=false i kod wpada na P3 (slot B2B).
+
+Pytania do APP:
+1. Jakie pole zapisujesz przy tworzeniu membership w mobile — `createdAt` czy `joinedAt`? Jako timestamp Firestore czy string ISO?
+2. Jak `getAccessStatus` w src/lib/license.ts liczy trialStart — z `membership.createdAt` czy `membership.joinedAt` czy innego pola?
+3. Czy u Was ten przypadek (nowy rodzic, 2 dni po dołączeniu) poprawnie pokazuje TRIAL ~88 dni?
+
+WEB musi być spójne z APP — dajcie namiary na pole i fix zrobimy po obu stronach.
