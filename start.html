@@ -891,8 +891,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             } else {
                 const access = await checkPaymentAccess(user.userId || user.id, clubId);
                 if (!access) return;
-                if (access && shouldShowTrialBanner(access.daysLeft)) {
-                    localStorage.setItem('trialBannerShownDay', String(access.daysLeft));
+                if (access && (access.status === 'TRIAL' || access.status === 'GRACE') && shouldShowTrialBanner(access.daysLeft)) {
                     window.location.href = `platnosci-banner.html?status=${access.status}&days=${access.daysLeft}&redirect=${encodeURIComponent('start.html')}`;
                     return;
                 }
