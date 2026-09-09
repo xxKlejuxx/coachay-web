@@ -27,6 +27,108 @@ Wersja: 4.7 | Data: 2026-04-17
 
 ---
 
+## 🔒 Bezpieczeństwo
+
+> Ta sekcja dokumentuje co znaleźliśmy, co zbudowaliśmy i co jeszcze trzeba zrobić. Historia dla przyszłych pokoleń.
+
+### Co znaleźliśmy (luki, które istniały przed naprawą)
+
+1. **Brak izolacji między klubami w regułach Firestore** — reguły pozwalały każdemu zalogowanemu userowi (`request.auth != null`) odczytać memberships/players/events dowolnego klubu. Trener klubu A mógł przez Firestore API zobaczyć zawodników klubu B.
+2. **Brak weryfikacji email przy logowaniu** — user mógł się zalogować bez potwierdzenia maila, co otwierało możliwość zakładania kont na cudze adresy.
+3. **`authDomain` → zepsute linki weryfikacyjne na Safari/iOS** — Firebase wysyłało linki weryfikacyjne przez `coachay-5c3c9.firebaseapp.com` zamiast `coachay.com`; Safari (ITP) blokował cross-site cookies, link nie działał.
+4. **`doLogin()` bez `emailVerified` guard** — nawet po naprawieniu rejestracji, istniejące funkcje logowania (email+hasło i SMS) nie sprawdzały `user.emailVerified` przed wejściem do appki.
+5. **`start.html` / `findUserByAuthUid()`** — globalne `window.findUserByAuthUid` nie istniało (wywoływane z `start.html`), powodowało runtime crash przy specyficznych warunkach.
+6. **`players` bez `clubId`** — nowo dodawani zawodnicy przez `zapiszZawodnika()` w `druzyna.html` nie mieli pola `clubId` w dokumencie. Reguły Firestore dla `players` wymagają `clubId` do izolacji, więc nowi zawodnicy byli dostępni szerzej niż powinni.
+7. **Memberships KIBIC bez `clubId` (legacy)** — stare KIBIC memberships zarejestrowane przed migracją miały `clubId: null`. Reguły z `|| resource.data.clubId == null` były tymczasowym fallbackiem, nie docelowym rozwiązaniem.
+8. **Wildcard reguła Firestore pozwalała pisać do `authIndex` innych userów** — dopóki nie było szczegółowej reguły dla `authIndex/{authUid}`, każdy zalogowany user mógł zapisać dokument `authIndex` innej osoby (odkryte przy pierwszej migracji — ta migracja działała właśnie przez tę lukę).
+
+---
+
+### Co zbudowaliśmy
+
+#### Kolekcja `authIndex` — izolacja między klubami w regułach Firestore
+
+**Problem:** Reguły Firestore mogą robić `get()` tylko na konkretnej ścieżce dokumentu — nie mogą odpytywać kolekcji przez pole. Dokument `users/{userId}` jest kluczowany po `userId`, a nie po `authUid` (Firebase Auth UID). Reguły nie mogły więc sprawdzić "do jakich klubów należy ten user" przez kolekcję `users`.
+
+**Rozwiązanie:** Nowa kolekcja `authIndex/{authUid}` — ID dokumentu to Firebase Auth UID (znany w regułach jako `request.auth.uid`), zawartość: `{ userId, clubIds: [] }`. Reguły robią `get(/databases/.../authIndex/$(request.auth.uid))` → O(1), bez query.
+
+**Reguła `inMyClub(clubId)`:**
+```javascript
+function inMyClub(clubId) {
+  return request.auth != null
+    && get(/databases/$(database)/documents/authIndex/$(request.auth.uid)).data.clubIds.hasAny([clubId]);
+}
+```
+Użyta przy: `memberships`, `players`, `events`, `tasks`, `announcements`, `trainers`.
+
+**Reguła dla samego `authIndex`:**
+```javascript
+match /authIndex/{authUid} {
+  allow read, write: if request.auth != null && request.auth.uid == authUid;
+}
+```
+Każdy user może czytać/pisać tylko swój własny dokument. Admin SDK (Cloud Functions, skrypty Node.js) omija reguły.
+
+**Kiedy i jak wypełniany `authIndex`:**
+- Rejestracja przez kod zaproszenia (`login.html`) — `_createFirestoreDocsFromPending()` tworzy `authIndex` przy tworzeniu konta.
+- Migracja ręczna — skrypt `functions/fix_legacy_kibic.js` (Admin SDK) naprawia istniejące konta bez `authIndex`.
+- Demo mode (anonimowe logowanie) — `authIndex` nie jest tworzony, reguły mają osobny path dla demo.
+
+#### Weryfikacja emaila
+
+- `login.html` — `doLogin()` (email+hasło i SMS): blokada jeśli `!user.emailVerified`, z komunikatem "Potwierdź adres e-mail — link wysłaliśmy na [email]" i przyciskiem "Wyślij ponownie".
+- `authDomain` zmieniony na `coachay.com` w Firebase Console → linki weryfikacyjne działają poprawnie w Safari/iOS (brak cross-site cookie problem z `.firebaseapp.com`).
+
+#### Filtr wulgaryzmów
+
+5 Cloud Functions (`checkVulgarism_*`) sprawdzają treści zapisywane przez userów (czat, ogłoszenia, komentarze, profile, zadania) — lista wulgaryzmów w `functions/vulgarisms.js`. Scope: cała appka (nie tylko demo). Blokuje zapis przy dopasowaniu, zwraca błąd do UI.
+
+#### Fix `players.clubId`
+
+`zapiszZawodnika()` w `druzyna.html` uzupełniony o `clubId: aktualnyClubId || null` w dokumencie zawodnika. Wcześniej pole nie istniało — nowi zawodnicy nie mieli izolacji per klub.
+
+#### Naprawa legacy KIBIC (Firestore rules + skrypt)
+
+Reguły `memberships` i `players` mają tymczasowy fallback `|| resource.data.clubId == null` — pozwala dostęp do starych dokumentów bez `clubId` do czasu migracji.
+
+Skrypt `functions/fix_legacy_kibic.js` (Admin SDK, Node.js) — naprawia KIBIC memberships z `clubId: null`:
+1. Resolve `clubId` przez membership RODZIC tego samego `playerId` (fallback: przez `teamId`).
+2. Aktualizuje membership + `authIndex` (Admin SDK może pisać do cudzych `authIndex`).
+
+Uruchomienie:
+```bash
+cd functions
+gcloud auth application-default login
+node fix_legacy_kibic.js
+```
+
+---
+
+### TODO — do zrobienia
+
+- [ ] **App Check (reCAPTCHA v3)** — blokada botów / niezautoryzowanych klientów przed Firebase API.
+  - Rafał: utwórz klucz w [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin) → typ reCAPTCHA v3, domena `coachay.com`.
+  - WEB: `firebase.appCheck().activate(siteKey, true)` w `coachay-core.js` (`initFirebase()`).
+  - Firebase Console: App Check → wymuś dla Firestore i Authentication.
+  - Po włączeniu: każde żądanie do Firestore musi przejść przez App Check token — żadne zewnętrzne skrypty/boty nie mogą odpytywać API bezpośrednio.
+
+- [ ] **SMS daily limit** — bez limitu wysyłka SMS przez Firebase Authentication może generować koszty.
+  - Rafał: Firebase Console → Authentication → Settings → SMS usage limits → ustaw **100/day** (lub mniej, zależnie od realnego ruchu).
+
+- [ ] **Ewa Testowa — brakujący `authIndex`** — jedyny realny (nie-demo) user bez dokumentu `authIndex`.
+  - `userId = authUid = a8NP9Q9PZAgFDxMmCsZBoKAMTco2` (zarejestrowała się przed `generateUserId()`, ma `userId == authUid`).
+  - Rafał: Firebase Console → Firestore → kolekcja `authIndex` → nowy dokument:
+    - ID: `a8NP9Q9PZAgFDxMmCsZBoKAMTco2`
+    - Pola: `userId: "a8NP9Q9PZAgFDxMmCsZBoKAMTco2"`, `clubIds: ["club_orly_praga"]`
+
+- [ ] **Usunąć fallback `|| resource.data.clubId == null` z reguł Firestore** — po uruchomieniu `fix_legacy_kibic.js` i ręcznym stworzeniu `authIndex` dla Ewy (dwa punkty wyżej), wszystkie dokumenty będą miały `clubId`. Fallback można wtedy usunąć — bez niego izolacja będzie pełna, żadna "dziura" przez null-clubId.
+
+- [ ] **`admin.auth().updateUser(uid, {disabled:true})`** — dziś zawieszony trener (`isReadOnly` w Firestore) technicznie wciąż może się zalogować przez Firebase Auth. Docelowo: blokada Auth powinna iść w parze z blokadą Firestore. Wymaga Cloud Function — klient nie ma uprawnień do wyłączenia cudzego konta Auth.
+
+- [ ] **Audyt: `requireWriteAccess()` vs ręczne `isDemoMode()` checki** — znalezione 2026-07-28: `requireWriteAccess()` jest realnie użyta tylko w `klub.html` (3 miejsca), reszta 14 plików (34 miejsca) blokuje zapis przez ręczne `isDemoMode()` checki. Ryzyko: nowy przycisk zapisu bez checka = demo/zawieszony/grace-period user może faktycznie coś zapisać.
+
+---
+
 ## ⚖️ RODO / Usuwanie danych
 
 ### Zasada ogólna (ustalona 2026-07-28, patrz sesja niżej dla pełnego uzasadnienia)

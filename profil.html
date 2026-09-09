@@ -6,9 +6,10 @@
 <title>COACHAY — Mój profil</title>
 <link rel="stylesheet" href="_global.css?v=20260802d">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20260820"></script>
+<script src="_i18n.js?v=20260910a"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
@@ -365,7 +366,7 @@
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20260903d"></script>
+<script src="coachay-core.js?v=20260907d"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    PROFIL.HTML — Mój profil (wszystkie role)
@@ -844,7 +845,7 @@ async function renderKibiceSection(allMemberships) {
                 <button class="sort-btn" data-typ="KIBIC" onclick="wybierzTypKoduP('${d.playerId}',this,'KIBIC')">${_tP('roles.KIBIC', '👴 Kibic')}</button>
             </div>
             <div id="kod-typ-info-${d.playerId}" style="font-size:11px;color:var(--szary);margin-bottom:10px;line-height:1.5;">${getKodOpisyP().ZAWODNIK}</div>
-            <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size:12px;" onclick="generujKodP('${d.playerId}','${d.clubId}','${d.teamId}',this)">${_tP('profil.generateCodeButton', '🔑 Wygeneruj nowy kod')}</button>
+            <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size:12px;" onclick="generujKodP('${d.playerId}','${d.clubId}','${d.teamId}',this,${JSON.stringify(d.nazwa)})">${_tP('profil.generateCodeButton', '🔑 Wygeneruj nowy kod')}</button>
             <div id="kod-content-${d.playerId}"><div class="pr-kod-empty">${_tP('profil.loadingLabel', 'Ładowanie...')}</div></div>
 
             <div class="pr-kibic-section-lbl" style="margin-top:12px;">${_tP('profil.registeredKibiceLabel', 'Zarejestrowani kibice')}</div>
@@ -1019,7 +1020,7 @@ async function zaladujKodyP(playerId) {
     }
 }
 
-async function generujKodP(playerId, clubId, teamId, btnEl) {
+async function generujKodP(playerId, clubId, teamId, btnEl, playerName) {
     const typ = (stanKoduDzieci[playerId] && stanKoduDzieci[playerId].typ) || 'ZAWODNIK';
     btnEl.disabled = true;
     const prevLabel = btnEl.textContent;
@@ -1080,6 +1081,7 @@ async function generujKodP(playerId, clubId, teamId, btnEl) {
         pinHash: '',
         type: typ,
         playerId: playerId,
+        playerName: playerName || '',
         teamId: teamId || currentTeamId || null,
         clubId: clubId || currentClubId || null,
         createdBy: currentUserId,
@@ -1395,7 +1397,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             initProfil();
         } else {
-            if (!isDemoMode()) window.location.href = 'login.html';
+            if (!isDemoMode()) window.location.href = 'index.html';
         }
     });
 });

@@ -28,45 +28,45 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == authUid;
     }
 
-    // users — odczyt przez zweryfikowanych (niska wrażliwość, potrzebny cross-club lookup w apce)
+    // users — create podczas rejestracji (przed weryfikacją emaila), read/update przez zweryfikowanych
     match /users/{userId} {
       allow read: if isVerified();
-      allow create: if isVerified() && request.resource.data.authUid == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.authUid == request.auth.uid;
       allow update, delete: if isVerified();
     }
 
-    // clubs — izolacja po clubId (= document ID)
+    // clubs — create podczas rejestracji (przed weryfikacją emaila); inMyClub() gwarantuje izolację
     match /clubs/{clubId} {
       allow read: if isVerified() && inMyClub(clubId);
-      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
       allow update, delete: if isVerified() && inMyClub(clubId);
     }
 
-    // memberships — izolacja po clubId; legacy docs z clubId==null dostępne dla zweryfikowanych
+    // memberships — create podczas rejestracji; legacy docs z clubId==null dostępne dla zweryfikowanych
     match /memberships/{membershipId} {
       allow read: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
-      allow create: if isVerified() && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
+      allow create: if request.auth != null && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
       allow update, delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
     }
 
     // teams — izolacja po clubId
     match /teams/{teamId} {
       allow read: if isVerified() && inMyClub(resource.data.clubId);
-      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
       allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
 
-    // trainers — izolacja po clubId
+    // trainers — create podczas rejestracji
     match /trainers/{trainerId} {
       allow read: if isVerified() && inMyClub(resource.data.clubId);
-      allow create: if isVerified() && inMyClub(request.resource.data.clubId);
+      allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
       allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
 
     // players — izolacja po clubId; legacy docs z clubId==null dostępne dla zweryfikowanych
     match /players/{playerId} {
       allow read: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
-      allow create: if isVerified() && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
+      allow create: if request.auth != null && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
       allow update, delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
     }
 

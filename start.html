@@ -6,10 +6,11 @@
 <title>COACHAY — Start</title>
 <link rel="stylesheet" href="_global.css?v=20260802d">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20260820"></script>
+<script src="_i18n.js?v=20260910a"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <style>
 :root { --phone-h: 750px; }
@@ -777,7 +778,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     <div class="mp-body" id="mp-body"></div>
 </div>
 
-<script src="coachay-core.js?v=20260903d"></script>
+<script src="coachay-core.js?v=20260907d"></script>
 <script>
     /* ─────────────────────────────────────────────────────
        i18n helpers
@@ -847,7 +848,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         checkImpersonationBanner();
 
         const session = await initSession();
-        if (!session) { console.error('Brak sesji'); return; }
+        if (!session) {
+            console.error('Brak sesji');
+            if (!isDemoMode()) { await auth.signOut(); window.location.href = 'index.html'; }
+            return;
+        }
         const { user, team, membership } = session;
         if (!user) { console.error('Brak danych'); return; }
 
@@ -2527,6 +2532,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 if (!isDemoMode() && user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
                     await auth.signOut(); window.location.href = 'index.html'; return;
                 }
+                // Force token refresh — token może mieć email_verified:false z cache po weryfikacji
+                if (user.emailVerified) { try { await user.getIdToken(true); } catch(e) {} }
                 if (!isDemoMode() && !getCurrentUserId()) {
                     var userCode = await findUserByAuthUid(user.uid);
                     if (!userCode) { await auth.signOut(); window.location.href = 'index.html'; return; }
@@ -2534,7 +2541,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 }
                 loadDashboard();
             } else {
-                if (!isDemoMode()) { window.location.href = 'login.html'; }
+                if (!isDemoMode()) { window.location.href = 'index.html'; }
             }
         });
     });
