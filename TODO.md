@@ -239,6 +239,7 @@ Dziś niespójne: tworzenie nowego eventu (`kalendarz.html:1040`) ma tylko sztyw
 
 ## 📋 Priorytet 4 — Porządki techniczne
 
+- [ ] i18n race condition — każdy ekran renderuje przed załadowaniem locale (fetch async). Objaw: przy zimnym cache (hard reset) pojawiają się surowe klucze zamiast tłumaczeń. Fix: owinąć init każdego ekranu w `onI18nReady()`. Obecnie obejście przez `_tP(key, fallback)` w start.html — ale nie wszystkie ekrany i nie wszystkie klucze są pokryte.
 - [x] Usunąć kolekcję `matches` z Firebase
 - [x] `players.guardianIds` — migracja danych demo
 - [x] Weryfikacja wszystkich ról na wszystkich ekranach
