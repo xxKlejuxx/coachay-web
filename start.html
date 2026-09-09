@@ -1720,7 +1720,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const render = (el, list) => {
             el.innerHTML = '';
             if (list.length === 0) {
-                const msg = typeof t === 'function' ? t('start.noEvents', { days: UPCOMING_DAYS }) : `Brak wydarzeń w najbliższych ${UPCOMING_DAYS} dniach`;
+                const msg = _tP('start.noEvents', `Brak wydarzeń w najbliższych ${UPCOMING_DAYS} dniach`)?.replace?.('{{days}}', UPCOMING_DAYS) ?? `Brak wydarzeń w najbliższych ${UPCOMING_DAYS} dniach`;
                 el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--szary);font-size:13px;">${msg}</div>`;
                 return;
             }
@@ -1730,7 +1730,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const dash  = document.getElementById('ev-dashboard');
         const more  = document.getElementById('ev-more');
         const panel = document.getElementById('ev-panel-body');
-        const allLabel = typeof t === 'function' ? t('start.seeAll') : 'Wszystkie';
+        const allLabel = _tP('start.seeAll', 'Wszystkie');
 
         const dashEvents = items.filter(i => i.source === 'event').slice(0, MAX_EVENTS);
         const dashAnns   = items.filter(i => i.source === 'announcement').slice(0, MAX_ANN);
@@ -2071,8 +2071,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             }));
         }
 
-        const allLabel = typeof t === 'function' ? t('start.seeAll') : 'Wszystkie';
-        const noLabel  = typeof t === 'function' ? t('start.noTasks') : 'Brak zadań';
+        const allLabel = _tP('start.seeAll', 'Wszystkie');
+        const noLabel  = _tP('start.noTasks', 'Brak zadań');
 
         const dash = document.getElementById('task-dashboard');
         const more = document.getElementById('task-more');
