@@ -447,3 +447,35 @@ Rafal chcial zeby nowi userzy po pierwszej rejestracji automatycznie widzieli ek
 PROSBA: jesli chcecie, zeby to samo dzialalo dla userow, ktorzy zakladaja konto NA WASZEJ stronie (a potem np. instaluja appke mobilna) — dopiszcie `onboardingDone: false` do dokumentu `users/{id}` przy KAZDYM tworzeniu nowego konta u Was (analogicznie do tego co my zrobilismy). Appka mobilna juz to obsluzy automatycznie, nic wiecej nie trzeba robic po naszej stronie. Jesli tego nie zrobicie — nic sie nie zepsuje, po prostu userzy zarejestrowani przez web nie zobacza auto-onboardingu w appce (tylko recznie z menu, jak dotychczas).
 
 Commit: 413328d.
+
+[2026-09-10 04:20] [APP] [TODO→WEB] KOREKTA poprzedniego wpisu o onboardingDone + nowy, wazniejszy temat: wersjonowanie zgod prawnych:
+
+**Koryguje wpis sprzed kilku godzin (03:15, commit 413328d)** — prosba o `onboardingDone: false` przy Waszej rejestracji jest NIEAKTUALNA, prosze ZIGNOROWAC. Rafal slusznie zauwazyl, ze onboarding to czysto mobile'owy ekran (walkthrough po appce) i nie ma sensu, zeby web cokolwiek o nim wiedzial czy zapisywal — appka teraz sama sobie z tym radzi w 100% (wersjonowanie zamiast flagi, patrz nizej analogiczny mechanizm). Web NIC nie musi robic w tym temacie, przepraszam za zamieszanie.
+
+**Nowy, faktycznie wazny temat — wspolny mechanizm wersjonowania zgod (RODO/polityka prywatnosci), bo TO jest cross-platformowe:**
+
+Rafal chcial miec mozliwosc wymuszenia PONOWNEJ akceptacji zgody (np. po zmianie regulaminu) BEZ potrzeby wydawania nowej appki w sklepach — dotychczas raz zaakceptowane `termsAcceptedAt` bylo wieczne, zaden mechanizm ponownego wymuszenia nie istnial (ani w appce, ani po Waszej stronie o ile wiem).
+
+Rozwiazanie (juz wdrozone w mobile, commit 727559b) — prosba o analogiczna implementacje po Waszej stronie, bo `users/{id}` to WSPOLNY dokument:
+
+1. Nowy dokument Firestore `config/legal` z polami (liczby, zaczynamy wszystkie od `1`):
+   - `termsVersion` — ogolna polityka prywatnosci, dotyczy KAZDEGO usera
+   - `parentalConsentVersion` — oswiadczenie trenera/admina klubu o zgodach rodzicow na dane zawodnikow (dotyczy TYLKO trenerow)
+   - `parentDataConsentVersion` — zgoda RODZICA na przetwarzanie danych KONKRETNEGO dziecka (per membership, dotyczy TYLKO rodzicow)
+
+   To TRZY NIEZALEZNE liczby (Rafal: "sa inne zgody dla rodzica i inne dla trenera") — podbicie jednej nie rusza pozostalych.
+
+2. Odpowiadajace pola na kontach:
+   - `users/{id}.termsAcceptedVersion` (liczba) — obok istniejacego `termsAcceptedAt` (zostaje jako data)
+   - `trainers/{id}.parentalConsentVersion` (liczba) — obok `parentalConsentDeclaredAt`
+   - `memberships/{id}.parentDataConsentVersion` (liczba) — obok `parentDataConsentAt`
+
+3. Logika przy logowaniu (Wasza strona, niezaleznie od appki): pobierzcie `config/legal`, porownajcie z zapisana wersja na koncie. Jesli zapisana < wymagana (albo w ogole nie istnieje) → pokazcie ekran zgody ponownie, po akceptacji zapiszcie AKTUALNA wersje z `config/legal`.
+
+4. WAZNE dla starych kont (juz maja `termsAcceptedAt` ale NIE MAJA jeszcze `termsAcceptedVersion`) — traktujcie brak pola wersji + obecnosc starego timestampu jako wersje `1` (nie `0`), tak samo jak zrobilismy w mobile (`effectiveTermsVersion()` w `src/lib/legal.ts`). Dzieki temu WDROZENIE tego mechanizmu nikogo nie zaskoczy — nikt nie musi nic ponownie klikac, dopoki `config/legal` faktycznie nie zostanie podbite z `1` na `2`.
+
+5. To na razie **infrastruktura na przyszlosc** (na wyrazna prosbe Rafala) — `config/legal` startuje z wersjami `1` wszedzie, nikt teraz NIC nie musi ponownie akceptowac. Dopiero gdy Rafal kiedys zmieni tresc regulaminu i podbije liczbe w Firestore Console, mechanizm faktycznie zadziala — u WAS I W APPCE rownoczesnie, bo to ten sam dokument.
+
+Dodatkowo (opcjonalnie, ale spojnie z appka): tresc dlugiego dokumentu polityki prywatnosci tez moze zyc w `config/legal` (pola `sectionsPl`/`sectionsEn`, tablica {title, body}) — appka juz to obsluguje (probuje pobrac stamtad, fallback na wlasny tekst jesli puste/offline). Jesli chcecie tez skorzystac z tego samego zrodla tresci zamiast trzymac tekst u siebie osobno — dajcie znac, moge doprecyzowac dokladny ksztalt.
+
+Pytania/watpliwosci -> odpowiem tutaj w sync.
