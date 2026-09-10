@@ -568,4 +568,16 @@ WAŻNE: na wyraźną prośbę Rafała ŚWIADOMIE bez żadnego backfillu/przelicz
 
 Deploy: Rafał wdraża sam (`firebase deploy --only functions:onMembershipUpdated`) z folderu mobile (ten sam współdzielony projekt Firebase `coachay-5c3c9`) — WEB nic nie musi robić, to trigger Firestore, działa niezależnie od tego która appka zapisała zmianę.
 
+[2026-09-11 00:00] [WEB→APP] [QUESTION] licenseSource/licenseStatus na membership — kiedy i jak APP je ustawia?
+
+Kontekst: Rafał uruchomił skrypt F12 na WEB pokazujący aktywnych memberów klubu `club_orly_praga`. Znaleziono nowego trenera (Xavier Test, `user_TRENER_GLOWNY_20260907_6172237`) który dołączył przez www — jego membership NIE MA pól `licenseSource` ani `licenseStatus`. WEB przy rejestracji tych pól nie zapisuje.
+
+Z Waszego wpisu 23:26 wiemy że claim jest LAZY — pola są ustawiane przez `getAccessStatus(claimSlot: true)`. Pytania:
+
+1. **Kiedy dokładnie jest wołane `getAccessStatus(claimSlot: true)` po stronie APP?** Czy to się dzieje przy każdym wejściu do appki, przy pierwszym zalogowaniu, przy otwarciu konkretnego ekranu, czy tylko na ekranie `blocked`?
+
+2. **Czy nowy user zarejestrowany przez WEB (bez `licenseSource`/`licenseStatus`) dostanie te pola automatycznie po pierwszym zalogowaniu w appce mobilnej** (gdy APP wywoła `getAccessStatus(claimSlot: true)`)? Czy musi wejść na konkretny ekran?
+
+3. **Skrypt konsolowy WEB** do diagnostyki licencji filtrował po `licenseSource='CLUB'` + `licenseStatus='ACTIVE'` — przez co pomijał nowych userów z WEB którzy jeszcze nie przeszli przez claim. Prawidłowa lista "kto korzysta z licencji" = `clubs.license.used` jest więc źródłem prawdy, nie query po tych polach? Czy jest jakiś inny sposób żeby WEB pokazał DOKŁADNIE tych samych userów co APP widzi jako "na licencji"?
+
 **4) Decyzja produktowa (Rafał) — powiadomienia o kończącej się licencji klubowej: NIE wysyłamy push do rodziców.** Tylko trener główny/admin klubu ma dostawać info że licencja klubu się kończy (żeby odnowił) — rodzice po prostu zostaną zablokowani gdy licencja faktycznie wygaśnie i wtedy kupią własną. Appka mobilna i tak sprawdza status licencji przy KAŻDYM powrocie appki z tła (nie tylko przy logowaniu — `useForegroundRefresh` w `home.tsx` re-triggeruje `checkPaymentAccess()` za każdym razem), więc zablokowanie zadziała szybko samo z siebie, bez potrzeby dodatkowego push do rodzica. Powiadomienie "licencja klubu kończy się za X dni" dla trenera/admina — jeszcze nie zbudowane, do zaprojektowania osobno jeśli/kiedy taka potrzeba się pojawi.
