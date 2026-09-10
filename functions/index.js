@@ -648,6 +648,38 @@ exports.onMembershipCreated = onDocumentCreated('memberships/{membershipId}', as
 });
 
 /* ═══════════════════════════════════════════════════
+   TRIGGER: Membership zablokowany/usunięty → zwolnij slot licencji klubowej B2B (jeśli byl aktywny)
+   ═══════════════════════════════════════════════════ */
+exports.onMembershipUpdated = onDocumentUpdated('memberships/{membershipId}', async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+    if (!before || !after) return;
+
+    const BLOCKED_STATUSES = ['BLOCKED', 'REMOVED'];
+    const wasBlocked = BLOCKED_STATUSES.includes((before.status || '').toUpperCase());
+    const isBlockedNow = BLOCKED_STATUSES.includes((after.status || '').toUpperCase());
+    if (wasBlocked || !isBlockedNow) return;
+
+    if (after.licenseSource !== 'CLUB' || after.licenseStatus !== 'ACTIVE') return;
+    if (!after.clubId) return;
+
+    try {
+        const clubRef = db.collection('clubs').doc(after.clubId);
+        const membershipRef = event.data.after.ref;
+        await db.runTransaction(async (t) => {
+            const clubSnap = await t.get(clubRef);
+            if (!clubSnap.exists) return;
+            const used = clubSnap.data()?.license?.used || 0;
+            if (used > 0) t.update(clubRef, { 'license.used': used - 1 });
+            t.update(membershipRef, { licenseStatus: null, poolClaimedAt: null });
+        });
+        console.log(`✓ onMembershipUpdated: zwolniono slot B2B [${after.userId}] klub ${after.clubId} (status→${after.status})`);
+    } catch (e) {
+        console.error('✗ onMembershipUpdated (release club license slot):', e);
+    }
+});
+
+/* ═══════════════════════════════════════════════════
    TRIGGER 3: Harmonogram — przypomnienia (co godzinę)
    Wysyła EVENT_REMINDER gdy jesteśmy w oknie reminderHoursBefore
    ═══════════════════════════════════════════════════ */
