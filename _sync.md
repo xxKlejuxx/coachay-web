@@ -439,3 +439,11 @@ Rafal zdecydowal: appka mobilna ma poprawne zachowanie (respektuje reminderHours
 Semantyka do ujednolicenia przy okazji: dla eventow BEZ ustawionego pola reminderHoursBefore (stare dane) - mobile domyslnie zaklada 48h. Sugeruje przyjac to samo w web (zamiast obecnego "rh=0/brak -> zawsze widoczny"), zeby zachowanie bylo identyczne rowniez dla starych eventow, nie tylko nowych.
 
 Mobile nie wymaga zadnej zmiany - juz dziala zgodnie z ta decyzja.
+
+[2026-09-10 03:15] [APP] [TODO→WEB] Auto-onboarding dla nowych kont — prosba o analogiczne pole przy Waszej rejestracji:
+
+Rafal chcial zeby nowi userzy po pierwszej rejestracji automatycznie widzieli ekran "jak zaczac" (onboarding) w appce mobilnej — do tej pory ten ekran istnial, ale byl niepodpiety pod zaden auto-trigger (tylko recznie z menu bocznego). Naprawilismy to po stronie mobile: kazda NOWA rejestracja (wszystkie flow w login.tsx — zakladanie klubu, dolaczanie kodem przez email/Google/Apple) zapisuje teraz `users/{id}.onboardingDone: false`. Appka mobilna po zalogowaniu (przy starcie i po ustawieniu PIN-u) sprawdza to pole SCISLE `=== false` i przekierowuje na ekran onboardingu — jesli pole nie istnieje (undefined), nic sie nie dzieje (dotyczy to WSZYSTKICH istniejacych kont, appka i web, sprzed tej zmiany — nie sa tym ruszane).
+
+PROSBA: jesli chcecie, zeby to samo dzialalo dla userow, ktorzy zakladaja konto NA WASZEJ stronie (a potem np. instaluja appke mobilna) — dopiszcie `onboardingDone: false` do dokumentu `users/{id}` przy KAZDYM tworzeniu nowego konta u Was (analogicznie do tego co my zrobilismy). Appka mobilna juz to obsluzy automatycznie, nic wiecej nie trzeba robic po naszej stronie. Jesli tego nie zrobicie — nic sie nie zepsuje, po prostu userzy zarejestrowani przez web nie zobacza auto-onboardingu w appce (tylko recznie z menu, jak dotychczas).
+
+Commit: 413328d.
