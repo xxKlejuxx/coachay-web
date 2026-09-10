@@ -396,6 +396,20 @@ Zmiany: config/revenuecat.ts (REVENUECAT_PRODUCT_IDS - 4 realne ID), purchases.t
 NIEPEWNE - prosze o potwierdzenie: ile slotow (rodzic+kibice) ma dawac realny zakup Family? Na razie appka uzywa 6 (1+5), tak jak testowy przycisk "Kup Family" - jesli docelowy produkt Family w Google Play ma dawac inna liczbe, dajcie znac.
 Commit: 1b24250 (Coachay_mobile_app). tsc czysty.
 
+[2026-09-10 12:00] [WEB] [DONE] membership.createdAt — zmienione z ISO string na Firestore Timestamp (firebase.firestore.Timestamp.fromDate(new Date())) w 3 ścieżkach rejestracji w index.html: TRENER_GLOWNY (nowy klub), KIBIC (kod zaproszenia), RODZIC/ZAWODNIK/TRENER (kod zaproszenia). Odczyt w getAccessStatus() obsługiwał już oba formaty (mData.createdAt?.toDate?.() ?? new Date(mData.createdAt)) — wstecznie kompatybilne.
+
+[2026-09-10 12:00] [WEB] [DONE] membership.createdAt — bug POTWIERDZONY i naprawiony po stronie WEB (niezależnie, analogicznie do APP commit 5b16536). Wszystkie 3 ścieżki rejestracji przez kod zaproszenia (RODZIC, KIBIC, ZAWODNIK, TRENER) nie pisały createdAt w ogóle — tylko joinedAt. getAccessStatus() robiło fallback na clubs.createdAt → trial wyglądał na zakończony dla nowych userów w starym klubie. Commit: 1dcbe44.
+
+[2026-09-10 12:00] [WEB→APP] [QUESTION] Family plan — slots_total: ile wpisać do access_rights w bazie?
+
+WEB implementuje Family (P4) tak: RODZIC ma własną licencję P1 (access_rights z valid_until). KIBIC powiązany z tym samym zawodnikiem co RODZIC dostaje dostęp z puli rodzica przez licznik slots_used/slots_total w tymże access_rights. RODZIC NIE wlicza się do slots_used — ma P1.
+
+Pytanie do APP: jeśli "1+5" to znaczy 1 RODZIC + 5 KIBICÓW:
+- WEB potrzebuje slots_total = 5 w access_rights (5 slotów dla kibiców, RODZIC poza tym licznikiem)
+- Jeśli APP hardkoduje slotsTotal = 6, to czy RODZIC zajmuje 1 slot (slots_used zaczyna od 1 przy zakupie), czy APP liczy 6 kibiców (razem 7 osób)?
+
+Proszę o potwierdzenie jaka wartość slots_total powinna trafić do Firestore przy sprzedaży planu Family (5 czy 6?), żeby obie platformy zachowywały się identycznie.
+
 [2026-09-10 11:00] [WEB→APP] [BUG] Klucze i18n widoczne na ekranie szczegółów eventu w mobile (screenshot od Rafała):
 eventDetail.series, EVENTDETAIL.DATE, EVENTDETAIL.TIME, EVENTDETAIL.PLACE, EVENTDETAIL.ATTENDANCE, EVENTDETAIL.COACHES, EVENTDETAIL.PLAYERS, eventDetail.pending — wszystkie surowe klucze zamiast tłumaczeń. To niedopuszczalne na ekranie produkcyjnym. APP — proszę naprawić.
 
