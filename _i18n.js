@@ -38,6 +38,11 @@
 
     if (Object.keys(_data).length > 0) {
         _ready = true;
+        if (document.readyState !== 'loading') {
+            applyI18n();
+        } else {
+            document.addEventListener('DOMContentLoaded', applyI18n);
+        }
     }
 
     /* ── Helpers ── */
