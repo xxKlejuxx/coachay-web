@@ -73,28 +73,38 @@
         document.documentElement.lang = _lang;
     }
 
-    var LOCALE_V = '20260908a';
+    var LOCALE_V = '20260910b';
     function load(lang) {
-        return fetch('locales/' + lang + '.json?v=' + LOCALE_V)
-            .then(function (r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
-            })
-            .then(function (data) {
-                _data = data;
-                _ready = true;
-                if (document.readyState !== 'loading') {
-                    applyI18n();
-                } else {
-                    document.addEventListener('DOMContentLoaded', applyI18n);
-                }
-                _queue.forEach(function (fn) { fn(); });
-                _queue.length = 0;
-            })
-            .catch(function () {
-                if (lang !== 'pl') return load('pl');
-            });
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'locales/' + lang + '.json?v=' + LOCALE_V, false);
+            xhr.send(null);
+            if (xhr.status === 200) {
+                _data = JSON.parse(xhr.responseText);
+            } else if (lang !== 'pl') {
+                xhr.open('GET', 'locales/pl.json?v=' + LOCALE_V, false);
+                xhr.send(null);
+                if (xhr.status === 200) _data = JSON.parse(xhr.responseText);
+            }
+        } catch (e) {
+            if (lang !== 'pl') {
+                try {
+                    var xhr2 = new XMLHttpRequest();
+                    xhr2.open('GET', 'locales/pl.json?v=' + LOCALE_V, false);
+                    xhr2.send(null);
+                    if (xhr2.status === 200) _data = JSON.parse(xhr2.responseText);
+                } catch (e2) {}
+            }
+        }
+        _ready = true;
+        if (document.readyState !== 'loading') {
+            applyI18n();
+        } else {
+            document.addEventListener('DOMContentLoaded', applyI18n);
+        }
+        _queue.forEach(function (fn) { fn(); });
+        _queue.length = 0;
     }
 
-    window._i18nReady = load(_lang);
+    load(_lang);
 })();
