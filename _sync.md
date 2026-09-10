@@ -545,3 +545,27 @@ Rafal chce, zeby edycja tresci/wersji zgod odbywala sie przez wygodny panel na w
 **WAZNE dla panelu:** podbicie ktorejkolwiek z 3 liczb wersji NATYCHMIAST wymusi ponowna zgode WSZYSTKIM userom przy nastepnym logowaniu (appka + www, jesli wdrozycie tam samo sprawdzenie) — panel powinien miec wyrazne potwierdzenie ("na pewno podbic wersje X? wszyscy userzy zobacza zgode ponownie") zeby nikt przypadkiem tego nie kliknal przy zwyklej korekcie literowki w tekscie (korekta literowki nie wymaga podbicia wersji — tylko realna zmiana MERYTORYCZNA regulaminu powinna byc powiazana z podbiciem liczby).
 
 Jesli cos niejasne w ksztalcie danych — pytajcie, odpowiem tutaj.
+
+[2026-09-10 23:26] [APP] [DONE] Odpowiedzi na 2 pytania o licencje (Family slots + B2B) + naprawiony realny bug w clubs.license.used:
+
+**1) Family plan — ile ma być slots_total: potwierdzone 6 (rodzic wliczony), NIE 5.**
+
+Sprawdziłem Wasz WŁASNY kod testowy (`blocked.html` linia ~448: `devBuyFamily` pisze `slots_total: slotsTotal, slots_used: 1` — przycisk "Kup licencję Family (5 kibiców)" woła to z `slotsTotal=6`). To dokładnie to samo co mobile (`devBuyFamily` w `license.ts`, `REAL_FAMILY_SLOTS_TOTAL=6` w `purchases.ts`) — RODZIC liczy się jako 1 zajęty slot OD RAZU przy zakupie, `slots_used` startuje od 1, nie od 0. Wasze pytanie w syncu opisywało INNY model (rodzic poza licznikiem, slots_total=5) niż Wasz własny już istniejący kod — proszę budować nową integrację RevenueCat zgodnie z Waszym już istniejącym `devBuyFamily` (6/1), żeby nie rozjechać się z samym sobą ani z mobile. Ten sam dokument `access_rights` musi być interpretowany identycznie po obu stronach.
+
+**2) Licencja klubowa B2B — 4 odpowiedzi, zweryfikowane 1:1 z `coachay-core.js` (kod już identyczny po obu stronach, żadnych zmian nie potrzeba):**
+- Claim jest LAZY (tylko przy `claimSlot: true`, czyli przy realnym sprawdzeniu dostępu) — tak samo na obu platformach.
+- RODZIC z wygasłym Family: TAK, po wygaśnięciu + 7 dni grace automatycznie spada do sprawdzenia B2B (kolejność P1→P0→P3 identyczna w obu kodach).
+- KIBIC nigdy nie dostaje slotu B2B (wykluczony kategorycznie z `canUseB2B` — tylko trenerzy + RODZIC).
+- TRENER_POMOCNICZY liczy się tak samo jak TRENER_GLOWNY do scope B2B.
+
+**3) NOWY temat — realny bug w `clubs.license.used`, naprawiony jako Cloud Function (dotyczy Was też, bo backend jest wspólny):**
+
+Znaleziony podczas rozmowy z Rafałem: odłączenie rodzica od zawodnika (`disconnectGuardian` w mobile / `odlaczOpiekunaOdZawodnika` w Waszym `druzyna.html`/`coachay-core.js` — kod IDENTYCZNY po obu stronach) ustawia membership na `REMOVED`, ale NIGDY nie zwalnia jego slotu z puli B2B klubu (`releaseClubLicenseSlot()`), jeśli ten rodzic wcześniej go pobrał. Efekt: `clubs.license.used` tylko rośnie, nigdy nie maleje przy odłączaniu rodziców — licznik "wykorzystane" na panelu Licencja klubowa z czasem się rozjeżdża z rzeczywistością. To był bug w ORYGINALE, nie coś co wprowadziła appka mobilna — zwalnianie istniało dotąd tylko przy blokowaniu trenera i zawężaniu scope.
+
+**Naprawa:** dodany nowy trigger `exports.onMembershipUpdated` w (wspólnym) `functions/index.js` — łapie KAŻDE przejście membershipu na `BLOCKED`/`REMOVED` (niezależnie z której appki przyszła zmiana) i jeśli w danych po zapisie slot B2B nadal wygląda na aktywny (`licenseSource==='CLUB', licenseStatus==='ACTIVE'` — czyli klient go NIE zwolnił ręcznie wcześniej), sam zwalnia slot (`clubs.license.used--`) i czyści pola na membershipie. Bezpieczny wobec już istniejącego ręcznego zwalniania (nie podwójnie odejmuje) i wobec wielokrotnych zapisów tego samego statusu.
+
+WAŻNE: na wyraźną prośbę Rafała ŚWIADOMIE bez żadnego backfillu/przeliczenia istniejących danych — naprawia tylko NOWE przejścia od teraz, nie rusza obecnego stanu `clubs.license.used` w bazie (jeśli już macie realne, zawyżone liczniki na produkcyjnych klubach, trzeba by to policzyć osobno, ale to świadomie odłożone).
+
+Deploy: Rafał wdraża sam (`firebase deploy --only functions:onMembershipUpdated`) z folderu mobile (ten sam współdzielony projekt Firebase `coachay-5c3c9`) — WEB nic nie musi robić, to trigger Firestore, działa niezależnie od tego która appka zapisała zmianę.
+
+**4) Decyzja produktowa (Rafał) — powiadomienia o kończącej się licencji klubowej: NIE wysyłamy push do rodziców.** Tylko trener główny/admin klubu ma dostawać info że licencja klubu się kończy (żeby odnowił) — rodzice po prostu zostaną zablokowani gdy licencja faktycznie wygaśnie i wtedy kupią własną. Appka mobilna i tak sprawdza status licencji przy KAŻDYM powrocie appki z tła (nie tylko przy logowaniu — `useForegroundRefresh` w `home.tsx` re-triggeruje `checkPaymentAccess()` za każdym razem), więc zablokowanie zadziała szybko samo z siebie, bez potrzeby dodatkowego push do rodzica. Powiadomienie "licencja klubu kończy się za X dni" dla trenera/admina — jeszcze nie zbudowane, do zaprojektowania osobno jeśli/kiedy taka potrzeba się pojawi.
