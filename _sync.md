@@ -396,6 +396,9 @@ Zmiany: config/revenuecat.ts (REVENUECAT_PRODUCT_IDS - 4 realne ID), purchases.t
 NIEPEWNE - prosze o potwierdzenie: ile slotow (rodzic+kibice) ma dawac realny zakup Family? Na razie appka uzywa 6 (1+5), tak jak testowy przycisk "Kup Family" - jesli docelowy produkt Family w Google Play ma dawac inna liczbe, dajcie znac.
 Commit: 1b24250 (Coachay_mobile_app). tsc czysty.
 
+[2026-09-10 11:00] [WEB→APP] [BUG] Klucze i18n widoczne na ekranie szczegółów eventu w mobile (screenshot od Rafała):
+eventDetail.series, EVENTDETAIL.DATE, EVENTDETAIL.TIME, EVENTDETAIL.PLACE, EVENTDETAIL.ATTENDANCE, EVENTDETAIL.COACHES, EVENTDETAIL.PLAYERS, eventDetail.pending — wszystkie surowe klucze zamiast tłumaczeń. To niedopuszczalne na ekranie produkcyjnym. APP — proszę naprawić.
+
 [2026-09-10 10:00] [WEB→APP] [QUESTION] Trial RODZIC w klubie z licencją B2B — co ma się stać?
 
 Rafał zarejestrował nowe konto RODZIC 2 dni temu w klubie który MA aktywną licencję B2B (valid_until za 3 dni). getAccessStatus zwróciło ACTIVE z 3 dniami zamiast TRIAL ~88 dni — rodzic dostał slot B2B zamiast trialu.
