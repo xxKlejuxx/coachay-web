@@ -479,3 +479,43 @@ Rozwiazanie (juz wdrozone w mobile, commit 727559b) — prosba o analogiczna imp
 Dodatkowo (opcjonalnie, ale spojnie z appka): tresc dlugiego dokumentu polityki prywatnosci tez moze zyc w `config/legal` (pola `sectionsPl`/`sectionsEn`, tablica {title, body}) — appka juz to obsluguje (probuje pobrac stamtad, fallback na wlasny tekst jesli puste/offline). Jesli chcecie tez skorzystac z tego samego zrodla tresci zamiast trzymac tekst u siebie osobno — dajcie znac, moge doprecyzowac dokladny ksztalt.
 
 Pytania/watpliwosci -> odpowiem tutaj w sync.
+
+[2026-09-10 05:05] [APP] [TODO→WEB] Dokladny format pol config/legal — do budowy panelu edycji dla supportu na www:
+
+Rafal chce, zeby edycja tresci/wersji zgod odbywala sie przez wygodny panel na www (nie recznie w Firebase Console), skoro macie tam juz dostep i narzedzia dla supportu. Ponizej DOKLADNY ksztalt dokumentu, zeby dalo sie zbudowac pod niego formularz.
+
+**Kolekcja/dokument:** `config/legal` (jeden, staly dokument — nie kolekcja wielu dokumentow, ID dokumentu to dokladnie `"legal"`).
+
+**Pola (wszystkie top-level na tym dokumencie):**
+
+```
+{
+  "termsVersion": 1,              // number (int), wymagane, domyslnie 1 jesli nieobecne
+  "parentalConsentVersion": 1,    // number (int), wymagane, domyslnie 1 jesli nieobecne
+  "parentDataConsentVersion": 1,  // number (int), wymagane, domyslnie 1 jesli nieobecne
+
+  "introPl": "Krotki wstep po polsku (1-2 zdania) przed sekcjami polityki.",   // string, opcjonalne
+  "introEn": "Short English intro before the policy sections.",                // string, opcjonalne
+
+  "sectionsPl": [                 // array obiektow, opcjonalne (jesli puste/brak -> appka i www uzywaja wlasnego wbudowanego tekstu)
+    { "title": "1. Administrator danych", "body": "Pelna tresc tego paragrafu, moze byc dlugi tekst z \\n na nowe linie." },
+    { "title": "2. Cel przetwarzania danych", "body": "..." }
+  ],
+  "sectionsEn": [                 // array obiektow, ten sam ksztalt co sectionsPl, po angielsku
+    { "title": "1. Data controller", "body": "..." }
+  ]
+}
+```
+
+**Typy dokladnie:**
+- `termsVersion`, `parentalConsentVersion`, `parentDataConsentVersion` — liczby calkowite (Firestore `number`), NIE string. Panel: 3 osobne pola numeryczne (np. spinner/input type=number), kazde z osobnym przyciskiem zapisu (zeby mozna bylo podbic jedna zgode bez ruszania pozostalych).
+- `introPl` / `introEn` — zwykly string, jedno pole tekstowe (textarea) na jezyk.
+- `sectionsPl` / `sectionsEn` — tablica obiektow `{ title: string, body: string }`. Panel: lista sekcji z mozliwoscia dodania/usuniecia/przesuniecia + dwa pola (tytul + tresc) na kazda. `body` moze byc dlugi tekst wieloliniowy (uzywajcie zwyklych znakow nowej linii `\n`, appka mobilna wyswietla je jako zwykly tekst z zawijaniem).
+
+**Co appka mobilna z tym robi (dla kontekstu):**
+- Ekran polityki prywatnosci pobiera `sectionsPl`/`sectionsEn` (wg jezyka usera) + `introPl`/`introEn` — jesli puste/brak/offline, pokazuje wlasny wbudowany tekst (appka nigdy nie jest pusta).
+- Przy logowaniu appka porownuje `termsVersion`/`parentalConsentVersion`/`parentDataConsentVersion` z wersjami zapisanymi na koncie usera (`users/{id}.termsAcceptedVersion`, `trainers/{id}.parentalConsentVersion`, `memberships/{id}.parentDataConsentVersion`) — nizsza/brak wersji = pokaz ekran zgody ponownie. Pelny opis w poprzednim wpisie (04:20) i w kodzie appki: `src/lib/legal.ts`.
+
+**WAZNE dla panelu:** podbicie ktorejkolwiek z 3 liczb wersji NATYCHMIAST wymusi ponowna zgode WSZYSTKIM userom przy nastepnym logowaniu (appka + www, jesli wdrozycie tam samo sprawdzenie) — panel powinien miec wyrazne potwierdzenie ("na pewno podbic wersje X? wszyscy userzy zobacza zgode ponownie") zeby nikt przypadkiem tego nie kliknal przy zwyklej korekcie literowki w tekscie (korekta literowki nie wymaga podbicia wersji — tylko realna zmiana MERYTORYCZNA regulaminu powinna byc powiazana z podbiciem liczby).
+
+Jesli cos niejasne w ksztalcie danych — pytajcie, odpowiem tutaj.
