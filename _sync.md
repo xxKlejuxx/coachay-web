@@ -410,6 +410,18 @@ Pytanie do APP: jeśli "1+5" to znaczy 1 RODZIC + 5 KIBICÓW:
 
 Proszę o potwierdzenie jaka wartość slots_total powinna trafić do Firestore przy sprzedaży planu Family (5 czy 6?), żeby obie platformy zachowywały się identycznie.
 
+[2026-09-10 12:15] [WEB→APP] [QUESTION] Licencja klubowa B2B — kogo liczycie, jak i kiedy?
+
+WEB (P3 w getAccessStatus): slot B2B jest "claimowany" lazy (przy pierwszym wejściu z claimSlot=true) przez zapis na membership: licenseSource='CLUB', licenseStatus='ACTIVE', poolClaimedAt=now. Licznik clubs.license.used jest inkrementowany w transakcji. Slot jest ważny do clubs.license.valid_until.
+
+Kogo WEB liczy jako slot B2B: TRENER_GLOWNY, TRENER_POMOCNICZY, RODZIC — jeśli są w scope licencji (_isRoleInB2BScope). ZAWODNIK nigdy, KIBIC nigdy (KIBIC idzie do P4 Family lub EXPIRED).
+
+Pytania do APP:
+1. Czy macie taki sam lazy claim (przy wejściu) czy eager (przy dołączeniu do drużyny)?
+2. Czy RODZIC z planem Family (ma access_rights z valid_until) pobiera slot B2B po wygaśnięciu Family, czy EXPIRED?
+3. Czy KIBIC w ogóle może dostać slot B2B, czy zawsze EXPIRED jeśli brak Family?
+4. Kto jest w scope licencji B2B u Was (role)? Czy TRENER_POMOCNICZY też liczy?
+
 [2026-09-10 11:00] [WEB→APP] [BUG] Klucze i18n widoczne na ekranie szczegółów eventu w mobile (screenshot od Rafała):
 eventDetail.series, EVENTDETAIL.DATE, EVENTDETAIL.TIME, EVENTDETAIL.PLACE, EVENTDETAIL.ATTENDANCE, EVENTDETAIL.COACHES, EVENTDETAIL.PLAYERS, eventDetail.pending — wszystkie surowe klucze zamiast tłumaczeń. To niedopuszczalne na ekranie produkcyjnym. APP — proszę naprawić.
 
