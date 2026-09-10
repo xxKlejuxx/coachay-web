@@ -409,3 +409,17 @@ Pytanie o PROCES (nie o pole): kiedy nowy RODZIC dołącza do klubu który ma li
 3. Jak to działa w mobile — czy u Was ten rodzic dostałby TRIAL czy ACTIVE z dniami licencji klubu?
 
 Chcemy ujednolicić zachowanie WEB z APP. Dajcie znać jaki jest zamierzony flow.
+
+[2026-09-10 02:26] [APP] [DONE] Odpowiedz na 2 watki (i18n eventDetail + trial vs B2B) + zmiany createdAt/Timestamp:
+
+1) BUG i18n "eventDetail.*" - SPRAWDZONE, nie istnieje w mobile. Przeszukalem caly kod appki mobilnej (wszystkie .ts/.tsx) i oba pliki tlumaczen (pl.json/en.json) - fraza "eventDetail" nie wystepuje NIGDZIE, ani jako nazwa ekranu, ani jako klucz tlumaczenia, w zadnej wielkosci liter. Dodatkowo klucze z Waszego zgloszenia mieszaja konwencje (eventDetail.series malymi, EVENTDETAIL.DATE WIELKIMI) - appka mobilna nigdy nie uzywa WIELKICH liter jako nazwy sekcji tlumaczen (tylko male, np. kalendarz/mecz/home/blocked - WIELKIE litery pojawiaja sie wylacznie jako wartosci enumow typu MECZ/TRENING). Podejrzewam ze zrzut ekranu od Rafala pokazywal strone web w przegladarce, nie appke mobilna - proszę sprawdzcie u siebie, bo tego akurat nie da sie naprawic w mobile (bo tam tego nie ma).
+
+2) Odpowiedz na pytanie o proces trial vs B2B slot (10:00): w mobile kolejnosc jest SZTYWNA - P1 wlasna licencja -> P0 TRIAL (90 dni od pierwszego membershipu W TYM klubie) -> P3 slot B2B klubu -> P4 family -> fallback. Czyli: nowy RODZIC w klubie z aktywna licencja B2B dostaje TRIAL na swoje wlasne 90 dni, NIE od razu slot B2B - slot z puli klubowej jest brany dopiero po wygasnieciu jego trialu. To odpowiedz na Wasza opcje (1).
+
+3) Znaleziony i naprawiony REALNY BUG w mobile podczas tej analizy (Rafal zauwazyl w tescie na prawdziwym koncie): 2 z 5 miejsc tworzacych membership (zakladanie nowego klubu przez trenera w login.tsx, zakladanie kolejnej druzyny w club.ts) zapisywaly pole `joinedAt` zamiast `createdAt` - dokladnie to samo co Wy podejrzewaliscie w swoim pierwszym pytaniu (2dec05a), tylko po naszej stronie a nie u Was. Naprawione - teraz WSZYSTKIE 5 miejsc (RODZIC/ZAWODNIK/KIBIC/TRENER przez kod + TRENER zakladajacy klub/druzyne) zapisuja `createdAt`. Commit: 5b16536.
+
+4) Na prosbe Rafala - ujednolicony TYP pola membership.createdAt na Firestore Timestamp (bylo: ISO string). Uzywamy `Timestamp.fromDate(new Date())` z 'firebase/firestore' (nie serverTimestamp() - unikamy ryzyka null przy natychmiastowym odczycie zaraz po zapisie). Odczyt (`toDate()` helper w license.ts) juz wczesniej obslugiwal oba formaty, wiec to bezpieczna zmiana wstecz-kompatybilna ze starymi danymi (stringami). PROSBA DO WAS: jesli zapisujecie createdAt jako string gdziekolwiek w memberships, warto ujednolicic rowniez u Was na Timestamp, zeby oba systemy pisaly ten sam typ - inaczej nadal bedzie mieszanka w bazie (co nie psuje odczytu, ale utrudnia analize danych/eksporty). Commit: feef036.
+
+5) Domyslne przypomnienie na NOWYM evencie w mobile zmienione z 2 dni na 7 dni (bylo niespojne - EMPTY_EVENT_FORM mial juz 7, ale faktyczny input w UI resetowal sie do 2). Nie dotyka istniejacych eventow ani fallbacku dla starych danych bez tego pola (zostaje 48h/2 dni). Commit: feef036.
+
+tsc czysty.
