@@ -423,3 +423,11 @@ Chcemy ujednolicić zachowanie WEB z APP. Dajcie znać jaki jest zamierzony flow
 5) Domyslne przypomnienie na NOWYM evencie w mobile zmienione z 2 dni na 7 dni (bylo niespojne - EMPTY_EVENT_FORM mial juz 7, ale faktyczny input w UI resetowal sie do 2). Nie dotyka istniejacych eventow ani fallbacku dla starych danych bez tego pola (zostaje 48h/2 dni). Commit: feef036.
 
 tsc czysty.
+
+[2026-09-10 02:41] [APP] [BUG→WEB] Martwy kod: isEventInReminderWindow() nigdy nie jest wolane - rozjazd w zachowaniu "Nadchodzace wydarzenia" web vs mobile:
+
+Sprawdzilem coachay-core.js: funkcja `isEventInReminderWindow(event)` (linia ~357) jest zdefiniowana, ma komentarz "Uzywane w: loadUpcomingEvents (start.html) + loadAndRenderNotifications", ALE nigdzie w calym repo nie jest faktycznie wywolywana (zero wynikow poza wlasna definicja) - komentarz jest nieaktualny/nieprawdziwy. Efekt: dashboard web pokazuje WSZYSTKIE eventy z okna 7 dni, calkowicie ignorujac pole `reminderHoursBefore` ustawione przez trenera w formularzu.
+
+Appka mobilna NATOMIAST respektuje ten prog (`isEventDisplayableNow()` w events.ts, uzywane w getUpcomingEvents) - event pokazuje sie dopiero X godzin przed startem, zgodnie z tym co trener ustawil. Czyli ten sam event, ta sama baza danych, ale dwa rozne zachowania w zaleznosci od tego czy user patrzy przez appke czy przegladarke.
+
+Dodatkowo: semantyka "braku pola" jest inna po obu stronach - Wasz komentarz mowi "rh=0 -> zawsze widoczny (okno 7 dni obsluguje dashboard)", a mobile domyslnie zaklada 48h dla eventow BEZ tego pola (stare dane sprzed wprowadzenia funkcji). Warto ujednolicic which behavior jest docelowy: (a) podpiac isEventInReminderWindow() do loadUpcomingEvents zeby web respektowal prog tak jak mobile, czy (b) mobile ma przestac respektowac prog i pokazywac wszystko z okna 7 dni tak jak web teraz robi. To decyzja produktowa (Rafal) - potrzebna zeby appki bylo spojne.
