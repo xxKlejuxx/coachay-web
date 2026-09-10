@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   COACHAY — _i18n.js  v2.0
+   COACHAY — _i18n.js  v3.0
    Internacjonalizacja (PL / EN)
 
    Użycie:
@@ -15,37 +15,35 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
+    const LOCALE_V  = '20260910d';
+
     let _lang = localStorage.getItem('coachay_lang') || 'pl';
     if (!SUPPORTED.includes(_lang)) _lang = 'pl';
 
-    let _data = {};
+    let _data  = {};
     let _ready = false;
     const _queue = [];
 
-    // ── Spinner overlay — zakrywa stronę do czasu załadowania locale ──
-    var _spinner = null;
-    function _showSpinner() {
-        if (_spinner) return;
-        var style = document.createElement('style');
-        style.textContent = [
-            '#_i18n_overlay{position:fixed;inset:0;z-index:99999;background:var(--bg,#111);display:flex;align-items:center;justify-content:center;}',
-            '#_i18n_overlay svg{width:40px;height:40px;animation:_i18n_spin 0.8s linear infinite;}',
-            '@keyframes _i18n_spin{to{transform:rotate(360deg);}}'
-        ].join('');
-        document.head.appendChild(style);
-        _spinner = document.createElement('div');
-        _spinner.id = '_i18n_overlay';
-        _spinner.innerHTML = '<svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="var(--akcent,#3B82F6)" stroke-width="4" stroke-dasharray="80 40"/></svg>';
-        document.body ? document.body.appendChild(_spinner) : document.addEventListener('DOMContentLoaded', function() { document.body.appendChild(_spinner); });
-    }
-    function _hideSpinner() {
-        if (_spinner && _spinner.parentNode) _spinner.parentNode.removeChild(_spinner);
-        _spinner = null;
+    const CACHE_KEY = 'coachay_i18n_' + _lang;
+    const CACHE_VER = 'coachay_i18n_ver_' + _lang;
+
+    /* ── KROK 1: Natychmiastowe załadowanie z localStorage ── */
+    try {
+        var _cv = localStorage.getItem(CACHE_VER);
+        var _cd = localStorage.getItem(CACHE_KEY);
+        if (_cd && _cv === LOCALE_V) {
+            _data = JSON.parse(_cd);
+        }
+    } catch (e) {}
+
+    if (Object.keys(_data).length > 0) {
+        _ready = true;
     }
 
+    /* ── Helpers ── */
     function resolve(key) {
         return key.split('.').reduce(function (o, k) {
-            return o !== null && o !== undefined ? o[k] : null;
+            return (o !== null && o !== undefined) ? o[k] : null;
         }, _data);
     }
 
@@ -56,6 +54,7 @@
         });
     }
 
+    /* ── API publiczne ── */
     window.t = function (key, vars) {
         var val = resolve(key);
         if (val === null || val === undefined) return key;
@@ -94,45 +93,81 @@
         document.documentElement.lang = _lang;
     }
 
-    function _finish(data) {
-        if (data) _data = data;
+    function _markReady() {
         _ready = true;
         if (document.readyState !== 'loading') {
             applyI18n();
-            _hideSpinner();
         } else {
-            document.addEventListener('DOMContentLoaded', function() { applyI18n(); _hideSpinner(); });
+            document.addEventListener('DOMContentLoaded', applyI18n);
         }
         _queue.forEach(function (fn) { fn(); });
         _queue.length = 0;
     }
 
-    var LOCALE_V = '20260910c';
-    var TIMEOUT_MS = 3000;
-
-    function load(lang) {
-        var timeout = new Promise(function(_, reject) {
-            setTimeout(function() { reject(new Error('timeout')); }, TIMEOUT_MS);
-        });
-        return Promise.race([
-            fetch('locales/' + lang + '.json?v=' + LOCALE_V).then(function(r) {
+    /* ── KROK 2 & 3: Sprawdź wersję i aktualizuj cache ── */
+    function _fetchAndCache(lang, onSuccess, onError) {
+        return fetch('locales/' + lang + '.json?v=' + LOCALE_V)
+            .then(function (r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
-            }),
-            timeout
-        ])
-        .then(function(data) { _finish(data); })
-        .catch(function() {
-            if (lang !== 'pl') {
-                return fetch('locales/pl.json?v=' + LOCALE_V)
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) { _finish(data); })
-                    .catch(function() { _finish(null); }); // fallback: pusta locale, brak freeze
-            }
-            _finish(null);
-        });
+            })
+            .then(onSuccess)
+            .catch(onError);
     }
 
-    _showSpinner();
-    window._i18nReady = load(_lang);
+    window._i18nReady = Promise.resolve();
+
+    var _cachedVer = localStorage.getItem(CACHE_VER);
+
+    if (_ready && _cachedVer === LOCALE_V) {
+        /* ── Cache aktualny: nic do roboty ── */
+        window._i18nReady = Promise.resolve();
+
+    } else if (_ready && _cachedVer !== LOCALE_V) {
+        /* ── Stare tłumaczenia w cache, nowa wersja w tle ──
+           Strona działa na starym cache. Po pobraniu nowego → reload.        */
+        window._i18nReady = _fetchAndCache(
+            _lang,
+            function (data) {
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+                    localStorage.setItem(CACHE_VER, LOCALE_V);
+                } catch (e) {}
+                window.location.reload();
+            },
+            function () { /* sieć nie działa — zostajemy na starym cache */ }
+        );
+
+    } else {
+        /* ── Brak cache (pierwsza wizyta / czyszczenie storage) ──
+           Fetch blokujący dla _i18nReady; po sukcesie: zapisz i reload.
+           Strona w tym czasie może pokazać surowe klucze przez chwilę,
+           ale natychmiast po zapisie przeładuje się z gotowym cache.         */
+        window._i18nReady = _fetchAndCache(
+            _lang,
+            function (data) {
+                _data = data;
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+                    localStorage.setItem(CACHE_VER, LOCALE_V);
+                } catch (e) {}
+                /* Przeładuj — teraz cache jest gotowy, tłumaczenia będą instant */
+                window.location.reload();
+            },
+            function () {
+                /* Fetch główny się wywalił — spróbuj pl jako fallback */
+                if (_lang !== 'pl') {
+                    _fetchAndCache('pl',
+                        function (data) {
+                            _data = data;
+                            _markReady();
+                        },
+                        function () { _markReady(); }
+                    );
+                } else {
+                    _markReady();
+                }
+            }
+        );
+    }
 })();
