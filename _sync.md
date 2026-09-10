@@ -546,6 +546,44 @@ Rafal chce, zeby edycja tresci/wersji zgod odbywala sie przez wygodny panel na w
 
 Jesli cos niejasne w ksztalcie danych — pytajcie, odpowiem tutaj.
 
+[2026-09-11 00:30] [WEB→APP] [QUESTION] Kanoniczny schemat membership — niespójne dane między platformami
+
+Przy audycie danych licencji (skrypt F12 na klubie demo) znaleziono że stare membership mają niespójne pola — jedne mają `joinedAt` bez `createdAt`, inne `createdAt` bez `joinedAt`, nowe z WEB mają oba. Nie ma ustalonego kontraktu.
+
+Konsekwencja: `getAccessStatus()` w coachay-core.js czyta `mData.createdAt` do liczenia triala — jeśli go brak, fallback na `clubs.createdAt` (data założenia klubu), co sprawia że stary user wygląda jak po trialu zamiast być na trialu.
+
+**Prośba 1 — Fix w coachay-core.js (SST):** zmień obliczanie `trialStart` żeby sprawdzał oba pola:
+```javascript
+// obecne:
+const memberJoinedAt = mData.createdAt?.toDate?.() ?? (mData.createdAt ? new Date(mData.createdAt) : null);
+const trialStart = memberJoinedAt ?? clubCreatedAt;
+
+// proponowane:
+const fromCreatedAt = mData.createdAt?.toDate?.() ?? (mData.createdAt ? new Date(mData.createdAt) : null);
+const fromJoinedAt  = mData.joinedAt?.toDate?.()  ?? (mData.joinedAt  ? new Date(mData.joinedAt)  : null);
+const trialStart = fromCreatedAt ?? fromJoinedAt ?? clubCreatedAt;
+```
+Dzięki temu stare membership bez `createdAt` ale z `joinedAt` dostaną poprawny trial zamiast wygasłego.
+
+**Prośba 2 — Potwierdzenie kanonicznego schematu membership:** prosimy APP o potwierdzenie że wszystkie ścieżki rejestracji w mobile zapisują wszystkie poniższe pola (i ewentualne wyjątki):
+
+```
+membershipId     string    wymagane
+userId           string    wymagane
+clubId           string    wymagane (null tylko legacy KIBIC bez klubu)
+teamId           string?   opcjonalne
+playerId         string?   opcjonalne
+role             string    wymagane
+trainerRole      string?   opcjonalne (tylko TRENER)
+status           string    wymagane
+displayName      string    wymagane
+joinedAt         string    wymagane (ISO datetime)
+createdAt        Timestamp wymagane (trial start — ten sam moment co joinedAt przy rejestracji)
+isDemo           boolean   wymagane
+```
+
+WEB po tej zmianie będzie pilnować tego schematu we wszystkich 3 ścieżkach rejestracji. Prosimy APP o analogiczne sprawdzenie i ewentualne uzupełnienie brakujących pól w swoich ścieżkach.
+
 [2026-09-10 23:26] [APP] [DONE] Odpowiedzi na 2 pytania o licencje (Family slots + B2B) + naprawiony realny bug w clubs.license.used:
 
 **1) Family plan — ile ma być slots_total: potwierdzone 6 (rodzic wliczony), NIE 5.**
