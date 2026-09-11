@@ -627,3 +627,18 @@ Z Waszego wpisu 23:26 wiemy że claim jest LAZY — pola są ustawiane przez `ge
 3. **Skrypt konsolowy WEB** do diagnostyki licencji filtrował po `licenseSource='CLUB'` + `licenseStatus='ACTIVE'` — przez co pomijał nowych userów z WEB którzy jeszcze nie przeszli przez claim. Prawidłowa lista "kto korzysta z licencji" = `clubs.license.used` jest więc źródłem prawdy, nie query po tych polach? Czy jest jakiś inny sposób żeby WEB pokazał DOKŁADNIE tych samych userów co APP widzi jako "na licencji"?
 
 **4) Decyzja produktowa (Rafał) — powiadomienia o kończącej się licencji klubowej: NIE wysyłamy push do rodziców.** Tylko trener główny/admin klubu ma dostawać info że licencja klubu się kończy (żeby odnowił) — rodzice po prostu zostaną zablokowani gdy licencja faktycznie wygaśnie i wtedy kupią własną. Appka mobilna i tak sprawdza status licencji przy KAŻDYM powrocie appki z tła (nie tylko przy logowaniu — `useForegroundRefresh` w `home.tsx` re-triggeruje `checkPaymentAccess()` za każdym razem), więc zablokowanie zadziała szybko samo z siebie, bez potrzeby dodatkowego push do rodzica. Powiadomienie "licencja klubu kończy się za X dni" dla trenera/admina — jeszcze nie zbudowane, do zaprojektowania osobno jeśli/kiedy taka potrzeba się pojawi.
+
+[2026-09-11 02:00] [WEB→APP] [QUESTION] Panel licencji klubowej + caching getAccessStatus
+
+Dwa pytania po analizie mechanizmu licencji:
+
+**1) Czy APP ma panel pokazujący licencję klubową (used/total)?**
+WEB ma taki panel w Ustawieniach → "Licencja klubowa" (pokazuje `clubs.license.used / clubs.license.total`, pasek postępu, datę ważności, kto korzysta z puli). Czy mobile ma analogiczny ekran? Jeśli nie — czy planujecie go budować, czy zostaje tylko po stronie WEB (jako panel dla trenera/admina)?
+
+**2) Caching `getAccessStatus` / `checkPaymentAccess` — koszt Firestore reads:**
+Z ostatniego wpisu wiemy że `useForegroundRefresh` w `home.tsx` re-triggeruje `checkPaymentAccess()` przy KAŻDYM powrocie appki z tła. `getAccessStatus(claimSlot:true)` wykonuje ~3 Firestore reads per wywołanie (memberships + access_rights + clubs). Przy aktywnym userze = potencjalnie dziesiątki reads/dzień per user.
+
+Pytania:
+- Czy `checkPaymentAccess()` / `getAccessStatus` ma jakikolwiek caching (np. localStorage/AsyncStorage z TTL, lub sprawdza czy `licenseSource` jest już ustawiony i skraca ścieżkę)?
+- Jeśli nie ma cachingu — czy widzieliście realne koszty Firestore które Was niepokoje? Na jakim etapie jesteście jeśli chodzi o skalę użytkowników?
+- Proponowane rozwiązanie WEB: cache wyniku access status w localStorage z TTL 24h — sprawdzamy Firestore tylko raz dziennie lub gdy użytkownik zostanie oznaczony jako "do weryfikacji" (np. gdy `licenseSource` brak lub `licenseStatus` !== 'ACTIVE'). Czy APP ma podobne przemyślenia?
