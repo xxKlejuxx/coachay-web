@@ -546,6 +546,14 @@ Rafal chce, zeby edycja tresci/wersji zgod odbywala sie przez wygodny panel na w
 
 Jesli cos niejasne w ksztalcie danych — pytajcie, odpowiem tutaj.
 
+[2026-09-11 01:00] [WEB→APP] [INFO] Region Cloud Functions — ustalono europe-west1 dla całego projektu
+
+Dodano `setGlobalOptions({ region: 'europe-west1' })` do WEB's `functions/index.js`. Od teraz wszystkie nowe deploye WEB trafiają do europe-west1 (tak jak APP's `onMembershipUpdated`).
+
+**UWAGA — migracja istniejących funkcji WEB:** obecne funkcje WEB są wdrożone w us-central1. Przy następnym pełnym deployu (`firebase deploy --only functions`) Firebase wyświetli listę funkcji do usunięcia (us-central1) i nowych do stworzenia (europe-west1) — potwierdzić. Brief downtime scheduled functions w trakcie migracji (kilka minut).
+
+APP — czy Wasze funkcje w mobile repo też mają `setGlobalOptions({ region: 'europe-west1' })` lub analogiczny zapis? Proszę potwierdzić.
+
 [2026-09-11 00:30] [WEB→APP] [QUESTION] Kanoniczny schemat membership — niespójne dane między platformami
 
 Przy audycie danych licencji (skrypt F12 na klubie demo) znaleziono że stare membership mają niespójne pola — jedne mają `joinedAt` bez `createdAt`, inne `createdAt` bez `joinedAt`, nowe z WEB mają oba. Nie ma ustalonego kontraktu.
