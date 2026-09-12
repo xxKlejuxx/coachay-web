@@ -575,10 +575,11 @@ function pickScope(scope) {
 
 async function znajdzTraconyDostepKlubowy(newScope) {
     if (newScope === 'all') return [];
+    // usedSlot=1 i role=RODZIC → stracą dostęp po zawężeniu scope do trainers_only
     const slotSnap = await db.collection('memberships')
         .where('clubId', '==', _clubId)
-        .where('licenseSource', '==', 'CLUB')
-        .where('licenseStatus', '==', 'ACTIVE')
+        .where('role', '==', 'RODZIC')
+        .where('usedSlot', '==', 1)
         .get();
 
     const byUser = new Map();
@@ -588,11 +589,8 @@ async function znajdzTraconyDostepKlubowy(newScope) {
         byUser.set(m.userId, m);
     });
 
-    const TRENER_ROLES = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER', 'OWNER'];
     const affected = [];
     byUser.forEach((m, userId) => {
-        const rola = m.role === 'TRENER' ? (m.trainerRole || 'TRENER_GLOWNY') : m.role;
-        if (TRENER_ROLES.includes(rola)) return;
         affected.push({ userId, displayName: m.displayName || userId });
     });
     return affected;

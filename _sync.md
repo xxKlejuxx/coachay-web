@@ -716,3 +716,64 @@ Funkcja `makeMbrId(role)` w `coachay-core.js` generuje poprawny format:
 WEB znalazł 1 miejsce gdzie ID było generowane ręcznie bez prefixu roli (`mbr_YYYYMMDD_XXXXX`) — naprawione w `klub.html:1026` (TRENER_POMOCNICZY club-level membership przy usuwaniu z drużyny).
 
 Prośba do APP: sprawdź czy w Waszym kodzie (React Native / TypeScript) wszędzie gdzie tworzycie dokument w kolekcji `memberships` używacie funkcji analogicznej do `makeMbrId` i czy generowany format jest spójny z powyższym schematem. Szczególnie sprawdź edge-case'y: zmiana drużyny, usunięcie z drużyny, backfill membership przy tworzeniu klubu.
+
+[2026-09-12 14:00] [WEB→APP] [INFO] Nowy system licencji klubowej B2B — pole `usedSlot` jako source of truth
+
+**PRZEŁOM ARCHITEKTONICZNY** — stary mechanizm `licenseSource/licenseStatus` został zastąpiony nowym polem `usedSlot` (0 lub 1) na każdym dokumencie w kolekcji `memberships`. To jest teraz jedyne źródło prawdy kto korzysta z licencji klubowej.
+
+---
+
+### Co się zmieniło
+
+**Nowe pole:** `memberships.usedSlot: 0 | 1`
+- `1` = ta membership konsumuje 1 slot z puli licencyjnej klubu (`clubs.license.used`)
+- `0` = nie konsumuje (trial, własna sub, KIBIC/ZAWODNIK, przekroczony limit, itp.)
+- Pole jest teraz na **każdym** membership (stare dane zmigrowane skryptem)
+
+**`clubs.license.used`** — nadal istnieje, jest zsynchronizowane z COUNT memberships z `usedSlot=1` w tym klubie (Cloud Functions utrzymują spójność).
+
+**Stare pola `licenseSource` / `licenseStatus`** — **deprecated, nie będą już ustawiane przez nowe CF**. WEB `getAccessStatus` w `coachay-core.js` wciąż je czyta (backward compat), ale nowe trigery ich nie zapisują.
+
+---
+
+### Reguły eligibility (kto dostaje usedSlot=1)
+
+1. KIBIC / ZAWODNIK → zawsze 0 (nigdy nie korzysta z B2B)
+2. Status BLOCKED / REMOVED / INACTIVE / DELETE → 0
+3. User ma własną aktywną subskrypcję (`users.subscription.status == 'ACTIVE'`) → 0
+4. Trial < 90 dni od najstarszego membership w tym klubie → 0 (dotyczy WSZYSTKICH ról: TRENER i RODZIC tak samo)
+5. scope = `trainers_only` → RODZIC dostaje 0
+6. Dedup: jeden slot per userId per klub — jeśli userId ma wiele membership (różne drużyny), tylko najstarsze dostaje 1
+7. Kolejka gdy limit: trenerzy pierwsi (po dacie), potem rodzice
+
+**Trial liczy się od najstarszego `createdAt/joinedAt` danego userId w tym klubie** (nie od konkretnego membership).
+
+---
+
+### Nowe Cloud Functions (wszystkie w europe-west1)
+
+| CF | Trigger | Co robi |
+|----|---------|---------|
+| `onMembershipCreated` | nowy membership | ustawia `usedSlot` + zapisuje `clubs_trial.{clubId}` |
+| `onMembershipUpdated` | zmiana statusu → BLOCKED/REMOVED/INACTIVE/DELETE | jeśli `usedSlot=1` → transfer slotu do najstarszego rodzeństwa lub dekrementuje `clubs.license.used` |
+| `onClubLicenseUpdated` | zmiana `clubs.license.total` lub `scope` | total wzrósł → przydziela sloty oczekującym; scope→trainers_only → cofa sloty rodzicom |
+| `assignExpiredTrialSlots` | cron co 24h | szuka membership bez slotu których trial właśnie wygasł i przydziela sloty w kolejce |
+| `revenuecatWebhook` | RC event ACTIVE/EXPIRED | ACTIVE → zwalnia wszystkie sloty klubowe tego usera; EXPIRED → ponownie sprawdza eligibility |
+
+---
+
+### Co APP powinien sprawdzić / zaktualizować
+
+1. **Panel licencji klubowej** — jeśli APP pokazuje listę "kto korzysta z licencji B2B", zmień query z `where licenseSource=='CLUB' && licenseStatus=='ACTIVE'` na `where clubId==X && usedSlot==1`. To jest teraz dokładna i zawsze aktualna lista.
+
+2. **`getAccessStatus(claimSlot:true)`** — wciąż działa (stary kod w core.js), ALE lazy claim (`licenseSource/licenseStatus`) jest zastępowany automatyką CF. Jeśli user nie ma `usedSlot=1` to CF już o tym zadecydował i nie należy mu się slot. Można rozważyć czy `claimSlot:true` nadal ma sens — omówmy jeśli planujecie refactor.
+
+3. **RevenueCat** — gdy user kupuje własną subskrypcję (ACTIVE event), `revenuecatWebhook` automatycznie zwalnia jego slot klubowy (`usedSlot: 0`) i dekrementuje `clubs.license.used`. **APP nie musi tego robić po stronie mobilnej** — CF to zrobi centralnie dla WEB i APP.
+
+4. **Tworzenie nowych membership** — nowe CF `onMembershipCreated` automatycznie ustawia `usedSlot`. APP nie musi pisać tego pola przy tworzeniu dokumentu.
+
+5. **Stare pola** — `licenseSource/licenseStatus/poolClaimedAt` — po stopniowym refactorze `getAccessStatus` można je usunąć z membership. Na razie zostają dla backward compat z core.js. Nie zapisuj ich w nowych membership.
+
+---
+
+Pytanie do APP: czy `getAccessStatus(claimSlot:true)` jest wywoływane w sytuacjach gdzie user mógłby dostać slot? Jeśli tak — ta ścieżka będzie teraz "pusta" (CF już ustawił `usedSlot`), ale `licenseSource/licenseStatus` mogą nie być ustawione (nowe CF ich nie pisze). Daj znać jak to wygląda od Waszej strony.
