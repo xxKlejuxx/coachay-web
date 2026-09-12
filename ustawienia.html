@@ -517,11 +517,6 @@ let _licScopeOriginal = 'all';
 
 const _ROLE_ORDER = { TRENER_GLOWNY: 0, TRENER: 1, TRENER_POMOCNICZY: 2, RODZIC: 3 };
 
-function _getMbrName(u) {
-    const parts = [u.firstName, u.lastName].filter(Boolean);
-    return parts.length ? parts.join(' ') : (u.displayName || u.name || u.userId || '—');
-}
-
 async function loadLicencjaUsers() {
     const el = document.getElementById('licencja-uzytkownicy');
     if (!el || !_clubId) return;
@@ -537,17 +532,28 @@ async function loadLicencjaUsers() {
             return;
         }
 
-        const users = snap.docs.map(d => d.data());
-        users.sort((a, b) => {
+        const mbrs = snap.docs.map(d => d.data());
+
+        // Pobierz dane users (imię, nazwisko)
+        const userIds = [...new Set(mbrs.map(m => m.userId).filter(Boolean))];
+        const userMap = {};
+        await Promise.all(userIds.map(async uid => {
+            try {
+                const uDoc = await db.collection('users').doc(uid).get();
+                if (uDoc.exists) userMap[uid] = uDoc.data();
+            } catch (e) {}
+        }));
+
+        mbrs.sort((a, b) => {
             const ra = _ROLE_ORDER[a.role] ?? 9;
             const rb = _ROLE_ORDER[b.role] ?? 9;
             if (ra !== rb) return ra - rb;
-            return _getMbrName(a).localeCompare(_getMbrName(b), 'pl');
+            return _getUserFullName(userMap[a.userId]).localeCompare(_getUserFullName(userMap[b.userId]), 'pl');
         });
 
-        el.innerHTML = users.map(u => {
-            const name  = _getMbrName(u);
-            const label = t('settings.roleLabel_' + u.role) || u.role || '—';
+        el.innerHTML = mbrs.map(m => {
+            const name  = _getUserFullName(userMap[m.userId]);
+            const label = t('settings.roleLabel_' + m.role) || m.role || '—';
             return `<div class="poz-item" style="pointer-events:none;">
                 <div class="poz-name">${name}</div>
                 <span style="font-size:14px;color:var(--szary);font-weight:600;">${label}</span>
@@ -557,6 +563,12 @@ async function loadLicencjaUsers() {
         el.innerHTML = `<div style="padding:14px;color:var(--blad);font-size:16px;">${t('settings.licenseUsersError')}</div>`;
         console.error('loadLicencjaUsers:', e);
     }
+}
+
+function _getUserFullName(u) {
+    if (!u) return '—';
+    const parts = [u.firstName, u.lastName].filter(Boolean);
+    return parts.length ? parts.join(' ') : (u.displayName || u.name || '—');
 }
 
 async function loadLicencja() {
