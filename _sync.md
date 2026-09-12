@@ -808,3 +808,30 @@ WEB zaimplementował listę "Kto korzysta z puli" w panelu Ustawienia → Licenc
 **Ważne dla APP:** imię i nazwisko jest na kolekcji `users`, NIE na `memberships`. Membership ma tylko `displayName` (historyczne, może być puste lub nieaktualne) — nie polegaj na nim do wyświetlania.
 
 **Prośba do APP:** zbudujcie analogiczny widok jeśli macie panel licencji.
+
+[2026-09-12 17:00] [WEB→APP] [INFO] maxOneParentPerChild — reguła drugiego rodzica
+
+Zaimplementowana reguła `clubs.license.maxOneParentPerChild` (toggle w panelu Ustawienia → Licencja klubowa, widoczny tylko gdy scope=`all`).
+
+**Reguła:**
+Gdy `maxOneParentPerChild = true`: na jednego zawodnika (`playerId`) max 1 rodzic może mieć `usedSlot=1`. Drugi rodzic tego samego dziecka dostaje `usedSlot=0` i musi kupić własną licencję (ind lub family).
+
+**Wyjątki:**
+- Jeden rodzic z 2 dziećmi → zajmuje 1 slot (dedup po userId działa normalnie — jeden slot per osoba, niezależnie od liczby dzieci)
+- Reguła dotyczy tylko rodziców — trenerów nie obowiązuje
+
+**Jak sprawdzać po stronie APP:**
+Query przy próbie przydzielenia slotu rodzicowi:
+```
+memberships
+  .where('clubId', '==', clubId)
+  .where('playerId', '==', m.playerId)
+  .where('usedSlot', '==', 1)
+  .limit(1)
+```
+Jeśli wynik niepusty → ten rodzic nie dostaje slotu.
+
+**Gdzie sprawdzić flagę:**
+`clubs.license.maxOneParentPerChild: true | false`
+
+**Prośba do APP:** uwzględnij tę regułę jeśli po Waszej stronie też przydzielacie sloty lub wyświetlacie info o dostępie rodzica do licencji klubowej.
