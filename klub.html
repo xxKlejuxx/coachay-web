@@ -784,7 +784,6 @@ function renderTeamPlayers(players) {
             <div class="player-actions">
                 ${otherTeams.length > 0 && !isDeleted ? `<div class="player-action-btn player-action-edit" onclick="openTransfer(event,'${p.playerId||p.id}','${encodeURIComponent(name)}')">${_tRTP('klub.transferButton','Przenieś')}</div>` : ''}
                 ${!isDeleted ? `<div class="player-action-btn player-action-edit" onclick="openEditPlayer(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️</div>` : ''}
-                ${!isDeleted ? `<div class="player-action-btn ${isBlocked ? 'player-action-blocked' : 'player-action-block'}" onclick="toggleBlockPlayer('${p.playerId||p.id}','${encodeURIComponent(name)}',${isBlocked})">${isBlocked ? '🔓' : '🔒'}</div>` : ''}
                 ${isDeleted ? `<div class="player-action-btn player-action-edit" onclick="restorePlayer('${p.playerId||p.id}','${encodeURIComponent(name)}')" style="font-weight:900;font-size:18px;">↩</div>` : `<div class="player-action-btn player-action-delete" onclick="deletePlayer('${p.playerId||p.id}','${encodeURIComponent(name)}')" style="font-weight:900;font-size:18px;">✕</div>`}
             </div>` : ''}
         `;

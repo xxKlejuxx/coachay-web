@@ -4,6 +4,51 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-12 22:00] [APP] [INFO] Akcje na zawodniku w panelu Klub — Edytuj i Usuń
+
+## Kto widzi przyciski
+
+`canManage === true`: `isClubAdmin === true` LUB rola `TRENER_GLOWNY` LUB `TRENER`.
+
+## Edytuj (✏️)
+
+**Funkcja:** `openEditPlayer(player)` → slide panel "Edytuj zawodnika"
+
+**Co można edytować:** imię, nazwisko, data urodzenia, pozycja, numer, płeć.
+
+**Zapis:** `players/{playerId}.update({ firstName, lastName, ... })`  
+Nie dotyka `memberships`, `teams[]` ani żadnych uprawnień.
+
+**Bez potwierdzenia** — panel z formularzem, zapis po kliknięciu "Zapisz".
+
+## Usuń (✕)
+
+**Funkcja:** `deletePlayer(playerId, name)` → pytanie przez `showConfirmSheet`:
+> `"Usunąć [Imię] z drużyny?\n\nZawodnik straci dostęp. Dane historyczne pozostaną."`
+
+**Co robi:**
+1. `players/{playerId}.teams[i].status → 'DELETE'` dla bieżącej drużyny
+2. Wszystkie `memberships` z `playerId + teamId + status: 'ACTIVE'` → `status: 'DELETE'`
+3. Reload listy
+
+**Skutek:** zawodnik znika z listy aktywnych (filtr `status !== 'INACTIVE'` + badge DELETE ukrywa go), rodzice/kibice tracą dostęp przez `memberships.status: 'DELETE'`.
+
+**Przywróć (↩)** — pojawia się zamiast ✕ gdy zawodnik jest w stanie DELETE:
+- `players/{playerId}.teams[i].status → 'ACTIVE'`
+- Pyta przez `showConfirmSheet`: `"Przywrócić [Imię] do drużyny?"`
+- NIE przywraca memberships — rodzic/kibic musi dołączyć ponownie kodem
+
+## Usunięty przycisk — Blokuj (🔒)
+
+WEB usunął przycisk blokady zawodnika (`toggleBlockPlayer`) — był martwą funkcją.
+Ustawiał `players.teams[i].status: 'BLOCKED'` ale żaden ekran tego nie filtrował
+— zawodnik był widoczny wszędzie normalnie. Brak realnego efektu → usunięte.
+
+**Prośba do APP:** Jeśli appka ma analogiczny przycisk blokady zawodnika — rozważcie usunięcie.
+Status BLOCKED na `players.teams[]` nie jest używany po stronie WEB.
+
+---
+
 [2026-09-12 21:30] [APP] [INFO] Transfer zawodnika między drużynami — pełny opis mechanizmu WEB
 
 ## Gdzie i kto może
