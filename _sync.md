@@ -4,6 +4,110 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-12 22:15] [APP] [INFO] Zarządzanie drużynami w panelu Klub — Dodaj, Edytuj, Usuń drużynę
+
+## Gdzie i kto może
+
+**Ekran:** `klub.html` — sekcja Klub → lista drużyn → przycisk "Edytuj" przy wybranej drużynie  
+**Dodaj drużynę:** FAB przycisk (+) w prawym dolnym rogu ekranu Klub
+
+**Kto może:**
+- **Dodaj drużynę:** `canManage === true` — TRENER_GLOWNY, TRENER, isClubAdmin
+- **Edytuj drużynę:** `canManage === true` — jak wyżej; przycisk "Edytuj" widoczny w nagłówku panelu drużyny
+- **Usuń drużynę:** tylko `isAdmin === true` (isClubAdmin lub ADMIN_PLATFORMY)
+
+## UI Flow
+
+1. Klub → kliknięcie na drużynę → slide panel z detalami drużyny
+2. Przycisk **"Edytuj"** (prawy górny róg panelu) → slide panel "Edytuj drużynę"
+3. Panel zawiera:
+   - Pole tekstowe: nazwa drużyny
+   - Lista wszystkich trenerów w klubie z dwoma checkboxami na każdym:
+     - ☐ Przypisz do drużyny
+     - ☐ ★ Główny (aktywny tylko gdy przypisany)
+   - Przycisk "Zapisz drużynę"
+   - Przycisk "Usuń drużynę" (tylko dla isAdmin)
+4. Kliknięcie "Zapisz" → `saveTeam()` w trybie edit
+
+## Funkcje (klub.html)
+
+- `openAddTeam()` — otwiera panel w trybie dodawania, czyści formularz, preselektuje bieżącego użytkownika
+- `openEditTeam()` — otwiera panel w trybie edycji, wypełnia dane wybranej drużyny
+- `fillTrainersList(teamId, preselectedUserId)` — ładuje listę trenerów klubu z ich aktualnymi rolami w drużynie
+- `saveTeam()` — zapisuje zmiany (dwa tryby: `editMode === 'add'` / `editMode === 'edit'`)
+- `deleteTeam()` — usuwa drużynę (tylko isAdmin)
+
+## Logika saveTeam() — tryb DODAJ
+
+```
+1. Utwórz teams/{teamId}:
+   { teamId, clubId, clubName, teamName, displayName, createdBy, createdAt }
+
+2. Membership dla twórcy (jeśli nie wybrany na liście trenerów):
+   - Jeśli ma membership bez teamId → update: { teamId }
+   - Inaczej → nowe membership TRENER_GLOWNY
+
+3. Memberships dla wybranych trenerów:
+   memberships.set(makeMbrId(role), {
+       userId, teamId, clubId,
+       role: isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY',
+       trainerRole: role, status: 'ACTIVE',
+       displayName: getTrainerName(userId), joinedAt
+   })
+```
+
+**Walidacja:** minimum 1 trener + dokładnie 1 oznaczony jako ★ Główny.
+
+## Logika saveTeam() — tryb EDYTUJ
+
+Oblicza diff trenerów względem poprzedniego stanu:
+
+**Dodani trenerzy** (`toAdd` — zaznaczeni, których nie było):
+- Sprawdź istniejące aktywne memberships → update roli (upsert, bez duplikatów)
+- Jeśli był REMOVED → reaktywuj (`status: 'ACTIVE'`, `rejoinedAt`)
+- Jeśli brak → nowe membership
+
+**Usunięci trenerzy** (`toRemove` — byli, teraz odznaczeni):
+- Ich aktywne memberships → `status: 'REMOVED', removedAt, removedBy`
+- Jeśli trener nie ma już innych drużyn w tym klubie → tworzy "club-level" membership:
+  `{ teamId: null, role: 'TRENER_POMOCNICZY', status: 'ACTIVE' }` — trener zostaje w klubie bez drużyny
+
+**Zmiana roli** (`toUpdate` — byli i są, ale zmieniła się gwiazdka):
+- Update roli na pierwszym aktywnym membership, usuń duplikaty
+
+**Na końcu:** `teams/{teamId}.update({ teamName, displayName })`
+
+## Logika deleteTeam()
+
+**Wymagane:** `isAdmin === true`
+
+**Zabezpieczenia:**
+- Jeśli to **ostatnia drużyna w klubie** → blokada z komunikatem, brak usunięcia
+- Jeśli drużyna **ma zawodników** → ostrzejszy dialog z liczbą zawodników
+
+**Co robi (batch):**
+1. Wszystkie `memberships` z `teamId` → `status: 'DELETE'`
+2. `players.teams[i]` dla tej drużyny → `status: 'DELETE'`
+3. Dokument `teams/{teamId}` → usunięcie
+
+## Kluczowe zasady
+
+- Każda drużyna musi mieć dokładnie 1 TRENER_GLOWNY — walidacja po stronie UI
+- Trener usunięty z drużyny nie jest usuwany z klubu — dostaje club-level membership (`teamId: null`)
+- `makeMbrId(role)` = `mbr_ROLE_YYYYMMDD_RANDOM`
+- `displayName` w membership = `getTrainerName(userId)` = z kolekcji `trainers` lub `users`
+
+## Prośba do APP
+
+Ta funkcjonalność (Dodaj/Edytuj/Usuń drużynę) **nie istnieje jeszcze w aplikacji mobilnej**. Proszę o implementację lub potwierdzenie że nie jest planowana (zarządzanie drużynami tylko przez web).
+
+Do zweryfikowania przy implementacji:
+1. Czy przy usunięciu trenera z drużyny tworzycie club-level membership (`teamId: null`)?
+2. Czy przy dodaniu nowej drużyny twórca automatycznie dostaje membership TRENER_GLOWNY?
+3. Czy walidujecie dokładnie 1 TRENER_GLOWNY per drużyna?
+
+---
+
 [2026-09-12 22:00] [APP] [INFO] Akcje na zawodniku w panelu Klub — Edytuj i Usuń
 
 ## Kto widzi przyciski
