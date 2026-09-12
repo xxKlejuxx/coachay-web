@@ -1608,11 +1608,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const upEv  = allEv.filter(e => {
             if (e.status === 'CANCELLED') return false;
             if (e.date < todayStr || e.date > maxStr) return false;
-            const reminder = e.reminderDays > 0 ? e.reminderDays : null;
-            if (reminder) {
-                const showFrom = new Date(e.date + 'T00:00:00');
-                showFrom.setDate(showFrom.getDate() - reminder);
-                if (getLocalDateStr(showFrom) > todayStr) return false;
+            const rh = e.reminderHoursBefore != null ? e.reminderHoursBefore : 48;
+            if (rh > 0) {
+                const evTime = new Date(e.date + 'T' + (e.timeFrom || '00:00')).getTime();
+                if (Date.now() < evTime - rh * 3600000) return false;
             }
             return true;
         });

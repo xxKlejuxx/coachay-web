@@ -642,3 +642,77 @@ Pytania:
 - Czy `checkPaymentAccess()` / `getAccessStatus` ma jakikolwiek caching (np. localStorage/AsyncStorage z TTL, lub sprawdza czy `licenseSource` jest już ustawiony i skraca ścieżkę)?
 - Jeśli nie ma cachingu — czy widzieliście realne koszty Firestore które Was niepokoje? Na jakim etapie jesteście jeśli chodzi o skalę użytkowników?
 - Proponowane rozwiązanie WEB: cache wyniku access status w localStorage z TTL 24h — sprawdzamy Firestore tylko raz dziennie lub gdy użytkownik zostanie oznaczony jako "do weryfikacji" (np. gdy `licenseSource` brak lub `licenseStatus` !== 'ACTIVE'). Czy APP ma podobne przemyślenia?
+
+[2026-09-12 10:00] [WEB→APP] [TODO] Google Play Console — 2 ostrzeżenia przed następną premierą (wersja 6 / 1.0.6)
+
+Google Play Console zgłosił 2 problemy które muszą być naprawione przed kolejnym release (nie blokują obecnej wersji, ale zablokują następny publish jeśli nie będą poprawione).
+
+---
+
+**PROBLEM 1: Wycofane API dla wyświetlania bez ramki (Android 15)**
+
+> "Twoja aplikacja używa wycofanych interfejsów API lub parametrów w przypadku wyświetlania bez ramki. Co najmniej 1 z używanych interfejsów API lub ustawionych parametrów wyświetlania bez ramki i wyświetlania w oknie został wycofany w Androidzie 15."
+
+**Co sprawdzić i naprawić:**
+- Wyszukać w kodzie użycie `WindowCompat.setDecorFitsSystemWindows(window, false)` — to stary sposób, zastąpić nowym API
+- Wyszukać `FLAG_LAYOUT_NO_LIMITS`, `FLAG_LAYOUT_FULLSCREEN`, `FLAG_LAYOUT_IN_SCREEN` — wycofane flagi okna
+- Wyszukać `fitSystemWindows`, `fitsSystemWindows` w XML layoutach
+- Wyszukać `LAYOUT_IN_DISPLAY_CUTOUT_MODE_*` parametry — sprawdzić czy używana wartość jest nadal obsługiwana
+
+**Jak naprawić (Android 15 / API 35+):**
+```kotlin
+// STARE (wycofane):
+WindowCompat.setDecorFitsSystemWindows(window, false)
+
+// NOWE (Android 15+):
+// W Activity.onCreate() lub ekwiwalent w React Native:
+ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+    val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+    v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+    insets
+}
+```
+Dla React Native: upewnić się że używana wersja `react-native-safe-area-context` jest aktualna i obsługuje Android 15 edge-to-edge. Sprawdzić `android:windowSoftInputMode` w AndroidManifest.
+
+Dokumentacja Google: https://developer.android.com/about/versions/15/behavior-changes-15#edge-to-edge
+
+---
+
+**PROBLEM 2: Ograniczenia rozmiaru i orientacji (Android 16)**
+
+> "Usuń ograniczenia dotyczące zmiany rozmiaru i orientacji, aby aplikacja obsługiwała urządzenia z dużym ekranem. Android w wersji 16 i nowszych będzie ignorował ograniczenia dotyczące zmiany rozmiaru i orientacji na urządzeniach z dużym ekranem, takich jak urządzenia składane i tablety."
+
+**Co sprawdzić i naprawić:**
+
+W `AndroidManifest.xml` — wyszukać w każdym `<activity>`:
+```xml
+<!-- Te atrybuty będą IGNOROWANE przez Android 16 na tabletach/składanych: -->
+android:screenOrientation="portrait"        <!-- lub landscape, sensorPortrait itp. -->
+android:resizeableActivity="false"
+android:maxAspectRatio="..."
+```
+
+W kodzie Kotlin/Java — wyszukać:
+```kotlin
+requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT  // ignorowane na dużych ekranach
+```
+
+**Jak naprawić:**
+1. Usunąć lub zamienić `android:screenOrientation="portrait"` na `android:screenOrientation="unspecified"` (lub usunąć atrybut całkowicie) — Android 16 i tak to zignoruje, ale usunięcie eliminuje warning
+2. Ustawić `android:resizeableActivity="true"` jeśli nie jest już ustawione
+3. Przetestować layout na emulatorze tabletu / składanego — upewnić się że UI nie "rozsypuje się" przy szerszym ekranie (flex layout zwykle działa OK, problemy bywają z hardkodowanymi szerokościami w px)
+
+Dokumentacja Google: https://developer.android.com/about/versions/16/behavior-changes-16#screen-orientation
+
+---
+
+**Priorytet:** Naprawić przed kolejnym release (wersja 7). Oba problemy dotyczą wersji 6 (1.0.6) — Google już to widzi i oznaczy jako blokujące przy kolejnym submit jeśli Android target SDK zostanie podbity do 35+.
+
+[2026-09-12 11:00] [WEB→APP] [TODO] Nomenklatura membership ID — sprawdź u siebie
+
+Funkcja `makeMbrId(role)` w `coachay-core.js` generuje poprawny format:
+`mbr_{typ}_{YYYYMMDD}_{rand7}` → np. `mbr_trener_20260912_1234567`
+
+WEB znalazł 1 miejsce gdzie ID było generowane ręcznie bez prefixu roli (`mbr_YYYYMMDD_XXXXX`) — naprawione w `klub.html:1026` (TRENER_POMOCNICZY club-level membership przy usuwaniu z drużyny).
+
+Prośba do APP: sprawdź czy w Waszym kodzie (React Native / TypeScript) wszędzie gdzie tworzycie dokument w kolekcji `memberships` używacie funkcji analogicznej do `makeMbrId` i czy generowany format jest spójny z powyższym schematem. Szczególnie sprawdź edge-case'y: zmiana drużyny, usunięcie z drużyny, backfill membership przy tworzeniu klubu.

@@ -1023,7 +1023,7 @@ async function saveTeam() {
                 const hasOther = [...otherA.docs, ...otherB.docs].some(d => d.data().teamId && d.data().teamId !== teamId);
                 if (!hasOther) {
                     // Brak innych drużyn — utwórz club-level membership (teamId: null)
-                    const clubMbrId = 'mbr_' + dateStr + '_' + Math.random().toString(36).slice(2,7).toUpperCase();
+                    const clubMbrId = makeMbrId('TRENER_POMOCNICZY');
                     await db.collection('memberships').doc(clubMbrId).set({
                         membershipId: clubMbrId, userId, teamId: null,
                         clubId: currentClubId, role: 'TRENER_POMOCNICZY', trainerRole: 'TRENER_POMOCNICZY',
