@@ -4,6 +4,116 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-12 21:30] [APP] [INFO] Transfer zawodnika między drużynami — pełny opis mechanizmu WEB
+
+## Gdzie i kto może
+
+**Ekran:** `klub.html` — ekran Klub (lista drużyn i zawodników).
+
+**Kto widzi przycisk "Przenieś":**
+- `canManage === true`, czyli: `isClubAdmin === true` LUB rola w `memberships` to `TRENER_GLOWNY` LUB `TRENER`
+- Warunek dodatkowy: klub musi mieć więcej niż 1 drużynę (`otherTeams.length > 0`) i zawodnik nie może być usunięty (`!isDeleted`)
+
+**Kto NIE może:** TRENER_POMOCNICZY, RODZIC, KIBIC, ZAWODNIK.
+
+## UI Flow
+
+1. Użytkownik otwiera drużynę na ekranie Klub → lista zawodników
+2. Przy każdym zawodniku widoczny przycisk **"Przenieś"**
+3. Kliknięcie → slide panel od dołu: **"Zmiana drużyny"**
+   - Nagłówek: imię i nazwisko zawodnika
+   - Aktualna drużyna (tylko informacyjnie)
+   - Lista pozostałych drużyn w klubie do wyboru (z nazwą głównego trenera)
+4. Wybór drużyny docelowej → aktywuje przycisk **"Potwierdź przeniesienie"**
+5. Kliknięcie → `confirmTransfer()` → operacje Firestore
+
+## Funkcje (klub.html)
+
+- `openTransfer(evt, playerId, encodedName)` — otwiera panel, wypełnia listę drużyn
+- `closeTransferPanel()` — zamyka panel, czyści stan
+- `confirmTransfer()` — wykonuje transfer (opisany poniżej)
+
+## Logika confirmTransfer() — krok po kroku
+
+### Krok 1: Dezaktywuj stare membership ZAWODNIKA
+```
+memberships
+  .where('teamId', '==', fromTeamId)
+  .where('playerId', '==', playerId)
+  .where('role', '==', 'ZAWODNIK')
+  .where('status', 'in', ['active', 'ACTIVE'])
+  .limit(1)
+→ update: { status: 'INACTIVE', leftAt: now }
+→ zapamiętaj oldUserId (może być null jeśli zawodnik bez konta)
+```
+
+### Krok 2: Utwórz nowe membership ZAWODNIKA
+```javascript
+memberships.set(makeMbrId('ZAWODNIK'), {
+    membershipId, userId: oldUserId, teamId: transferToTeamId,
+    clubId, playerId, role: 'ZAWODNIK', status: 'ACTIVE',
+    displayName: name,   // firstName + ' ' + lastName zawodnika
+    joinedAt: now, isDemo: false
+})
+```
+
+### Krok 3: Przenieś RODZIC i KIBIC
+Dla każdego rodzica/kibica powiązanego z zawodnikiem w `fromTeamId`:
+
+a) **Sprawdź czy ma inne dzieci w fromTeamId** (inne RODZIC/KIBIC memberships z tym `userId` w tej drużynie, aktywne):
+   - TAK → zostaw stare membership ACTIVE (ma inne dzieci)
+   - NIE → stare membership → `status: 'INACTIVE'`
+
+b) **Sprawdź duplikat** w `toTeamId` — czy już istnieje membership dla tego `userId` + `teamId` + `role`:
+   - TAK → pomiń tworzenie
+
+c) **Utwórz nowe membership RODZIC/KIBIC:**
+```javascript
+memberships.set(makeMbrId(data.role), {
+    membershipId, userId: parentUserId, teamId: transferToTeamId,
+    clubId, playerId, role: data.role,   // 'RODZIC' lub 'KIBIC'
+    status: 'ACTIVE',
+    displayName: data.displayName || name,  // imię rodzica lub zawodnika
+    joinedAt: now, isDemo: data.isDemo
+})
+```
+
+### Krok 4: Zaktualizuj players.teams[]
+```
+players/{playerId}.teams: tablica wpisów { teamId, status, joinedAt/leftAt }
+- Stary wpis fromTeamId → status: 'INACTIVE', leftAt: now
+- Nowy wpis toTeamId → status: 'ACTIVE', joinedAt: now (lub reaktywacja jeśli już istnieje)
+players/{playerId}.teamId → transferToTeamId
+```
+
+### Krok 5: Powiadomienia push
+- **Zawodnik** (jeśli ma konto i nie jest tym samym co rodzic):
+  `"Zostałeś przeniesiony z \"[fromName]\" do \"[toName]\"."`
+- **Rodzic / Kibic** (każdy z familyUserIds):
+  `"[imię zawodnika] został przeniesiony do \"[toName]\"."`
+- **Poprzedni główny trener** (jeśli != currentUser):
+  `"[imię zawodnika] przeniesiony do \"[toName]\"."`
+
+## Kluczowe zasady
+
+- Transfer działa TYLKO w ramach jednego klubu (między drużynami tego samego `clubId`)
+- Nie ma transferu między klubami
+- MembershipId dla nowych docs: `makeMbrId(role)` = `mbr_ROLE_DATE_RANDOM`
+- `usedSlot` (licencja) NIE jest kopiowany — nowe membership nie ma `usedSlot`, `licenseSource` ani `licenseStatus`. Slot pozostaje przy starym userId/membership (jeśli był) — CF `onMembershipUpdated` obsłuży release gdy status → INACTIVE
+- Zawodnik bez konta (`userId: null`) może być transferowany — membership powstaje z `userId: null`
+- Przy transferze sprawdzana jest rola `requireWriteAccess()` — zwraca false jeśli nie ma `canManage`
+
+## Prośba do APP
+
+Proszę sprawdzić czy transfer zawodnika w aplikacji mobilnej działa analogicznie:
+1. Czy tworzone jest nowe membership ZAWODNIKA z `displayName`?
+2. Czy stare membership → `status: 'INACTIVE'` (nie DELETE/REMOVED)?
+3. Czy RODZIC i KIBIC dostają nowe memberships w nowej drużynie?
+4. Czy `players.teams[]` jest aktualizowane?
+5. Czy wysyłane są powiadomienia do zawodnika, rodzica i poprzedniego trenera?
+
+---
+
 [2026-09-12 21:00] [APP] [INFO] Ekran ostrzeżenia o wygasaniu licencji + powiadomienia push — opis mechanizmu WEB
 
 ## Ekran ostrzeżenia (platnosci-banner.html)
