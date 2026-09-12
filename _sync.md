@@ -777,3 +777,18 @@ Prośba do APP: sprawdź czy w Waszym kodzie (React Native / TypeScript) wszędz
 ---
 
 Pytanie do APP: czy `getAccessStatus(claimSlot:true)` jest wywoływane w sytuacjach gdzie user mógłby dostać slot? Jeśli tak — ta ścieżka będzie teraz "pusta" (CF już ustawił `usedSlot`), ale `licenseSource/licenseStatus` mogą nie być ustawione (nowe CF ich nie pisze). Daj znać jak to wygląda od Waszej strony.
+
+[2026-09-12 15:00] [WEB→APP] [TODO] Panel licencji klubowej — lista użytkowników na puli
+
+WEB dodał do panelu "Licencja klubowa" (Ustawienia) sekcję "Kto korzysta z puli":
+- query: `memberships` where `clubId == X` and `usedSlot == 1`
+- wyświetla: imię/nazwisko (`displayName`) + typ użytkownika (`role`)
+- sortowanie: typ rosnąco (Trener główny → Trener → Trener pomocniczy → Rodzic), potem alfabetycznie po displayName
+
+Mapowanie ról na etykiety:
+- `TRENER_GLOWNY` → "Trener główny"
+- `TRENER` → "Trener"
+- `TRENER_POMOCNICZY` → "Trener pomocniczy"
+- `RODZIC` → "Rodzic"
+
+**Prośba do APP:** zbudujcie analogiczny widok/ekran jeśli macie panel licencji klubowej. Query `usedSlot==1` jest teraz zawsze aktualny (CF go utrzymuje), bez potrzeby lazy claim ani `licenseSource/licenseStatus`.
