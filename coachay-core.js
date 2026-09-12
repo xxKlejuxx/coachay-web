@@ -3275,7 +3275,7 @@ async function _checkPinLock(user) {
    ═══════════════════════════════════════════════════════════════ */
 
 const GRACE_DAYS = 7;
-const TRIAL_SHOW_DAYS = [30, 23, 19, 15, 12, 9, 6, 5, 4, 3, 2, 1];
+const TRIAL_SHOW_DAYS = [15, 10, 5, 1, 0];
 
 /** Zwraca pierwsze aktywne membership usera dla danego klubu lub null. */
 async function _getMembershipForClub(uid, clubId) {

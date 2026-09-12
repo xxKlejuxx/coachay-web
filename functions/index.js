@@ -1328,17 +1328,11 @@ const LICENSE_NOTIF_DAYS = [15, 10, 5, 1, 0];
 const LICENSE_GRACE_MARKS = [0, 7];
 const TRIAL_DAYS_MS = 90 * 86400 * 1000;
 
-function makeLicenseNotifId(userId, title, daysLeft) {
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const slug = title.replace(/[^a-zA-Z]/g, '').slice(0, 8).toLowerCase();
-    const dl = daysLeft >= 0 ? 'd' + daysLeft : 'g' + Math.abs(daysLeft);
-    return `licnotif_${today}_${userId}_${slug}_${dl}`;
-}
-
 async function sendLicenseNotification(userId, title, body, teamId, daysLeft) {
     const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
     const notif = {
-        notificationId: makeLicenseNotifId(userId, title, daysLeft ?? 0),
+        notificationId: 'notif_' + dateStr + '_' + Date.now().toString().slice(-7),
         userId,
         teamId: teamId || null,
         type: 'LICENSE_EXPIRING',
