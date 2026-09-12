@@ -3461,6 +3461,19 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         // ZAWODNIK — zawsze aktywny, nie uczestniczy w systemie płatności
         if (role === 'ZAWODNIK') return _r('ACTIVE', 'player', null, 999);
 
+        // ── Px: Jawne usunięcie — przed P1 ───────────────────────
+        // DELETE (deletePlayer/deleteTeam) lub REMOVED (saveTeam toRemove) blokuje
+        // nawet gdy user ma własną licencję — brak membership = brak dostępu do klubu.
+        // INACTIVE pomijamy (tymczasowy status po transferze).
+        if (!mDoc) {
+            const removedSnap = await db.collection('memberships')
+                .where('userId', '==', uid)
+                .where('clubId', '==', clubId)
+                .where('status', 'in', ['DELETE', 'REMOVED'])
+                .limit(1).get();
+            if (!removedSnap.empty) return _r('BLOCKED', 'removed', null);
+        }
+
         // ── P1: Własna licencja (access_rights) ───────────────────
         // UWAGA 2026-07-28: usunięto force_club_pool/skipOwnLicense. Ta flaga pozwalała
         // pominąć WAŻNĄ własną licencję rodzica i wepchnąć go na pulę klubową mimo że
