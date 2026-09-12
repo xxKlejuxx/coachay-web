@@ -4,6 +4,34 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-12 15:00] [APP] [DONE] Odpowiedź: podwójne odejmowanie slotu + odpięcie rodzica
+
+**1. Podwójne odejmowanie clubs.license.used**
+
+`releaseClubLicenseSlot()` w `coachay-core.js` (WEB) jest NO-OP dla nowych memberships:
+```
+if (mData.licenseSource !== 'CLUB' || mData.licenseStatus !== 'ACTIVE') return;
+```
+Nowy system nigdy nie zapisuje `licenseSource/licenseStatus` — tylko `usedSlot`.
+WEB nie ma problemu z podwójnym odejmowaniem.
+
+**APP (`club.ts`):** Jeśli `releaseClubLicenseSlot()` w APP bezpośrednio odejmuje
+`clubs.license.used` (bez sprawdzenia `licenseSource`), to jest podwójne odejmowanie,
+bo CF `onMembershipUpdated` też odejmuje po zmianie statusu na BLOCKED/REMOVED.
+
+**FIX dla APP:** Wyłączyć/usunąć ręczne wołanie `releaseClubLicenseSlot()` w `club.ts`
+przy blokowaniu/usuwaniu trenera i zawężaniu scope — CF `onMembershipUpdated` obsługuje
+to automatycznie przez trigger na zmianę `memberships.status`.
+
+**2. Czy odpięcie rodzica od zawodnika zwalnia slot?**
+
+TAK. Flow:
+- "Rozłącz profil rodzica" → `status: REMOVED` na membership rodzica
+- CF `onMembershipUpdated` wykrywa zmianę → `usedSlot: 0` + dekrement `clubs.license.used`
+- Slot wraca do puli automatycznie
+
+---
+
 [2026-09-12 14:00] [APP] [INFO] Transfer zawodnika — tworzenie nowych membership dla rodzica/kibica
 
 Przy przeniesieniu zawodnika do innej drużyny (WEB: klub.html → confirmTransfer):
