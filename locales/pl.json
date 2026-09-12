@@ -971,7 +971,15 @@
   "licenseSavedMsg": "Zapisano ✓",
   "licenseSaveError": "Błąd: {{message}}",
   "licenseConfirmLoseAccessTitle": "Zmienić ustawienia licencji?",
-  "licenseConfirmLoseAccessBody": "Ta zmiana odbierze dostęp przez pulę klubową: {{names}}. Kontynuować?"
+  "licenseConfirmLoseAccessBody": "Ta zmiana odbierze dostęp przez pulę klubową: {{names}}. Kontynuować?",
+  "licenseUsersLabel": "Kto korzysta z puli",
+  "licenseUsersEmpty": "Nikt nie korzysta jeszcze z puli",
+  "licenseUsersLoading": "Ładowanie…",
+  "licenseUsersError": "Błąd ładowania",
+  "roleLabel_TRENER_GLOWNY": "Trener główny",
+  "roleLabel_TRENER": "Trener",
+  "roleLabel_TRENER_POMOCNICZY": "Trener pomocniczy",
+  "roleLabel_RODZIC": "Rodzic"
  },
  "notifLib": {
   "eventTypeFallback": "Wydarzenie",

@@ -971,7 +971,15 @@
   "licenseSavedMsg": "Saved ✓",
   "licenseSaveError": "Error: {{message}}",
   "licenseConfirmLoseAccessTitle": "Change license settings?",
-  "licenseConfirmLoseAccessBody": "This change will revoke club-pool access for: {{names}}. Continue?"
+  "licenseConfirmLoseAccessBody": "This change will revoke club-pool access for: {{names}}. Continue?",
+  "licenseUsersLabel": "Who uses the pool",
+  "licenseUsersEmpty": "No one is using the pool yet",
+  "licenseUsersLoading": "Loading…",
+  "licenseUsersError": "Loading error",
+  "roleLabel_TRENER_GLOWNY": "Head coach",
+  "roleLabel_TRENER": "Coach",
+  "roleLabel_TRENER_POMOCNICZY": "Assistant coach",
+  "roleLabel_RODZIC": "Parent"
  },
  "notifLib": {
   "eventTypeFallback": "Event",

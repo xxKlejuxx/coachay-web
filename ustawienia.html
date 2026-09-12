@@ -263,7 +263,7 @@
                 <button class="btn-primary" style="width:100%;padding:14px;margin-top:14px;" onclick="saveLicencja()" data-i18n="settings.licenseSaveButton">Zapisz</button>
                 <div id="licencja-msg" style="font-size:17px;font-weight:700;text-align:center;min-height:18px;"></div>
 
-                <div class="dp-form-lbl" style="margin-top:20px;">Kto korzysta z puli</div>
+                <div class="dp-form-lbl" style="margin-top:20px;" data-i18n="settings.licenseUsersLabel">Kto korzysta z puli</div>
                 <div id="licencja-uzytkownicy" class="pozycje-list">
                     <div style="padding:14px;color:var(--szary);font-size:16px;">Ładowanie…</div>
                 </div>
@@ -516,11 +516,16 @@ let _licScope = 'all';
 let _licScopeOriginal = 'all';
 
 const _ROLE_ORDER = { TRENER_GLOWNY: 0, TRENER: 1, TRENER_POMOCNICZY: 2, RODZIC: 3 };
-const _ROLE_LABEL = { TRENER_GLOWNY: 'Trener główny', TRENER: 'Trener', TRENER_POMOCNICZY: 'Trener pomocniczy', RODZIC: 'Rodzic' };
+
+function _getMbrName(u) {
+    const parts = [u.firstName, u.lastName].filter(Boolean);
+    return parts.length ? parts.join(' ') : (u.displayName || u.name || u.userId || '—');
+}
 
 async function loadLicencjaUsers() {
     const el = document.getElementById('licencja-uzytkownicy');
     if (!el || !_clubId) return;
+    el.innerHTML = `<div style="padding:14px;color:var(--szary);font-size:16px;">${t('settings.licenseUsersLoading')}</div>`;
     try {
         const snap = await db.collection('memberships')
             .where('clubId', '==', _clubId)
@@ -528,7 +533,7 @@ async function loadLicencjaUsers() {
             .get();
 
         if (snap.empty) {
-            el.innerHTML = '<div style="padding:14px;color:var(--szary);font-size:16px;">Brak użytkowników na puli</div>';
+            el.innerHTML = `<div style="padding:14px;color:var(--szary);font-size:16px;">${t('settings.licenseUsersEmpty')}</div>`;
             return;
         }
 
@@ -537,19 +542,19 @@ async function loadLicencjaUsers() {
             const ra = _ROLE_ORDER[a.role] ?? 9;
             const rb = _ROLE_ORDER[b.role] ?? 9;
             if (ra !== rb) return ra - rb;
-            return (a.displayName || '').localeCompare(b.displayName || '', 'pl');
+            return _getMbrName(a).localeCompare(_getMbrName(b), 'pl');
         });
 
         el.innerHTML = users.map(u => {
-            const name  = u.displayName || u.userId || '—';
-            const label = _ROLE_LABEL[u.role] || u.role || '—';
+            const name  = _getMbrName(u);
+            const label = t('settings.roleLabel_' + u.role) || u.role || '—';
             return `<div class="poz-item" style="pointer-events:none;">
                 <div class="poz-name">${name}</div>
                 <span style="font-size:14px;color:var(--szary);font-weight:600;">${label}</span>
             </div>`;
         }).join('');
     } catch (e) {
-        el.innerHTML = '<div style="padding:14px;color:var(--blad);font-size:16px;">Błąd ładowania</div>';
+        el.innerHTML = `<div style="padding:14px;color:var(--blad);font-size:16px;">${t('settings.licenseUsersError')}</div>`;
         console.error('loadLicencjaUsers:', e);
     }
 }
