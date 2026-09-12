@@ -4,6 +4,40 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-13 00:00] [APP] [TODO] Ekran płatności — poprawny sposób pobierania ceny z RevenueCat Google v6
+
+## Problem
+
+Pod Google Billing v6 (RevenueCat SDK) cena produktu subskrypcyjnego **nie jest już dostępna bezpośrednio** na `product.price` ani `product.priceString`. Stary sposób pobierania ceny (bezpośrednio z produktu) zwraca `undefined` lub niepoprawną wartość.
+
+## Poprawny sposób
+
+Cena musi być wyciągana z **Subscription Option** z flagą `isBasePlan`:
+
+```javascript
+const offerings = await Purchases.getOfferings();
+const price = offerings.current.monthly.product
+    .subscriptionOptions
+    .find(opt => opt.isBasePlan)
+    .price.presentedByRevenueCat;
+```
+
+## Co sprawdzić w kodzie APP
+
+1. **Czy pobieranie ceny używa `subscriptionOptions`?** — jeśli nie, cena może być `undefined` lub pokazywać się błędnie.
+2. **Czy `find(opt => opt.isBasePlan)` jest zabezpieczone przed `null`?** — jeśli `subscriptionOptions` jest puste lub żaden opt nie ma `isBasePlan === true`, kod wyrzuci błąd. Warto dodać fallback:
+   ```javascript
+   const basePlan = product.subscriptionOptions?.find(opt => opt.isBasePlan);
+   const price = basePlan?.price?.presentedByRevenueCat ?? product.priceString ?? '—';
+   ```
+3. **Czy dotyczy wszystkich planów** (miesięczny, roczny, itp.) — każdy plan powinien wyciągać cenę tą samą metodą przez swój własny `subscriptionOptions`.
+
+## Kontekst
+
+Zmiana wymuszona przez Google — od Billing v6 produkty subskrypcyjne mają wiele "base plans" i "offers", cena nie jest skalarem na poziomie produktu. RevenueCat enkapsuluje to w `subscriptionOptions`. `presentedByRevenueCat` to gotowy string do wyświetlenia (np. `"29,99 zł"`).
+
+---
+
 [2026-09-12 23:30] [APP] [TODO] Blokada dostępu po usunięciu membership — logika Px w getAccessStatus
 
 ## Problem
