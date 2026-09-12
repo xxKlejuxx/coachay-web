@@ -4,6 +4,79 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-12 23:30] [APP] [TODO] Blokada dostępu po usunięciu membership — logika Px w getAccessStatus
+
+## Problem
+
+Gdy admin usuwa zawodnika, trenera lub całą drużynę, membership powiązanych userów dostaje status `DELETE` lub `REMOVED`. Jeśli taki user ma własną licencję indywidualną (`access_rights`), system pomijał usunięcie i dawał mu ACTIVE — czyli normalny dostęp mimo że nie ma już powiązania z klubem.
+
+## Oczekiwane zachowanie
+
+User usunięty jawnie z klubu (DELETE lub REMOVED) → ekran blokady, niezależnie od posiadanej własnej licencji.
+
+## Kiedy membership dostaje DELETE / REMOVED
+
+| Akcja | Role których dotyczy | Status membership |
+|---|---|---|
+| `deletePlayer` (usuń zawodnika) | ZAWODNIK, RODZIC, KIBIC powiązani z tym zawodnikiem i drużyną | `DELETE` |
+| `saveTeam` (usuń trenera z drużyny) | TRENER usunięty z listy przypisanych | `REMOVED` |
+| `deleteTeam` (usuń drużynę) | wszyscy członkowie drużyny | `DELETE` |
+
+**INACTIVE jest celowo wyłączone z tej logiki** — status INACTIVE to stan tymczasowy (np. transfer zawodnika między drużynami). User z INACTIVE nie powinien trafiać na ekran blokady.
+
+## Logika do zaimplementowania w APP (odpowiednik `getAccessStatus`)
+
+Przed sprawdzeniem własnej licencji (`access_rights`), dodaj krok Px:
+
+```
+1. Pobierz aktywne membership usera w tym klubie (status == ACTIVE)
+2. Jeśli aktywne membership NIE ISTNIEJE:
+   a. Zapytaj Firestore: memberships WHERE userId == uid AND clubId == clubId AND status IN ['DELETE', 'REMOVED'] LIMIT 1
+   b. Jeśli wynik nie jest pusty → zwróć BLOCKED (source: 'removed')
+3. Kontynuuj normalną kolejność P1 → P0 → P3 → P4
+```
+
+## Kolejność priorytetów po zmianie
+
+```
+ZAWODNIK (role == 'ZAWODNIK') → zawsze ACTIVE
+  ↓
+Px: DELETE/REMOVED membership? → BLOCKED
+  ↓
+P1: własna licencja (access_rights valid_until > now) → ACTIVE / GRACE
+  ↓
+P0: trial (90 dni od dołączenia do klubu) → TRIAL / GRACE
+  ↓
+P3: slot klubowy B2B (TRENER, RODZIC) → ACTIVE / EXPIRED
+  ↓
+P4: family slot (KIBIC przez RODZIC) → ACTIVE / GRACE
+  ↓
+EXPIRED
+```
+
+## Dlaczego ZAWODNIK jest przed Px
+
+Zawodnik z rolą ZAWODNIK jest zawsze ACTIVE i nie uczestniczy w systemie płatności — ta linia odpala się tylko gdy `_getMembershipForClub` zwróciło ACTIVE membership z rolą ZAWODNIK, więc Px nigdy nie dotyczy aktywnych zawodników. Po usunięciu (`deletePlayer`) membership zawodnika dostaje DELETE → `_getMembershipForClub` zwraca null → role = '' → linia ZAWODNIK nie odpala → Px odpala → BLOCKED. Poprawne.
+
+## Firestore — query dla Px
+
+```
+collection: memberships
+filters:
+  userId == <uid>
+  clubId == <clubId>
+  status in ['DELETE', 'REMOVED']
+limit: 1
+```
+
+Zwróć uwagę: w bazie mogą istnieć memberships ze statusem lowercase (`active`, `delete`) — legacy dane. Przy Px sprawdzaj tylko `DELETE`/`REMOVED` (uppercase), bo `deletePlayer`/`saveTeam`/`deleteTeam` zawsze piszą uppercase.
+
+## Ekran blokady dla source: 'removed'
+
+Gdy `getAccessStatus` zwraca `{ status: 'BLOCKED', source: 'removed' }`, wyświetl dedykowany komunikat: użytkownik został usunięty z klubu przez administratora. Nie pokazuj ogólnego ekranu "brak licencji".
+
+---
+
 [2026-09-12 22:15] [APP] [INFO] Zarządzanie drużynami w panelu Klub — Dodaj, Edytuj, Usuń drużynę
 
 ## Gdzie i kto może
