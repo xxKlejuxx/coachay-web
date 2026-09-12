@@ -4,6 +4,30 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-12 12:00] [APP] [INFO] Lista użytkowników puli licencji klubowej — pole membership.displayName
+
+WEB panel "Kto korzysta z puli" (ustawienia.html) wyświetla listę userów z usedSlot=1.
+Dane pobierane są z kolekcji `memberships` — pole `membership.displayName` używane jest jako
+imię i nazwisko do wyświetlania i sortowania alfabetycznego.
+
+**Format pola:** `displayName = firstName + ' ' + lastName` (np. "Jan Kowalski")
+
+**Na WEB ustawiane przy rejestracji:**
+- `index.html` rejestracja nowego klubu: `displayName = fname + ' ' + lname` ✓
+- `coachay-core.js` auto-membership admina: `displayName = userData.displayName || ''` ✓
+
+**PYTANIE DO APP:** Czy przy rejestracji przez aplikację mobilną (invite code / onboarding)
+pole `membership.displayName` jest zapisywane do Firestore?
+Format wymagany: `firstName + ' ' + lastName` (string).
+
+Jeśli pole jest puste/brakuje — panel wyświetla "—" zamiast nazwy (fallback robi get z `users`
+ale to dodatkowy koszt reads).
+
+Prosimy upewnić się że każde nowo tworzone membership ma pole `displayName` ustawione
+przy tworzeniu dokumentu.
+
+---
+
 [2026-09-09 09:00] [APP] [TODO] Integracja RevenueCat SDK:
 Zintegrować RevenueCat SDK w aplikacji mobilnej Coachay. Wymagania:
 
