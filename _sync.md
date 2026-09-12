@@ -792,3 +792,19 @@ Mapowanie ról na etykiety:
 - `RODZIC` → "Rodzic"
 
 **Prośba do APP:** zbudujcie analogiczny widok/ekran jeśli macie panel licencji klubowej. Query `usedSlot==1` jest teraz zawsze aktualny (CF go utrzymuje), bez potrzeby lazy claim ani `licenseSource/licenseStatus`.
+
+[2026-09-12 16:00] [WEB→APP] [DONE] Panel licencji klubowej — lista userów na puli (szczegóły implementacji)
+
+WEB zaimplementował listę "Kto korzysta z puli" w panelu Ustawienia → Licencja klubowa.
+
+**Jak działa:**
+- Lazy load — dane pobierane dopiero gdy trener wejdzie w panel (nie przy starcie strony)
+- Query memberships: `where('clubId', '==', clubId).where('usedSlot', '==', 1)`
+- Dla każdego userId pobiera dokument z kolekcji `users` (Promise.all równolegle)
+- Imię i nazwisko: `users.firstName + users.lastName` (fallback: `displayName` → `name`)
+- Sortowanie: typ rosnąco (Trener główny → Trener → Trener pomocniczy → Rodzic), potem alfabetycznie
+- Tłumaczenia (PL/EN) dla etykiet ról i stanów (ładowanie, pusty, błąd) — klucze `settings.roleLabel_*`
+
+**Ważne dla APP:** imię i nazwisko jest na kolekcji `users`, NIE na `memberships`. Membership ma tylko `displayName` (historyczne, może być puste lub nieaktualne) — nie polegaj na nim do wyświetlania.
+
+**Prośba do APP:** zbudujcie analogiczny widok jeśli macie panel licencji.
