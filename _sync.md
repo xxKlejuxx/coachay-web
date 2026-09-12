@@ -4,6 +4,35 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-13 00:15] [WEB] [TODO] Płatności webowe Google Play i App Store przez RevenueCat Web Billing
+
+## Cel
+
+Wdrożyć zakup licencji bezpośrednio na stronie WWW (platnosci.html) przez RevenueCat — zarówno dla użytkowników Android (Google Play) jak i iOS (App Store). RevenueCat oferuje Web Billing (dawniej "Purchase Links" / "Web Paywall"), które pozwala inicjować zakup subskrypcji z przeglądarki i przypisać go do konta RevenueCat usera.
+
+## Do zbadania przed implementacją
+
+1. **RevenueCat Web Billing** — czy jest dostępny na obecnym planie RevenueCat? Wymaga planu Grow lub wyższego.
+2. **Google Play** — Web Billing dla Google obsługuje zakupy przez przeglądarkę i przekierowuje do Google Play checkout. User musi być zalogowany na to samo konto Google co na urządzeniu.
+3. **App Store** — Apple nie zezwala na zakupy in-app przez WWW (polityka App Store). RevenueCat Web Billing dla iOS to osobny flow (Stripe jako fallback) — trzeba sprawdzić czy Apple to akceptuje dla danego typu produktu.
+4. **Linkowanie konta** — zakup na WWW musi być przypisany do `revenueCatUserId` danego usera (u nas = Firebase UID). Bez tego zakup nie pojawi się w entitlements usera w apce.
+5. **Webhook RevenueCat → CF** — czy obecny webhook w `functions/index.js` obsłuży zakupy webowe tak samo jak mobilne?
+
+## Kolejność działań (propozycja)
+
+1. Sprawdzić plan RevenueCat i dostępność Web Billing
+2. Skonfigurować Web Billing w dashboardzie RevenueCat (produkty, ceny, wygląd)
+3. Na platnosci.html — przycisk "Kup przez WWW" generuje link RevenueCat z `app_user_id` = Firebase UID usera
+4. Po zakupie — RevenueCat wysyła webhook → CF aktualizuje `access_rights` / `valid_until`
+5. Przetestować flow end-to-end na koncie testowym
+
+## Powiązane
+
+- Integracja iFirma (FV) przy płatnościach webowych — patrz `project_ifirma.md`
+- Ekran platnosci.html — istniejący plik do rozbudowy
+
+---
+
 [2026-09-13 00:00] [APP] [TODO] Ekran płatności — poprawny sposób pobierania ceny z RevenueCat Google v6
 
 ## Problem
