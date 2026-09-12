@@ -589,10 +589,29 @@ async function _licLoadPage(pageIdx) {
             return;
         }
 
-        const rows = snap.docs.map(doc => {
-            const m = doc.data();
-            return { name: m.displayName || '—', label: t('settings.roleLabel_' + m.role) || m.role || '—' };
-        }).sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+        const memberships = snap.docs.map(doc => doc.data());
+
+        // Dla starych memberships bez displayName — fetch users doc (tylko brakujące)
+        const missing = memberships.filter(m => !m.displayName && m.userId);
+        if (missing.length > 0) {
+            const userDocs = await Promise.all(
+                missing.map(m => db.collection('users').doc(m.userId).get().catch(() => null))
+            );
+            const userMap = {};
+            userDocs.forEach((u, i) => {
+                if (u && u.exists) {
+                    const d = u.data();
+                    const name = [d.firstName, d.lastName].filter(Boolean).join(' ') || d.displayName || '';
+                    if (name) userMap[missing[i].userId] = name;
+                }
+            });
+            memberships.forEach(m => { if (!m.displayName && userMap[m.userId]) m.displayName = userMap[m.userId]; });
+        }
+
+        const rows = memberships.map(m => ({
+            name:  m.displayName || m.userId || '—',
+            label: t('settings.roleLabel_' + m.role) || m.role || '—',
+        })).sort((a, b) => a.name.localeCompare(b.name, 'pl'));
 
         el.innerHTML = rows.map(r =>
             `<div class="poz-item" style="pointer-events:none;">
