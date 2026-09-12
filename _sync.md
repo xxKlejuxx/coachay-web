@@ -4,6 +4,45 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-12 14:00] [APP] [INFO] Transfer zawodnika — tworzenie nowych membership dla rodzica/kibica
+
+Przy przeniesieniu zawodnika do innej drużyny (WEB: klub.html → confirmTransfer):
+1. Stare membership ZAWODNIKA → status: INACTIVE
+2. Nowe membership ZAWODNIKA z nowym teamId → ACTIVE
+3. Dla każdego aktywnego RODZICA i KIBICA powiązanego z zawodnikiem:
+   - Jeśli rodzic NIE MA innych dzieci w starej drużynie → stare membership → INACTIVE
+   - Jeśli MA inne dzieci w starej drużynie → stare membership zostaje ACTIVE
+   - Nowe membership RODZICA/KIBICA z nowym teamId → ACTIVE (chyba że już istnieje)
+   displayName: kopiowane ze starego membership, fallback na players.firstName+lastName
+
+**PYTANIE DO APP:** Czy transfer zawodnika w aplikacji mobilnej działa tak samo?
+Czy rodzic/kibic automatycznie dostaje nowe membership z nowym teamId?
+
+---
+
+[2026-09-12 14:00] [APP] [INFO] Zmiana nazwy przycisku — "Rozłącz profil rodzica"
+
+Przycisk na szczegółach zawodnika (druzyna.html) zmieniono:
+- Stara nazwa: "↩ Przejmij zawodnika z powrotem"
+- Nowa nazwa: "↩ Rozłącz profil rodzica"
+- Nowy dialog: "Czy na pewno chcesz odpiąć rodzica [Imię Nazwisko] od profilu tego zawodnika? Rodzic utraci dostęp." + przyciski "Anuluj" / "Tak, rozłącz"
+- Przy wielu rodzicach: wymienia wszystkich po imieniu
+
+Akcja bez zmian: ustawia status: REMOVED na membership wszystkich aktywnych rodziców i kibiców.
+
+**Prośba do APP:** Zaktualizować nazwę i dialog potwierdzenia analogicznie.
+
+---
+
+[2026-09-12 14:00] [APP] [INFO] Usunięcie zakładki "Kibic" z sekcji Kody dostępu na szczegółach zawodnika
+
+W sekcji "KODY DOSTĘPU" na ekranie szczegółów zawodnika usunięto zakładkę "Kibic".
+Pozostają tylko: Rodzic, Zawodnik.
+
+**Prośba do APP:** Usunąć zakładkę Kibic z sekcji kodów dostępu na ekranie szczegółów zawodnika.
+
+---
+
 [2026-09-12 12:00] [APP] [INFO] Lista użytkowników puli licencji klubowej — pole membership.displayName
 
 WEB panel "Kto korzysta z puli" (ustawienia.html) wyświetla listę userów z usedSlot=1.
