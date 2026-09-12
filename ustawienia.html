@@ -549,7 +549,7 @@ function _licBuildQuery() {
         .where('usedSlot', '==', 1);
     if (showTrainers && !showParents) q = q.where('role', 'in', _TRAINER_ROLES_ARR);
     else if (showParents && !showTrainers) q = q.where('role', '==', 'RODZIC');
-    return q.orderBy('displayName').limit(_LIC_PAGE_SIZE);
+    return q.orderBy('createdAt').limit(_LIC_PAGE_SIZE);
 }
 
 async function loadLicencjaUsers() {
@@ -589,15 +589,17 @@ async function _licLoadPage(pageIdx) {
             return;
         }
 
-        el.innerHTML = snap.docs.map(doc => {
+        const rows = snap.docs.map(doc => {
             const m = doc.data();
-            const name  = m.displayName || '—';
-            const label = t('settings.roleLabel_' + m.role) || m.role || '—';
-            return `<div class="poz-item" style="pointer-events:none;">
-                <div class="poz-name">${name}</div>
-                <span style="font-size:14px;color:var(--szary);font-weight:600;">${label}</span>
-            </div>`;
-        }).join('');
+            return { name: m.displayName || '—', label: t('settings.roleLabel_' + m.role) || m.role || '—' };
+        }).sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+
+        el.innerHTML = rows.map(r =>
+            `<div class="poz-item" style="pointer-events:none;">
+                <div class="poz-name">${r.name}</div>
+                <span style="font-size:14px;color:var(--szary);font-weight:600;">${r.label}</span>
+            </div>`
+        ).join('');
         el.scrollTop = 0;
 
         const hasPrev = pageIdx > 0;

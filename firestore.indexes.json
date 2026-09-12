@@ -77,19 +77,19 @@
       "collectionGroup": "memberships",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "clubId",      "order": "ASCENDING" },
-        { "fieldPath": "usedSlot",    "order": "ASCENDING" },
-        { "fieldPath": "displayName", "order": "ASCENDING" }
+        { "fieldPath": "clubId",    "order": "ASCENDING" },
+        { "fieldPath": "usedSlot",  "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "memberships",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "clubId",      "order": "ASCENDING" },
-        { "fieldPath": "usedSlot",    "order": "ASCENDING" },
-        { "fieldPath": "role",        "order": "ASCENDING" },
-        { "fieldPath": "displayName", "order": "ASCENDING" }
+        { "fieldPath": "clubId",    "order": "ASCENDING" },
+        { "fieldPath": "usedSlot",  "order": "ASCENDING" },
+        { "fieldPath": "role",      "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
     },
     {
