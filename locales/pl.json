@@ -976,6 +976,8 @@
   "licenseUsersEmpty": "Nikt nie korzysta jeszcze z puli",
   "licenseUsersLoading": "Ładowanie…",
   "licenseUsersError": "Błąd ładowania",
+  "licenseFilterTrainers": "Trenerzy",
+  "licenseFilterParents": "Rodzice",
   "roleLabel_TRENER_GLOWNY": "Trener główny",
   "roleLabel_TRENER": "Trener",
   "roleLabel_TRENER_POMOCNICZY": "Trener pomocniczy",

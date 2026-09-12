@@ -264,9 +264,26 @@
                 <div id="licencja-msg" style="font-size:17px;font-weight:700;text-align:center;min-height:18px;"></div>
 
                 <div class="dp-form-lbl" style="margin-top:20px;" data-i18n="settings.licenseUsersLabel">Kto korzysta z puli</div>
-                <div id="licencja-uzytkownicy" class="pozycje-list">
+
+                <!-- Filtry -->
+                <div style="display:flex;gap:12px;margin-bottom:10px;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:16px;font-weight:600;color:var(--bialy);cursor:pointer;">
+                        <input type="checkbox" id="lic-filter-trainers" checked onchange="loadLicencjaUsers()" style="width:18px;height:18px;accent-color:var(--akcent);">
+                        <span data-i18n="settings.licenseFilterTrainers">Trenerzy</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:16px;font-weight:600;color:var(--bialy);cursor:pointer;">
+                        <input type="checkbox" id="lic-filter-parents" checked onchange="loadLicencjaUsers()" style="width:18px;height:18px;accent-color:var(--akcent);">
+                        <span data-i18n="settings.licenseFilterParents">Rodzice</span>
+                    </label>
+                </div>
+
+                <!-- Lista (stała wysokość, max 25 wierszy) -->
+                <div id="licencja-uzytkownicy" class="pozycje-list" style="max-height:calc(25 * 52px);overflow-y:auto;">
                     <div style="padding:14px;color:var(--szary);font-size:16px;">Ładowanie…</div>
                 </div>
+
+                <!-- Paginacja -->
+                <div id="licencja-paginacja" style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;"></div>
             </div>
         </div>
     </div>
@@ -515,60 +532,85 @@ function showMsg(el, txt, ok) {
 let _licScope = 'all';
 let _licScopeOriginal = 'all';
 
-const _ROLE_ORDER = { TRENER_GLOWNY: 0, TRENER: 1, TRENER_POMOCNICZY: 2, RODZIC: 3 };
+const _TRAINER_ROLES_ARR = ['TRENER_GLOWNY', 'TRENER', 'TRENER_POMOCNICZY'];
+const _LIC_PAGE_SIZE     = 25;
+let   _licState = { filter: 'all', page: 0, cursors: [null], hasMore: false };
+
+function _licBtnStyle(active) {
+    return `min-width:36px;padding:6px 14px;border-radius:8px;border:none;font-size:15px;font-weight:700;cursor:pointer;` +
+           `background:${active ? 'var(--akcent)' : 'var(--tlo-karta)'};color:${active ? '#fff' : 'var(--bialy)'};`;
+}
+
+function _licBuildQuery() {
+    const showTrainers = document.getElementById('lic-filter-trainers')?.checked ?? true;
+    const showParents  = document.getElementById('lic-filter-parents')?.checked  ?? true;
+    let q = db.collection('memberships')
+        .where('clubId', '==', _clubId)
+        .where('usedSlot', '==', 1);
+    if (showTrainers && !showParents) q = q.where('role', 'in', _TRAINER_ROLES_ARR);
+    else if (showParents && !showTrainers) q = q.where('role', '==', 'RODZIC');
+    return q.orderBy('displayName').limit(_LIC_PAGE_SIZE);
+}
 
 async function loadLicencjaUsers() {
-    const el = document.getElementById('licencja-uzytkownicy');
+    const el   = document.getElementById('licencja-uzytkownicy');
+    const pgEl = document.getElementById('licencja-paginacja');
     if (!el || !_clubId) return;
+    const showT = document.getElementById('lic-filter-trainers')?.checked ?? true;
+    const showP = document.getElementById('lic-filter-parents')?.checked  ?? true;
+    if (!showT && !showP) {
+        el.innerHTML = `<div style="padding:14px;color:var(--szary);font-size:16px;">${t('settings.licenseUsersEmpty')}</div>`;
+        pgEl.innerHTML = '';
+        return;
+    }
+    const filter = (showT && showP) ? 'all' : showT ? 'trainers' : 'parents';
+    _licState = { filter, page: 0, cursors: [null], hasMore: false };
+    await _licLoadPage(0);
+}
+
+async function _licLoadPage(pageIdx) {
+    const el   = document.getElementById('licencja-uzytkownicy');
+    const pgEl = document.getElementById('licencja-paginacja');
+    if (!el || !pgEl || !_clubId) return;
     el.innerHTML = `<div style="padding:14px;color:var(--szary);font-size:16px;">${t('settings.licenseUsersLoading')}</div>`;
+    pgEl.innerHTML = '';
     try {
-        const snap = await db.collection('memberships')
-            .where('clubId', '==', _clubId)
-            .where('usedSlot', '==', 1)
-            .get();
+        let q = _licBuildQuery();
+        const cursor = _licState.cursors[pageIdx];
+        if (cursor) q = q.startAfter(cursor);
+        const snap = await q.get();
+
+        _licState.page    = pageIdx;
+        _licState.hasMore = snap.docs.length === _LIC_PAGE_SIZE;
+        if (_licState.hasMore) _licState.cursors[pageIdx + 1] = snap.docs[snap.docs.length - 1];
 
         if (snap.empty) {
             el.innerHTML = `<div style="padding:14px;color:var(--szary);font-size:16px;">${t('settings.licenseUsersEmpty')}</div>`;
             return;
         }
 
-        const mbrs = snap.docs.map(d => d.data());
-
-        // Pobierz dane users (imię, nazwisko)
-        const userIds = [...new Set(mbrs.map(m => m.userId).filter(Boolean))];
-        const userMap = {};
-        await Promise.all(userIds.map(async uid => {
-            try {
-                const uDoc = await db.collection('users').doc(uid).get();
-                if (uDoc.exists) userMap[uid] = uDoc.data();
-            } catch (e) {}
-        }));
-
-        mbrs.sort((a, b) => {
-            const ra = _ROLE_ORDER[a.role] ?? 9;
-            const rb = _ROLE_ORDER[b.role] ?? 9;
-            if (ra !== rb) return ra - rb;
-            return _getUserFullName(userMap[a.userId]).localeCompare(_getUserFullName(userMap[b.userId]), 'pl');
-        });
-
-        el.innerHTML = mbrs.map(m => {
-            const name  = _getUserFullName(userMap[m.userId]);
+        el.innerHTML = snap.docs.map(doc => {
+            const m = doc.data();
+            const name  = m.displayName || '—';
             const label = t('settings.roleLabel_' + m.role) || m.role || '—';
             return `<div class="poz-item" style="pointer-events:none;">
                 <div class="poz-name">${name}</div>
                 <span style="font-size:14px;color:var(--szary);font-weight:600;">${label}</span>
             </div>`;
         }).join('');
+        el.scrollTop = 0;
+
+        const hasPrev = pageIdx > 0;
+        const hasNext = _licState.hasMore;
+        if (!hasPrev && !hasNext) return;
+        pgEl.innerHTML =
+            (hasPrev ? `<button onclick="_licLoadPage(${pageIdx - 1})" style="${_licBtnStyle(false)}">← Poprzednia</button>` : '') +
+            `<span style="font-size:15px;font-weight:600;color:var(--szary);align-self:center;padding:0 4px;">Strona ${pageIdx + 1}</span>` +
+            (hasNext ? `<button onclick="_licLoadPage(${pageIdx + 1})" style="${_licBtnStyle(false)}">Następna →</button>` : '');
     } catch (e) {
         el.innerHTML = `<div style="padding:14px;color:var(--blad);font-size:16px;">${t('settings.licenseUsersError')}</div>`;
-        console.error('loadLicencjaUsers:', e);
+        console.error('_licLoadPage:', e);
     }
-}
-
-function _getUserFullName(u) {
-    if (!u) return '—';
-    const parts = [u.firstName, u.lastName].filter(Boolean);
-    return parts.length ? parts.join(' ') : (u.displayName || u.name || '—');
 }
 
 async function loadLicencja() {

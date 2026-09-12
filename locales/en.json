@@ -976,6 +976,8 @@
   "licenseUsersEmpty": "No one is using the pool yet",
   "licenseUsersLoading": "Loading…",
   "licenseUsersError": "Loading error",
+  "licenseFilterTrainers": "Coaches",
+  "licenseFilterParents": "Parents",
   "roleLabel_TRENER_GLOWNY": "Head coach",
   "roleLabel_TRENER": "Coach",
   "roleLabel_TRENER_POMOCNICZY": "Assistant coach",
