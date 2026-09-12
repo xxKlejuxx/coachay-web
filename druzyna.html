@@ -424,9 +424,9 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 </div>
             </div>
 
-            <!-- Przejmij zawodnika z powrotem (tylko trener) -->
+            <!-- Rozłącz profil rodzica (tylko trener, tylko gdy są aktywni rodzice) -->
             <div class="dp-section" id="dp-przejmij-section" style="display:none">
-                <button class="btn-ghost" style="width:100%;padding:11px;font-size: 18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">↩ Przejmij zawodnika z powrotem</button>
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size:18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">↩ Rozłącz profil rodzica</button>
             </div>
 
             <!-- Usuń zawodnika (tylko TRENER_GLOWNY) -->
@@ -2112,8 +2112,8 @@ function zamknijPowModal() {
     document.getElementById('pow-modal-overlay').classList.remove('open');
 }
 
-// Przejmuje zawodnika z powrotem całkowicie — odłącza WSZYSTKICH aktywnych rodziców i kibiców naraz.
-// Osobny, zawsze widoczny przycisk na dole okna zawodnika (obok punktowego "Odłącz rodzica"/"Odłącz kibica").
+// Rozłącza WSZYSTKICH aktywnych rodziców i kibiców od zawodnika — trener "przejmuje" zawodnika.
+// Przycisk widoczny tylko gdy są aktywni rodzice/kibice (dp-przejmij-section).
 async function przejmijZawodnikaZPowrotem() {
     if (!aktualnyZawodnik) return;
     const aktywni = [
@@ -2121,15 +2121,22 @@ async function przejmijZawodnikaZPowrotem() {
         ..._allKibice.filter(isAktywne).map(m => ({ ...m, typ: 'KIBIC' }))
     ];
     if (aktywni.length === 0) {
-        pokazKomunikat('Brak podpiętych rodziców pod zawodnika', 'info');
+        pokazKomunikat(t('druzyna.reclaimNoParents'), 'info');
         return;
     }
-    if (!await showConfirmSheet('Przejąć zawodnika z powrotem? Wszyscy powiązani rodzice i kibice stracą dostęp.')) return;
+    const nazwy = aktywni.map(m => m.displayName || m.userId).join(', ');
+    const msg = aktywni.length === 1
+        ? t('druzyna.reclaimConfirmOne', { name: nazwy })
+        : t('druzyna.reclaimConfirmMany', { names: nazwy, count: aktywni.length });
+    if (!await showConfirmSheet(msg, {
+        okLabel:     t('druzyna.reclaimConfirmOk'),
+        cancelLabel: t('druzyna.reclaimConfirmCancel'),
+    })) return;
     try {
         for (const m of aktywni) {
             await odlaczOpiekunaOdZawodnika(m.userId, m.typ, m.id);
         }
-        pokazKomunikat('Zawodnik przejęty z powrotem', 'sukces');
+        pokazKomunikat(t('druzyna.reclaimSuccess'), 'sukces');
         await zaladujPowiazaneKonta(aktualnyZawodnik);
     } catch (e) {
         pokazKomunikat('Błąd: ' + e.message, 'blad');
