@@ -633,8 +633,21 @@ async function assignUsedSlot(membershipRef, m) {
             .limit(1).get();
         if (!existingSlot.empty) return membershipRef.update({ usedSlot: 0 });
 
-        // Transakcja: sprawdź scope + limit, przydziel slot
+        // maxOneParentPerChild: sprawdź czy playerId ma już innego rodzica na puli
         const clubRef = db.collection('clubs').doc(clubId);
+        if (isParent && m.playerId) {
+            const clubDocMOP = await clubRef.get();
+            if (clubDocMOP.exists && clubDocMOP.data().license?.maxOneParentPerChild) {
+                const sibParent = await db.collection('memberships')
+                    .where('clubId', '==', clubId)
+                    .where('playerId', '==', m.playerId)
+                    .where('usedSlot', '==', 1)
+                    .limit(1).get();
+                if (!sibParent.empty) return membershipRef.update({ usedSlot: 0 });
+            }
+        }
+
+        // Transakcja: sprawdź scope + limit, przydziel slot
         await db.runTransaction(async (t) => {
             const clubSnap = await t.get(clubRef);
             if (!clubSnap.exists) { t.update(membershipRef, { usedSlot: 0 }); return; }
@@ -928,7 +941,7 @@ exports.assignExpiredTrialSlots = onSchedule('every 24 hours', async () => {
             if (subStatus === 'ACTIVE') continue;
 
             candidates.push({ ref: doc.ref, userId: m.userId, role,
-                eligibleAt: trialEndMs });
+                eligibleAt: trialEndMs, playerId: m.playerId || null });
         }
 
         // Dedup po userId: jeden slot per osoba
@@ -949,6 +962,15 @@ exports.assignExpiredTrialSlots = onSchedule('every 24 hours', async () => {
             if (!ex.empty) alreadySlotted.add(uid);
         }
 
+        // maxOneParentPerChild: zbierz playerId które mają już rodzica na puli
+        const maxOneParent = club.license?.maxOneParentPerChild || false;
+        const takenPlayerIds = new Set();
+        if (maxOneParent) {
+            const slottedParents = await db.collection('memberships')
+                .where('clubId', '==', clubId).where('role', '==', 'RODZIC').where('usedSlot', '==', 1).get();
+            slottedParents.docs.forEach(d => { const pid = d.data().playerId; if (pid) takenPlayerIds.add(pid); });
+        }
+
         // Kolejka: trenerzy pierwsi, potem rodzice — sortowane po eligibleAt
         const queue = Object.values(byUser)
             .filter(c => !alreadySlotted.has(c.userId))
@@ -961,11 +983,13 @@ exports.assignExpiredTrialSlots = onSchedule('every 24 hours', async () => {
         let assigned = 0;
         for (const c of queue) {
             if (used >= total) break;
+            if (maxOneParent && c.role === 'RODZIC' && c.playerId && takenPlayerIds.has(c.playerId)) continue;
             const batch = db.batch();
             batch.update(c.ref, { usedSlot: 1 });
             used++;
             batch.update(clubDoc.ref, { 'license.used': used });
             await batch.commit();
+            if (maxOneParent && c.role === 'RODZIC' && c.playerId) takenPlayerIds.add(c.playerId);
             console.log(`✓ assignExpiredTrialSlots: ${c.userId} → ${clubId} (${used}/${total})`);
             assigned++;
         }
@@ -1062,22 +1086,34 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
         const uid = c.m.userId;
         if (!byUser[uid] || c.eligibleAt < byUser[uid].eligibleAt) byUser[uid] = c;
     }
-    const queue = [
+    const maxOneParent = after.license?.maxOneParentPerChild || false;
+
+    // Zbierz playerId rodziców już na puli (dla maxOneParentPerChild)
+    const takenPlayerIds = new Set();
+    if (maxOneParent) {
+        const slottedParents = await db.collection('memberships')
+            .where('clubId', '==', clubId).where('role', '==', 'RODZIC').where('usedSlot', '==', 1).get();
+        slottedParents.docs.forEach(d => { const pid = d.data().playerId; if (pid) takenPlayerIds.add(pid); });
+    }
+
+    const sortedQueue = [
         ...Object.values(byUser).filter(c => c.isTrainer).sort((a, b) => a.eligibleAt - b.eligibleAt),
         ...Object.values(byUser).filter(c => c.isParent) .sort((a, b) => a.eligibleAt - b.eligibleAt),
-    ].slice(0, avail);
-
-    if (queue.length === 0) return;
+    ];
 
     let newUsed = used;
     const batch = db.batch();
-    for (const c of queue) {
+    for (const c of sortedQueue) {
+        if (newUsed - used >= avail) break;
+        if (maxOneParent && c.isParent && c.m.playerId && takenPlayerIds.has(c.m.playerId)) continue;
         batch.update(c.m._ref, { usedSlot: 1 });
+        if (maxOneParent && c.isParent && c.m.playerId) takenPlayerIds.add(c.m.playerId);
         newUsed++;
     }
+    if (newUsed === used) return;
     batch.update(clubRef, { 'license.used': newUsed });
     await batch.commit();
-    console.log(`onClubLicenseUpdated: ${clubId} — przydzielono ${queue.length} slotów (${newUsed}/${newTotal})`);
+    console.log(`onClubLicenseUpdated: ${clubId} — przydzielono ${newUsed - used} slotów (${newUsed}/${newTotal})`);
 });
 
 exports.sendReminders = onSchedule('every 60 minutes', async () => {
