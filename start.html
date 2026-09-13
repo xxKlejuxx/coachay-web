@@ -850,10 +850,14 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const session = await initSession();
         if (!session) {
             console.error('Brak sesji');
-            localStorage.removeItem('currentUserId');
-            localStorage.removeItem('selectedMembershipId');
-            try { if (auth) await auth.signOut(); } catch(e) {}
-            window.location.href = 'index.html';
+            // Nie wylogowuj jeśli initSession już przekierował (RODO, PIN) — sprawdź czy nadal na start.html
+            const _stillHere = window.location.pathname.includes('start');
+            if (_stillHere) {
+                localStorage.removeItem('currentUserId');
+                localStorage.removeItem('selectedMembershipId');
+                try { if (auth) await auth.signOut(); } catch(e) {}
+                window.location.href = 'index.html';
+            }
             return;
         }
         const { user, team, membership } = session;
