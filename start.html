@@ -385,6 +385,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 </style>
 </head>
 <body>
+<div id="session-loader" style="position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;align-items:center;justify-content:center;">
+    <div style="width:32px;height:32px;border:3px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:sl-spin 0.7s linear infinite"></div>
+</div>
+<style>@keyframes sl-spin{to{transform:rotate(360deg)}}</style>
 <div class="phone">
     <div class="notch"></div>
 
@@ -903,6 +907,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 }
             }
         }
+
+        document.getElementById('session-loader')?.remove();
 
         if (isDemoMode()) {
             const demoRole = getDemoRole();
