@@ -4,6 +4,49 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-13 23:00] [WEB+APP] [DONE] Priorytet przydzielania slotów licencji klubowej
+
+## Zmiana w functions/index.js
+
+Kolejność przydzielania slotów klubowych (dotyczy `assignExpiredTrialSlots` i `onClubLicenseUpdated`):
+
+1. **TRENER_GLOWNY** (admin trenera) — najwyższy priorytet
+2. **TRENER / TRENER_POMOCNICZY** — pozostałe role trenerskie
+3. **RODZIC** — tylko gdy `scope !== 'trainers_only'`
+
+W ramach każdej grupy sortowanie po `eligibleAt` (najwcześniej kwalifikujący się dostaje slot pierwszy).
+
+## Scenariusz, który naprawia
+Klub z 1x TRENER_GLOWNY + 4x TRENER_POMOCNICZY kupuje 3 licencje → wcześniej TRENER_GLOWNY mógł nie dostać slotu jeśli inni trenerzy dołączyli wcześniej. Teraz TRENER_GLOWNY zawsze dostaje slot jako pierwszy.
+
+## Dla APP
+Dotyczy — Cloud Functions są wspólne dla WEB i APP. Zmiana automatyczna, nie wymaga zmian w APP.
+
+---
+
+[2026-09-13 23:45] [WEB] [DONE] blocked.html + platnosci.html — pełna internacjonalizacja (i18n)
+
+Dodano tłumaczenia PL+EN do wszystkich hardkodowanych stringów na ekranie blocked:
+- `data-i18n` na: tytuły i teksty kart, przyciski wyloguj, ctx-switcher tytuł i label "brak kont", placeholder pola invite
+- `t()` w JS: komunikaty kodu zaproszenia (`redeemCode`), dynamiczne teksty w `initBlocked` (trainerHasLicense), ctx-team label przy `payment_expired`
+- `platnosci.html`: przyciski "← Wróć" i "Wyloguj się" w trybie `mode=blocked` teraz używają `data-i18n`
+- Nowe klucze w `locales/pl.json` i `locales/en.json` sekcja `blocked`: `logoutButton`, `noAccessTitle`, `noAccessBody`, `noAccessTeamLabel`, `ctxSwitchTitle`, `ctxNoAccounts`, `invitePlaceholder`, `inviteFullCode`, `inviteInvalidCode`, `inviteExpiredCode`, `inviteConnectError`, `backButton`
+- Podbity `LOCALE_V` w `_i18n.js` → `20260913a` (unieważnia localStorage cache)
+
+## Dla APP
+Nie dotyczy ekranu blocked — APP ma własny ekran. Sprawdzić czy APP ma analogiczne tłumaczenia dla ekranu "brak dostępu".
+
+---
+
+[2026-09-13 23:30] [WEB] [DONE] blocked.html — usunięto sekcję "Usuń moje konto i dane"
+
+Usunięto kartę `.delete-card` wraz z przyciskiem "🗑️ Usuń moje konto i dane" i funkcją `requestDeleteBlocked()`. Opcja usunięcia konta jest dostępna wyłącznie w ustawieniach konta po zalogowaniu (rodo-consent.html lub ekran konta).
+
+## Dla APP
+Nie dotyczy — ekran blocked w APP nie ma tej sekcji.
+
+---
+
 [2026-09-13 22:00] [WEB] [DONE] Ekran płatności (platnosci.html) — furtki i ceny
 
 ## Co się zmieniło

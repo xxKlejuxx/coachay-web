@@ -1471,7 +1471,19 @@
   "devError": "Błąd: {{message}}",
   "devDowngradeWarnTitle": "Masz aktywną licencję Family",
   "devDowngradeWarnBody": "Obecnie korzysta z niej {{count}} kibiców (przez Twoje sloty rodzinne). Zmiana na licencję indywidualną odbierze im dostęp przy najbliższym sprawdzeniu. Kontynuować?",
-  "devDowngradeConfirm": "Tak, zmień na indywidualną"
+  "devDowngradeConfirm": "Tak, zmień na indywidualną",
+  "logoutButton": "Wyloguj się",
+  "noAccessTitle": "Brak dostępu do klubu",
+  "noAccessBody": "Nie masz aktywnego dostępu do żadnego klubu. Skontaktuj się z administratorem lub wpisz kod zaproszenia.",
+  "noAccessTeamLabel": "Brak dostępu",
+  "ctxSwitchTitle": "Przełącz konto",
+  "ctxNoAccounts": "Brak innych aktywnych kont",
+  "invitePlaceholder": "np. ABC123",
+  "inviteFullCode": "Wpisz pełny kod zaproszenia.",
+  "inviteInvalidCode": "Nieprawidłowy lub wygasły kod.",
+  "inviteExpiredCode": "Ten kod wygasł.",
+  "inviteConnectError": "Błąd połączenia. Spróbuj ponownie.",
+  "backButton": "← Wróć"
  },
  "consent": {
   "headerTitle": "Zanim przejdziesz dalej",

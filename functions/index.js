@@ -975,9 +975,9 @@ exports.assignExpiredTrialSlots = onSchedule('every 24 hours', async () => {
         const queue = Object.values(byUser)
             .filter(c => !alreadySlotted.has(c.userId))
             .sort((a, b) => {
-                const aT = _MBR_TRAINER_ROLES.has(a.role) ? 0 : 1;
-                const bT = _MBR_TRAINER_ROLES.has(b.role) ? 0 : 1;
-                return aT !== bT ? aT - bT : a.eligibleAt - b.eligibleAt;
+                const rolePriority = r => r === 'TRENER_GLOWNY' ? 0 : _MBR_TRAINER_ROLES.has(r) ? 1 : 2;
+                const ap = rolePriority(a.role), bp = rolePriority(b.role);
+                return ap !== bp ? ap - bp : a.eligibleAt - b.eligibleAt;
             });
 
         let assigned = 0;
@@ -1097,8 +1097,9 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
     }
 
     const sortedQueue = [
-        ...Object.values(byUser).filter(c => c.isTrainer).sort((a, b) => a.eligibleAt - b.eligibleAt),
-        ...Object.values(byUser).filter(c => c.isParent) .sort((a, b) => a.eligibleAt - b.eligibleAt),
+        ...Object.values(byUser).filter(c => c.isTrainer && c.m.role === 'TRENER_GLOWNY').sort((a, b) => a.eligibleAt - b.eligibleAt),
+        ...Object.values(byUser).filter(c => c.isTrainer && c.m.role !== 'TRENER_GLOWNY') .sort((a, b) => a.eligibleAt - b.eligibleAt),
+        ...Object.values(byUser).filter(c => c.isParent)                                  .sort((a, b) => a.eligibleAt - b.eligibleAt),
     ];
 
     let newUsed = used;
@@ -1241,6 +1242,7 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
 
         const batch = db.batch();
         let updated = 0;
+        const toReset = []; // kluby których licencja właśnie wygasła → reset slotów
 
         for (const doc of clubsSnap.docs) {
             const d        = doc.data();
@@ -1274,11 +1276,18 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
 
             // Zapisz tylko jeśli status się zmienił (oszczędność zapisów)
             if (status !== prevStatus) {
-                batch.update(clubRef, {
+                const clubUpdate = {
                     licenseStatus:          status,
                     licenseStatusSource:    source,
                     licenseStatusUpdatedAt: FieldValue.serverTimestamp(),
-                });
+                };
+                // Licencja właśnie wygasła → zeruj license.used i license.total w tym samym batchu
+                if (status === 'EXPIRED' && (d.license?.total || 0) > 0) {
+                    clubUpdate['license.used']  = 0;
+                    clubUpdate['license.total'] = 0;
+                    toReset.push(doc.id);
+                }
+                batch.update(clubRef, clubUpdate);
                 updated++;
                 console.log(`Club ${doc.id}: ${prevStatus} → ${status} (${source})`);
             }
@@ -1286,6 +1295,19 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
 
         await batch.commit();
         console.log(`updateClubLicenseStatuses: zaktualizowano ${updated}/${clubsSnap.size} klubów`);
+
+        // Reset usedSlot na wszystkich membership wygasłych klubów
+        for (const clubId of toReset) {
+            const mbrSnap = await db.collection('memberships')
+                .where('clubId', '==', clubId)
+                .where('usedSlot', '==', 1)
+                .get();
+            if (mbrSnap.empty) continue;
+            const mbrBatch = db.batch();
+            mbrSnap.docs.forEach(d => mbrBatch.update(d.ref, { usedSlot: 0 }));
+            await mbrBatch.commit();
+            console.log(`Reset slotów: klub ${clubId} — ${mbrSnap.size} membership(s)`);
+        }
 
     } catch (e) {
         console.error('updateClubLicenseStatuses error:', e);

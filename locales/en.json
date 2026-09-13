@@ -1471,7 +1471,19 @@
   "devError": "Error: {{message}}",
   "devDowngradeWarnTitle": "You have an active Family license",
   "devDowngradeWarnBody": "{{count}} kibic(s) are currently using it (via your family slots). Switching to Individual will remove their access on next check. Continue?",
-  "devDowngradeConfirm": "Yes, switch to Individual"
+  "devDowngradeConfirm": "Yes, switch to Individual",
+  "logoutButton": "Log out",
+  "noAccessTitle": "No club access",
+  "noAccessBody": "You don't have active access to any club. Contact your administrator or enter an invitation code.",
+  "noAccessTeamLabel": "No access",
+  "ctxSwitchTitle": "Switch account",
+  "ctxNoAccounts": "No other active accounts",
+  "invitePlaceholder": "e.g. ABC123",
+  "inviteFullCode": "Enter the full invitation code.",
+  "inviteInvalidCode": "Invalid or expired code.",
+  "inviteExpiredCode": "This code has expired.",
+  "inviteConnectError": "Connection error. Please try again.",
+  "backButton": "← Back"
  },
  "consent": {
   "headerTitle": "Before you continue",

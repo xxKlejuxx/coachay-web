@@ -79,12 +79,6 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .dev-msg.ok  { color: #34d399; }
 .dev-msg.err { color: #ef4444; }
 
-/* ── Karta usunięcia konta ── */
-.delete-card { margin: 16px 16px 0; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-.delete-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
-.delete-card-text { font-size: 11px; color: var(--szary); font-weight: 600; line-height: 1.6; }
-.delete-card-btn { width: 100%; padding: 12px; border-radius: var(--r-pill); background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.2); color: var(--blad); font-size: 12px; font-weight: 800; cursor: pointer; }
-.delete-card-btn:active { background: rgba(248,113,113,0.14); }
 </style>
 </head>
 <body>
@@ -97,7 +91,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
             <div class="ctx-dot" id="ctx-dot">?</div>
             <div class="ctx-text">
                 <span class="ctx-klub" id="ctx-klub">Coachay</span>
-                <span class="ctx-team" id="ctx-team">Brak dostępu</span>
+                <span class="ctx-team" id="ctx-team" data-i18n="blocked.noAccessTeamLabel">Brak dostępu</span>
             </div>
             <span class="ctx-arrow">▾</span>
         </div>
@@ -105,7 +99,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 
     <!-- Ctx overlay -->
     <div class="blocked-ctx-ov" id="blocked-ctx-ov">
-        <div class="blocked-ctx-title">Przełącz konto</div>
+        <div class="blocked-ctx-title" data-i18n="blocked.ctxSwitchTitle">Przełącz konto</div>
         <div id="blocked-ctx-list"></div>
     </div>
 
@@ -121,33 +115,33 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
         <!-- Karta blokady (domyślna) -->
         <div class="blocked-card" id="card-suspended">
             <div class="blocked-icon">🔒</div>
-            <div class="blocked-title">Brak dostępu do klubu</div>
-            <div class="blocked-text">Nie masz aktywnego dostępu do żadnego klubu. Skontaktuj się z administratorem lub wpisz kod zaproszenia.</div>
-            <button class="blocked-logout-btn" onclick="logout()">Wyloguj się</button>
+            <div class="blocked-title" data-i18n="blocked.noAccessTitle">Brak dostępu do klubu</div>
+            <div class="blocked-text" data-i18n="blocked.noAccessBody">Nie masz aktywnego dostępu do żadnego klubu. Skontaktuj się z administratorem lub wpisz kod zaproszenia.</div>
+            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
         </div>
 
         <!-- Karta wygaśnięcia płatności — trener (może zapłacić) -->
         <div class="payment-card" id="card-payment" style="display:none">
             <div class="payment-icon">💳</div>
-            <div class="payment-title">Dostęp wygasł</div>
-            <div class="payment-text">Okres próbny lub subskrypcja dobiegły końca. Wybierz plan, aby dalej korzystać z Coachay.</div>
-            <button class="payment-btn-primary" id="btn-pay" onclick="goToPayment()">Wybierz plan →</button>
-            <button class="payment-btn-secondary" onclick="logout()">Wyloguj się</button>
+            <div class="payment-title" data-i18n="blocked.expiredTitle">Dostęp wygasł</div>
+            <div class="payment-text" data-i18n="blocked.expiredBody">Okres próbny lub subskrypcja dobiegły końca. Wybierz plan, aby dalej korzystać z Coachay.</div>
+            <button class="payment-btn-primary" id="btn-pay" onclick="goToPayment()" data-i18n="blocked.choosePlanButton">Wybierz plan →</button>
+            <button class="payment-btn-secondary" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
         </div>
 
         <!-- Karta wygaśnięcia — rodzic / zawodnik / kibic (nie płaci) -->
         <div class="blocked-card" id="card-payment-member" style="display:none">
             <div class="blocked-icon">⏰</div>
-            <div class="blocked-title">Klub nie ma licencji</div>
-            <div class="blocked-text">Dostęp do aplikacji wygasł. Skontaktuj się z trenerem — to on odnawia dostęp dla całego klubu.</div>
-            <button class="blocked-logout-btn" onclick="logout()">Wyloguj się</button>
+            <div class="blocked-title" data-i18n="blocked.noLicenseTitle">Klub nie ma licencji</div>
+            <div class="blocked-text" data-i18n="blocked.noLicenseBody">Dostęp do aplikacji wygasł. Skontaktuj się z trenerem — to on odnawia dostęp dla całego klubu.</div>
+            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
         </div>
 
         <!-- Kod zaproszenia -->
         <div class="invite-card">
-            <div class="invite-label">Masz kod zaproszenia?</div>
+            <div class="invite-label" data-i18n="blocked.inviteCardLabel">Masz kod zaproszenia?</div>
             <div class="invite-body">
-                <input type="text" id="invite-input" class="invite-input" placeholder="np. ABC123" maxlength="6"
+                <input type="text" id="invite-input" class="invite-input" data-i18n-placeholder="blocked.invitePlaceholder" placeholder="np. ABC123" maxlength="6"
                     autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); if(this.value.length===6) redeemCode()">
                 <div class="invite-msg" id="invite-msg"></div>
             </div>
@@ -158,14 +152,6 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
             <div class="dev-card-title">🧪 Aktywuj dostęp (test)</div>
             <div class="dev-card-body" id="dev-purchase-body">
                 <div class="dev-msg" id="dev-msg"></div>
-            </div>
-        </div>
-
-        <!-- Usunięcie konta -->
-        <div class="delete-card">
-            <div class="delete-card-body">
-                <div class="delete-card-text">Chcesz usunąć swoje konto i dane? Wyślemy zgłoszenie do support@coachay.com.</div>
-                <button class="delete-card-btn" onclick="requestDeleteBlocked()">🗑️ Usuń moje konto i dane</button>
             </div>
         </div>
 
@@ -214,7 +200,7 @@ function exitSupportImpersonation() {
 function applyReason() {
     if (_reason === 'payment_expired') {
         document.getElementById('card-suspended').style.display = 'none';
-        document.getElementById('ctx-team').textContent = 'Dostęp wygasł';
+        document.getElementById('ctx-team').textContent = t('blocked.expiredTitle');
     }
 }
 
@@ -260,9 +246,8 @@ async function initBlocked(authUser) {
                     document.getElementById('card-payment').style.display = 'none';
                     document.getElementById('card-payment-member').style.display = 'flex';
                     document.querySelector('#card-payment-member .blocked-icon').textContent = '🏢';
-                    document.querySelector('#card-payment-member .blocked-title').textContent = 'Klub ma aktywną licencję';
-                    document.querySelector('#card-payment-member .blocked-text').textContent =
-                        'Twój klub posiada licencję — skontaktuj się z administratorem klubu, aby przypisać Ci dostęp.';
+                    document.querySelector('#card-payment-member .blocked-title').textContent = t('blocked.trainerHasLicenseTitle');
+                    document.querySelector('#card-payment-member .blocked-text').textContent = t('blocked.trainerHasLicenseBody');
                 } else {
                     document.getElementById('card-payment').style.display = 'flex';
                 }
@@ -303,7 +288,7 @@ async function renderBlockedCtx(memberships) {
     if (!listEl) return;
 
     if (memberships.length === 0) {
-        listEl.innerHTML = '<div class="blocked-ctx-empty">Brak innych aktywnych kont</div>';
+        listEl.innerHTML = `<div class="blocked-ctx-empty">${t('blocked.ctxNoAccounts')}</div>`;
         return;
     }
 
@@ -341,34 +326,6 @@ async function renderBlockedCtx(memberships) {
         });
         listEl.appendChild(item);
     }
-}
-
-/* ── Usunięcie konta ── */
-async function requestDeleteBlocked() {
-    const msg = typeof t === 'function'
-        ? t('rodo.deleteConfirmBody')
-        : 'Aby usunąć konto i dane, wyślij prośbę na support@coachay.com. Otworzyć klienta email?';
-    const confirmed = typeof showConfirmSheet === 'function'
-        ? await showConfirmSheet(msg)
-        : confirm(msg);
-    if (!confirmed) return;
-
-    const email  = (auth && auth.currentUser && auth.currentUser.email)       || '—';
-    const phone  = (auth && auth.currentUser && auth.currentUser.phoneNumber)  || '—';
-    const userId = blockedUserId || '—';
-    const clubId = _clubId || '—';
-    const role   = blockedUserRole || '—';
-
-    let body;
-    if (typeof t === 'function') {
-        body = t('rodo.deleteMailBody', { email, name: '—', userId, clubId, role });
-    } else {
-        body = 'Proszę o usunięcie mojego konta i wszystkich powiązanych danych z aplikacji Coachay, zgodnie z RODO.\n\n' +
-            'Email: ' + email + '\nTelefon: ' + phone + '\nID użytkownika: ' + userId + '\nID klubu: ' + clubId + '\nRola: ' + role;
-    }
-
-    const subj = typeof t === 'function' ? t('rodo.deleteMailSubject') : 'Usunięcie konta COACHAY';
-    window.location.href = 'mailto:support@coachay.com?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
 }
 
 /* ── Testowy zakup licencji (tylko isPlatformAdmin) ── */
@@ -474,7 +431,7 @@ async function redeemCode() {
 
     if (code.length < 5) {
         msgEl.className = 'invite-msg err';
-        msgEl.textContent = 'Wpisz pełny kod zaproszenia.';
+        msgEl.textContent = t('blocked.inviteFullCode');
         return;
     }
 
@@ -482,13 +439,13 @@ async function redeemCode() {
         const snap = await db.collection('inviteCodes')
             .where('code', '==', code).where('isUsed', '==', false).limit(1).get();
 
-        if (snap.empty) { msgEl.className = 'invite-msg err'; msgEl.textContent = 'Nieprawidłowy lub wygasły kod.'; return; }
+        if (snap.empty) { msgEl.className = 'invite-msg err'; msgEl.textContent = t('blocked.inviteInvalidCode'); return; }
 
         const codeDoc  = snap.docs[0];
         const codeData = codeDoc.data();
 
         if (codeData.expiresAt && codeData.expiresAt.toDate() < new Date()) {
-            msgEl.className = 'invite-msg err'; msgEl.textContent = 'Ten kod wygasł.'; return;
+            msgEl.className = 'invite-msg err'; msgEl.textContent = t('blocked.inviteExpiredCode'); return;
         }
 
         const userDoc     = await db.collection('users').doc(blockedUserId).get();
@@ -526,13 +483,13 @@ async function redeemCode() {
         if (codeData.teamId) localStorage.setItem('selectedTeamId', codeData.teamId);
 
         msgEl.className = 'invite-msg ok';
-        msgEl.textContent = 'Dołączono! Przekierowanie...';
+        msgEl.textContent = t('blocked.inviteJoinedMsg');
         setTimeout(() => { window.location.href = 'start.html'; }, 1200);
 
     } catch (e) {
         console.error('❌ redeemCode:', e);
         msgEl.className = 'invite-msg err';
-        msgEl.textContent = 'Błąd połączenia. Spróbuj ponownie.';
+        msgEl.textContent = t('blocked.inviteConnectError');
     }
 }
 </script>
