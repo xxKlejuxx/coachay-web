@@ -1255,13 +1255,10 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
             if (d.license) {
                 const raw    = d.license.valid_until ?? d.license.expiresAt;
                 const expiry = raw?.toDate ? raw.toDate() : (raw ? new Date(raw) : null);
-                if (expiry) {
-                    if (expiry > now) {
-                        status = 'ACTIVE'; source = 'club_license'; statusExpiry = expiry;
-                    } else if (expiry > new Date(now - GRACE_MS)) {
-                        status = 'GRACE'; source = 'club_license'; statusExpiry = expiry;
-                    }
+                if (expiry && expiry > now) {
+                    status = 'ACTIVE'; source = 'club_license'; statusExpiry = expiry;
                 }
+                // Karencja usunięta — wygaśnięcie = natychmiastowe EXPIRED
             }
 
             // 2. Aktywna licencja indywidualna admina klubu
@@ -1269,9 +1266,8 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
                 const expiry = adminArByClub[doc.id];
                 if (expiry > now) {
                     status = 'ACTIVE'; source = 'admin_personal'; statusExpiry = expiry;
-                } else if (expiry > new Date(now - GRACE_MS)) {
-                    status = 'GRACE'; source = 'admin_personal'; statusExpiry = expiry;
                 }
+                // Karencja usunięta — wygaśnięcie = natychmiastowe EXPIRED
             }
 
             // Trial liczony per-user w getAccessStatus() (memberships.createdAt) — nie tutaj

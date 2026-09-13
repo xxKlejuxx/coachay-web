@@ -3591,6 +3591,8 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         if (cd.licenseStatus) {
             const clubLicRoles = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'RODZIC'];
             if (!clubLicRoles.includes(role)) return _r('EXPIRED', null, null);
+            // GRACE usunięte — stale pole z CF traktuj jako EXPIRED
+            const fallbackStatus = cd.licenseStatus === 'GRACE' ? 'EXPIRED' : cd.licenseStatus;
             let expiryDate = null, daysLeft = 0;
             const raw = lic?.valid_until ?? lic?.expiresAt;
             if (raw) {
@@ -3600,7 +3602,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
                 expiryDate = trialEnd;
                 daysLeft   = Math.ceil((trialEnd - now) / 86400000);
             }
-            return { status: cd.licenseStatus, source: cd.licenseStatusSource || null,
+            return { status: fallbackStatus, source: cd.licenseStatusSource || null,
                      daysLeft: Math.max(0, daysLeft), expiryDate };
         }
 
