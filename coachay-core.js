@@ -1019,6 +1019,16 @@ async function initSession() {
         const _pinOk = await _checkPinLock(user);
         if (!_pinOk) return null;
         setupPushNotifications(userId); // fire-and-forget, nie blokuje renderowania ekranu
+
+        // Gate płatności — sprawdzany na każdej stronie (furtka)
+        const _payPage = (window.location.pathname.split('/').pop() || '').split('?')[0];
+        const _isPayExempt = _PAY_EXEMPT.some(p => _payPage === p);
+        const _clubIdForPayment = membership?.clubId || null;
+        if (!_isPayExempt && user.isPlatformAdmin !== true && effectiveRole !== 'ZAWODNIK' && _clubIdForPayment) {
+            const payAccess = await checkPaymentAccess(userId, _clubIdForPayment);
+            if (!payAccess) return null;
+            return { user, membership, team, allMemberships, access: payAccess };
+        }
         return { user, membership, team, allMemberships };
 
     } catch (e) {
@@ -3225,6 +3235,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const _PIN_EXEMPT   = ['pin.html', 'index.html', 'blocked.html', 'platnosci-banner.html'];
 const _RODO_EXEMPT  = ['index.html', 'rodo-consent.html', 'pin.html', 'blocked.html', 'platnosci-banner.html'];
+const _PAY_EXEMPT   = [..._RODO_EXEMPT, 'platnosci.html', 'rodo.html'];
 const _PIN_TIMEOUT  = 5 * 60 * 1000; // 5 min
 
 async function sha256(text) {

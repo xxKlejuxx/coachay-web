@@ -895,8 +895,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     if (access.daysLeft > 0 && access.daysLeft < 9000) statusEl.textContent += ` · ${access.daysLeft} dni`;
                 });
             } else {
-                const access = await checkPaymentAccess(user.userId || user.id, clubId);
-                if (!access) return;
+                // checkPaymentAccess wywołany już w initSession — EXPIRED = redirect tam
+                const access = session.access;
                 if (access && (access.status === 'TRIAL' || access.status === 'GRACE') && shouldShowTrialBanner(access.daysLeft)) {
                     window.location.href = `platnosci-banner.html?status=${access.status}&days=${access.daysLeft}&redirect=${encodeURIComponent('start.html')}`;
                     return;

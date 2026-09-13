@@ -4,6 +4,49 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-13 21:00] [WEB+APP] [DONE] Gate płatności przeniesiony do initSession — furtka zamknięta
+
+## Problem
+`checkPaymentAccess` był wywoływany tylko w `start.html`. User z wygasłą licencją mógł wpisać bezpośrednio URL np. `klub.html` i wejść z pominięciem blokady.
+
+## Zmiana w coachay-core.js
+
+Na końcu `initSession()`, przed zwróceniem sesji, dodano gate płatności:
+
+```javascript
+const _payPage = (window.location.pathname.split('/').pop() || '').split('?')[0];
+const _isPayExempt = _PAY_EXEMPT.some(p => _payPage === p);
+const _clubIdForPayment = membership?.clubId || null;
+if (!_isPayExempt && user.isPlatformAdmin !== true && effectiveRole !== 'ZAWODNIK' && _clubIdForPayment) {
+    const payAccess = await checkPaymentAccess(userId, _clubIdForPayment);
+    if (!payAccess) return null;
+    return { user, membership, team, allMemberships, access: payAccess };
+}
+return { user, membership, team, allMemberships };
+```
+
+Dodano listę `_PAY_EXEMPT` (strony zwolnione z gate):
+```javascript
+const _PAY_EXEMPT = [..._RODO_EXEMPT, 'platnosci.html', 'rodo.html'];
+// = ['index.html', 'rodo-consent.html', 'pin.html', 'blocked.html', 'platnosci-banner.html', 'platnosci.html', 'rodo.html']
+```
+
+Sesja teraz zwraca `access` w obiekcie: `{ user, membership, team, allMemberships, access }`.
+
+## Zmiana w start.html
+Usunięto wywołanie `checkPaymentAccess` — używa `session.access` (zwróconego przez initSession). Baner TRIAL/GRACE i baner impersonacji bez zmian.
+
+## Co APP musi zrobić
+W odpowiedniku `initSession()` dodać analogiczny gate przed zwróceniem sesji:
+- Pominąć dla `isPlatformAdmin`, roli `ZAWODNIK`, braku `clubId`, stron exempt
+- Wywołać odpowiednik `checkPaymentAccess(uid, clubId)`
+- Jeśli EXPIRED → przekieruj na ekran blokady, zwróć null
+- W przeciwnym razie zwróć `access` jako część obiektu sesji
+
+Strony exempt (nie sprawdzać płatności): ekran blokady, ekran płatności, baner płatności, RODO, PIN, ekran logowania.
+
+---
+
 [2026-09-13 20:00] [WEB+APP] [DONE] Zmiana reguł Firestore — isVerified() + users authUid
 
 ## Co się zmieniło w firestore.rules
