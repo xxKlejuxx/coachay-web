@@ -152,6 +152,7 @@
 .sup-action-btn.amber:active { background: rgba(251,191,36,0.08); }
 .sup-action-btn.red    { border-color: rgba(239,68,68,0.35); color: var(--blad); }
 .sup-action-btn.red:active { background: rgba(239,68,68,0.08); }
+.sup-action-btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
 
 .sup-action-info {
     font-size: 10px; font-weight: 600; color: var(--szary);
@@ -701,10 +702,12 @@ function renderClubs(clubs) {
                 </div>
 
                 <div class="sup-action-row">
-                    <button class="sup-action-btn green" onclick="openSheet('${club.id}', '${club.name}')">
+                    <button class="sup-action-btn green" onclick="openSheet('${club.id}', '${club.name}')"
+                        ${club.licenseStatus === 'active' ? 'disabled' : ''}>
                         ✓ Aktywuj licencję
                     </button>
-                    <button class="sup-action-btn amber" onclick="extendLicense('${club.id}', '${club.name}')">
+                    <button class="sup-action-btn amber" onclick="extendLicense('${club.id}', '${club.name}')"
+                        ${club.licenseStatus !== 'active' ? 'disabled' : ''}>
                         ↺ Przedłuż
                     </button>
                 </div>
