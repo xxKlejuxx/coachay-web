@@ -1363,7 +1363,7 @@ function licenseExpiryMessage(daysLeft, podmiot, tryb) {
     const czasownikWarunek = tryb === 'trial' ? 'kupisz pakietu' : 'odnowisz';
     if (daysLeft >= 0 && LICENSE_NOTIF_DAYS.includes(daysLeft)) {
         return daysLeft === 0
-            ? `${podmiot} kończy się dziś. ${czasownik}, żeby nie stracić dostępu.`
+            ? `${podmiot} wygasła dziś. Straciłeś dostęp — ${czasownik.toLowerCase()}, żeby przywrócić.`
             : `${podmiot} kończy się za ${daysLeft} ${daysLeft === 1 ? 'dzień' : 'dni'}. ${czasownik} w Płatnościach.`;
     }
     if (daysLeft < 0) {

@@ -3497,16 +3497,18 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
                 const validUntil = ar.valid_until?.toDate?.() ?? new Date(ar.valid_until);
                 if (validUntil > now)
                     return _r('ACTIVE', ar.source || 'individual', validUntil);
-                if (validUntil > graceCutoff)
-                    return _r('GRACE', ar.source || 'individual', validUntil,
-                        Math.ceil((validUntil.getTime() + graceMs - now) / 86400000));
+                // Karencja wyłączona — natychmiastowa blokada po wygaśnięciu licencji
+                // if (validUntil > graceCutoff)
+                //     return _r('GRACE', ar.source || 'individual', validUntil,
+                //         Math.ceil((validUntil.getTime() + graceMs - now) / 86400000));
             }
         }
 
         // ── P0: Trial (po P1 — własna licencja daje ACTIVE nawet w trialu) ──
         if (inTrial)      return _r('TRIAL', 'trial', trialEnd);
-        if (inTrialGrace) return _r('GRACE', 'trial', trialEnd,
-            Math.ceil((trialEnd.getTime() + graceMs - now) / 86400000));
+        // Karencja trialu wyłączona — natychmiastowa blokada po upływie 90 dni
+        // if (inTrialGrace) return _r('GRACE', 'trial', trialEnd,
+        //     Math.ceil((trialEnd.getTime() + graceMs - now) / 86400000));
 
         // ── P3: Slot B2B klubowy (TRENER, OWNER, RODZIC gdy w scope) ──
         const TRENER_ROLES = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER', 'OWNER'];
@@ -3521,9 +3523,10 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
             const slotActive = mData.licenseSource === 'CLUB' && mData.licenseStatus === 'ACTIVE' && slotFresh;
 
             if (slotActive && licExpiry) {
-                if (licExpiry > now)         return _r('ACTIVE', 'club_license', licExpiry);
-                if (licExpiry > graceCutoff) return _r('GRACE', 'club_license', licExpiry,
-                    Math.ceil((licExpiry.getTime() + graceMs - now) / 86400000));
+                if (licExpiry > now) return _r('ACTIVE', 'club_license', licExpiry);
+                // Karencja wyłączona — natychmiastowa blokada po wygaśnięciu licencji klubowej
+                // if (licExpiry > graceCutoff) return _r('GRACE', 'club_license', licExpiry,
+                //     Math.ceil((licExpiry.getTime() + graceMs - now) / 86400000));
                 return _r('EXPIRED', 'club_license_expired', null);
             }
 
@@ -3575,9 +3578,10 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
 
                 if (fs.validUntil > now)
                     return _r('ACTIVE', 'family_license', fs.validUntil);
-                if (fs.validUntil > graceCutoff)
-                    return _r('GRACE', 'family_license', fs.validUntil,
-                        Math.ceil((fs.validUntil.getTime() + graceMs - now) / 86400000));
+                // Karencja wyłączona — natychmiastowa blokada po wygaśnięciu family license
+                // if (fs.validUntil > graceCutoff)
+                //     return _r('GRACE', 'family_license', fs.validUntil,
+                //         Math.ceil((fs.validUntil.getTime() + graceMs - now) / 86400000));
             }
         }
 
