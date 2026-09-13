@@ -4,6 +4,35 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-13 22:00] [WEB] [DONE] Ekran płatności (platnosci.html) — furtki i ceny
+
+## Co się zmieniło
+
+### 1. Tryb blocked — ukrycie sidebara i nawigacji
+blocked.html → "Wybierz plan" otwiera `platnosci.html?mode=blocked`.
+W tym trybie platnosci.html:
+- ukrywa sidebar (`body.pay-blocked-mode #app-sidebar, .sidebar { display: none }`)
+- pokazuje pasek z przyciskami **← Wróć** (`history.back()`) i **Wyloguj** (`logout()`)
+- użytkownik bez licencji nie ma dostępu do reszty nawigacji
+
+### 2. Poprawione ceny
+Zsynchronizowane z index.html:
+
+| Plan | Cena base | Cena Apple (app-only, disabled) |
+|---|---|---|
+| Indywidualny miesięczny | 4,99 zł | 9,99 zł |
+| Indywidualny roczny | 49,99 zł | 99,99 zł |
+| Rodzinny miesięczny | 19,99 zł | 39,99 zł |
+| Rodzinny roczny | 199,99 zł | 399,99 zł |
+
+### 3. Overlay ładowania na start.html
+Spinner `#session-loader` (z-index 9999, czarne tło) zakrywa całą stronę łącznie z sidebar od momentu załadowania. Znika dopiero po potwierdzeniu sesji przez `initSession()` + `checkPaymentAccess`. Jeśli użytkownik jest EXPIRED → redirect do blocked.html bez możliwości kliknięcia w nawigację.
+
+## Dla APP
+Nie dotyczy — ekran płatności i flow blocked są webowe. Sprawdzić czy APP ma analogiczny ekran płatności z aktualnymi cenami (patrz tabela powyżej).
+
+---
+
 [2026-09-13 21:00] [WEB+APP] [DONE] Gate płatności przeniesiony do initSession — furtka zamknięta
 
 ## Problem
