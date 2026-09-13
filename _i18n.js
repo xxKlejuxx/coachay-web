@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20260913a';
+    const LOCALE_V  = '20260914a';
 
     let _lang = localStorage.getItem('coachay_lang') || 'pl';
     if (!SUPPORTED.includes(_lang)) _lang = 'pl';

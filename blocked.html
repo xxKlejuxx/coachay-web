@@ -201,6 +201,20 @@ function applyReason() {
     if (_reason === 'payment_expired') {
         document.getElementById('card-suspended').style.display = 'none';
         document.getElementById('ctx-team').textContent = t('blocked.expiredTitle');
+    } else if (_reason === 'club_pool_full') {
+        document.getElementById('card-suspended').style.display = 'none';
+        document.getElementById('ctx-team').textContent = t('blocked.expiredTitle');
+        // Karta 1 — kup własną licencję
+        const cp = document.getElementById('card-payment');
+        cp.style.display = 'flex';
+        cp.querySelector('.payment-title').textContent = t('blocked.poolFullTitle');
+        cp.querySelector('.payment-text').textContent  = t('blocked.poolFullBody');
+        // Karta 2 — skontaktuj się z trenerem
+        const cm = document.getElementById('card-payment-member');
+        cm.style.display = 'flex';
+        cm.querySelector('.blocked-icon').textContent  = '👤';
+        cm.querySelector('.blocked-title').textContent = t('blocked.poolFullContactTitle');
+        cm.querySelector('.blocked-text').textContent  = t('blocked.poolFullContactBody');
     }
 }
 

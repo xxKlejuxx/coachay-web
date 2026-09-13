@@ -1483,7 +1483,11 @@
   "inviteInvalidCode": "Nieprawidłowy lub wygasły kod.",
   "inviteExpiredCode": "Ten kod wygasł.",
   "inviteConnectError": "Błąd połączenia. Spróbuj ponownie.",
-  "backButton": "← Wróć"
+  "backButton": "← Wróć",
+  "poolFullTitle": "Brak wolnych miejsc w klubie",
+  "poolFullBody": "Klub wykorzystał wszystkie miejsca licencji. Kup własną licencję, aby korzystać z Coachay.",
+  "poolFullContactTitle": "lub skontaktuj się z trenerem",
+  "poolFullContactBody": "Trener może dokupić dodatkowe miejsca licencji dla całego klubu."
  },
  "consent": {
   "headerTitle": "Zanim przejdziesz dalej",

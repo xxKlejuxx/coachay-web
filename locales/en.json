@@ -1483,7 +1483,11 @@
   "inviteInvalidCode": "Invalid or expired code.",
   "inviteExpiredCode": "This code has expired.",
   "inviteConnectError": "Connection error. Please try again.",
-  "backButton": "← Back"
+  "backButton": "← Back",
+  "poolFullTitle": "No free club slots",
+  "poolFullBody": "The club has used all its license slots. Buy your own license to keep using Coachay.",
+  "poolFullContactTitle": "or contact your coach",
+  "poolFullContactBody": "Your coach can purchase additional license slots for the whole club."
  },
  "consent": {
   "headerTitle": "Before you continue",

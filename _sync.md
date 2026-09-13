@@ -4,6 +4,76 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-14 02:00] [WEB+APP] [DONE] Pętla redirect trener → index zamiast blocked — flaga _initSessionRedirecting
+
+## Problem
+Trener z wygasłą licencją logował się na start.html:
+1. `initSession()` wywoływało `checkPaymentAccess()` → redirect na `blocked.html` (async, jeszcze nie wykonany)
+2. `initSession()` zwracało `null`
+3. Handler `if (!session)` w `start.html` widział `null` → robił redirect na `index.html` + `localStorage.clear()`
+4. Dwa redirecty ścigały się → wygrywał `index.html` → pętla logowania
+
+## Fix WEB — coachay-core.js, funkcja initSession()
+
+**Linia ~1028** — przed wywołaniem `checkPaymentAccess`:
+```javascript
+window._initSessionRedirecting = true;
+const payAccess = await checkPaymentAccess(userId, _clubIdForPayment);
+if (!payAccess) return null;
+window._initSessionRedirecting = false;
+```
+
+Ta sama flaga ustawiana też przy redirectach RODO (linie ~877, ~890, ~901).
+
+## Fix WEB — start.html, linia ~857
+
+```javascript
+const session = await initSession();
+if (!session) {
+    if (!window._initSessionRedirecting) {   // ← bez tej flagi redirect wygrywał
+        localStorage.removeItem('currentUserId');
+        localStorage.removeItem('selectedMembershipId');
+        try { if (auth) await auth.signOut(); } catch(e) {}
+        window.location.href = 'index.html';
+    }
+    return;
+}
+```
+
+## Dla APP
+W odpowiedniku `initSession()` — jeśli redirect na blocked/RODO jest inicjowany wewnątrz funkcji:
+1. Ustaw globalną flagę (`_initSessionRedirecting = true`) PRZED redirect
+2. W handlerach każdej strony w bloku `if (!session)` — sprawdź flagę PRZED wykonaniem własnego redirectu na ekran logowania
+3. Bez tego: oba redirecty ścigają się i wygrywa handler strony (do logowania) zamiast redirect z `initSession`
+
+---
+
+[2026-09-14 01:00] [WEB] [DONE] blocked.html — obsługa club_pool_full + fix lazy-claim
+
+## Problem 1 — stary lazy-claim blokował blocked screen
+Pola `licenseSource='CLUB'`, `licenseStatus='ACTIVE'`, `poolClaimedAt` na membership (System B) były sprawdzane w P3 `getAccessStatus` BEZ weryfikacji `usedSlot`. Jeśli user miał te pola ustawione ze starego claimu (np. sprzed 2 miesięcy), dostawał ACTIVE mimo braku ważnej licencji lub własnych `access_rights`.
+
+**Bezpośredni fix danych:** wyczyścić te 3 pola na membership usera skryptem F12.
+**Docelowo:** uproszczenie P3 — tylko `usedSlot=1` + `clubs.license.valid_until > now` (TODO osobny wpis).
+
+## Problem 2 — reason=club_pool_full nie był obsługiwany
+Gdy user nie ma wolnego slotu (`used >= total`), `checkPaymentAccess` przekierowuje na `blocked.html?reason=club_pool_full`. `applyReason()` nie obsługiwał tego przypadku → domyślna karta "Brak dostępu do klubu" bez żadnych opcji.
+
+## Zmiana w blocked.html
+Dodano obsługę `reason=club_pool_full` w `applyReason()` — pokazuje dwie karty:
+1. **"Brak wolnych miejsc w klubie"** + "Wybierz plan →" (user może kupić własną licencję indywidualną)
+2. **"lub skontaktuj się z trenerem"** + info że trener może dokupić miejsca
+
+## Nowe klucze i18n (pl+en)
+`blocked.poolFullTitle`, `blocked.poolFullBody`, `blocked.poolFullContactTitle`, `blocked.poolFullContactBody`
+
+## LOCALE_V → 20260914a
+
+## Dla APP
+Dotyczy — APP powinno obsługiwać analogicznie przypadek braku wolnych slotów (pool_full): pokazać opcję zakupu własnej licencji + info o kontakcie z trenerem.
+
+---
+
 [2026-09-13 23:00] [WEB+APP] [DONE] Priorytet przydzielania slotów licencji klubowej
 
 ## Zmiana w functions/index.js
