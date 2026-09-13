@@ -4,6 +4,115 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-13 20:00] [WEB+APP] [DONE] Zmiana reguł Firestore — isVerified() + users authUid
+
+## Co się zmieniło w firestore.rules
+
+### 1. isVerified() — dodano provider password
+
+**Było:**
+```
+email_verified == true OR phone OR anonymous
+```
+
+**Jest:**
+```
+email_verified == true OR phone OR anonymous OR password
+```
+
+### Dlaczego
+Demo konta (klejux+demo_trener@gmail.com, klejux+demo_parents@gmail.com) mają `emailVerified: false` (Firebase Console nie wysyła linka weryfikacyjnego). Bez tej zmiany logowanie przez email/password bez weryfikacji → `Missing or insufficient permissions` na każdym odczycie Firestore.
+
+### Skutek bezpieczeństwa
+Każde konto Firebase Auth z providerem `password` (email/hasło) może czytać Firestore — niezależnie od weryfikacji emaila. Dostęp do danych konkretnego klubu nadal wymaga wpisu w `authIndex` (inMyClub). Dostęp do cudzego `users` nadal wymaga `email_verified == true` (reguła users ma osobny wyjątek — patrz niżej).
+
+### 2. users — dodano wyjątek authUid
+
+```javascript
+allow read: if isVerified() || (request.auth != null && resource.data.authUid == request.auth.uid);
+```
+
+Użytkownik może odczytać swój własny dokument `users` jeśli pole `authUid` zgadza się z jego Firebase Auth UID — nawet bez weryfikacji emaila. Nie daje dostępu do cudzych dokumentów.
+
+## Dla APP
+Reguły Firestore są współdzielone — zmiana działa automatycznie po obu stronach. Żadnych zmian w kodzie APP nie wymagamy.
+
+---
+
+[2026-09-13 20:00] [WEB] [DONE] Demo logowanie przez email/password zamiast anonymous
+
+## Co się zmieniło (index.html — loginAsDemo)
+
+Role TRENER_GLOWNY i RODZIC logują się teraz przez `signInWithEmailAndPassword`:
+- TRENER: klejux+demo_trener@gmail.com / Demo123@321!  → userId: demo_trener_jan
+- RODZIC:  klejux+demo_parents@gmail.com / Demo123@321! → userId: demo_rodzic_anna
+
+Role ZAWODNIK i KIBIC nadal przez `signInAnonymously` (z demoMode).
+
+## Dlaczego
+Anonymous auth tworzyło nowy rekord w Firebase Authentication przy każdej sesji demo → zaśmiecanie. Stałe konta email/password = czyste Authentication.
+
+## Dane wymagane w Firestore (raz, już założone)
+- `users/demo_trener_jan.authUid` = Firebase Auth UID konta email trenera
+- `users/demo_rodzic_anna.authUid` = Firebase Auth UID konta email rodzica
+- `authIndex/{UID_trenera}` = `{ clubIds: ["club_orly_praga"], userId: "demo_trener_jan" }`
+- `authIndex/{UID_rodzica}` = `{ clubIds: ["club_orly_praga"], userId: "demo_rodzic_anna" }`
+
+## Dla APP
+Nie dotyczy — demo login jest wyłącznie webowy.
+
+---
+
+[2026-09-13 04:00] [APP] [TODO] Dodać pole arId do dokumentów kolekcji access_rights
+
+## Problem
+Kolekcja `access_rights` nie przechowuje własnego document ID jako pola wewnątrz rekordu, podczas gdy wszystkie inne kolekcje mają ten wzorzec (np. `users/{userId}` ma pole `userId: "..."`).
+
+## Co zrobić
+Przy każdym tworzeniu nowego rekordu `access_rights` dodać pole `arId` równe document ID:
+
+```
+document ID:  {uid}_{clubId}   (lub inny ustalony format)
+pola w środku:
+  arId:       "{uid}_{clubId}"  ← NOWE POLE
+  uid:        "..."
+  club_id:    "..."
+  valid_until: Timestamp
+  source:     "..."
+```
+
+## Istniejące rekordy
+Aktualnie są 3 rekordy w kolekcji — bez pola `arId`. Możesz je zaktualizować ręcznie w Firebase Console lub przy pierwszym odczycie dodać migrację.
+
+---
+
+[2026-09-13 03:00] [WEB] [DONE] Reset license.used / license.total / usedSlot przy wygaśnięciu licencji klubowej
+
+## Gdzie zaimplementowane
+CF `updateClubLicenseStatuses` (`functions/index.js`) — odpala się codziennie o 06:00 UTC.
+
+## Co się dzieje przy przejściu → EXPIRED
+Gdy CF wykryje że klub właśnie przeszedł na EXPIRED (`prevStatus !== 'EXPIRED'` i nowy status `=== 'EXPIRED'`):
+
+1. W tym samym batchu co zmiana `licenseStatus`:
+   - `clubs.license.used = 0`
+   - `clubs.license.total = 0`
+
+2. W osobnym batchu (po commit pierwszego):
+   - Znajdź wszystkie `memberships` w tym klubie gdzie `usedSlot === 1`
+   - Ustaw `usedSlot = 0` na każdym z nich
+
+## Efekt
+Gdy admin przydzieli nową licencję przez support.html (pole `confirmActivation` → `total = N, used = 0`):
+- CF `onClubLicenseUpdated` odpala się automatycznie (zmiana `license.total` z 0 na N)
+- Automatycznie rozdziela sloty: najpierw trenerzy, potem rodzice wg daty dołączenia
+- Pomija userów z własną licencją i trialsami
+
+## APP — brak zmian wymaganych
+APP korzysta z `memberships.usedSlot` (System A). Reset `usedSlot = 0` przez CF jest automatyczny.
+
+---
+
 [2026-09-13 02:00] [APP] [TODO] Usunąć ręczne wywołania releaseClubLicenseSlot — CF robi to automatycznie
 
 ## Problem — double counting clubs.license.used
