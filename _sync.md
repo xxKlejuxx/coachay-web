@@ -4,6 +4,113 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-13 01:30] [APP] [TODO] Pytanie: jaki system slotów klubowych jest używany w APP?
+
+## Kontekst
+
+Na WWW odkryliśmy że istnieją **dwa równoległe systemy** śledzenia slotów licencji klubowej B2B (P3). Zanim zaimplementujemy reset/dystrybucję slotów, musimy ustalić który jest kanonicznym źródłem prawdy — i ujednolicić go dla WWW i APP.
+
+## System A — CF (stary)
+
+Używany przez Cloud Functions: `onClubLicenseUpdated`, `assignExpiredTrialSlots`
+
+**Pola Firestore:**
+- `memberships.usedSlot` = 0 lub 1 — czy użytkownik ma zarezerwowany slot
+- `clubs.license.used` — licznik zajętych slotów
+
+**Kiedy ustawiane:** proaktywnie przez CF od razu po zmianie `clubs.license.total`
+
+## System B — Web/lazy-claim (nowy)
+
+Używany przez `claimClubLicenseSlot()` w coachay-core.js, sprawdzany w `getAccessStatus()` P3
+
+**Pola Firestore:**
+- `memberships.licenseSource` = `'CLUB'` — źródło licencji
+- `memberships.licenseStatus` = `'ACTIVE'` — status licencji
+- `memberships.poolClaimedAt` — timestamp przydzielenia slotu
+- `clubs.license.used` — ten sam licznik (oba systemy go modyfikują)
+
+**Kiedy ustawiane:** lazy — dopiero przy pierwszym logowaniu usera po zakupie licencji przez klub
+
+## Problem
+
+`getAccessStatus()` P3 sprawdza `licenseSource === 'CLUB' && licenseStatus === 'ACTIVE'`.
+CF ustawia tylko `usedSlot = 1`, a NIE `licenseSource/licenseStatus`.
+Efekt: user z `usedSlot = 1` (zarezerwowany slot przez CF) i tak wpada do lazy-claim → `clubs.license.used` jest inkrementowane drugi raz → potencjalne double-counting.
+
+## Pytanie do APP
+
+1. Który system sprawdzacie po stronie APP do weryfikacji dostępu do licencji klubowej?
+   - `memberships.usedSlot` ?
+   - `memberships.licenseSource + licenseStatus` ?
+   - Oba?
+
+2. Czy `claimClubLicenseSlot()` (lazy claim przy logowaniu) jest zaimplementowany w APP?
+
+## Plan po ustaleniu
+
+Po odpowiedzi APP — ujednolicimy oba systemy. Zostanie jeden zestaw pól, jeden moment przydzielania (proaktywnie po zakupie LUB lazy przy logowaniu), jedno źródło prawdy dla WWW i APP.
+
+---
+
+[2026-09-13 01:00] [WEB+APP] [DONE] Usunięcie okresu karencji (GRACE) — natychmiastowa blokada po wygaśnięciu licencji
+
+## Co się zmieniło
+
+Poprzednio: po wygaśnięciu licencji user miał 7-dniowy okres karencji (status `GRACE`) — przez 7 dni od wygaśnięcia wciąż mógł korzystać z aplikacji.
+
+Teraz: **brak karencji** — wygaśnięcie licencji = natychmiastowy ekran blokady.
+
+## Zmiana na WWW (commit `6671c69`)
+
+W `getAccessStatus()` w `coachay-core.js` zakomentowane `return _r('GRACE', ...)` we wszystkich 4 ścieżkach:
+
+- **P1** — własna licencja indywidualna (`access_rights`)
+- **P0** — trial 90 dni
+- **P3** — slot B2B licencji klubowej
+- **P4** — family license (kibic przez rodzica)
+
+Kod `GRACE` jest zachowany w komentarzach — można przywrócić jedną linią jeśli zajdzie potrzeba.
+
+## Co APP musi zrobić
+
+Usunąć lub wyłączyć obsługę statusu `GRACE` w swoim odpowiedniku `getAccessStatus()`. Po wygaśnięciu licencji funkcja zwraca bezpośrednio `EXPIRED` (lub `BLOCKED` przy jawnym usunięciu — patrz wpis z 2026-09-12).
+
+Kolejność po zmianie:
+```
+ZAWODNIK → ACTIVE (zawsze)
+Px: DELETE/REMOVED → BLOCKED
+P1: access_rights valid → ACTIVE
+P0: trial → TRIAL
+P3: slot klubowy ważny → ACTIVE, wygasły → EXPIRED (bez GRACE)
+P4: family license ważna → ACTIVE, wygasła → EXPIRED (bez GRACE)
+→ EXPIRED
+```
+
+Status `GRACE` **nie jest już emitowany przez żadną ścieżkę** — jeśli APP ma ekran karencji, nie będzie już wywoływany.
+
+---
+
+[2026-09-13 01:00] [WEB+APP] [DONE] Zmiana tekstu push — licencja wygasła dziś
+
+## Co się zmieniło
+
+Tekst powiadomienia push dla `daysLeft === 0` (dzień wygaśnięcia licencji):
+
+**Było:**
+> „Licencja klubowa X kończy się dziś. Odnów, żeby nie stracić dostępu."
+
+**Jest:**
+> „Licencja klubowa X wygasła dziś. Straciłeś dostęp — odnów, żeby przywrócić."
+
+## Co APP musi zrobić
+
+Sprawdzić czy APP generuje własny tekst push dla `daysLeft === 0`. Jeśli tak — zaktualizować analogicznie: zmiana komunikatu z ostrzegawczego na informujący o utracie dostępu.
+
+Jeśli APP korzysta wyłącznie z pushów wysyłanych przez CF (WWW) — zmiana już działa, nic do roboty.
+
+---
+
 [2026-09-13 00:15] [WEB] [TODO] Płatności webowe Google Play i App Store przez RevenueCat Web Billing
 
 ## Cel
