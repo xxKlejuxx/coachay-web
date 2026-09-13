@@ -4,6 +4,81 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-13 02:00] [APP] [TODO] Usunąć ręczne wywołania releaseClubLicenseSlot — CF robi to automatycznie
+
+## Problem — double counting clubs.license.used
+
+`releaseClubLicenseSlot` (czyli ręczne dekrementowanie `clubs.license.used` + czyszczenie pól slotu) jest wywoływana w APP ręcznie przy:
+1. Zawężeniu scope licencji (`all → trainers_only`) — dla każdego rodzica z aktywnym slotem
+2. Blokowaniu trenera/użytkownika z klubu
+3. Usuwaniu trenera/użytkownika z klubu
+
+**Jednocześnie** Cloud Function `onMembershipUpdated` odpala się automatycznie przy każdej zmianie statusu membership na BLOCKED/REMOVED/INACTIVE/DELETE — i jeśli `before.usedSlot === 1`, również dekrementuje `license.used`.
+
+Efekt: `license.used` jest dekrementowane **dwa razy** za jedno zdarzenie.
+
+## Jak działa CF automatycznie
+
+### onMembershipUpdated (trigger na memberships/{id})
+Warunki odpalenia:
+- `before.status` był aktywny (nie BLOCKED/REMOVED/INACTIVE/DELETE)
+- `after.status` jest teraz BLOCKED/REMOVED/INACTIVE/DELETE
+- `before.usedSlot === 1`
+
+Co robi:
+- Ustawia `usedSlot = 0` na tym membership
+- Szuka "rodzeństwa" (ten sam userId + clubId, `usedSlot = 0`, status aktywny)
+- Jeśli rodzeństwo istnieje → przenosi slot na najstarszy rekord (brak zmiany `license.used`)
+- Jeśli brak rodzeństwa → dekrementuje `license.used`
+
+### onClubLicenseUpdated (trigger na clubs/{clubId})
+Warunki odpalenia:
+- `license.total` lub `license.scope` zmienił się
+
+Co robi przy `all → trainers_only`:
+- Znajduje wszystkich rodziców z `usedSlot === 1`
+- Ustawia im `usedSlot = 0`
+- Dekrementuje `license.used` o liczbę odebranych slotów
+
+Co robi przy `trainers_only → all` lub wzroście `total`:
+- Przydziela wolne sloty trenerom (najpierw) → rodzicom (wg daty dołączenia)
+- Ustawia `usedSlot = 1` na uprawnionych membership
+- Inkrementuje `license.used`
+
+## Co APP musi zrobić
+
+**Usunąć ręczne wywołania `releaseClubLicenseSlot` we wszystkich trzech przypadkach:**
+
+### 1. Zawężenie scope (`all → trainers_only`)
+- NIE wywoływać `releaseClubLicenseSlot` dla rodziców
+- Wystarczy zapisać nowy scope do `clubs/{clubId}.license.scope`
+- CF `onClubLicenseUpdated` automatycznie zabierze sloty rodzicom
+
+### 2. Blokowanie użytkownika
+- NIE wywoływać `releaseClubLicenseSlot` przed blokowaniem
+- Wystarczy zmienić `memberships.status → BLOCKED`
+- CF `onMembershipUpdated` automatycznie zwolni slot (lub przeniesie na rodzeństwo)
+
+### 3. Usuwanie użytkownika z klubu
+- NIE wywoływać `releaseClubLicenseSlot` przed usunięciem
+- Wystarczy zmienić `memberships.status → REMOVED`
+- CF `onMembershipUpdated` automatycznie zwolni slot
+
+## Weryfikacja po poprawce
+
+Po usunięciu ręcznych wywołań: `clubs.license.used` powinno zawsze równać się liczbie membership z `usedSlot === 1` w danym klubie. Można to sprawdzić skryptem:
+
+```
+SELECT count(*) FROM memberships WHERE clubId = X AND usedSlot = 1
+→ musi być równe clubs/{X}.license.used
+```
+
+## Zmiana na WWW (commit w toku)
+
+Na WWW `releaseClubLicenseSlot` sprawdza `licenseSource !== 'CLUB'` przed dekrementowaniem → jest NO-OP dla użytkowników Systemu A → brak double decrement na WWW. Mimo to wywołania są usuwane z `ustawienia.html` i `trenerzy.html` dla czystości kodu.
+
+---
+
 [2026-09-13 01:30] [APP] [TODO] Pytanie: jaki system slotów klubowych jest używany w APP?
 
 ## Kontekst

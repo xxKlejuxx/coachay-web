@@ -994,12 +994,7 @@ async function blockTrainer(scope) {
         if (scope === 'TEAM') q = q.where('teamId', '==', currentTeamId);
         const snap = await q.get();
 
-        // Blokada całego klubu = koniec dostępu → zwolnij slot z puli B2B jeśli z niej korzystał.
-        // Musi się wykonać PRZED zmianą statusu membershipu na BLOCKED, bo releaseClubLicenseSlot
-        // szuka membershipu po statusie active/ACTIVE.
-        if (scope === 'CLUB') {
-            await releaseClubLicenseSlot(t.userId, currentClubId);
-        }
+        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu → BLOCKED
 
         const batch = db.batch();
         snap.docs.forEach(d => batch.update(d.ref, { status: 'BLOCKED', blockedAt: now, blockedBy: currentUserId }));
@@ -1140,10 +1135,7 @@ async function removeTrainerFromClub() {
     if (!await showConfirmSheet(removeBody)) return;
     const now = new Date().toISOString();
     try {
-        // Usunięcie z klubu = koniec dostępu → zwolnij slot z puli B2B jeśli z niej korzystał.
-        // Musi się wykonać PRZED zmianą statusu membershipu na REMOVED, bo releaseClubLicenseSlot
-        // szuka membershipu po statusie active/ACTIVE.
-        if (t.userId) await releaseClubLicenseSlot(t.userId, currentClubId);
+        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu → REMOVED
 
         // Ustaw wszystkie memberships TRENER na REMOVED
         if (t.userId) {

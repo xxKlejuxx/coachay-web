@@ -757,9 +757,8 @@ async function saveLicencja() {
                 if (!ok) return;
             }
 
-            for (const u of [...bezpieczni, ...zagrozeni]) {
-                await releaseClubLicenseSlot(u.userId, _clubId);
-            }
+            // releaseClubLicenseSlot usunięte — CF onClubLicenseUpdated obsługuje zwolnienie slotów
+            // automatycznie przez trigger na zmianę license.scope
             for (const u of zagrozeni) {
                 try {
                     await createNotification({
