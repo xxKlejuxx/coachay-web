@@ -874,6 +874,7 @@ async function initSession() {
         const _isRodoExempt = _RODO_EXEMPT.some(p => _currentPage.includes(p));
         if (!user.termsAcceptedAt && !_isRodoExempt) {
             sessionStorage.setItem('rodoReturnUrl', window.location.href);
+            window._initSessionRedirecting = true;
             window.location.replace('rodo-consent.html');
             return null;
         }
@@ -886,6 +887,7 @@ async function initSession() {
             const isCoach = allMemberships.some(m => ['TRENER', 'TRENER_GLOWNY', 'TRENER_POMOCNICZY'].includes(m.role));
             if (isCoach) {
                 sessionStorage.setItem('rodoReturnUrl', window.location.href);
+                window._initSessionRedirecting = true;
                 window.location.replace('rodo-consent.html');
                 return null;
             }
@@ -896,6 +898,7 @@ async function initSession() {
             const hasUnconsentedChild = allMemberships.some(m => m.role === 'RODZIC' && !m.parentDataConsentAt);
             if (hasUnconsentedChild) {
                 sessionStorage.setItem('rodoReturnUrl', window.location.href);
+                window._initSessionRedirecting = true;
                 window.location.replace('rodo-consent.html');
                 return null;
             }

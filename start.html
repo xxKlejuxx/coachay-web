@@ -850,9 +850,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const session = await initSession();
         if (!session) {
             console.error('Brak sesji');
-            // Nie wylogowuj jeśli initSession już przekierował (RODO, PIN) — sprawdź czy nadal na start.html
-            const _stillHere = window.location.pathname.includes('start');
-            if (_stillHere) {
+            if (!window._initSessionRedirecting) {
                 localStorage.removeItem('currentUserId');
                 localStorage.removeItem('selectedMembershipId');
                 try { if (auth) await auth.signOut(); } catch(e) {}
