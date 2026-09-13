@@ -1904,16 +1904,20 @@ async function loginAsDemo(role) {
     localStorage.removeItem('demoRole');
     sessionStorage.setItem('showSplash','1');
 
-    if (role === 'TRENER_GLOWNY') {
+    var emailMap = {
+        TRENER_GLOWNY: { email: 'klejux+demo_trener@gmail.com',  userId: 'demo_trener_jan'  },
+        RODZIC:        { email: 'klejux+demo_parents@gmail.com', userId: 'demo_rodzic_anna' }
+    };
+    if (emailMap[role]) {
         try {
-            await auth.signInWithEmailAndPassword('klejux+demo_trener@gmail.com', 'Demo123@321!');
-            localStorage.setItem('currentUserId', 'demo_trener_jan');
+            await auth.signInWithEmailAndPassword(emailMap[role].email, 'Demo123@321!');
+            localStorage.setItem('currentUserId', emailMap[role].userId);
         } catch(e) {
             console.error('Demo login error:', e);
             return;
         }
     } else {
-        var userMap = { RODZIC:'demo_rodzic_anna', ZAWODNIK:'demo_zawodnik_jasiek', KIBIC:'demo_obserwator_babcia' };
+        var userMap = { ZAWODNIK:'demo_zawodnik_jasiek', KIBIC:'demo_obserwator_babcia' };
         localStorage.setItem('demoMode','true');
         localStorage.setItem('demoRole', role);
         localStorage.setItem('currentUserId', userMap[role] || '');
