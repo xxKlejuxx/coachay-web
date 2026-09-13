@@ -952,6 +952,7 @@ async function initSession() {
                     .where('userId', '==', userId)
                     .limit(1).get();
                 if (!anySnap.empty) {
+                    localStorage.setItem('_dbg_redirect', JSON.stringify({ to: 'blocked.html', reason: 'initSession_3b_no_active_memberships', userId, allMembershipsCount: allMemberships.length, isPlatformAdmin: user.isPlatformAdmin, ts: new Date().toISOString() }));
                     if (!window.location.href.includes('blocked.html')) window.location.href = 'blocked.html';
                     return null;
                 }
@@ -3635,6 +3636,9 @@ function shouldShowTrialBanner(daysLeft) {
 async function checkPaymentAccess(uid, clubId) {
     if (localStorage.getItem('supportOriginalUserId')) {
         return { status: 'ACTIVE', source: 'support_impersonation', daysLeft: 9999 };
+    }
+    if (getCurrentUserData()?._raw?.isPlatformAdmin === true) {
+        return { status: 'ACTIVE', source: 'platform_admin', daysLeft: 9999 };
     }
     // claimSlot: true — automatycznie pobierz slot B2B gdy trial wygasł
     const access = await getAccessStatus(uid, clubId, { claimSlot: true });

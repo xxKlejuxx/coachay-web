@@ -1900,11 +1900,25 @@ async function doRegisterWithApple() {
 /* ══ DEMO ═════════════════════════════════════════════════════ */
 async function loginAsDemo(role) {
     localStorage.removeItem('selectedMembershipId');
-    localStorage.setItem('demoMode','true'); localStorage.setItem('demoRole', role);
-    var userMap = { TRENER_GLOWNY:'demo_trener_jan', RODZIC:'demo_rodzic_anna', ZAWODNIK:'demo_zawodnik_jasiek', KIBIC:'demo_obserwator_babcia' };
-    localStorage.setItem('currentUserId', userMap[role]);
+    localStorage.removeItem('demoMode');
+    localStorage.removeItem('demoRole');
     sessionStorage.setItem('showSplash','1');
-    try { await auth.signInAnonymously(); } catch(e) {}
+
+    if (role === 'TRENER_GLOWNY') {
+        try {
+            await auth.signInWithEmailAndPassword('klejux+demo_trener@gmail.com', 'Demo123@321!');
+            localStorage.setItem('currentUserId', 'demo_trener_jan');
+        } catch(e) {
+            console.error('Demo login error:', e);
+            return;
+        }
+    } else {
+        var userMap = { RODZIC:'demo_rodzic_anna', ZAWODNIK:'demo_zawodnik_jasiek', KIBIC:'demo_obserwator_babcia' };
+        localStorage.setItem('demoMode','true');
+        localStorage.setItem('demoRole', role);
+        localStorage.setItem('currentUserId', userMap[role] || '');
+        try { await auth.signInAnonymously(); } catch(e) {}
+    }
     window.location.href = 'start.html';
 }
 </script>

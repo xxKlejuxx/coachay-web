@@ -850,7 +850,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const session = await initSession();
         if (!session) {
             console.error('Brak sesji');
-            if (!isDemoMode()) { await auth.signOut(); window.location.href = 'index.html'; }
+            localStorage.removeItem('currentUserId');
+            localStorage.removeItem('selectedMembershipId');
+            try { if (auth) await auth.signOut(); } catch(e) {}
+            window.location.href = 'index.html';
             return;
         }
         const { user, team, membership } = session;
@@ -868,7 +871,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const clubId = membership?.clubId || team?.clubId || '';
         const _isZawodnik = _effectiveRole === 'ZAWODNIK';
 
-        if (!isDemoMode() && !_isPlatformAdmin && _isZawodnik && clubId) {
+
+        if (!_isPlatformAdmin && _isZawodnik && clubId) {
             getAccessStatus(user.userId || user.id, clubId).then(access => {
                 if (access.status === 'EXPIRED') {
                     const b = document.getElementById('zawodnik-license-banner');
@@ -877,7 +881,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             });
         }
 
-        if (!isDemoMode() && !_isPlatformAdmin && !_isZawodnik && clubId) {
+        if (!_isPlatformAdmin && !_isZawodnik && clubId) {
             if (_isImpersonating) {
                 getAccessStatus(user.userId || user.id, clubId).then(access => {
                     const statusEl = document.getElementById('imp-banner-status');
