@@ -1025,8 +1025,10 @@ async function initSession() {
         const _isPayExempt = _PAY_EXEMPT.some(p => _payPage === p);
         const _clubIdForPayment = membership?.clubId || null;
         if (!_isPayExempt && user.isPlatformAdmin !== true && effectiveRole !== 'ZAWODNIK' && _clubIdForPayment) {
+            window._initSessionRedirecting = true;
             const payAccess = await checkPaymentAccess(userId, _clubIdForPayment);
             if (!payAccess) return null;
+            window._initSessionRedirecting = false;
             return { user, membership, team, allMemberships, access: payAccess };
         }
         return { user, membership, team, allMemberships };

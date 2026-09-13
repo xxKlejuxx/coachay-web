@@ -16,6 +16,9 @@
 .screen-body::-webkit-scrollbar { display: none; }
 .screen-body > * { flex-shrink: 0; }
 
+/* Ukryj sidebar — blocked to full-screen */
+#app-sidebar, .sidebar { display: none !important; }
+
 /* ── Top bar (uproszczony — tylko ctx-switcher) ── */
 .blocked-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; padding: 0 16px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 body:has(#app-sidebar) .blocked-topbar { display: none; }
