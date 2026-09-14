@@ -4,6 +4,35 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-14 23:50] [APP] [TODO] Zakup Google Play v6 — prawidłowe wywołanie przez purchaseSubscriptionOption
+
+Poprzedni błąd: `purchaseStoreProduct(product)` → "Ta wersja aplikacji nie jest skonfigurowana do rozliczeń".
+
+Fix: w RevenueCat v6+ dla Google Play (Base Plans) trzeba przekazać `SubscriptionOption`, nie sam `StoreProduct`:
+
+```ts
+// 1. Pobieramy produkt z serwera
+const products = await Purchases.getProducts(['coachay_individual_monthly:monthly-plan']);
+const myProduct = products[0];
+
+// 2. Wyciągamy opcję dla naszego Base Plan
+const defaultOption = myProduct.subscriptionOptions?.find(
+  option => option.id === 'monthly-plan'
+);
+
+if (defaultOption) {
+  // 3. PRAWIDŁOWE WYWOŁANIE dla Google V6+
+  const { purchaserInfo } = await Purchases.purchaseSubscriptionOption(defaultOption);
+} else {
+  // fallback
+  const { purchaserInfo } = await Purchases.purchaseStoreProduct(myProduct);
+}
+```
+
+**Kluczowe:** `subscriptionOptions` zawiera ceny i czas trwania planu — bez tego obiektu Google Play odrzuca zakup.
+
+---
+
 [2026-09-14 23:30] [APP] [TODO] Błąd zakupu Google Play — purchaseStoreProduct nieprawidłowy argument w RevenueCat v6
 
 Objaw: Wewnętrzne Udostępnianie pobiera się OK, bramka Google Play reaguje, ale przy próbie zakupu twardy błąd:
