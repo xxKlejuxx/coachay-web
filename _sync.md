@@ -4,6 +4,27 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-14 23:30] [APP] [TODO] Błąd zakupu Google Play — purchaseStoreProduct nieprawidłowy argument w RevenueCat v6
+
+Objaw: Wewnętrzne Udostępnianie pobiera się OK, bramka Google Play reaguje, ale przy próbie zakupu twardy błąd:
+`"Ta wersja aplikacji nie jest skonfigurowana do rozliczeń"`
+Log z kodu: `"3 błąd promise: one or more of the arguments provided are invalid (reject)"`
+
+Przyczyna: `Purchases.purchaseStoreProduct(product)` dostaje nieprawidłowy argument w nowej architekturze Google Play V6 (Base Plans). SDK v6+ wymaga poprawnie zmapowanego `subscriptionOptions` w obiekcie `product` — jeśli idzie droga bezpośrednich produktów (bez Offerings), obiekt może nie mieć tego pola.
+
+Fix: użyj metody dedykowanej dla surowych produktów z Base Plans:
+```ts
+// Opcja 1 — najprostsza, po productId:
+await Purchases.purchaseProduct(productId);
+
+// Opcja 2 — jeśli masz obiekt StoreProduct, upewnij się że subscriptionOptions są zmapowane:
+await Purchases.purchaseStoreProduct(product); // product.subscriptionOptions musi być tablicą
+```
+
+Po poprawce: wygeneruj nową paczkę i wrzuć na Wewnętrzne Udostępnianie Google Play.
+
+---
+
 [2026-09-14 02:00] [WEB+APP] [DONE] Pętla redirect trener → index zamiast blocked — flaga _initSessionRedirecting
 
 ## Problem
