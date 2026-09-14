@@ -3362,41 +3362,63 @@ async function releaseFamilySlot(parentUid, clubId) {
 }
 
 /**
- * Pobiera slot z puli klubowej B2B dla danego usera (transakcja).
- * @returns {{ success: bool, status?, source?, daysLeft?, expiryDate? }}
+ * Pobiera slot z puli klubowej B2B dla danego usera (fallback przy logowaniu).
+ * @returns {{ success: bool, source?, daysLeft?, expiryDate? }}
  */
 async function claimClubLicenseSlot(uid, clubId, membershipDoc) {
     try {
+        const mData = membershipDoc.data();
+
+        // Już ma slot — nic do roboty
+        if (mData.usedSlot === 1) return { success: true, source: 'club_license' };
+
+        // Rola nie kwalifikuje do puli klubowej
+        const role = (mData.role || '').toUpperCase();
+        const CLUB_ROLES = new Set(['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER', 'OWNER', 'RODZIC']);
+        if (!CLUB_ROLES.has(role)) return { success: false, source: 'role_excluded' };
+
         const clubRef = db.collection('clubs').doc(clubId);
+        const clubSnap = await clubRef.get();
+        if (!clubSnap.exists) return { success: false, source: 'error' };
+
+        const lic = clubSnap.data().license;
+        if (!lic?.valid_until) return { success: false, source: 'club_license_expired' };
+        const expiry = lic.valid_until?.toDate?.() ?? new Date(lic.valid_until);
+        if (expiry <= new Date()) return { success: false, source: 'club_license_expired' };
+
+        // Scope: trainers_only wyklucza RODZIC
+        const scope = (lic.scope || 'all').toLowerCase();
+        if (scope === 'trainers_only' && role === 'RODZIC')
+            return { success: false, source: 'scope_excluded' };
+
+        // maxOneParentPerChild: jeden playerId → max jeden rodzic na puli
+        if (role === 'RODZIC' && mData.playerId && lic.maxOneParentPerChild) {
+            const sibSnap = await db.collection('memberships')
+                .where('clubId', '==', clubId)
+                .where('playerId', '==', mData.playerId)
+                .where('usedSlot', '==', 1)
+                .limit(1).get();
+            if (!sibSnap.empty) return { success: false, source: 'max_one_parent' };
+        }
+
+        // Transakcja: przydziel slot
         let claimedExpiry = null;
-
         await db.runTransaction(async t => {
-            const clubSnap = await t.get(clubRef);
-            if (!clubSnap.exists) throw new Error('NO_CLUB');
-            const lic = clubSnap.data().license;
-            if (!lic || !lic.valid_until) throw new Error('NO_LICENSE');
-
-            const expiry = lic.valid_until?.toDate?.() ?? new Date(lic.valid_until);
-            if (expiry <= new Date()) throw new Error('LICENSE_EXPIRED');
-
-            const used  = lic.used  || 0;
-            const total = lic.total || 0;
+            const freshClub = await t.get(clubRef);
+            if (!freshClub.exists) throw new Error('NO_CLUB');
+            const freshLic = freshClub.data().license;
+            const used  = freshLic.used  || 0;
+            const total = freshLic.total || 0;
             if (used >= total) throw new Error('POOL_FULL');
-
             claimedExpiry = expiry;
             t.update(clubRef, { 'license.used': used + 1 });
-            t.update(membershipDoc.ref, {
-                licenseStatus: 'ACTIVE',
-                licenseSource: 'CLUB',
-                poolClaimedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            t.update(membershipDoc.ref, { usedSlot: 1 });
         });
 
         const daysLeft = Math.ceil((claimedExpiry - new Date()) / 86400000);
-        return { success: true, status: 'ACTIVE', source: 'club_license', daysLeft, expiryDate: claimedExpiry };
+        return { success: true, source: 'club_license', daysLeft, expiryDate: claimedExpiry };
     } catch (e) {
-        if (e.message === 'POOL_FULL')       return { success: false, source: 'club_pool_full' };
-        if (e.message === 'LICENSE_EXPIRED') return { success: false, source: 'club_license_expired' };
+        if (e.message === 'POOL_FULL') return { success: false, source: 'club_pool_full' };
         console.error('claimClubLicenseSlot:', e);
         return { success: false, source: 'error' };
     }
@@ -3533,21 +3555,13 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
                              (TRENER_ROLES.includes(role) || role === 'RODZIC');
 
         if (canUseB2B) {
-            const renewedAt  = lic?.renewed_at?.toDate?.() ?? null;
-            const claimedAt  = mData.poolClaimedAt?.toDate?.() ?? null;
-            // Slot jest aktualny jeśli: claimedAt >= renewedAt (lub renewedAt null = stara licencja)
-            const slotFresh  = !renewedAt || (claimedAt && claimedAt >= renewedAt);
-            const slotActive = mData.licenseSource === 'CLUB' && mData.licenseStatus === 'ACTIVE' && slotFresh;
-
-            if (slotActive && licExpiry) {
+            // Slot przydzielony przez CF lub webhook
+            if (mData.usedSlot === 1 && licExpiry) {
                 if (licExpiry > now) return _r('ACTIVE', 'club_license', licExpiry);
-                // Karencja wyłączona — natychmiastowa blokada po wygaśnięciu licencji klubowej
-                // if (licExpiry > graceCutoff) return _r('GRACE', 'club_license', licExpiry,
-                //     Math.ceil((licExpiry.getTime() + graceMs - now) / 86400000));
                 return _r('EXPIRED', 'club_license_expired', null);
             }
 
-            // Slot nieaktualny lub nie pobrany — spróbuj pobrać
+            // Fallback: spróbuj pobrać slot przy logowaniu (gdy CF/webhook nie zadziałał)
             if (claimSlot && licExpiry && licExpiry > now) {
                 const claimed = await claimClubLicenseSlot(uid, clubId, mDoc);
                 if (claimed.success)
