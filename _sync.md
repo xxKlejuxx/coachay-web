@@ -893,7 +893,7 @@ const access = await checkPaymentAccess(uid, clubId);
 → redirect do platnosci-banner.html?status=X&days=Y&redirect=start.html
 ```
 
-**Progi wyświetlania bannera:** dni 15, 10, 5, 1, 0 przed końcem licencji + grace period (status GRACE → zawsze).
+**Progi wyświetlania bannera:** dni 7, 4, 2, 1, 0 przed końcem licencji (status GRACE → zawsze).
 
 ## Push powiadomienia (CF checkExpiringLicenses)
 
@@ -901,36 +901,28 @@ CF `checkExpiringLicenses` odpala się codziennie o **07:00 UTC (= 09:00 CEST)**
 
 Zapisuje dokument do kolekcji `notifications` → trigger `onNotificationCreated` → wysyła push przez Expo (`pushToken`) lub FCM (`fcmToken`).
 
-**Progi powiadomień:** `LICENSE_NOTIF_DAYS = [15, 10, 5, 1, 0]` dni przed końcem + grace marks `[0, 7]`.
+**Progi powiadomień:** `LICENSE_NOTIF_DAYS = [7, 4, 2, 1, 0]` dni przed końcem.
 
-**Trzy ścieżki dla różnych typów licencji:**
+**Trzy etapy:**
 
-**A) Indywidualna licencja (`access_rights`):**
-- Czyta kolekcję `access_rights` — pola: `uid`, `club_id`, `valid_until`
-- Wylicza `daysLeft = Math.ceil((valid_until - now) / 86400000)`
-- Jeśli `daysLeft` w `LICENSE_NOTIF_DAYS` → push do `uid`
-- Treść: `"Twój pakiet Coachay kończy się za X dni. Odnów w Płatnościach."`
+**Etap 1 — własna subskrypcja (ind / family):**
+- Czyta kolekcję `access_rights` — pole `valid_until`
+- Jeśli `daysLeft` w `[7,4,2,1,0]` → push do `uid`
+- Treść przed: `"Twój pakiet Coachay kończy się za X dni. Odnów w Płatnościach."`
+- Treść dzień 0: `"Twój pakiet Coachay wygasł dziś. Stracisz dostęp — odnów w Płatnościach."`
 
-**B) Licencja klubowa B2B (`clubs.license.valid_until`):**
-- Czyta pole `clubs/{clubId}.license.valid_until`
-- Jeśli `daysLeft` w progach → push do:
-  - adminów klubu (`trainers` kolekcja, `isClubAdmin === true`)
-  - trenerów z memberships (`role in ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER']`, `status === 'ACTIVE'`)
-- Treść: `"Licencja klubowa \"[nazwa]\" kończy się za X dni. Odnów w Płatnościach."`
+**Etap 2 — trial usera wygasa, brak wolnego slotu w klubie:**
+- Kogo: TRENER* + RODZIC z `membership.usedSlot === 0`
+- Kiedy: `membership.trialEndsAt` za `[7,4,2,1,0]` dni
+- Pomija klub jeśli ma wolny slot (`license.used < license.total` i `valid_until > now`)
+- Treść: `"Twój darmowy okres próbny w klubie \"[nazwa]\" kończy się za X dni. Kup pakiet ind."`
 
-**C) Trial (90 dni od założenia klubu):**
-- Liczy `trialEnd = clubs.createdAt + 90 dni`
-- Push do wszystkich aktywnych trenerów bez własnej licencji (bez rekordu w `access_rights`)
-- Treść: `"Twój darmowy okres próbny w klubie \"[nazwa]\" kończy się za X dni. Kup pakiet."`
+**Etap 3 — licencja klubowa wygasa / wygasła:**
+- Kogo: tylko `isClubAdmin === true` (nie wszyscy trenerzy, nie RODZIC)
+- Treść przed: `"Licencja Waszego klubu \"[nazwa]\" wygasa za X dni. Kup nową lub przedłuż."`
+- Treść dzień 0: `"Wasz dostęp klubowy już wygasł — kup nową licencję klubową lub pakiet ind."`
 
-**Grace period (po wygaśnięciu):** osobne notyfikacje przy `daysLeft = 0` i `daysLeft = -7` (ostatni dzień grace).
-
-## Prośba do APP
-
-Proszę sprawdzić czy w aplikacji mobilnej:
-1. Ekran ostrzeżenia pojawia się na tych samych dniach `[15, 10, 5, 1, 0]` i raz dziennie (bez powtarzania)
-2. Czy mobile ma analogiczną logikę `shouldShowTrialBanner` (lub odpowiednik)
-3. Push powiadomienia są obsługiwane przez ten sam CF (`checkExpiringLicenses`) → nie ma potrzeby osobnej logiki po stronie mobile. Wystarczy mieć aktualny `pushToken` lub `fcmToken` zapisany w `users/{uid}`
+**APP: brak zmian po Waszej stronie** — push przychodzi z CF, wystarczy aktualny `pushToken`/`fcmToken` w `users/{uid}`.
 
 ---
 
