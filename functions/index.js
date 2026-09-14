@@ -1349,8 +1349,7 @@ exports.autoFinishMatches = onSchedule('every day 00:00', async () => {
 
    Kolejność priorytetów:
    1. clubs.license.valid_until aktywne → ACTIVE (club_license)
-   2. Admin klubu ma access_rights aktywne → ACTIVE (admin_personal)
-   3. Nic → EXPIRED
+   2. Nic → EXPIRED
    (Trial liczony per-user w getAccessStatus() na podstawie memberships.createdAt)
 ═══════════════════════════════════════════════════════ */
 exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
@@ -1360,33 +1359,7 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
     console.log(`updateClubLicenseStatuses start: ${now.toISOString()}`);
 
     try {
-        // Pobierz wszystko równolegle
-        const [clubsSnap, adminsSnap, arSnap] = await Promise.all([
-            db.collection('clubs').get(),
-            db.collection('trainers').where('isClubAdmin', '==', true).get(),
-            db.collection('access_rights').get(),
-        ]);
-
-        // Mapa: clubId → Set(adminUserId)
-        const adminsByClub = {};
-        adminsSnap.docs.forEach(d => {
-            const { clubId, userId } = d.data();
-            if (!clubId || !userId) return;
-            if (!adminsByClub[clubId]) adminsByClub[clubId] = new Set();
-            adminsByClub[clubId].add(userId);
-        });
-
-        // Mapa: clubId → najdalszy valid_until aktywnego access_rights admina
-        const adminArByClub = {};
-        arSnap.docs.forEach(d => {
-            const { club_id: cid, uid, valid_until } = d.data();
-            if (!cid || !uid || !valid_until) return;
-            if (!adminsByClub[cid]?.has(uid)) return; // nie admin tego klubu
-            const expiry = valid_until.toDate ? valid_until.toDate() : new Date(valid_until);
-            if (!adminArByClub[cid] || expiry > adminArByClub[cid]) {
-                adminArByClub[cid] = expiry;
-            }
-        });
+        const clubsSnap = await db.collection('clubs').get();
 
         const batch = db.batch();
         let updated = 0;
@@ -1407,15 +1380,6 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
                 const expiry = raw?.toDate ? raw.toDate() : (raw ? new Date(raw) : null);
                 if (expiry && expiry > now) {
                     status = 'ACTIVE'; source = 'club_license'; statusExpiry = expiry;
-                }
-                // Karencja usunięta — wygaśnięcie = natychmiastowe EXPIRED
-            }
-
-            // 2. Aktywna licencja indywidualna admina klubu
-            if (status === 'EXPIRED' && adminArByClub[doc.id]) {
-                const expiry = adminArByClub[doc.id];
-                if (expiry > now) {
-                    status = 'ACTIVE'; source = 'admin_personal'; statusExpiry = expiry;
                 }
                 // Karencja usunięta — wygaśnięcie = natychmiastowe EXPIRED
             }
