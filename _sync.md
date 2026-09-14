@@ -1856,3 +1856,39 @@ Jeśli wynik niepusty → ten rodzic nie dostaje slotu.
 `clubs.license.maxOneParentPerChild: true | false`
 
 **Prośba do APP:** uwzględnij tę regułę jeśli po Waszej stronie też przydzielacie sloty lub wyświetlacie info o dostępie rodzica do licencji klubowej.
+
+---
+
+[2026-09-14 22:00] [WEB→APP] [WERYFIKACJA] Przepływ zakupu RevenueCat — obsługa błędów i blokada UI
+
+Czy Wasza implementacja zakupu wygląda tak (lub podobnie)? Kluczowe elementy to:
+1. `setIsSubmitting(true)` przed zakupem — blokuje UI żeby user nie kliknął dwa razy
+2. Logika Firebase WEWNĄTRZ bloku `try` — jeśli Firebase się wysypie, wpadamy do `catch`
+3. `finally` z `setIsSubmitting(false)` — odblokowanie UI działa ZAWSZE (sukces i błąd)
+4. Sprawdzenie `error.userCancelled` — nie pokazujemy alertu gdy user sam anulował
+
+```typescript
+try {
+  setIsSubmitting(true); // Włączenie blokady ekranu
+
+  // 1. Wywołanie zakupu w RevenueCat
+  const { purchaserInfo } = await Purchases.purchasePackage(pack);
+
+  // 2. Logika Firebase (jeśli tu się wywali, też wpadnie do catch)
+  if (purchaserInfo.entitlements.active['coachay_pro'] !== undefined) {
+    await handleFirebaseSubscriptionSuccess();
+  }
+} catch (error: any) {
+  // KLUCZOWE: Jeśli nastąpi błąd, ten kod go przechwyci
+  console.error("BŁĄD ZAKUPU:", error);
+
+  if (!error.userCancelled) {
+    Alert.alert("Błąd", "Nie udało się dokończyć transakcji. Spróbuj ponownie.");
+  }
+} finally {
+  // TO ODZYSKA PRZYCISKI: Wykonuje się ZAWSZE, niezależnie od sukcesu czy błędu
+  setIsSubmitting(false);
+}
+```
+
+**Prośba do APP:** zweryfikujcie czy Wasz kod ma wszystkie 4 elementy powyżej — szczególnie `finally` z odblokaniem UI i obsługę `userCancelled`.
