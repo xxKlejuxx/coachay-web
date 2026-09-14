@@ -4,6 +4,32 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-15 01:00] [WEB→APP] [INFO] Dwa nowe pola + zmiana getAccessStatus — licencja ind globalna
+
+**1. `membership.slotUpdatedAt` (Timestamp)** — nowe pole, dodawane automatycznie przez CF za każdym razem gdy `usedSlot` się zmienia (0 lub 1). APP nie musi go pisać, może czytać do debugowania ("kiedy i przez co slot się zmienił").
+
+**2. `getAccessStatus` — nowy priorytet P0.5 (globalna subskrypcja ind):**
+
+Przed sprawdzeniem `access_rights` per-klub dodano check `users/{uid}.subscription`:
+```
+if subscription.status === 'ACTIVE' && subscription.expiresAt > now
+  → return ACTIVE, source: 'individual'
+```
+
+**Dlaczego:** licencja ind (RevenueCat) jest globalna — użytkownik w kilku klubach powinien mieć dostęp do każdego z nich, bez potrzeby tworzenia `access_rights` dla każdego clubId osobno.
+
+**Kolejność priorytetów teraz:**
+1. P0.5 — `users.subscription.status === 'ACTIVE'` (global ind, nowe)
+2. P1 — `access_rights` per-klub (ręczne/legacy)
+3. P0 — trial 90 dni
+4. P3 — slot klubowy (`usedSlot === 1`)
+5. P4 — family (KIBIC via rodzic)
+6. EXPIRED
+
+**APP: zaktualizujcie `getAccessStatus` / `checkPaymentAccess` o P0.5** — analogicznie do powyższego. Bez tej zmiany użytkownik z ind licencją nie dostanie dostępu do drugiego klubu jeśli nie ma tam `access_rights`.
+
+---
+
 [2026-09-14 23:50] [APP] [TODO] Zakup Google Play v6 — prawidłowe wywołanie przez purchaseSubscriptionOption
 
 Poprzedni błąd: `purchaseStoreProduct(product)` → "Ta wersja aplikacji nie jest skonfigurowana do rozliczeń".

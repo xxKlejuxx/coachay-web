@@ -3412,7 +3412,7 @@ async function claimClubLicenseSlot(uid, clubId, membershipDoc) {
             if (used >= total) throw new Error('POOL_FULL');
             claimedExpiry = expiry;
             t.update(clubRef, { 'license.used': used + 1 });
-            t.update(membershipDoc.ref, { usedSlot: 1 });
+            t.update(membershipDoc.ref, { usedSlot: 1, slotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
         });
 
         const daysLeft = Math.ceil((claimedExpiry - new Date()) / 86400000);
@@ -3511,6 +3511,16 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
                 .where('status', 'in', ['DELETE', 'REMOVED'])
                 .limit(1).get();
             if (!removedSnap.empty) return _r('BLOCKED', 'removed', null);
+        }
+
+        // ── P0.5: Globalna subskrypcja ind (RevenueCat) ──────────────
+        // Sprawdzana przed access_rights — działa we WSZYSTKICH klubach użytkownika,
+        // niezależnie od tego czy access_rights istnieje dla tego konkretnego clubId.
+        const userDocForSub = await db.collection('users').doc(uid).get();
+        const _sub = userDocForSub.exists ? userDocForSub.data().subscription : null;
+        if (_sub?.status === 'ACTIVE' && _sub?.expiresAt) {
+            const _subExpiry = _sub.expiresAt.toDate ? _sub.expiresAt.toDate() : new Date(_sub.expiresAt);
+            if (_subExpiry > now) return _r('ACTIVE', 'individual', _subExpiry);
         }
 
         // ── P1: Własna licencja (access_rights) ───────────────────
