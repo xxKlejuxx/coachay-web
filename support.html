@@ -1059,12 +1059,19 @@ async function viewClubUsers(clubId) {
                     displayName: data.displayName || '',
                     status:      data.status || 'ACTIVE',
                     roles:       new Set(),
-                    usedSlot:    0
+                    usedSlot:    0,
+                    trialEndsAt: null
                 };
             }
             const r = data.role === 'TRENER' ? (data.trainerRole || 'TRENER_GLOWNY') : (data.role || '?');
             usersMap[data.userId].roles.add(r);
             if (data.usedSlot === 1) usersMap[data.userId].usedSlot = 1;
+            if (data.createdAt) {
+                const ca = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                const te = new Date(ca.getTime() + 90 * 86400000);
+                if (!usersMap[data.userId].trialEndsAt || te > usersMap[data.userId].trialEndsAt)
+                    usersMap[data.userId].trialEndsAt = te;
+            }
         });
 
         // Pobierz user docs + subscription + access_rights (family)
@@ -1104,7 +1111,8 @@ async function viewClubUsers(clubId) {
             roleLabel:   [...u.roles].map(r => roleNames[r] || r).join(' + '),
             sortKey:     Math.min(...[...u.roles].map(r => roleOrder[r] ?? 9)),
             lic:         licMap[u.userId] || null,
-            usedSlot:    u.usedSlot
+            usedSlot:    u.usedSlot,
+            trialEndsAt: u.trialEndsAt
         }));
         members.sort((a, b) => a.sortKey - b.sortKey || a.displayName.localeCompare(b.displayName, 'pl'));
 
@@ -1158,6 +1166,13 @@ async function viewClubUsers(clubId) {
                             badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${col};color:${textCol};border:1px solid ${border};white-space:nowrap">👨‍👩‍👧 family ${isActive?'✓':'✗'} · ${fmtD(m.lic.expiresAt)}</span>`);
                         }
                         if (m.usedSlot === 1) badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:rgba(59,130,246,0.12);color:#60A5FA;border:1px solid rgba(59,130,246,0.25);white-space:nowrap">🏢 slot klubowy</span>`);
+                        if (m.trialEndsAt) {
+                            const tActive = m.trialEndsAt > new Date();
+                            const tCol = tActive ? 'rgba(251,191,36,0.12)' : 'rgba(100,100,100,0.12)';
+                            const tBorder = tActive ? 'rgba(251,191,36,0.25)' : 'rgba(100,100,100,0.25)';
+                            const tText = tActive ? 'var(--warn)' : 'var(--szary)';
+                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${tCol};color:${tText};border:1px solid ${tBorder};white-space:nowrap">⏱ trial ${tActive?'✓':'✗'} · ${fmtD(m.trialEndsAt)}</span>`);
+                        }
                         const licBadge = badges.join(' ');
                         const canRemove = m.lic && ((m.lic.type === 'individual' && m.lic.status === 'ACTIVE') || (m.lic.type === 'family' && m.lic.expiresAt > new Date()));
                         const licBtn = canRemove
@@ -1178,7 +1193,7 @@ async function viewClubUsers(clubId) {
                                 ${m.status !== 'ACTIVE' ? `<span style="font-size:9px;font-weight:900;color:${statusColor[m.status] || 'var(--szary)'}">· ${m.status}</span>` : ''}
                                 ${licBadge}
                             </div>
-                            <div style="font-size:9px;color:var(--border2);font-family:var(--font-d);margin-top:1px;letter-spacing:0.3px">${shortId(m.userId)}</div>
+                            <div style="font-size:9px;color:var(--szary-j);font-family:var(--font-d);margin-top:1px;letter-spacing:0.3px">${shortId(m.userId)}</div>
                         </div>
                         ${licBtn}
                     </label>`;
