@@ -1884,7 +1884,7 @@ Wdrożono nowe pole `trialEndsAt` na dokumentach membership oraz nową scheduled
 **Composite index dodany do `firestore.indexes.json`:**
 - `memberships(status ASC, usedSlot ASC, trialEndsAt ASC)`
 
-**Prośba do APP:** przy tworzeniu membership zapisujcie `trialEndsAt = joinedAt + 90 dni @ 23:55 UTC` jeśli po Waszej stronie też tworzycie dokumenty membership. Pole jest używane przez CF do przydzielania slotów.
+**Info dla APP:** pole `trialEndsAt` jest dopisywane automatycznie przez CF `onMembershipCreated` — nie musicie go pisać sami. Pojawi się na każdym nowym membership niezależnie od tego kto go tworzy (web lub APP).
 
 [2026-09-15 10:00] [WEB] Lazy-claim v2 — `coachay-core.js`
 
