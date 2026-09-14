@@ -1580,8 +1580,7 @@ exports.checkExpiringLicenses = onSchedule('every day 07:00', async () => {
                             .get(),
                         db.collection('memberships')
                             .where('clubId', '==', clubId)
-                            .where('licenseSource', '==', 'CLUB')
-                            .where('licenseStatus', '==', 'ACTIVE')
+                            .where('usedSlot', '==', 1)
                             .get()
                     ]);
 
