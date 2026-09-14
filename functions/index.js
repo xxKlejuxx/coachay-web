@@ -1472,9 +1472,7 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
    Progi dni: {15,10,5,1,0} przed końcem opłaconego okresu/trialu, {0,7} w trakcie
    7-dniowego grace.
 ═══════════════════════════════════════════════════════ */
-const LICENSE_NOTIF_DAYS = [15, 10, 5, 1, 0];
-const LICENSE_GRACE_MARKS = [0, 7];
-const TRIAL_DAYS_MS = 90 * 86400 * 1000;
+const LICENSE_NOTIF_DAYS = [7, 4, 2, 1, 0];
 
 async function sendLicenseNotification(userId, title, body, teamId, daysLeft) {
     const now = new Date();
@@ -1504,143 +1502,97 @@ async function sendLicenseNotification(userId, title, body, teamId, daysLeft) {
     await db.collection('notifications').doc(notif.notificationId).set(notif);
 }
 
-// Zwraca treść powiadomienia dla danego daysLeft, albo null jeśli żaden próg nie pasuje.
-// tryb: 'active' (już płaci, "odnów") | 'trial' (jeszcze nie płaci, "kup pakiet")
-function licenseExpiryMessage(daysLeft, podmiot, tryb) {
-    const czasownik = tryb === 'trial' ? 'Kup pakiet' : 'Odnów';
-    const czasownikWarunek = tryb === 'trial' ? 'kupisz pakietu' : 'odnowisz';
-    if (daysLeft >= 0 && LICENSE_NOTIF_DAYS.includes(daysLeft)) {
-        return daysLeft === 0
-            ? `${podmiot} wygasła dziś. Straciłeś dostęp — ${czasownik.toLowerCase()}, żeby przywrócić.`
-            : `${podmiot} kończy się za ${daysLeft} ${daysLeft === 1 ? 'dzień' : 'dni'}. ${czasownik} w Płatnościach.`;
-    }
-    if (daysLeft < 0) {
-        const graceDay = Math.round(-daysLeft);
-        if (graceDay <= 7 && LICENSE_GRACE_MARKS.includes(graceDay)) {
-            return graceDay === 0
-                ? `${podmiot} wygasł(a). Masz 7 dni okresu karencji — jeśli nie ${czasownikWarunek}, stracisz dostęp.`
-                : `Dziś ostatni dzień okresu karencji dla: ${podmiot}. Jeśli nie ${czasownikWarunek}, stracisz dostęp.`;
-        }
-    }
-    return null;
-}
-
 exports.checkExpiringLicenses = onSchedule('every day 07:00', async () => {
     const now = new Date();
     console.log(`checkExpiringLicenses start: ${now.toISOString()}`);
-    let sentA = 0, sentB = 0, sentEtap2 = 0, sentEtap3 = 0;
-    // Globalny dedup: userId → już dostał powiadomienie w tej iteracji (niezależnie od etapu)
+    let sentE1 = 0, sentE2 = 0, sentE3 = 0;
     const notifiedUsers = new Set();
 
     try {
-        // ── System A (Etap 1): access_rights (P1 własna + P4 rodzinna) ──
-        // Zbieramy też arByClub: clubId → Set(uid) z aktywnym P1, żeby Etap 2 (trial)
-        // mógł pominąć userów już objętych własną licencją.
-        const arByClub = new Map();
+        // ── Etap 1: własna subskrypcja (ind / family) wygasa ──
+        // access_rights.valid_until jest aktualizowany przez RevenueCat po odnowieniu,
+        // więc kolejne przypomnienia same wypadną poza progi [7,4,2,1,0]
         const arSnap = await db.collection('access_rights').get();
         for (const doc of arSnap.docs) {
             const ar = doc.data();
-            if (!ar.uid || !ar.valid_until || !ar.club_id) continue;
+            if (!ar.uid || !ar.valid_until) continue;
             const validUntil = ar.valid_until.toDate ? ar.valid_until.toDate() : new Date(ar.valid_until);
-
-            if (validUntil > now) {
-                if (!arByClub.has(ar.club_id)) arByClub.set(ar.club_id, new Set());
-                arByClub.get(ar.club_id).add(ar.uid);
-            }
-
             const daysLeft = Math.ceil((validUntil - now) / 86400000);
-            const msg = licenseExpiryMessage(daysLeft, 'Twój pakiet Coachay', 'active');
-            if (msg && !notifiedUsers.has(ar.uid)) {
-                await sendLicenseNotification(ar.uid, 'Coachay — pakiet', msg, ar.club_id, daysLeft);
-                notifiedUsers.add(ar.uid);
-                sentA++;
-            }
+            if (!LICENSE_NOTIF_DAYS.includes(daysLeft)) continue;
+            if (notifiedUsers.has(ar.uid)) continue;
+            const msg = daysLeft === 0
+                ? 'Twój pakiet Coachay wygasł dziś. Stracisz dostęp — odnów w Płatnościach.'
+                : `Twój pakiet Coachay kończy się za ${daysLeft} ${daysLeft === 1 ? 'dzień' : 'dni'}. Odnów w Płatnościach.`;
+            await sendLicenseNotification(ar.uid, 'Coachay — pakiet', msg, ar.club_id || null, daysLeft);
+            notifiedUsers.add(ar.uid);
+            sentE1++;
         }
 
-        // ── System B + Etap 3 + Etap 2: wszystko co dotyczy poszczególnych klubów ──
+        // ── Etap 3 + Etap 2: per klub ──
         const clubsSnap = await db.collection('clubs').get();
         for (const clubDoc of clubsSnap.docs) {
             const cd = clubDoc.data();
             const clubId = clubDoc.id;
             const clubLabel = cd.clubName || cd.legalName || clubId;
             const lic = cd.license;
+            const licValidUntil = lic?.valid_until
+                ? (lic.valid_until.toDate ? lic.valid_until.toDate() : new Date(lic.valid_until))
+                : null;
 
-            // System B (admin + trenerzy) + Etap 3 (każdy z aktywnym slotem klubowym)
-            if (lic && lic.valid_until) {
-                const validUntil = lic.valid_until.toDate ? lic.valid_until.toDate() : new Date(lic.valid_until);
-                const daysLeft = Math.ceil((validUntil - now) / 86400000);
-                const msgKlub = licenseExpiryMessage(daysLeft, `Licencja klubowa "${clubLabel}"`, 'active');
-
-                if (msgKlub) {
-                    const [adminsSnap, trenerzySnap, slotUsersSnap] = await Promise.all([
-                        db.collection('trainers').where('clubId', '==', clubId).where('isClubAdmin', '==', true).get(),
-                        db.collection('memberships')
-                            .where('clubId', '==', clubId)
-                            .where('role', 'in', ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER'])
-                            .get(),
-                        db.collection('memberships')
-                            .where('clubId', '==', clubId)
-                            .where('usedSlot', '==', 1)
-                            .get()
-                    ]);
-
-                    // System B — admini pierwsi (priorytet), potem trenerzy
-                    const odbiorcyB = new Set();
-                    adminsSnap.docs.forEach(d => { if (d.data().userId) odbiorcyB.add(d.data().userId); });
-                    trenerzySnap.docs.forEach(d => {
-                        const m = d.data();
-                        const st = (m.status || '').toLowerCase();
-                        if (m.userId && (st === 'active' || st === 'grace')) odbiorcyB.add(m.userId);
-                    });
-                    for (const uid of odbiorcyB) {
-                        if (notifiedUsers.has(uid)) continue; // już dostał powiadomienie w tym przebiegu
-                        await sendLicenseNotification(uid, 'Coachay — licencja klubowa', msgKlub, null, daysLeft);
+            // ── Etap 3: licencja klubowa wygasa / wygasła ──
+            // Tylko TRENER_GLOWNY z isClubAdmin=true — NIE RODZIC, NIE zwykły TRENER
+            if (licValidUntil) {
+                const daysLeft = Math.ceil((licValidUntil - now) / 86400000);
+                if (LICENSE_NOTIF_DAYS.includes(daysLeft)) {
+                    const msgE3 = daysLeft === 0
+                        ? `Wasz dostęp klubowy już wygasł — kup nową licencję klubową lub pakiet ind.`
+                        : `Licencja Waszego klubu "${clubLabel}" wygasa za ${daysLeft} ${daysLeft === 1 ? 'dzień' : 'dni'}. Kup nową lub przedłuż.`;
+                    const adminsSnap = await db.collection('trainers')
+                        .where('clubId', '==', clubId)
+                        .where('isClubAdmin', '==', true)
+                        .get();
+                    for (const d of adminsSnap.docs) {
+                        const uid = d.data().userId;
+                        if (!uid || notifiedUsers.has(uid)) continue;
+                        await sendLicenseNotification(uid, 'Coachay — licencja klubowa', msgE3, clubId, daysLeft);
                         notifiedUsers.add(uid);
-                        sentB++;
-                    }
-
-                    // Etap 3 — osobiste ostrzeżenie dla każdego z aktywnym slotem klubowym
-                    const msgSlot = licenseExpiryMessage(daysLeft, `Twój dostęp do Coachay przez pulę klubu "${clubLabel}"`, 'active');
-                    if (msgSlot) {
-                        for (const d of slotUsersSnap.docs) {
-                            const m = d.data();
-                            if (!m.userId || notifiedUsers.has(m.userId)) continue;
-                            // Rodzic i kibic nie mogą odnowić licencji — pomijamy
-                            if (['RODZIC', 'KIBIC', 'ZAWODNIK'].includes(m.role)) continue;
-                            await sendLicenseNotification(m.userId, 'Coachay — dostęp przez pulę klubową', msgSlot, clubId, daysLeft);
-                            notifiedUsers.add(m.userId);
-                            sentEtap3++;
-                        }
+                        sentE3++;
                     }
                 }
             }
 
-            // Etap 2 — TRIAL liczony od clubs.createdAt, dzielony przez członków bez P1
-            const createdAt = cd.createdAt?.toDate ? cd.createdAt.toDate() : (cd.createdAt ? new Date(cd.createdAt) : null);
-            if (createdAt && !isNaN(createdAt)) {
-                const trialEnd = new Date(createdAt.getTime() + TRIAL_DAYS_MS);
-                const daysLeftTrial = Math.ceil((trialEnd - now) / 86400000);
-                const msgTrial = licenseExpiryMessage(daysLeftTrial, `Twój darmowy okres próbny w klubie "${clubLabel}"`, 'trial');
+            // ── Etap 2: trial usera wygasa, brak wolnego slotu klubowego ──
+            // Dotyczy TRENER* + RODZIC z usedSlot===0; pomijamy jeśli klub ma wolny slot
+            const clubHasFreeSlot = lic && (lic.total || 0) > 0
+                && (lic.used || 0) < (lic.total || 0)
+                && licValidUntil && licValidUntil > now;
+            if (clubHasFreeSlot) continue;
 
-                if (msgTrial) {
-                    const juzMaP1 = arByClub.get(clubId) || new Set();
-                    const membersSnap = await db.collection('memberships').where('clubId', '==', clubId).get();
-                    for (const d of membersSnap.docs) {
-                        const m = d.data();
-                        const st = (m.status || '').toLowerCase();
-                        if (!m.userId || ['ZAWODNIK', 'RODZIC', 'KIBIC'].includes(m.role)) continue;
-                        if (!(st === 'active' || st === 'grace')) continue;
-                        if (juzMaP1.has(m.userId)) continue;
-                        if (notifiedUsers.has(m.userId)) continue; // już dostał inny typ powiadomienia
-                        await sendLicenseNotification(m.userId, 'Coachay — okres próbny', msgTrial, clubId, daysLeftTrial);
-                        notifiedUsers.add(m.userId);
-                        sentEtap2++;
-                    }
-                }
+            const candidatesSnap = await db.collection('memberships')
+                .where('clubId', '==', clubId)
+                .where('usedSlot', '==', 0)
+                .get();
+            for (const d of candidatesSnap.docs) {
+                const m = d.data();
+                if (!m.userId || !m.trialEndsAt) continue;
+                const role = (m.role || '').toUpperCase();
+                if (!['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER', 'RODZIC'].includes(role)) continue;
+                const st = (m.status || '').toLowerCase();
+                if (st !== 'active' && st !== 'grace') continue;
+                const trialEnd = m.trialEndsAt.toDate ? m.trialEndsAt.toDate() : new Date(m.trialEndsAt);
+                const daysLeft = Math.ceil((trialEnd - now) / 86400000);
+                if (!LICENSE_NOTIF_DAYS.includes(daysLeft)) continue;
+                if (notifiedUsers.has(m.userId)) continue;
+                const msg = daysLeft === 0
+                    ? `Twój darmowy okres próbny w klubie "${clubLabel}" wygasł. Kup pakiet ind, żeby zachować dostęp.`
+                    : `Twój darmowy okres próbny w klubie "${clubLabel}" kończy się za ${daysLeft} ${daysLeft === 1 ? 'dzień' : 'dni'}. Kup pakiet ind.`;
+                await sendLicenseNotification(m.userId, 'Coachay — okres próbny', msg, clubId, daysLeft);
+                notifiedUsers.add(m.userId);
+                sentE2++;
             }
         }
 
-        console.log(`checkExpiringLicenses: A=${sentA}, B=${sentB}, Etap2(trial)=${sentEtap2}, Etap3(slot klubowy)=${sentEtap3}`);
+        console.log(`checkExpiringLicenses: E1(subskrypcja)=${sentE1}, E2(trial)=${sentE2}, E3(licKlub)=${sentE3}`);
     } catch (e) {
         console.error('checkExpiringLicenses error:', e);
     }
