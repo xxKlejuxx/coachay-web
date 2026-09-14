@@ -1066,11 +1066,9 @@ async function viewClubUsers(clubId) {
             const r = data.role === 'TRENER' ? (data.trainerRole || 'TRENER_GLOWNY') : (data.role || '?');
             usersMap[data.userId].roles.add(r);
             if (data.usedSlot === 1) usersMap[data.userId].usedSlot = 1;
-            const rawCa = data.createdAt;
-            const memberCa = rawCa?.toDate ? rawCa.toDate() : (rawCa ? new Date(rawCa) : null);
-            const trialStart = memberCa ?? clubCreatedAt;
-            if (trialStart) {
-                const te = new Date(trialStart.getTime() + 90 * 86400000);
+            const rawTe = data.trialEndsAt;
+            if (rawTe) {
+                const te = rawTe?.toDate ? rawTe.toDate() : new Date(rawTe);
                 if (!usersMap[data.userId].trialEndsAt || te > usersMap[data.userId].trialEndsAt)
                     usersMap[data.userId].trialEndsAt = te;
             }
@@ -1080,12 +1078,10 @@ async function viewClubUsers(clubId) {
         const userIds = Object.keys(usersMap);
         const licMap = {}; // userId → { type, expiresAt, arDocId }
         if (userIds.length > 0) {
-            const [userDocs, arSnap, clubDoc] = await Promise.all([
+            const [userDocs, arSnap] = await Promise.all([
                 Promise.all(userIds.map(uid => db.collection('users').doc(uid).get())),
-                db.collection('access_rights').where('uid', 'in', userIds.slice(0, 30)).get(),
-                db.collection('clubs').doc(clubId).get()
+                db.collection('access_rights').where('uid', 'in', userIds.slice(0, 30)).get()
             ]);
-            const clubCreatedAt = (() => { const ca = clubDoc.data()?.createdAt; return ca?.toDate ? ca.toDate() : (ca ? new Date(ca) : null); })();
             userDocs.forEach(doc => {
                 if (!doc.exists || !usersMap[doc.id]) return;
                 const d = doc.data();
@@ -1137,10 +1133,7 @@ async function viewClubUsers(clubId) {
         }
 
         // Skróć userId do czytelnej formy
-        const shortId = uid => {
-            const parts = uid.split('_');
-            return parts.length >= 2 ? parts.slice(-2).join('_') : uid.slice(-16);
-        };
+        const shortId = uid => uid;
 
         infoEl.innerHTML = `
             <div style="margin-top:6px;">
