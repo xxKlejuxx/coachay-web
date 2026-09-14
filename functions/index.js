@@ -629,7 +629,24 @@ async function assignUsedSlot(membershipRef, m) {
         const userDoc  = await db.collection('users').doc(userId).get();
         const userData = userDoc.exists ? userDoc.data() : {};
         if ((userData?.subscription?.status || '') === 'ACTIVE') {
-            return membershipRef.update({ usedSlot: 0, ..._slotTs });
+            if (m.usedSlot === 1) {
+                // Zwolnij slot i zdekrementuj licznik w transakcji
+                const clubRef = db.collection('clubs').doc(clubId);
+                await db.runTransaction(async t => {
+                    const mSnap = await t.get(membershipRef);
+                    if (mSnap.data()?.usedSlot !== 1) {
+                        t.update(membershipRef, { usedSlot: 0, ..._slotTs });
+                        return;
+                    }
+                    const cSnap = await t.get(clubRef);
+                    const used = cSnap.data()?.license?.used || 0;
+                    t.update(membershipRef, { usedSlot: 0, ..._slotTs });
+                    t.update(clubRef, { 'license.used': Math.max(0, used - 1) });
+                });
+            } else {
+                await membershipRef.update({ usedSlot: 0, ..._slotTs });
+            }
+            return;
         }
 
         // Dedup: userId już ma usedSlot=1 w tym klubie (inny membership tej samej osoby)
