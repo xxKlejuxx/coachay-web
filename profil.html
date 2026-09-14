@@ -245,7 +245,7 @@
             <div class="pr-card" id="pr-card-sub">
                 <div class="pr-card-title" data-i18n="profil.subscriptionTitle">Subskrypcja</div>
                 <div class="pr-row" style="border-bottom:none;">
-                    <span class="pr-row-label" id="pr-sub-date" style="color:var(--szary);font-size:12px;font-weight:600;">—</span>
+                    <span class="pr-row-label" id="pr-sub-date" style="color:var(--szary);font-size:12px;font-weight:600;white-space:nowrap;">—</span>
                     <span id="pr-sub-chip" class="sub-chip trial">Ładowanie</span>
                 </div>
             </div>
@@ -676,10 +676,13 @@ async function renderSubscription() {
     };
     const fmtDate = d => {
         if (!d) return '';
-        const loc = getLang() === 'en' ? 'en-GB' : 'pl-PL';
-        const datePart = d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Warsaw' });
-        const timePart = d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Warsaw' });
-        return `${datePart} ${timePart}`;
+        const w = new Date(d.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+        const yyyy = w.getFullYear();
+        const mm   = String(w.getMonth() + 1).padStart(2, '0');
+        const dd   = String(w.getDate()).padStart(2, '0');
+        const hh   = String(w.getHours()).padStart(2, '0');
+        const mi   = String(w.getMinutes()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
     };
     const sourceLabel = SOURCE_MAP[access.source] || '';
     dateEl.textContent = [sourceLabel, fmtDate(access.expiryDate)].filter(Boolean).join(' ');
