@@ -1899,6 +1899,53 @@ Przepisano `claimClubLicenseSlot()` i P3 w `getAccessStatus()`:
 
 ---
 
+[2026-09-15 10:30] [WEB→APP] [WAŻNE] Kompletny opis logiki slotów klubowych — co APP musi wiedzieć
+
+### Czy user ma dostęp z licencji klubowej?
+```
+membership.usedSlot === 1
+AND clubs/{clubId}.license.valid_until > now
+```
+To jedyna poprawna weryfikacja. Nie używać `licenseSource/licenseStatus/poolClaimedAt`.
+
+### Kiedy user jest uprawniony do slotu?
+```
+membership.trialEndsAt <= now        // 90-dniowy trial wygasł
+AND membership.usedSlot === 0        // nie ma jeszcze slotu
+AND membership.status IN [ACTIVE, grace]
+AND rola IN [TRENER_GLOWNY, TRENER_POMOCNICZY, TRENER, OWNER, RODZIC]
+AND (rola !== RODZIC LUB scope !== 'trainers_only')
+AND użytkownik NIE ma aktywnej subskrypcji indywidualnej (users.subscription.status !== 'ACTIVE')
+```
+
+### Jak przydzielić slot (jeśli APP robi to samodzielnie)?
+```
+1. Sprawdź membership.usedSlot === 1 → jeśli tak, skip (już ma)
+2. Sprawdź eligibility (warunki powyżej)
+3. Sprawdź maxOneParentPerChild (jeśli clubs.license.maxOneParentPerChild === true):
+   → query memberships WHERE clubId=X AND playerId=Y AND usedSlot=1 LIMIT 1
+   → jeśli wynik niepusty → RODZIC nie dostaje slotu
+4. Transakcja:
+   → odczytaj clubs/{clubId}.license.used i total
+   → jeśli used >= total → POOL_FULL
+   → update membership: { usedSlot: 1 }
+   → update club: { 'license.used': used + 1 }
+```
+
+### Kiedy zwolnić slot?
+- User kupuje własną subskrypcję (RevenueCat INITIAL_PURCHASE/RENEWAL) → `usedSlot = 0`, `license.used--`
+- User jest blokowany/usuwany z klubu → `usedSlot = 0`, `license.used--`
+
+### Priorytety przydzielania (gdy wiele osób czeka na ograniczoną pulę)
+```
+1. TRENER_GLOWNY (po trialEndsAt ASC)
+2. TRENER / TRENER_POMOCNICZY / OWNER (po trialEndsAt ASC)
+3. RODZIC (po trialEndsAt ASC) — tylko gdy scope !== 'trainers_only'
+```
+Ten priorytet jest egzekwowany przez CF (`assignExpiredTrialSlotsV2`) uruchamiany o 3:00 AM Warsaw.
+
+---
+
 [2026-09-14 22:00] [WEB→APP] [WERYFIKACJA] Przepływ zakupu RevenueCat — obsługa błędów i blokada UI
 
 Czy Wasza implementacja zakupu wygląda tak (lub podobnie)? Kluczowe elementy to:
