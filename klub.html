@@ -339,7 +339,8 @@ window.addEventListener('DOMContentLoaded', () => {
         if (_loaded) return;
         if (user) {
             _loaded = true;
-            if (!isDemoMode() && user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+            const _demoEmails = ['klejux+demo_trener@gmail.com', 'klejux+demo_parents@gmail.com'];
+            if (!isDemoMode() && !_demoEmails.includes(user.email) && user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
                 await auth.signOut(); window.location.href = 'index.html'; return;
             }
             await initKlub();
