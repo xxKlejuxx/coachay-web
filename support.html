@@ -1065,10 +1065,14 @@ async function viewClubUsers(clubId) {
             usersMap[data.userId].roles.add(r);
         });
 
-        // Pobierz user docs żeby uzyskać prawdziwe imiona (memberships.displayName bywa puste)
+        // Pobierz user docs + subscription + access_rights (family)
         const userIds = Object.keys(usersMap);
+        const licMap = {}; // userId → { type, expiresAt, arDocId }
         if (userIds.length > 0) {
-            const userDocs = await Promise.all(userIds.map(uid => db.collection('users').doc(uid).get()));
+            const [userDocs, arSnap] = await Promise.all([
+                Promise.all(userIds.map(uid => db.collection('users').doc(uid).get())),
+                db.collection('access_rights').where('uid', 'in', userIds.slice(0, 30)).get()
+            ]);
             userDocs.forEach(doc => {
                 if (!doc.exists || !usersMap[doc.id]) return;
                 const d = doc.data();
@@ -1077,6 +1081,17 @@ async function viewClubUsers(clubId) {
                           || usersMap[doc.id].displayName
                           || '—';
                 usersMap[doc.id].displayName = name;
+                const sub = d.subscription;
+                if (sub?.status === 'ACTIVE' && sub?.expiresAt) {
+                    const exp = sub.expiresAt.toDate ? sub.expiresAt.toDate() : new Date(sub.expiresAt);
+                    if (exp > new Date()) licMap[doc.id] = { type: 'individual', expiresAt: exp, productId: sub.productId || '' };
+                }
+            });
+            arSnap.docs.forEach(d => {
+                const { uid, source, valid_until } = d.data();
+                if (source !== 'family_license' || !uid) return;
+                const exp = valid_until?.toDate ? valid_until.toDate() : (valid_until ? new Date(valid_until) : null);
+                if (exp && exp > new Date()) licMap[uid] = { type: 'family', expiresAt: exp, arDocId: d.id };
             });
         }
 
@@ -1085,7 +1100,8 @@ async function viewClubUsers(clubId) {
             displayName: u.displayName || '—',
             status:      u.status,
             roleLabel:   [...u.roles].map(r => roleNames[r] || r).join(' + '),
-            sortKey:     Math.min(...[...u.roles].map(r => roleOrder[r] ?? 9))
+            sortKey:     Math.min(...[...u.roles].map(r => roleOrder[r] ?? 9)),
+            lic:         licMap[u.userId] || null
         }));
         members.sort((a, b) => a.sortKey - b.sortKey || a.displayName.localeCompare(b.displayName, 'pl'));
 
@@ -1120,21 +1136,36 @@ async function viewClubUsers(clubId) {
                         Zaloguj jako →
                     </button>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;scrollbar-width:none;">
-                    ${members.map(m => `
+                <div style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;scrollbar-width:none;">
+                    ${members.map(m => {
+                        const licBadge = m.lic
+                            ? (m.lic.type === 'individual'
+                                ? `<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:rgba(74,222,128,0.12);color:var(--sukces);border:1px solid rgba(74,222,128,0.25);white-space:nowrap">🔑 ind · ${m.lic.expiresAt.toISOString().slice(0,10)}</span>`
+                                : `<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:rgba(168,85,247,0.12);color:#C084FC;border:1px solid rgba(168,85,247,0.25);white-space:nowrap">👨‍👩‍👧 family · ${m.lic.expiresAt.toISOString().slice(0,10)}</span>`)
+                            : '';
+                        const licBtn = m.lic
+                            ? `<button onclick="event.stopPropagation();removeLicense('${m.userId}','${m.lic.type}','${m.lic.arDocId||''}','${clubId}',this)"
+                                style="flex-shrink:0;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:var(--blad);font-size:9px;font-weight:900;cursor:pointer;white-space:nowrap">
+                                Usuń licencję
+                               </button>`
+                            : '';
+                        return `
                     <label style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--tlo-karta);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color 0.15s"
                            onmousedown="selectMember(this,'${m.userId}','${clubId}')">
                         <input type="radio" name="imp-radio-${clubId}" value="${m.userId}"
                                style="accent-color:var(--akcent);width:15px;height:15px;flex-shrink:0;pointer-events:none">
                         <div style="flex:1;min-width:0;">
                             <div style="font-size:12px;font-weight:800;color:var(--bialy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.displayName}</div>
-                            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap;">
                                 <span style="font-size:10px;color:var(--szary);font-weight:600">${m.roleLabel}</span>
                                 ${m.status !== 'ACTIVE' ? `<span style="font-size:9px;font-weight:900;color:${statusColor[m.status] || 'var(--szary)'}">· ${m.status}</span>` : ''}
+                                ${licBadge}
                             </div>
                             <div style="font-size:9px;color:var(--border2);font-family:var(--font-d);margin-top:1px;letter-spacing:0.3px">${shortId(m.userId)}</div>
                         </div>
-                    </label>`).join('')}
+                        ${licBtn}
+                    </label>`;
+                    }).join('')}
                 </div>
             </div>`;
     } catch (e) {
@@ -1156,6 +1187,66 @@ function selectMember(label, userId, clubId) {
         infoEl._selectedUserId = userId;
     }
     label.style.borderColor = 'var(--akcent)';
+}
+
+async function removeLicense(userId, type, arDocId, clubId, btn) {
+    const label = btn?.closest('label');
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+        if (type === 'individual') {
+            await db.collection('users').doc(userId).update({
+                'subscription.status':    'EXPIRED',
+                'subscription.expiresAt': firebase.firestore.FieldValue.serverTimestamp(),
+                'subscription.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+            });
+            await assignSlotAfterRemoval(userId);
+        } else if (type === 'family' && arDocId) {
+            await db.collection('access_rights').doc(arDocId).delete();
+        }
+        btn.textContent = '✓ Usunięto';
+        btn.style.color = 'var(--sukces)';
+        btn.style.borderColor = 'rgba(74,222,128,0.35)';
+        if (label) {
+            label.querySelectorAll('[style*="ind ·"],[style*="family ·"]').forEach(el => el.remove());
+        }
+    } catch (e) {
+        console.error('removeLicense:', e);
+        btn.disabled = false;
+        btn.textContent = 'Błąd';
+        btn.style.color = 'var(--blad)';
+    }
+}
+
+async function assignSlotAfterRemoval(userId) {
+    const memsSnap = await db.collection('memberships').where('userId', '==', userId).get();
+    const BLOCKED = new Set(['BLOCKED','REMOVED','INACTIVE','DELETE']);
+    for (const memDoc of memsSnap.docs) {
+        const m = memDoc.data();
+        if (BLOCKED.has((m.status || '').toUpperCase())) continue;
+        if (m.usedSlot === 1) continue;
+        const clubId = m.clubId;
+        if (!clubId) continue;
+        const clubRef = db.collection('clubs').doc(clubId);
+        try {
+            await db.runTransaction(async t => {
+                const cSnap = await t.get(clubRef);
+                const mSnap = await t.get(memDoc.ref);
+                if (!cSnap.exists || mSnap.data()?.usedSlot === 1) return;
+                const lic = cSnap.data()?.license || {};
+                const rawExp = lic.valid_until ?? lic.expiresAt;
+                const exp = rawExp?.toDate ? rawExp.toDate() : (rawExp ? new Date(rawExp) : null);
+                if (!exp || exp <= new Date()) return;
+                const used  = lic.used  || 0;
+                const total = lic.total || 0;
+                if (used >= total) return;
+                t.update(memDoc.ref, { usedSlot: 1, usedSlotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                t.update(clubRef, { 'license.used': used + 1 });
+            });
+        } catch (e) {
+            console.warn('assignSlotAfterRemoval:', userId, clubId, e.message);
+        }
+    }
 }
 
 async function impersonateSelected(clubId) {
