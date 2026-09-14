@@ -4,48 +4,62 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
-[2026-09-15 02:30] [WEB→APP] [INFO] access_rights — gdzie i kiedy tworzyć (architektura)
+[2026-09-15 02:30] [WEB+APP] [INFO] access_rights — pełna mapa: gdzie czytane, gdzie pisane, kiedy tworzyć
 
-## Gdzie żyją access_rights i kiedy je tworzyć
-
-Kolekcja `access_rights` to **ścieżka P1** w `getAccessStatus` — licencja przypisana ręcznie do konkretnego użytkownika w konkretnym klubie. Dokument ID: `{uid}_{clubId}`.
-
-### Kiedy access_rights JEST tworzone
-
-| Kto pisze | Kiedy | Source |
-|---|---|---|
-| APP | zakup planu rodzinnego przez rodzica | `family_license` |
-| WEB (support.html) | admin przydziela licencję indywidualną | `admin_personal` |
-| APP (legacy) | zakup planu indywidualnego w danym klubie | `individual` |
-
-### Kiedy access_rights NIE JEST potrzebne
-
-**Licencja indywidualna RevenueCat (nowa ścieżka — P0.5):**
-- Webhook RevenueCat → CF `revenuecatWebhook` → `applyLicenseUpdate` pisze do `users/{uid}.subscription`
-- `getAccessStatus` sprawdza P0.5 (`users.subscription.status === 'ACTIVE'`) **globalnie, przed** P1
-- Użytkownik z aktywną subskrypcją ma dostęp do **wszystkich** swoich klubów bez tworzenia `access_rights` dla każdego clubId osobno
-- **APP: po wdrożeniu P0.5 nie tworzyć access_rights przy zakupie indywidualnym** — wystarczy że RevenueCat webhook zapisze `users.subscription`
-
-**Licencja klubowa B2B (P3):**
-- Zarządzana przez `memberships.usedSlot` — CF przydziela automatycznie
-- Brak access_rights
-
-### Struktura dokumentu access_rights
+## Struktura dokumentu
 
 ```
 access_rights/{uid}_{clubId}
   arId:        "{uid}_{clubId}"   ← własne ID jako pole (TODO APP — patrz wpis 2026-09-13 04:00)
   uid:         "..."
   club_id:     "..."
-  valid_until: Timestamp          ← data wygaśnięcia
-  source:      "individual" | "family_license" | "admin_personal" | "club_license"
+  valid_until: Timestamp
+  source:      "individual" | "family_license"
+  slots_total: number   ← tylko family_license
+  slots_used:  number   ← tylko family_license
 ```
 
-### Czy tworzyć nowy dokument przy każdym zakupie?
+## Gdzie access_rights jest CZYTANE
 
-**Nie** — jeśli dokument już istnieje: tylko zaktualizować `valid_until` i `source`. Przy odnowieniu subskrypcji indywidualnej przez RevenueCat webhook robi to CF automatycznie (aktualizuje `users.subscription.expiresAt`). APP nie musi dotykaćaccess_rights przy odnowieniu.
+**`coachay-core.js` — `getAccessStatus()` P1 (linia ~3540)**
+`access_rights` gdzie `uid == uid AND club_id == clubId` (limit 1). Jeśli `valid_until > now` → ACTIVE.
+P0.5 (`users.subscription`) jest sprawdzane PRZED P1 — jeśli user ma aktywną subskrypcję RevenueCat, P1 nie jest wykonywane.
 
-**Tak** — przy pierwszym zakupie planu rodzinnego (access_rights dla KIBIC-a: `uid=kibic_uid, club_id=..., source='family_license'`).
+**`coachay-core.js` — `getFamilySlots()` P4 (linia ~3327)**
+Czyta `access_rights` rodzica (`uid=parentUid, club_id=clubId`) żeby sprawdzić `slots_total` i `slots_used` dla KIBIC-a.
+
+**`coachay-core.js` — `releaseFamilySlot()` (linia ~3348)**
+Czyta `access_rights` rodzica żeby dekrementować `slots_used` przy zwolnieniu slotu rodzinnego.
+
+**`functions/index.js` — `checkExpiringLicenses` (linia ~1497, cron codziennie)**
+Pobiera całą kolekcję `access_rights`, wysyła push do userów których `valid_until` wygasa za 15/10/5/1/0 dni. Dotyczy source `individual` (legacy) i `family_license`.
+
+**`ustawienia.html` (linia ~727)**
+Czyta `access_rights` zalogowanego usera żeby wyświetlić datę "Ważna do" w sekcji licencji.
+
+**`support.html` — `loadClubs()` (linia ~534)**
+Czyta `access_rights` gdzie `valid_until > now` jako fallback dla `licenseExpiry` na karcie klubu gdy `clubs.license` nie ma daty.
+
+## Gdzie access_rights jest PISANE
+
+**`blocked.html` — `devBuyIndividual()` / `devBuyFamily()` (linia ~408, ~419) — TYLKO DEV**
+Przyciski debugowe tworzą `access_rights` bezpośrednio z przeglądarki.
+- `devBuyIndividual`: doc `ar_{uid}_{clubId}`, source `individual`
+- `devBuyFamily`: doc `ar_{uid}_{clubId}`, source `family_license`, slots_total=6
+
+**APP — zakup planu rodzinnego**
+Jedyne produkcyjne miejsce tworzenia `access_rights`. Source: `family_license`.
+
+## Kiedy access_rights NIE JEST potrzebne
+
+**Licencja indywidualna RevenueCat (P0.5):**
+Webhook → CF `revenuecatWebhook` → `applyLicenseUpdate` → `users/{uid}.subscription`.
+`getAccessStatus` czyta to pole globalnie przed P1 — jeden zakup = dostęp do wszystkich klubów.
+**APP: po wdrożeniu P0.5 nie tworzyć access_rights przy zakupie indywidualnym.**
+
+**Licencja klubowa B2B (P3):** zarządzana przez `memberships.usedSlot` (CF) — `access_rights` nie jest potrzebne.
+
+**source `admin_personal`:** nigdy nie było tworzone produkcyjnie. Kod sprawdzający ten source w `updateClubLicenseStatuses` usunięty 2026-09-15. Nie używać.
 
 ---
 
