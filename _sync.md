@@ -4,6 +4,132 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-15 02:30] [WEB→APP] [INFO] access_rights — gdzie i kiedy tworzyć (architektura)
+
+## Gdzie żyją access_rights i kiedy je tworzyć
+
+Kolekcja `access_rights` to **ścieżka P1** w `getAccessStatus` — licencja przypisana ręcznie do konkretnego użytkownika w konkretnym klubie. Dokument ID: `{uid}_{clubId}`.
+
+### Kiedy access_rights JEST tworzone
+
+| Kto pisze | Kiedy | Source |
+|---|---|---|
+| APP | zakup planu rodzinnego przez rodzica | `family_license` |
+| WEB (support.html) | admin przydziela licencję indywidualną | `admin_personal` |
+| APP (legacy) | zakup planu indywidualnego w danym klubie | `individual` |
+
+### Kiedy access_rights NIE JEST potrzebne
+
+**Licencja indywidualna RevenueCat (nowa ścieżka — P0.5):**
+- Webhook RevenueCat → CF `revenuecatWebhook` → `applyLicenseUpdate` pisze do `users/{uid}.subscription`
+- `getAccessStatus` sprawdza P0.5 (`users.subscription.status === 'ACTIVE'`) **globalnie, przed** P1
+- Użytkownik z aktywną subskrypcją ma dostęp do **wszystkich** swoich klubów bez tworzenia `access_rights` dla każdego clubId osobno
+- **APP: po wdrożeniu P0.5 nie tworzyć access_rights przy zakupie indywidualnym** — wystarczy że RevenueCat webhook zapisze `users.subscription`
+
+**Licencja klubowa B2B (P3):**
+- Zarządzana przez `memberships.usedSlot` — CF przydziela automatycznie
+- Brak access_rights
+
+### Struktura dokumentu access_rights
+
+```
+access_rights/{uid}_{clubId}
+  arId:        "{uid}_{clubId}"   ← własne ID jako pole (TODO APP — patrz wpis 2026-09-13 04:00)
+  uid:         "..."
+  club_id:     "..."
+  valid_until: Timestamp          ← data wygaśnięcia
+  source:      "individual" | "family_license" | "admin_personal" | "club_license"
+```
+
+### Czy tworzyć nowy dokument przy każdym zakupie?
+
+**Nie** — jeśli dokument już istnieje: tylko zaktualizować `valid_until` i `source`. Przy odnowieniu subskrypcji indywidualnej przez RevenueCat webhook robi to CF automatycznie (aktualizuje `users.subscription.expiresAt`). APP nie musi dotykaćaccess_rights przy odnowieniu.
+
+**Tak** — przy pierwszym zakupie planu rodzinnego (access_rights dla KIBIC-a: `uid=kibic_uid, club_id=..., source='family_license'`).
+
+---
+
+[2026-09-15 02:00] [WEB] [DONE] Zmiany UI profil.html — format daty, jedna linia, nowrap
+
+- `fmtDate` → format `YYYY-MM-DD HH:MM` (czas Warsaw), bez locale-zależnego formatowania
+- `#pr-sub-date` → dodano `white-space:nowrap` — cały tekst w jednej linii
+- Wynik: `Plan indywidualny 2026-09-15 23:55` — wszystko w jednym wierszu
+
+---
+
+[2026-09-15 01:30] [WEB] [DONE] Bump LOCALE_V → 20260915a + nowe tłumaczenia
+
+- `locales/pl.json` + `en.json`: `subSourceIndividual` → "Plan indywidualny" / "Individual plan", `subSourceFamilyLicense` → "Plan rodzinny" / "Family plan", `subSourceAdminPersonal` → "Plan indywidualny" / "Individual plan"
+- `_i18n.js` LOCALE_V → `20260915a`
+- Wszystkie 15 plików HTML: `_i18n.js?v=` → `20260915a`
+
+---
+
+[2026-09-15 01:00] [WEB] [DONE] Demo email exception — brak pętli redirect na 5 ekranach
+
+Ekrany bez wyjątku dla kont demo (klejux+demo_trener, klejux+demo_parents) przekierowywały niezalogowanych na `start.html`, co powodowało pętlę `index ↔ start`. Dodano wyjątek na:
+- `profil.html`, `druzyna.html`, `klub.html`, `support.html`, `trenerzy.html`
+
+```javascript
+const _demoEmails = ['klejux+demo_trener@gmail.com', 'klejux+demo_parents@gmail.com'];
+if (!isDemoMode() && !_demoEmails.includes(user.email) && user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+    // → auth.signOut() + redirect
+}
+```
+
+---
+
+[2026-09-15 00:30] [WEB] [DONE] assignUsedSlot — fix dekrementowania license.used przy ACTIVE subscription
+
+**Bug:** gdy user z `subscription.status === 'ACTIVE'` (własna licencja ind) zwalniał slot klubowy, `assignUsedSlot` zerował `usedSlot` ale **nie dekrementował** `clubs.license.used` → licznik rósł bez końca.
+
+**Fix:** transakcja Firestore w `assignUsedSlot` — re-odczyt `usedSlot` + dekrement `license.used` atomowo:
+```javascript
+if (userData?.subscription?.status === 'ACTIVE') {
+    if (m.usedSlot === 1) {
+        await db.runTransaction(async t => {
+            const mSnap = await t.get(membershipRef);
+            if (mSnap.data()?.usedSlot !== 1) { t.update(membershipRef, { usedSlot: 0 }); return; }
+            const used = (await t.get(clubRef)).data()?.license?.used || 0;
+            t.update(membershipRef, { usedSlot: 0, ...slotTs });
+            t.update(clubRef, { 'license.used': Math.max(0, used - 1) });
+        });
+    }
+}
+```
+
+**Ręczna naprawa danych:** `clubs/{clubId}.license.used` ustawić ręcznie na `1` w Firestore Console (aktualne jest `2`, powinno być `1` bo tylko 1 membership ma `usedSlot=1`).
+
+---
+
+[2026-09-14 23:00] [WEB→APP] [DONE] RevenueCat webhook skonfigurowany — users.subscription zapisywane
+
+- Secret `REVENUECAT_WEBHOOK_SECRET` w Google Cloud Secret Manager był `PLACEHOLDER_REPLACE_ME` → zaktualizowany
+- Webhook URL skonfigurowany w dashboardzie RevenueCat → test event zwrócił 200
+- `INITIAL_PURCHASE` / `RENEWAL` → CF `revenuecatWebhook` → `applyLicenseUpdate` → pisze `users/{uid}.subscription`:
+  - `status: 'ACTIVE'`
+  - `expiresAt: Timestamp` (normalizowany do **23:55 UTC** w dniu wygaśnięcia, niezależnie od godziny w payload RevenueCat)
+  - `productId`, `store`, `updatedAt`
+- `EXPIRATION` → status `'EXPIRED'`
+
+**APP:** `users.subscription` jest teraz zapisywane automatycznie przez webhook. APP może czytać to pole do wyświetlenia statusu subskrypcji.
+
+---
+
+[2026-09-14 22:30] [WEB] [DONE] Zmiana nazw pól + normalizacja expiresAt
+
+- `membership.slotUpdatedAt` → **`usedSlotUpdatedAt`** (9 zmian w `functions/index.js`, 1 w `coachay-core.js`) — łatwiejsza identyfikacja w Firestore Console
+- `users.subscription.expiresAt` normalizowany do `23:55 UTC` danego dnia (CF `applyLicenseUpdate`, linia ~2110):
+  ```javascript
+  const _expDate = new Date(expiration_at_ms);
+  _expDate.setUTCHours(23, 55, 0, 0);
+  updates['subscription.expiresAt'] = _expDate;
+  ```
+
+**APP:** jeśli APP czyta `usedSlotUpdatedAt` — stare pole `slotUpdatedAt` już nie istnieje.
+
+---
+
 [2026-09-15 01:00] [WEB→APP] [INFO] Dwa nowe pola + zmiana getAccessStatus — licencja ind globalna
 
 **1. `membership.slotUpdatedAt` (Timestamp)** — nowe pole, dodawane automatycznie przez CF za każdym razem gdy `usedSlot` się zmienia (0 lub 1). APP nie musi go pisać, może czytać do debugowania ("kiedy i przez co slot się zmienił").
