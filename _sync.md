@@ -1859,6 +1859,35 @@ Jeśli wynik niepusty → ten rodzic nie dostaje slotu.
 
 ---
 
+[2026-09-15 09:00] [CF] Nowa architektura przydzielania slotów klubowych
+
+Wdrożono nowe pole `trialEndsAt` na dokumentach membership oraz nową scheduled function `assignExpiredTrialSlotsV2`.
+
+**Pole `trialEndsAt` na membership:**
+- Dodane do `onMembershipCreated` — pisane dla WSZYSTKICH ról
+- Wartość: `(joinedAt ?? createdAt) + 90 dni @ 23:55:00 UTC`
+- Migracja istniejących membership wykonana skryptem (`scripts/migrate_trialEndsAt.js`)
+- Format w Firestore Console (UTC+2): np. "June 30 at 1:55 AM" = 23:55 UTC poprzedniego dnia ✓
+
+**`assignExpiredTrialSlotsV2` (nowa scheduled function):**
+- Harmonogram: `0 2 * * *` Europe/Warsaw (= 00:00 UTC latem, 01:00 UTC zimą)
+- Zastępuje drogi skan wszystkich klubów jednym query: `status IN [ACTIVE,grace] + usedSlot==0 + trialEndsAt<=now`
+- Zachowany priorytet ról: TRENER_GLOWNY → TRENER/TRENER_POMOCNICZY → RODZIC
+- Obsługuje scope (trainers_only), maxOneParentPerChild, dedup po userId
+- Stara funkcja `assignExpiredTrialSlots` pozostaje aktywna jako backup
+
+**`assignUsedSlot` (helper, zaktualizowany):**
+- Preferuje `m.trialEndsAt` zamiast czytać `users.clubs_trial[clubId]`
+- Fallback na `clubs_trial` dla starych membership bez pola `trialEndsAt`
+- Używany przez: `onMembershipCreated`, `revenuecatWebhook` (EXPIRATION), `onClubLicenseUpdated`
+
+**Composite index dodany do `firestore.indexes.json`:**
+- `memberships(status ASC, usedSlot ASC, trialEndsAt ASC)`
+
+**Prośba do APP:** przy tworzeniu membership zapisujcie `trialEndsAt = joinedAt + 90 dni @ 23:55 UTC` jeśli po Waszej stronie też tworzycie dokumenty membership. Pole jest używane przez CF do przydzielania slotów.
+
+---
+
 [2026-09-14 22:00] [WEB→APP] [WERYFIKACJA] Przepływ zakupu RevenueCat — obsługa błędów i blokada UI
 
 Czy Wasza implementacja zakupu wygląda tak (lub podobnie)? Kluczowe elementy to:
