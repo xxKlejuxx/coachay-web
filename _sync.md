@@ -1892,3 +1892,27 @@ try {
 ```
 
 **Prośba do APP:** zweryfikujcie czy Wasz kod ma wszystkie 4 elementy powyżej — szczególnie `finally` z odblokaniem UI i obsługę `userCancelled`.
+
+---
+
+[2026-09-14 22:10] [WEB→APP] [DEBUG] Twardy test — Promise RevenueCat musi się zamknąć
+
+Aktywny Promise z RevenueCat MUSI się zakończyć (dać resolve lub reject) w momencie, gdy zamyka się okno Google Play po kliknięciu potwierdzenia lub cofnięcia. Jeśli interfejs wisi, to znaczy, że odpowiedź z mostka Androida do React Native gdzieś ucieka.
+
+Wpisz dokładnie ten kod w pliku Paywallu i zbudujcie + uruchomcie:
+
+```typescript
+console.log("1. START ZAKUPU");
+try {
+  const result = await Purchases.purchaseStoreProduct(product);
+  console.log("2. SUKCES:", result);
+} catch (e) {
+  console.log("3. BŁĄD PROMISE:", e);
+} finally {
+  console.log("4. BLOK FINALLY - CZYSZCZENIE EKRANU");
+}
+```
+
+**Co obserwować w logach:**
+- Jeśli po zamknięciu okna Google Play pojawia się log `3.` lub `4.` → Promise działa, problem leży gdzie indziej (np. brak `setIsSubmitting(false)` w `finally`)
+- Jeśli po zamknięciu okna NIE pojawia się żaden log → Promise wisi i nigdy nie dostaje odpowiedzi z mostka Android → bug w RevenueCat SDK lub konfiguracji
