@@ -1886,6 +1886,17 @@ Wdrożono nowe pole `trialEndsAt` na dokumentach membership oraz nową scheduled
 
 **Prośba do APP:** przy tworzeniu membership zapisujcie `trialEndsAt = joinedAt + 90 dni @ 23:55 UTC` jeśli po Waszej stronie też tworzycie dokumenty membership. Pole jest używane przez CF do przydzielania slotów.
 
+[2026-09-15 10:00] [WEB] Lazy-claim v2 — `coachay-core.js`
+
+Przepisano `claimClubLicenseSlot()` i P3 w `getAccessStatus()`:
+- **Stare pola** (`licenseSource`, `licenseStatus`, `poolClaimedAt`) przestały być czytane i zapisywane — zostają w bazie jako legacy, do usunięcia skryptem po stabilizacji
+- **Nowe pole**: `usedSlot=1` jest jedynym źródłem prawdy o slocie klubowym
+- P3 sprawdza `mData.usedSlot === 1` → ACTIVE; jeśli 0 → próbuje lazy-claim jako fallback
+- `claimClubLicenseSlot()` przed transakcją sprawdza `usedSlot`, rolę, scope, maxOneParentPerChild
+- Fallback działa tylko gdy CF (`assignExpiredTrialSlotsV2`) i webhook (`revenuecatWebhook`) nie przydzieliły slotu
+
+**Prośba do APP:** jeśli po Waszej stronie sprawdzacie `licenseSource`/`licenseStatus`/`poolClaimedAt` — przejdźcie na `usedSlot === 1`. Te stare pola będą wkrótce usunięte z bazy.
+
 ---
 
 [2026-09-14 22:00] [WEB→APP] [WERYFIKACJA] Przepływ zakupu RevenueCat — obsługa błędów i blokada UI
