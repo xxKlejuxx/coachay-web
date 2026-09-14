@@ -674,7 +674,7 @@ async function renderSubscription() {
         family_license:_tP('profil.subSourceFamilyLicense', 'Pakiet rodzinny'),
         admin_personal:_tP('profil.subSourceAdminPersonal', 'Własna licencja (admina)')
     };
-    const fmtDate = d => d ? d.toISOString().slice(0, 10) : '';
+    const fmtDate = d => d ? d.toLocaleString(getLang() === 'en' ? 'en-GB' : 'pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Warsaw' }) : '';
     const sourceLabel = SOURCE_MAP[access.source] || '';
     dateEl.textContent = [sourceLabel, fmtDate(access.expiryDate)].filter(Boolean).join(' · ');
 
