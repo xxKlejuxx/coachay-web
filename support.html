@@ -1066,9 +1066,11 @@ async function viewClubUsers(clubId) {
             const r = data.role === 'TRENER' ? (data.trainerRole || 'TRENER_GLOWNY') : (data.role || '?');
             usersMap[data.userId].roles.add(r);
             if (data.usedSlot === 1) usersMap[data.userId].usedSlot = 1;
-            if (data.createdAt) {
-                const ca = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-                const te = new Date(ca.getTime() + 90 * 86400000);
+            const rawCa = data.createdAt;
+            const memberCa = rawCa?.toDate ? rawCa.toDate() : (rawCa ? new Date(rawCa) : null);
+            const trialStart = memberCa ?? clubCreatedAt;
+            if (trialStart) {
+                const te = new Date(trialStart.getTime() + 90 * 86400000);
                 if (!usersMap[data.userId].trialEndsAt || te > usersMap[data.userId].trialEndsAt)
                     usersMap[data.userId].trialEndsAt = te;
             }
@@ -1078,10 +1080,12 @@ async function viewClubUsers(clubId) {
         const userIds = Object.keys(usersMap);
         const licMap = {}; // userId → { type, expiresAt, arDocId }
         if (userIds.length > 0) {
-            const [userDocs, arSnap] = await Promise.all([
+            const [userDocs, arSnap, clubDoc] = await Promise.all([
                 Promise.all(userIds.map(uid => db.collection('users').doc(uid).get())),
-                db.collection('access_rights').where('uid', 'in', userIds.slice(0, 30)).get()
+                db.collection('access_rights').where('uid', 'in', userIds.slice(0, 30)).get(),
+                db.collection('clubs').doc(clubId).get()
             ]);
+            const clubCreatedAt = (() => { const ca = clubDoc.data()?.createdAt; return ca?.toDate ? ca.toDate() : (ca ? new Date(ca) : null); })();
             userDocs.forEach(doc => {
                 if (!doc.exists || !usersMap[doc.id]) return;
                 const d = doc.data();
@@ -1149,7 +1153,7 @@ async function viewClubUsers(clubId) {
                 </div>
                 <div style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;scrollbar-width:none;">
                     ${members.map(m => {
-                        const fmtD = d => { const w=new Date(d.toLocaleString('en-US',{timeZone:'Europe/Warsaw'})); return `${w.getFullYear()}-${String(w.getMonth()+1).padStart(2,'0')}-${String(w.getDate()).padStart(2,'0')}`; };
+                        const fmtD = d => { const w=new Date(d.toLocaleString('en-US',{timeZone:'Europe/Warsaw'})); return `${w.getFullYear()}-${String(w.getMonth()+1).padStart(2,'0')}-${String(w.getDate()).padStart(2,'0')} ${String(w.getHours()).padStart(2,'0')}:${String(w.getMinutes()).padStart(2,'0')}`; };
                         const badges = [];
                         if (m.lic?.type === 'individual') {
                             const isActive = m.lic.status === 'ACTIVE' && m.lic.expiresAt > new Date();
@@ -1174,7 +1178,7 @@ async function viewClubUsers(clubId) {
                             badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${tCol};color:${tText};border:1px solid ${tBorder};white-space:nowrap">⏱ trial ${tActive?'✓':'✗'} · ${fmtD(m.trialEndsAt)}</span>`);
                         }
                         const licBadge = badges.join(' ');
-                        const canRemove = m.lic && ((m.lic.type === 'individual' && m.lic.status === 'ACTIVE') || (m.lic.type === 'family' && m.lic.expiresAt > new Date()));
+                        const canRemove = m.lic != null;
                         const licBtn = canRemove
                             ? `<button onclick="event.stopPropagation();removeLicense('${m.userId}','${m.lic.type}','${m.lic.arDocId||''}','${clubId}',this)"
                                 style="flex-shrink:0;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:var(--blad);font-size:9px;font-weight:900;cursor:pointer;white-space:nowrap">
