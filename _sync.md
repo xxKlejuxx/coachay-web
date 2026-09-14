@@ -4,6 +4,69 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-15 03:30] [WEB] [DONE] support.html — widok licencji per user + usuń licencję ind/family
+
+W liście userów przy rozwiniętej karcie klubu każdy wiersz pokazuje teraz aktywną licencję osobistą usera i pozwala ją usunąć do celów testowych.
+
+### Jak działa
+
+**Skąd dane:**
+- `users/{uid}.subscription` — czytane przy `viewClubUsers()` razem z user docs (już pobieranymi)
+- `access_rights` gdzie `uid in userIds` — równoległe zapytanie (max 30 userów, limit Firestore)
+
+**Badge przy userze:**
+- `🔑 ind · YYYY-MM-DD` (zielony) — aktywna `users.subscription.status === 'ACTIVE'`
+- `👨‍👩‍👧 family · YYYY-MM-DD` (fioletowy) — aktywna `access_rights` z `source: 'family_license'`
+- brak badge — brak aktywnej licencji osobistej
+
+**Przycisk "Usuń licencję":**
+
+Dla **ind**:
+1. `users/{uid}.subscription.status → 'EXPIRED'`, `expiresAt → serverTimestamp()`
+2. `assignSlotAfterRemoval(userId)` — iteruje memberships usera, dla każdego nie-zablokowanego z `usedSlot=0`: transakcja sprawdza czy klub ma `valid_until > now AND used < total` → jeśli tak: `usedSlot=1`, `license.used+1`
+
+Dla **family**:
+1. Usuwa dokument `access_rights/{arDocId}`
+2. KIBIC przy następnym logowaniu straci dostęp (P4 → `getFamilySlots()` → 0)
+3. Brak zmian w `usedSlot` ani `license.used` — family nie używa systemu slotów
+
+### Ważne: user z ind nie ma usedSlot=1
+
+Przy zakupie licencji ind CF (`applyLicenseUpdate`) **zwalnia** club slot (`usedSlot → 0`). Dlatego przy usuwaniu ind **nie ma czego zwalniać** — od razu próbujemy przydzielić nowy slot klubowy.
+
+---
+
+[2026-09-15 03:00] [WEB+APP] [INFO] Analiza: zakup family gdy user ma ind — race condition
+
+### Co robi webhook przy zakupie family
+
+`applyLicenseUpdate` **nie rozróżnia productId** — dla ind i family zapisuje to samo: `users/{uid}.subscription`. Nie tworzy `access_rights` dla family — to musi robić **APP**.
+
+### Scenariusz Google Play: ind → family
+
+Jeśli ind i family są w tym samym subscription group: Google Play anuluje ind automatycznie przy zakupie family. RevenueCat wysyła dwa zdarzenia w nieokreślonej kolejności:
+- `INITIAL_PURCHASE` (family) → `users.subscription.status = 'ACTIVE'`, productId family
+- `CANCELLATION` (ind) → `users.subscription.status = 'EXPIRED'` → próbuje przydzielić club slot
+
+**Race condition:** jeśli `CANCELLATION` dotrze po `INITIAL_PURCHASE`:
+- `users.subscription` ląduje na `EXPIRED`
+- User ma dostęp tylko przez P1 (`access_rights` założone przez APP)
+- Jeśli APP nie założyło jeszcze `access_rights` → user chwilowo bez dostępu
+
+### Co APP musi zrobić
+
+Przy zakupie planu rodzinnego:
+1. **Najpierw** utwórz `access_rights/{uid}_{clubId}` z `source: 'family_license'`, `valid_until`, `slots_total`, `slots_used: 0`
+2. **Potem** zainicjuj zakup przez RevenueCat
+
+Kolejność jest kluczowa — `access_rights` musi istnieć zanim webhook przetworzy zdarzenia.
+
+### Przydzielenie club slotu przy CANCELLATION ind
+
+`applyLicenseUpdate` EXPIRED-path wywołuje `assignUsedSlot` dla każdego membership usera. Jeśli w tym momencie `users.subscription.status = 'EXPIRED'` (ind anulowane) i klub ma wolny slot → user dostaje `usedSlot=1`. To nadmiarowe (ma family license przez P1) ale nieszkodliwe — slot zostanie zwolniony przy kolejnym `applyLicenseUpdate` ACTIVE (jeśli family też przejdzie przez webhook).
+
+---
+
 [2026-09-15 02:30] [WEB+APP] [INFO] access_rights — pełna mapa: gdzie czytane, gdzie pisane, kiedy tworzyć
 
 ## Struktura dokumentu
