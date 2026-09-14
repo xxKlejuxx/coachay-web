@@ -668,11 +668,11 @@ async function renderSubscription() {
     chip.className = `sub-chip ${s.cls}`;
 
     const SOURCE_MAP = {
-        individual:    _tP('profil.subSourceIndividual', 'Własna licencja'),
+        individual:    _tP('profil.subSourceIndividual', 'Plan indywidualny'),
         trial:         _tP('profil.subSourceTrial', 'Okres próbny'),
         club_license:  _tP('profil.subSourceClubLicense', 'Licencja klubowa'),
-        family_license:_tP('profil.subSourceFamilyLicense', 'Pakiet rodzinny'),
-        admin_personal:_tP('profil.subSourceAdminPersonal', 'Własna licencja (admina)')
+        family_license:_tP('profil.subSourceFamilyLicense', 'Plan rodzinny'),
+        admin_personal:_tP('profil.subSourceAdminPersonal', 'Plan indywidualny')
     };
     const fmtDate = d => {
         if (!d) return '';
