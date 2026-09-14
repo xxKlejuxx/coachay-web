@@ -3412,7 +3412,7 @@ async function claimClubLicenseSlot(uid, clubId, membershipDoc) {
             if (used >= total) throw new Error('POOL_FULL');
             claimedExpiry = expiry;
             t.update(clubRef, { 'license.used': used + 1 });
-            t.update(membershipDoc.ref, { usedSlot: 1, slotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            t.update(membershipDoc.ref, { usedSlot: 1, usedSlotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
         });
 
         const daysLeft = Math.ceil((claimedExpiry - new Date()) / 86400000);

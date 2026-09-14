@@ -602,7 +602,7 @@ async function assignUsedSlot(membershipRef, m) {
     const status = (m.status || '').toUpperCase();
     const { userId, clubId } = m;
 
-    const _slotTs = { slotUpdatedAt: FieldValue.serverTimestamp() };
+    const _slotTs = { usedSlotUpdatedAt: FieldValue.serverTimestamp() };
     if (!userId || !clubId)               return membershipRef.update({ usedSlot: 0, ..._slotTs });
     if (_MBR_EXCLUDE_ROLES.has(role))     return membershipRef.update({ usedSlot: 0, ..._slotTs });
     if (_MBR_BLOCKED_STATUS.has(status))  return membershipRef.update({ usedSlot: 0, ..._slotTs });
@@ -773,11 +773,11 @@ exports.onMembershipUpdated = onDocumentUpdated('memberships/{membershipId}', as
             .sort((a, b) => (a.data().createdAt?.toMillis?.() || 0) - (b.data().createdAt?.toMillis?.() || 0));
 
         await db.runTransaction(async (t) => {
-            t.update(membershipRef, { usedSlot: 0, slotUpdatedAt: FieldValue.serverTimestamp() });
+            t.update(membershipRef, { usedSlot: 0, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
 
             if (siblings.length > 0) {
                 // Przenieś slot na najstarsze aktywne rodzeństwo — licznik bez zmian
-                t.update(siblings[0].ref, { usedSlot: 1, slotUpdatedAt: FieldValue.serverTimestamp() });
+                t.update(siblings[0].ref, { usedSlot: 1, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
                 console.log(`✓ onMembershipUpdated: slot → rodzeństwo ${siblings[0].id} [${after.userId}/${after.clubId}]`);
             } else {
                 // Brak rodzeństwa — zwolnij slot, dekrementuj licznik
@@ -1005,7 +1005,7 @@ exports.assignExpiredTrialSlots = onSchedule('every 24 hours', async () => {
             if (used >= total) break;
             if (maxOneParent && c.role === 'RODZIC' && c.playerId && takenPlayerIds.has(c.playerId)) continue;
             const batch = db.batch();
-            batch.update(c.ref, { usedSlot: 1, slotUpdatedAt: FieldValue.serverTimestamp() });
+            batch.update(c.ref, { usedSlot: 1, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
             used++;
             batch.update(clubDoc.ref, { 'license.used': used });
             await batch.commit();
@@ -1113,7 +1113,7 @@ exports.assignExpiredTrialSlotsV2 = onSchedule(
                 if (used >= total) break;
                 if (maxOneParent && c.role === 'RODZIC' && c.playerId && takenPlayerIds.has(c.playerId)) continue;
                 const batchOp = db.batch();
-                batchOp.update(c.ref, { usedSlot: 1, slotUpdatedAt: FieldValue.serverTimestamp() });
+                batchOp.update(c.ref, { usedSlot: 1, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
                 used++;
                 batchOp.update(clubRef, { 'license.used': used });
                 await batchOp.commit();
@@ -1156,7 +1156,7 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
                 const cSnap = await t.get(clubRef);
                 if (!cSnap.exists) return;
                 const used = cSnap.data().license?.used || 0;
-                for (const d of parentSlots.docs) t.update(d.ref, { usedSlot: 0, slotUpdatedAt: FieldValue.serverTimestamp() });
+                for (const d of parentSlots.docs) t.update(d.ref, { usedSlot: 0, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
                 t.update(clubRef, { 'license.used': Math.max(0, used - parentSlots.size) });
             });
             console.log(`onClubLicenseUpdated: ${clubId} — cofnięto ${parentSlots.size} slotów rodzicom (scope→trainers_only)`);
@@ -1238,7 +1238,7 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
     for (const c of sortedQueue) {
         if (newUsed - used >= avail) break;
         if (maxOneParent && c.isParent && c.m.playerId && takenPlayerIds.has(c.m.playerId)) continue;
-        batch.update(c.m._ref, { usedSlot: 1, slotUpdatedAt: FieldValue.serverTimestamp() });
+        batch.update(c.m._ref, { usedSlot: 1, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
         if (maxOneParent && c.isParent && c.m.playerId) takenPlayerIds.add(c.m.playerId);
         newUsed++;
     }
@@ -1435,7 +1435,7 @@ exports.updateClubLicenseStatuses = onSchedule('every day 06:00', async () => {
                 .get();
             if (mbrSnap.empty) continue;
             const mbrBatch = db.batch();
-            mbrSnap.docs.forEach(d => mbrBatch.update(d.ref, { usedSlot: 0, slotUpdatedAt: FieldValue.serverTimestamp() }));
+            mbrSnap.docs.forEach(d => mbrBatch.update(d.ref, { usedSlot: 0, usedSlotUpdatedAt: FieldValue.serverTimestamp() }));
             await mbrBatch.commit();
             console.log(`Reset slotów: klub ${clubId} — ${mbrSnap.size} membership(s)`);
         }
@@ -2108,7 +2108,9 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
     if (product_id) updates['subscription.productId'] = product_id;
     if (store)      updates['subscription.store']     = store;
     if (expiration_at_ms) {
-        updates['subscription.expiresAt'] = new Date(expiration_at_ms);
+        const _expDate = new Date(expiration_at_ms);
+        _expDate.setUTCHours(23, 55, 0, 0);
+        updates['subscription.expiresAt'] = _expDate;
     } else if (!isActive) {
         updates['subscription.expiresAt'] = FieldValue.serverTimestamp();
     }
@@ -2127,7 +2129,7 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
                 if (cid) clubDecrement[cid] = (clubDecrement[cid] || 0) + 1;
             }
             const batch = db.batch();
-            for (const d of slottedSnap.docs) batch.update(d.ref, { usedSlot: 0, slotUpdatedAt: FieldValue.serverTimestamp() });
+            for (const d of slottedSnap.docs) batch.update(d.ref, { usedSlot: 0, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
             await batch.commit();
             for (const [cid, cnt] of Object.entries(clubDecrement)) {
                 await db.runTransaction(async (t) => {
