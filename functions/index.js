@@ -707,7 +707,7 @@ exports.onMembershipCreated = onDocumentCreated('memberships/{membershipId}', as
             const baseDate = m.joinedAt?.toDate?.() ?? m.createdAt?.toDate?.() ?? new Date();
             const trialEnd = new Date(baseDate);
             trialEnd.setDate(trialEnd.getDate() + 90);
-            trialEnd.setUTCHours(23, 55, 0, 0);
+            trialEnd.setUTCHours(23, 55, 0, 0); // = 01:55 AM Warsaw (UTC+2), ~1h przed CF o 3:00
             await event.data.ref.update({ trialEndsAt: trialEnd });
         } catch (e) {
             console.error('✗ trialEndsAt error:', e);
@@ -1022,7 +1022,7 @@ exports.assignExpiredTrialSlots = onSchedule('every 24 hours', async () => {
    Jedno celowane zapytanie zamiast skanowania wszystkich klubów.
    ═══════════════════════════════════════════════════════════════ */
 exports.assignExpiredTrialSlotsV2 = onSchedule(
-    { schedule: '0 2 * * *', timeZone: 'Europe/Warsaw' },
+    { schedule: '0 3 * * *', timeZone: 'Europe/Warsaw' },
     async () => {
         const now = new Date();
         console.log(`▶ assignExpiredTrialSlotsV2 start: ${now.toISOString()}`);

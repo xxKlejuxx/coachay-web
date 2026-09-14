@@ -30,7 +30,7 @@
             const baseDate = baseRaw.toDate?.() ?? new Date(baseRaw);
             const trialEnd = new Date(baseDate);
             trialEnd.setDate(trialEnd.getDate() + 90);
-            trialEnd.setUTCHours(23, 55, 0, 0);
+            trialEnd.setUTCHours(23, 55, 0, 0); // = 01:55 AM Warsaw (UTC+2), ~1h przed CF o 3:00
 
             batch.update(doc.ref, { trialEndsAt: trialEnd });
             batchCount++;
