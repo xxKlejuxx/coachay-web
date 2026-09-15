@@ -1189,9 +1189,23 @@ async function confirmTransfer() {
             .where('role','==','ZAWODNIK').where('status','in',['active','ACTIVE']).limit(1).get();
 
         let oldUserId = null;
+        let oldTrialEndsAt = null;
         if (!oldSnap.empty) {
-            oldUserId = oldSnap.docs[0].data().userId || null;
-            await db.collection('memberships').doc(oldSnap.docs[0].id).update({ status: 'INACTIVE', leftAt: now });
+            const oldData = oldSnap.docs[0].data();
+            oldUserId = oldData.userId || null;
+            oldTrialEndsAt = oldData.trialEndsAt || null;
+            const oldMbrRef = db.collection('memberships').doc(oldSnap.docs[0].id);
+            if (oldData.usedSlot === 1) {
+                await db.runTransaction(async tx => {
+                    const clubRef = db.collection('clubs').doc(currentClubId);
+                    const clubSnap = await tx.get(clubRef);
+                    const used = clubSnap.data()?.license?.used || 0;
+                    if (used > 0) tx.update(clubRef, { 'license.used': used - 1 });
+                    tx.update(oldMbrRef, { status: 'INACTIVE', leftAt: now, usedSlot: 0, usedSlotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                });
+            } else {
+                await oldMbrRef.update({ status: 'INACTIVE', leftAt: now });
+            }
         }
 
         // 2. Utwórz nowe membership ZAWODNIKA
@@ -1199,7 +1213,8 @@ async function confirmTransfer() {
         await db.collection('memberships').doc(newMbrId).set({
             membershipId: newMbrId, userId: oldUserId, teamId: transferToTeamId,
             clubId: currentClubId, playerId, role: 'ZAWODNIK', status: 'ACTIVE',
-            displayName: name, joinedAt: now, isDemo: false
+            displayName: name, joinedAt: now, isDemo: false, usedSlot: 0,
+            ...(oldTrialEndsAt ? { trialEndsAt: oldTrialEndsAt } : {})
         });
 
         // 3. Przenieś RODZIC i KIBIC
@@ -1229,7 +1244,17 @@ async function confirmTransfer() {
             );
             console.log(`   hasOtherChildren: ${hasOtherChildren}`);
             if (!hasOtherChildren) {
-                await doc.ref.update({ status: 'INACTIVE', leftAt: now });
+                if (data.usedSlot === 1) {
+                    await db.runTransaction(async tx => {
+                        const clubRef = db.collection('clubs').doc(currentClubId);
+                        const clubSnap = await tx.get(clubRef);
+                        const used = clubSnap.data()?.license?.used || 0;
+                        if (used > 0) tx.update(clubRef, { 'license.used': used - 1 });
+                        tx.update(doc.ref, { status: 'INACTIVE', leftAt: now, usedSlot: 0, usedSlotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    });
+                } else {
+                    await doc.ref.update({ status: 'INACTIVE', leftAt: now });
+                }
                 console.log(`   ✓ stare membership → INACTIVE`);
             } else {
                 console.log(`   ✓ stare membership zostawione ACTIVE (inne dzieci w drużynie)`);
@@ -1246,7 +1271,8 @@ async function confirmTransfer() {
             }
 
             const famMbrId = makeMbrId(data.role);
-            await db.collection('memberships').doc(famMbrId).set({
+            const famMbrRef = db.collection('memberships').doc(famMbrId);
+            await famMbrRef.set({
                 membershipId: famMbrId,
                 userId: parentUserId || null,
                 teamId: transferToTeamId,
@@ -1256,8 +1282,13 @@ async function confirmTransfer() {
                 status: 'ACTIVE',
                 displayName: data.displayName || name,
                 joinedAt: now,
-                isDemo: data.isDemo || false
+                isDemo: data.isDemo || false,
+                usedSlot: 0,
+                ...(data.trialEndsAt ? { trialEndsAt: data.trialEndsAt } : {})
             });
+            if (data.role === 'RODZIC' && parentUserId && typeof tryAssignClubSlot === 'function') {
+                try { const newFamDoc = await famMbrRef.get(); await tryAssignClubSlot(newFamDoc, currentClubId); } catch(e) { /* slot przydzieli CF */ }
+            }
             console.log(`   ✓ nowe membership → ${famMbrId} (${data.role} w ${transferToTeamId})`);
             if (parentUserId) familyUserIds.add(parentUserId);
         }
