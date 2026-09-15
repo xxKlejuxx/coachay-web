@@ -4,6 +4,69 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-15 12:00] [WEB] [DONE] klub.html — transfer zawodnika: zwolnienie usedSlot + aktualizacja clubs.license.used
+
+### Bug
+
+`confirmTransfer()` w `klub.html` ustawiał stare membership na `INACTIVE` ale **nie zwalniał `usedSlot`** i **nie dekrementował `clubs/{clubId}.license.used`**. Nowe memberships (ZAWODNIK, RODZIC, KIBIC) były tworzone **bez pola `usedSlot: 0`** i bez kopiowania `trialEndsAt`.
+
+### Zmiana w WEB (klub.html `confirmTransfer()`)
+
+**Krok 1 — stary ZAWODNIK (dezaktywacja):**
+```javascript
+// Przed: await memberships.doc(id).update({ status: 'INACTIVE', leftAt: now });
+// Po:
+if (oldData.usedSlot === 1) {
+    await db.runTransaction(async tx => {
+        const clubSnap = await tx.get(clubRef);
+        const used = clubSnap.data()?.license?.used || 0;
+        if (used > 0) tx.update(clubRef, { 'license.used': used - 1 });
+        tx.update(oldMbrRef, { status: 'INACTIVE', leftAt: now, usedSlot: 0, usedSlotUpdatedAt: serverTimestamp() });
+    });
+} else {
+    await oldMbrRef.update({ status: 'INACTIVE', leftAt: now });
+}
+```
+
+**Krok 2 — nowy ZAWODNIK (tworzenie):**
+- dodano `usedSlot: 0`
+- kopiowany `trialEndsAt` ze starego membership (jeśli istnieje)
+
+**Krok 3 — stary RODZIC/KIBIC (dezaktywacja, tylko gdy nie ma innych dzieci w drużynie):**
+- ta sama logika co krok 1: jeśli `usedSlot === 1` → transakcja z dekrementem `clubs.license.used`
+
+**Krok 3 — nowy RODZIC/KIBIC (tworzenie):**
+- dodano `usedSlot: 0`
+- kopiowany `trialEndsAt` ze starego membership
+- po zapisie: `tryAssignClubSlot(newFamDoc, currentClubId)` — próba przydzielenia slotu z puli klubu dla RODZIC
+
+### To samo do zrobienia w APP
+
+Funkcja transferu zawodnika w APP (odpowiednik `confirmTransfer`) musi mieć **dokładnie te same zmiany**:
+
+1. **Przed ustawieniem `INACTIVE` na starym membership** — sprawdź `usedSlot === 1`:
+   - jeśli tak: **transakcja atomowa** — `usedSlot = 0`, `usedSlotUpdatedAt = serverTimestamp()` na membership + `clubs/{clubId}.license.used -= 1`
+   - jeśli nie: zwykły update `{ status: 'INACTIVE', leftAt: now }`
+   - dotyczy zarówno ZAWODNIKA jak i RODZIC/KIBIC
+
+2. **Przy tworzeniu nowego membership** (ZAWODNIK / RODZIC / KIBIC):
+   - dodaj `usedSlot: 0`
+   - skopiuj `trialEndsAt` ze starego membership (jeśli pole istnieje)
+
+3. **Po stworzeniu nowego membership RODZIC**:
+   - wywołaj `tryAssignClubSlot(newMbrDoc, clubId)` — próba przydzielenia slotu z puli klubu
+   - błąd ignoruj (slot przydzieli CF `updateClubLicenseStatuses` następnego dnia)
+
+### Dlaczego ZAWODNIK może mieć usedSlot=1?
+
+Normalnie ZAWODNIK **nie kwalifikuje** do puli klubowej (nie ma go w `CLUB_ROLES`). Ale historycznie mogły zostać zapisane stare dane z `usedSlot=1`. Kod defensywnie sprawdza i czyści.
+
+### Dlaczego clubs.license.used ważny?
+
+Pole `clubs/{clubId}.license.used` to licznik aktywnie zajętych slotów. Musi być spójny z sumą membership z `usedSlot=1` w danym klubie. Przy transferze bez dekrementu: stare membership zostaje INACTIVE z `usedSlot=1` → licznik zawyżony → nowi użytkownicy nie mogą dostać slotu mimo wolnych miejsc.
+
+---
+
 [2026-09-15 03:30] [WEB] [DONE] support.html — widok licencji per user + usuń licencję ind/family
 
 W liście userów przy rozwiniętej karcie klubu każdy wiersz pokazuje teraz aktywną licencję osobistą usera i pozwala ją usunąć do celów testowych.
