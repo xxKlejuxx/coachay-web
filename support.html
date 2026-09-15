@@ -1153,22 +1153,22 @@ async function viewClubUsers(clubId) {
                             const col = isActive ? 'rgba(74,222,128,0.12)' : 'rgba(100,100,100,0.12)';
                             const border = isActive ? 'rgba(74,222,128,0.25)' : 'rgba(100,100,100,0.25)';
                             const textCol = isActive ? 'var(--sukces)' : 'var(--szary)';
-                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${col};color:${textCol};border:1px solid ${border};white-space:nowrap">🔑 ind ${isActive?'✓':'✗'} · ${fmtD(m.lic.expiresAt)}</span>`);
+                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${col};color:${textCol};border:1px solid ${border};white-space:nowrap">Plan indywidualny ${fmtD(m.lic.expiresAt)}</span>`);
                         }
                         if (m.lic?.type === 'family') {
                             const isActive = m.lic.expiresAt > new Date();
                             const col = isActive ? 'rgba(168,85,247,0.12)' : 'rgba(100,100,100,0.12)';
                             const border = isActive ? 'rgba(168,85,247,0.25)' : 'rgba(100,100,100,0.25)';
                             const textCol = isActive ? '#C084FC' : 'var(--szary)';
-                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${col};color:${textCol};border:1px solid ${border};white-space:nowrap">👨‍👩‍👧 family ${isActive?'✓':'✗'} · ${fmtD(m.lic.expiresAt)}</span>`);
+                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${col};color:${textCol};border:1px solid ${border};white-space:nowrap">Plan rodzinny ${fmtD(m.lic.expiresAt)}</span>`);
                         }
-                        if (m.usedSlot === 1) badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:rgba(59,130,246,0.12);color:#60A5FA;border:1px solid rgba(59,130,246,0.25);white-space:nowrap">🏢 slot klubowy</span>`);
+                        if (m.usedSlot === 1) badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:rgba(59,130,246,0.12);color:#60A5FA;border:1px solid rgba(59,130,246,0.25);white-space:nowrap">Licencja klubowa</span>`);
                         if (m.trialEndsAt) {
                             const tActive = m.trialEndsAt > new Date();
                             const tCol = tActive ? 'rgba(251,191,36,0.12)' : 'rgba(100,100,100,0.12)';
                             const tBorder = tActive ? 'rgba(251,191,36,0.25)' : 'rgba(100,100,100,0.25)';
                             const tText = tActive ? 'var(--warn)' : 'var(--szary)';
-                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${tCol};color:${tText};border:1px solid ${tBorder};white-space:nowrap">⏱ trial ${tActive?'✓':'✗'} · ${fmtD(m.trialEndsAt)}</span>`);
+                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${tCol};color:${tText};border:1px solid ${tBorder};white-space:nowrap">Okres próbny ${fmtD(m.trialEndsAt)}</span>`);
                         }
                         const licBadge = badges.join(' ');
                         const canRemove = m.lic != null;
