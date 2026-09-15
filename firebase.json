@@ -5,7 +5,26 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
-      "functions/**"
+      "functions/**",
+      "**/*.md",
+      "**/*.txt",
+      "**/*.py",
+      "**/*.bat",
+      "**/*.sh",
+      "firestore.rules",
+      "firestore.indexes.json",
+      "package.json",
+      "package-lock.json",
+      "demo-memberships.json",
+      "add_*.js",
+      "check_*.js",
+      "debug_*.js",
+      "fix_*.js",
+      "restore_*.js",
+      "remove_*.js",
+      "set-ttl.js",
+      "test_*.js",
+      "communication_test_scripts.js"
     ],
     "headers": [
       {
