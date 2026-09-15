@@ -358,6 +358,29 @@ Zamiast czekać na pełną migrację natywną, appka webowa jest opakowana w nat
 
 ---
 
+## 🚀 Po premierze — optymalizacja
+
+### UserContext + onSnapshot dla sesji/licencji (odłożone 2026-09-15)
+
+Propozycja: globalny React Context (`UserContext`) trzymający sesję + status licencji w RAM, zasilany `onSnapshot` zamiast dzisiejszych jednorazowych `getDoc`/`getDocs` na każdym ekranie. Cel: wyeliminować `useForegroundRefresh` (home.tsx), natychmiastowa reakcja na blokadę/zmianę uprawnień w tle, mniej odczytów Firestore.
+
+**Analiza:** Koncepcja sensowna i koszty Firestore by spadły. Ale zakres jest większy niż jeden listener:
+- `getAccessStatus` to kaskada kilku niezależnych źródeł (P0.5 `users.subscription`, P1 `access_rights`, P3 klub, P4 family) — żeby „live", potrzeba kilku równoległych nasłuchów + reaktywne przeliczanie kaskady przy zmianie któregokolwiek z nich
+- Przełącznik drużyn (`AsyncStorage selectedMembershipId`) — każde przełączenie wymaga odsubskrybowania starych nasłuchów i podpięcia nowych pod inny klub
+- 18 ekranów (`app/*.tsx`) dziś samodzielnie wywołuje `loadSession`/`getAccessStatus`/`checkPaymentAccess` niezależnie — pełne przejście na Context oznacza dotknięcie wszystkich, realne ryzyko regresji
+
+**Podzielone na 2 kroki, oba odłożone:**
+
+- [ ] **Krok 1 (mały)** — `onSnapshot` tylko w `PaymentGateGuard` / `app/_layout.tsx`, bez ruszania pozostałych ekranów
+  - ⚠️ **RYZYKO CRASH na iOS**: `PaymentGateGuard` jest montowany globalnie. TODO.md dokumentuje potwierdzony hard crash z 27.08.2026 (commit `4699781`) spowodowany `enableNetwork(db)` wołanym bezwarunkowo w globalnym `useEffect` w `PinLockGuard` przy KAŻDYM powrocie appki z tła na iOS. `onSnapshot` utrzymuje trwałe połączenie wznawiane przez Firestore SDK przy powrocie z tła — ta sama klasa operacji. **Przed wdrożeniem: przetestować ostrożnie na TestFlight, scenariusz tło→foreground.**
+
+- [ ] **Krok 2 (pełny)** — `UserContext` + eliminacja `useForegroundRefresh` + podpięcie wszystkich 18 ekranów
+  - Osobny projekt, wymaga porządnego planu i testów: przełączanie drużyn, wylogowanie, PIN-lock, blokada w trakcie sesji, ryzyko z kroku 1
+
+**Stan:** nic nie wdrożone — appka w stanie sprzed tej rozmowy (fetch-on-mount + `useForegroundRefresh` na Start).
+
+---
+
 ## 🔮 Backlog
 
 - **"Poproś o kod" — WhatsApp — zdecydowane 2026-07-28: nie robimy tego** (przeniesione z Aktywnych, gdzie tylko zajmowało miejsce). Pełna spec (wymagania Meta Business + numer telefonu, zmiany schematu `players.guardianPhones`/`inviteCodes.status`/`trainers.phone`, flow login.html, reverse lookup CF, `sendCodeViaWhatsApp`, `codeRequests` audit trail) — patrz historia TODO.md sprzed 2026-07-28, jeśli temat kiedyś wróci
