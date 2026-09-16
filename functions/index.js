@@ -756,7 +756,8 @@ exports.onMembershipCreated = onDocumentCreated('memberships/{membershipId}', as
             const raw = lic?.valid_until ?? lic?.expiresAt;
             cacheUpdates.cachedClubLicense = {
                 validUntil: raw?.toDate ? raw.toDate() : (raw ? new Date(raw) : null),
-                scope:      lic?.scope || 'all',
+                used:       lic?.used  ?? 0,
+                total:      lic?.total ?? 0,
                 updatedAt:  FieldValue.serverTimestamp(),
             };
         }
@@ -1215,7 +1216,8 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
         const raw = licData?.valid_until ?? licData?.expiresAt;
         return {
             validUntil: raw?.toDate ? raw.toDate() : (raw ? new Date(raw) : null),
-            scope:      licData?.scope || 'all',
+            used:       licData?.used  ?? 0,
+            total:      licData?.total ?? 0,
             updatedAt:  FieldValue.serverTimestamp(),
         };
     };

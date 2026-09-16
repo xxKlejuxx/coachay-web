@@ -51,7 +51,8 @@ async function main() {
         const raw = lic?.valid_until ?? lic?.expiresAt;
         clubLics[d.id] = {
             validUntil: raw?.toDate ? raw.toDate() : (raw ? new Date(raw) : null),
-            scope: lic?.scope || 'all',
+            used:  lic?.used  ?? 0,
+            total: lic?.total ?? 0,
         };
     }
     console.log(`  ${Object.keys(clubLics).length} klubów`);
