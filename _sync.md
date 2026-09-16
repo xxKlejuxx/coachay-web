@@ -4,6 +4,8 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-16 00:00] [APP] [INFO] syncEntitlementToAccessRights — slots_total/slots_used bezpieczne, brak konfliktu z webhookiem (patrz wpis poniżej)
+[2026-09-16 00:00] [APP] [INFO] Koncepcja V2 (po premierze): denormalizacja statusu licencji na memberships (patrz wpis poniżej)
 [2026-09-16 00:00] [WEB] [DONE] functions/index.js — revenuecatWebhook: nowy routing dla produktów rodzinnych + applyFamilyLicenseUpdate
 
 ---
@@ -55,6 +57,50 @@ Webhook działa po stronie Cloud Functions — APP nic nie musi zmieniać. Logik
 
 ### Znany mniejszy problem (niższy priorytet, brak fix)
 `slots_used` na `access_rights` rodzica nie jest automatycznie zwalniany gdy Kibic kupuje własną licencję ind (P0.5 wygrywa wcześniej, `releaseFamilySlot()` się nie woła). Nie psuje dostępu, tylko zawyża zajętość puli rodzica. `releaseFamilySlot()` wołana jest dziś tylko ręcznie przy blokowaniu Kibica.
+
+---
+
+## Odpowiedź APP: slots_total/slots_used w syncEntitlementToAccessRights — brak konfliktu (2026-09-16)
+
+APP sprawdziło `devBuyFamily()` (`src/lib/license.ts`) wołane przez `syncEntitlementToAccessRights` (`purchases.ts`) przy zakupie i przy ręcznym "Przywróć zakupy".
+
+**Wniosek: brak konfliktu z `applyFamilyLicenseUpdate`.** APP zapisuje przy każdym wywołaniu też `slots_total` i `slots_used`, ale:
+- `slots_used` jest **przeliczane na nowo** z realnego stanu (zapytanie po `memberships` gdzie `familySlotParent === uid` i status aktywny, +1 za właściciela, capped do `slots_total`) — nie nadpisywane sztywną wartością
+- `slots_total` zawsze zapisuje tę samą stałą (`REAL_FAMILY_SLOTS_TOTAL`) — idempotentne
+- Webhook (`applyFamilyLicenseUpdate`) pisze **rozłączne pola**: tylko `valid_until`, `productId`, `updatedAt` — nie rusza `slots_total`/`slots_used`
+
+Komentarz w kodzie APP z 2026-08-16: świadome zabezpieczenie przeciwko resetowi slots_used przy odnowieniu. **Zmiana po stronie APP nie jest wymagana.**
+
+---
+
+## Koncepcja V2 (po premierze): denormalizacja statusu licencji na memberships (2026-09-16)
+
+### Kontekst / cel
+Dziś `getAccessStatus()` sprawdza dostęp per klub kaskadą P0.5→P1→P0→P3→P4, robiąc przy każdym sprawdzeniu (appka: przy każdej nawigacji przez PaymentGateGuard + osobno na wielu ekranach, brak cache) osobne odczyty Firestore: `users/{uid}` (P0.5), `access_rights` (P1), `clubs/{clubId}` (P3), dla KIBIC dodatkowo skan RODZIC-membershipów + `access_rights` każdego z nich (P4). Rosnący koszt proporcjonalny do aktywnych userów × częstości nawigacji.
+
+**Propozycja:** zapisywać wynik (nie logikę — ta zostaje identyczna) bezpośrednio na dokumentach `memberships`, aktualizowany server-side przy zdarzeniach źródłowych. Appka robi JEDNO zapytanie (`memberships where userId==uid`) i liczy priorytet lokalnie z już-dostępnych pól.
+
+### Plan — 3 gałęzie (wspólny cel: membership jako cache)
+
+**1. Indywidualna (P0.5)**
+Trigger: istniejący `revenuecatWebhook` / `applyLicenseUpdate`. Przy evencie RC dopisać zapytanie po WSZYSTKICH aktywnych memberships `uid` i zapisać na każdym: `cachedUserSubscription: {status, expiresAt, productId, updatedAt}`.
+
+**2. Klubowa (P3)**
+Trigger: istniejący `onClubLicenseUpdated`. Przy zmianie licencji klubu zapisać `cachedClubLicense: {validUntil, updatedAt}` na memberships tego klubu (przynajmniej `usedSlot=1`).
+
+**3. Family (P4) — propagacja rodzic → kibic**
+Trigger: **`applyFamilyLicenseUpdate`** (nowa funkcja z dzisiejszego fixu) — naturalne miejsce, bo już aktualizuje `access_rights` rodzica. Dopisać propagację do Kibiców: znaleźć wszystkich zawodników gdzie ten `uid` jest RODZIC (ten sam skan co dziś P4 przy każdym odczycie, ale wykonany RAZ tutaj) i zapisać `cachedFamilySlot: {validUntil, slotsTotal, slotsUsed, updatedAt}` na ich membershipach KIBIC.
+
+**Zawodnik:** brak zmian — zawsze ACTIVE, nie wchodzi w system płatności.
+
+### Gap: nowe memberships
+Triggery reagują na zmianę istniejącego stanu. Nowo utworzony membership nie dostanie cache dopóki nie nastąpi event. Rozwiązanie: rozszerzyć istniejący `onMembershipCreated` (WEB) — stemplować aktualny stan przy tworzeniu (odpytać `users/{uid}.subscription` / klub / rodzica JEDEN raz przy tworzeniu).
+
+### Strona APP (po wdrożeniu pól przez WEB)
+Odczyt zamienia się z kaskady na jedno zapytanie `memberships where userId==uid`, priorytet liczony lokalnie. **Wymagany defensywny fallback** na starą ścieżkę dla memberships bez jeszcze-nie-wystawionych pól cache (analogicznie do podejścia z polem `productId` — brak pola = brak oznaczenia, nie błąd). Przejście bezpieczne bez migracji wstecznej.
+
+### Status
+**Odłożone świadomie po premierze** — razem z UserContext + onSnapshot. WEB (Cloud Functions + schemat) wdraża pierwsze, APP czeka na wystawione pola, potem dostosowuje odczyt.
 
 ---
 

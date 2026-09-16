@@ -390,6 +390,21 @@ Propozycja: globalny React Context (`UserContext`) trzymający sesję + status l
 
 **Stan:** nic nie wdrożone — appka w stanie sprzed tej rozmowy (fetch-on-mount + `useForegroundRefresh` na Start).
 
+### Denormalizacja statusu licencji na memberships — V2 (odłożone 2026-09-16)
+
+Cel: wyeliminować kaskadowe odczyty wielokolekcyjne przy każdym sprawdzeniu dostępu. Zamiast `getAccessStatus()` robiącego osobne odczyty `users/{uid}` + `access_rights` + `clubs/{clubId}` + skan RODZIC-membershipów — zapisywać wynik server-side na `memberships`, appka robi 1 zapytanie i liczy priorytet lokalnie z gotowych pól.
+
+**Plan 3-gałęziowy (triggery już istnieją — tylko dopisać zapis na membership):**
+
+- [ ] **P0.5 — ind**: rozszerzyć `applyLicenseUpdate` (`functions/index.js`) → przy evencie RC zapisać `cachedUserSubscription: {status, expiresAt, productId, updatedAt}` na wszystkich aktywnych memberships tego `uid`
+- [ ] **P3 — klub**: rozszerzyć `onClubLicenseUpdated` → przy zmianie licencji klubu zapisać `cachedClubLicense: {validUntil, updatedAt}` na memberships tego klubu
+- [ ] **P4 — family**: rozszerzyć `applyFamilyLicenseUpdate` → po aktualizacji `access_rights` rodzica propagować `cachedFamilySlot: {validUntil, slotsTotal, slotsUsed, updatedAt}` na memberships KIBIC powiązanych zawodników
+- [ ] **Nowe memberships**: rozszerzyć `onMembershipCreated` → stemplować aktualny stan od razu przy tworzeniu
+
+**Strona APP (po wdrożeniu pól przez WEB):** jedno zapytanie `memberships where userId==uid`, priorytet liczony lokalnie. Defensywny fallback na starą ścieżkę dla memberships bez jeszcze-nie-wystawionych pól. Logika P0.5→P1→P0→P3→P4 bez zmian.
+
+**Stan:** nic nie wdrożone. Patrz `_sync.md` wpis 2026-09-16 — "Koncepcja V2".
+
 ---
 
 ## 🔮 Backlog
