@@ -1950,10 +1950,12 @@ exports.cleanupExpiredTasks = onSchedule('every day 04:00', async () => {
 });
 
 /* ═══════════════════════════════════════════════════════
-   RevenueCat Webhook — obsługa subskrypcji indywidualnych
+   RevenueCat Webhook — obsługa subskrypcji indywidualnych i rodzinnych
    POST /revenuecat-webhook
    Zdarzenia: INITIAL_PURCHASE, RENEWAL → ACTIVE
               CANCELLATION, EXPIRATION   → EXPIRED
+   product_id coachay_family_* → applyFamilyLicenseUpdate (access_rights)
+   pozostałe  → applyLicenseUpdate (users.subscription)
 ═══════════════════════════════════════════════════════ */
 exports.revenuecatWebhook = onRequest(
     { secrets: [REVENUECAT_WEBHOOK_SECRET] },
@@ -1986,19 +1988,27 @@ exports.revenuecatWebhook = onRequest(
         }
 
         try {
-            // Znajdź użytkownika po app_user_id (= userId w Coachay)
-            const userSnap = await db.collection('users').doc(app_user_id).get();
-            if (!userSnap.exists) {
-                // Fallback — szukaj po polu userId jeśli nie ma dokumentu pod tym kluczem
-                const byField = await db.collection('users')
-                    .where('userId', '==', app_user_id).limit(1).get();
-                if (byField.empty) {
-                    console.warn(`revenuecatWebhook: user ${app_user_id} nie istnieje`);
-                    return res.status(200).send('OK'); // 200 żeby RC nie retry'ował
-                }
-                await applyLicenseUpdate(byField.docs[0].ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS);
+            // Wykryj produkt rodzinny (coachay_family_* przed ':' dla Billing v6 base plans)
+            const baseProductId = (product_id || '').split(':')[0];
+            const isFamilyProduct = baseProductId.startsWith('coachay_family_');
+
+            if (isFamilyProduct) {
+                await applyFamilyLicenseUpdate(app_user_id, type, expiration_at_ms, product_id, ACTIVE_EVENTS);
             } else {
-                await applyLicenseUpdate(userSnap.ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS);
+                // Znajdź użytkownika po app_user_id (= userId w Coachay)
+                const userSnap = await db.collection('users').doc(app_user_id).get();
+                if (!userSnap.exists) {
+                    // Fallback — szukaj po polu userId jeśli nie ma dokumentu pod tym kluczem
+                    const byField = await db.collection('users')
+                        .where('userId', '==', app_user_id).limit(1).get();
+                    if (byField.empty) {
+                        console.warn(`revenuecatWebhook: user ${app_user_id} nie istnieje`);
+                        return res.status(200).send('OK'); // 200 żeby RC nie retry'ował
+                    }
+                    await applyLicenseUpdate(byField.docs[0].ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS);
+                } else {
+                    await applyLicenseUpdate(userSnap.ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS);
+                }
             }
 
             return res.status(200).send('OK');
@@ -2079,6 +2089,35 @@ exports.moderateEvents = onDocumentWritten('events/{id}', (event) =>
 );
 
 /* ─────────────────────────────────────────────────── */
+
+async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id, ACTIVE_EVENTS) {
+    const isActive = ACTIVE_EVENTS.includes(type);
+    const arSnap = await db.collection('access_rights').where('uid', '==', uid).get();
+    const familyDocs = arSnap.docs.filter(d => d.data().source === 'family_license');
+    if (familyDocs.length === 0) {
+        console.log(`applyFamilyLicenseUpdate: brak access_rights family uid=${uid} — no-op`);
+        return;
+    }
+    if (familyDocs.length > 1) {
+        console.warn(`applyFamilyLicenseUpdate: uid=${uid} ma ${familyDocs.length} family docs — aktualizuję wszystkie`);
+    }
+    let validUntil;
+    if (isActive && expiration_at_ms) {
+        validUntil = new Date(expiration_at_ms);
+        validUntil.setUTCHours(23, 55, 0, 0);
+    } else if (!isActive) {
+        validUntil = new Date();
+    }
+    const batch = db.batch();
+    for (const doc of familyDocs) {
+        const updates = { updatedAt: FieldValue.serverTimestamp() };
+        if (validUntil) updates.valid_until = validUntil;
+        if (product_id) updates.productId = product_id;
+        batch.update(doc.ref, updates);
+    }
+    await batch.commit();
+    console.log(`applyFamilyLicenseUpdate: uid=${uid} type=${type} → ${familyDocs.length} access_rights, valid_until=${validUntil?.toISOString()}`);
+}
 
 async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS) {
     const isActive = ACTIVE_EVENTS.includes(type);

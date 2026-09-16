@@ -4,6 +4,60 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-16 00:00] [WEB] [DONE] functions/index.js — revenuecatWebhook: nowy routing dla produktów rodzinnych + applyFamilyLicenseUpdate
+
+---
+
+## Family webhook — automatyczne odnawianie access_rights (2026-09-16)
+
+### Problem (był)
+`revenuecatWebhook` przy RENEWAL / CANCELLATION / EXPIRATION aktualizował **tylko** `users/{uid}.subscription` (licencja ind, P0.5). Licencja rodzinna (`access_rights`, `source:'family_license'`) nie była dotykana przez webhook. Jedyna aktualizacja `valid_until` dochodziła z appki mobilnej (`syncEntitlementToAccessRights`) — wywoływanej tylko przy zakupie lub ręcznym "Przywróć zakupy".
+
+**Efekt:** Po upływie pierwszego opłaconego okresu wszyscy Kibice rodziny tracili dostęp (P4 widzi `valid_until` w przeszłości), mimo że rodzic płacił dalej.
+
+### Fix w WEB (functions/index.js)
+
+**1. Routing w `revenuecatWebhook`**
+
+Na początku bloku `try` — przed szukaniem usera — dodano wykrywanie produktu rodzinnego:
+
+```js
+const baseProductId = (product_id || '').split(':')[0];
+const isFamilyProduct = baseProductId.startsWith('coachay_family_');
+
+if (isFamilyProduct) {
+    await applyFamilyLicenseUpdate(app_user_id, type, expiration_at_ms, product_id, ACTIVE_EVENTS);
+} else {
+    // dotychczasowy kod: szukaj usera → applyLicenseUpdate
+}
+```
+
+`product_id` ma format `coachay_family_xxx:miesiac` (Billing v6 base plans) — porównujemy prefiks przed `:`.
+
+**2. Nowa funkcja `applyFamilyLicenseUpdate`**
+
+```js
+async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id, ACTIVE_EVENTS)
+```
+
+- Szuka `access_rights` gdzie `uid == uid` AND `source == 'family_license'`
+- Jeśli brak — **no-op + log** (pierwszy zapis robi zawsze klient przy zakupie; webhook tylko podtrzymuje)
+- Jeśli więcej niż 1 — loguje warning, aktualizuje wszystkie (edge case: rodzic w 2 klubach z osobnymi zakupami family)
+- Przy **RENEWAL / INITIAL_PURCHASE** (`ACTIVE_EVENTS`): `valid_until` = data z RC zaokrąglona do 23:55 UTC
+- Przy **CANCELLATION / EXPIRATION**: `valid_until` = `new Date()` (dostęp ginie natychmiast)
+- Aktualizuje tylko `valid_until`, `productId`, `updatedAt` — **NIE rusza** `slots_total` / `slots_used`
+
+### Dla APP — brak zmian wymaganych
+
+Webhook działa po stronie Cloud Functions — APP nic nie musi zmieniać. Logika `syncEntitlementToAccessRights` w appce może pozostać jako fallback (np. przy "Przywróć zakupy"), bo teraz webhook też pisze ten sam dokument.
+
+**Jedyna zasada:** `syncEntitlementToAccessRights` po stronie APP też powinna aktualizować **tylko** `valid_until` / `productId` — nie resetować `slots_total` / `slots_used`. Sprawdź czy tak jest.
+
+### Znany mniejszy problem (niższy priorytet, brak fix)
+`slots_used` na `access_rights` rodzica nie jest automatycznie zwalniany gdy Kibic kupuje własną licencję ind (P0.5 wygrywa wcześniej, `releaseFamilySlot()` się nie woła). Nie psuje dostępu, tylko zawyża zajętość puli rodzica. `releaseFamilySlot()` wołana jest dziś tylko ręcznie przy blokowaniu Kibica.
+
+---
+
 [2026-09-15 12:00] [WEB] [DONE] klub.html — transfer zawodnika: zwolnienie usedSlot + aktualizacja clubs.license.used
 
 ### Bug

@@ -25,6 +25,16 @@ Wersja: 4.7 | Data: 2026-04-17
 - [x] Link "Jak zacząć" w bocznym menu (14 plików, ukryty dla ZAWODNIK) — dostęp do tury w dowolnym momencie, nie tylko przy pierwszym uruchomieniu
 - [ ] Do zrobienia później: krok o płatnościach (na razie pominięty — funkcja niedokończona), kroki o generowaniu kodów dla rodzica/kibica
 
+### Brak webhooka RC dla licencji rodzinnej — access_rights nie odnawia się automatycznie (2026-09-15)
+
+**Problem:** `revenuecatWebhook` / `applyLicenseUpdate` (`functions/index.js`) przy RENEWAL/CANCELLATION/EXPIRATION aktualizuje **wyłącznie** `users/{uid}.subscription` (P0.5, licencja ind). Licencja rodzinna (`access_rights`, `source:'family'`) nie ma odpowiednika w webhookach. Jedyne miejsce gdzie `access_rights.valid_until` dostaje nową datę to appka mobilna (`syncEntitlementToAccessRights`, `src/lib/purchases.ts`) — wołana tylko przy zakupie i przy ręcznym "Przywróć zakupy".
+
+**Konsekwencja:** Rodzic płaci co miesiąc/rok, subskrypcja się odnawia — ale Firestore o tym nie wie. Po upływie **pierwszego opłaconego okresu** wszyscy Kibice rodziny tracą dostęp (P4 widzi `valid_until` w przeszłości), mimo że rodzic płaci dalej.
+
+**Status: ✅ Zaimplementowane 2026-09-16** — `applyFamilyLicenseUpdate` + routing w `revenuecatWebhook` w `functions/index.js`.
+
+**Osobny mniejszy problem (niższy priorytet):** `slots_used` nigdy nie jest automatycznie zwalniany gdy Kibic przestaje potrzebować slotu rodzinnego (np. kupuje własną licencję ind — P0.5 wygrywa wcześniej w kaskadzie, ale `familySlotParent.slots_used` zostaje zajęte na zawsze). `releaseFamilySlot()` wywołuje się dziś tylko ręcznie przy blokowaniu Kibica przez rodzica. Nie psuje dostępu, tylko zawyża zajętość puli rodzica.
+
 ---
 
 ## 🔒 Bezpieczeństwo
@@ -340,20 +350,6 @@ Zamiast czekać na pełną migrację natywną, appka webowa jest opakowana w nat
 - [ ] FCM + CF notifications (TRIAL/GRACE/licencje) — scheduled przypomnienia, osobne od podstawowego push wdrożonego 2026-07-24 — działa niezależnie od platformy
 - [ ] RevenueCat webhooks zaprojektowane (zastąpią Przelewy24 w mobile)
 
-### Brak webhooka RC dla licencji rodzinnej — access_rights nie odnawia się automatycznie (2026-09-15)
-
-**Problem:** `revenuecatWebhook` / `applyLicenseUpdate` (`functions/index.js`) przy RENEWAL/CANCELLATION/EXPIRATION aktualizuje **wyłącznie** `users/{uid}.subscription` (P0.5, licencja ind). Licencja rodzinna (`access_rights`, `source:'family'`) nie ma odpowiednika w webhookach. Jedyne miejsce gdzie `access_rights.valid_until` dostaje nową datę to appka mobilna (`syncEntitlementToAccessRights`, `src/lib/purchases.ts`) — wołana tylko przy zakupie i przy ręcznym "Przywróć zakupy".
-
-**Konsekwencja:** Rodzic płaci co miesiąc/rok, subskrypcja się odnawia — ale Firestore o tym nie wie. Po upływie **pierwszego opłaconego okresu** wszyscy Kibice rodziny tracą dostęp (P4 widzi `valid_until` w przeszłości), mimo że rodzic płaci dalej.
-
-**Propozycja naprawy w `revenuecatWebhook` (`functions/index.js`):**
-
-- [ ] Rozpoznać czy `product_id` to produkt rodzinny (prefiks `coachay_family_*` — ten sam wzorzec co `isFamilyProductId` po stronie mobile, porównanie prefiksu przed `:`, Billing v6 base plans)
-- [ ] Jeśli tak: zapytać `access_rights where uid==app_user_id AND source=='family'` (brak `clubId` w payloadzie RC) i zaktualizować **WSZYSTKIE** pasujące dokumenty — w normalnym przypadku 1, edge case: rodzic w 2 klubach z osobnymi zakupami family (logować, nie obsługiwać pełnie)
-- [ ] Aktualizować **TYLKO** `valid_until` i `productId` — **NIE ruszać** `slots_total`/`slots_used` (zarządzane osobno przy claimie/blokadzie Kibica)
-- [ ] Jeśli brak pasującego dokumentu — **no-op + log** (pierwszy zapis zawsze robi klient przy zakupie; webhook tylko podtrzymuje)
-
-**Osobny mniejszy problem (niższy priorytet):** `slots_used` nigdy nie jest automatycznie zwalniany gdy Kibic przestaje potrzebować slotu rodzinnego (np. kupuje własną licencję ind — P0.5 wygrywa wcześniej w kaskadzie, ale `familySlotParent.slots_used` zostaje zajęte na zawsze). `releaseFamilySlot()` wywołuje się dziś tylko ręcznie przy blokowaniu Kibica przez rodzica. Nie psuje dostępu, tylko zawyża zajętość puli rodzica.
 - [ ] Google OAuth w web (logika biznesowa do przeniesienia)
 - [ ] DEMO uproszczenie (jeden demo_user)
 - [ ] Onboarding pierwsze kroki
