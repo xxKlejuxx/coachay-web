@@ -4,6 +4,7 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-17 00:00] [WEB] [DONE] revenuecatWebhook — fix: CANCELLATION USER_CANCELLED nie kończy dostępu (patrz wpis poniżej)
 [2026-09-17 00:00] [WEB] [DONE] Pola cachedLicense na memberships — wdrożone i backfillowane, APP może zacząć używać (patrz wpis poniżej)
 [2026-09-16 00:00] [APP] [INFO] syncEntitlementToAccessRights — slots_total/slots_used bezpieczne, brak konfliktu z webhookiem (patrz wpis poniżej)
 [2026-09-16 00:00] [APP] [INFO] Koncepcja V2 (po premierze): denormalizacja statusu licencji na memberships (patrz wpis poniżej)
@@ -2537,3 +2538,65 @@ try {
 **Co obserwować w logach:**
 - Jeśli po zamknięciu okna Google Play pojawia się log `3.` lub `4.` → Promise działa, problem leży gdzie indziej (np. brak `setIsSubmitting(false)` w `finally`)
 - Jeśli po zamknięciu okna NIE pojawia się żaden log → Promise wisi i nigdy nie dostaje odpowiedzi z mostka Android → bug w RevenueCat SDK lub konfiguracji
+
+---
+
+## revenuecatWebhook — CANCELLATION USER_CANCELLED (2026-09-17)
+
+### Problem (był)
+Gdy user wyłączał auto-odnowienie w Google Play (nie anulował natychmiast — tylko odznaczył "odnów automatycznie"), RC wysyłał zdarzenie `CANCELLATION` z `cancel_reason = USER_CANCELLED`. Nasz webhook traktował każde `CANCELLATION` jako utratę dostępu → ustawiał `subscription.status = EXPIRED` i `access_rights.valid_until = now()` **natychmiast**, mimo że user miał opłacony dostęp do końca okresu.
+
+### Fix w WEB (functions/index.js)
+
+Wyciągamy teraz `cancel_reason` z payloadu RC i rozróżniamy przypadki:
+
+```js
+const { type, app_user_id, expiration_at_ms, product_id, store, cancel_reason } = event;
+
+const isUserCancelledAutoRenew = type === 'CANCELLATION' && cancel_reason === 'USER_CANCELLED';
+
+if (isUserCancelledAutoRenew) {
+    // no-op — dostęp zachowany do expiresAt ustawionego przez poprzedni RENEWAL
+    return res.status(200).send('OK');
+}
+```
+
+| cancel_reason | Co oznacza | Nowe zachowanie |
+|---|---|---|
+| `USER_CANCELLED` | User wyłączył auto-odnowienie w Google Play | **no-op** — dostęp do końca okresu |
+| `BILLING_ERROR` | Płatność nie przeszła | EXPIRED natychmiast |
+| `DEVELOPER_INITIATED` | My anulowaliśmy | EXPIRED natychmiast |
+| brak / inne | Inne powody | EXPIRED natychmiast |
+
+Dostęp faktycznie wygasa dopiero gdy RC wyśle `EXPIRATION` (koniec opłaconego okresu).
+
+### Wpływ na sloty rodzinne i klubowe
+
+- **Family slots** (`applyFamilyLicenseUpdate`): przy USER_CANCELLED — no-op, `access_rights.valid_until` zostaje z poprzedniego RENEWAL. KIBIC zachowuje slot do wygaśnięcia rodzica.
+- **Club slots / trial**: nie są obsługiwane przez RC webhook — bez wpływu.
+- **`checkExpiringLicenses`**: nadal wyśle reminder "licencja wygasa za X dni" — poprawne zachowanie, user odwołał auto-odnowienie więc powinien dostać ostrzeżenie.
+
+### Dla APP — co może/powinna zrobić
+
+**Wymagane:** nic — webhook backendowy, dostęp działa poprawnie bez zmian w APP.
+
+**Opcjonalne (rekomendowane UX):** RC SDK w `CustomerInfo` zwraca pole `willRenew` na aktywnym entitlement. Gdy user wyłączył auto-odnowienie, `willRenew === false` mimo że entitlement jest aktywny. APP może to wykorzystać:
+
+```typescript
+const customerInfo = await Purchases.getCustomerInfo();
+const entitlement = customerInfo.entitlements.active['coachay_pro']; // lub odpowiedni klucz
+const willRenew = entitlement?.willRenew ?? true;
+const expiresDate = entitlement?.expirationDate; // ISO string
+
+if (!willRenew && expiresDate) {
+    // pokaż baner: "Twoja subskrypcja wygasa [data] i nie odnowi się automatycznie"
+    // + przycisk "Zarządzaj subskrypcją" → deep link do Google Play
+}
+```
+
+Deep link do zarządzania subskrypcją w Google Play:
+```
+https://play.google.com/store/account/subscriptions?package=<PACKAGE_NAME>
+```
+
+**Skąd user anuluje / przywraca subskrypcję:** wyłącznie w Google Play (Settings → Subscriptions) lub iOS App Store — NIE w naszej aplikacji. Aplikacja może tylko pokazać link.
