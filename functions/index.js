@@ -2026,8 +2026,9 @@ exports.cleanupExpiredTasks = onSchedule('every day 04:00', async () => {
 /* ═══════════════════════════════════════════════════════
    RevenueCat Webhook — obsługa subskrypcji indywidualnych i rodzinnych
    POST /revenuecat-webhook
-   Zdarzenia: INITIAL_PURCHASE, RENEWAL → ACTIVE
-              CANCELLATION, EXPIRATION   → EXPIRED
+   Zdarzenia: INITIAL_PURCHASE, RENEWAL, UNCANCELLATION → ACTIVE
+              CANCELLATION(USER_CANCELLED) → no-op (dostęp do expiresAt)
+              CANCELLATION(inne), EXPIRATION, BILLING_ISSUE → EXPIRED
    product_id coachay_family_* → applyFamilyLicenseUpdate (access_rights)
    pozostałe  → applyLicenseUpdate (users.subscription)
 ═══════════════════════════════════════════════════════ */
@@ -2047,13 +2048,23 @@ exports.revenuecatWebhook = onRequest(
         const event = req.body?.event;
         if (!event) return res.status(400).send('Bad Request: brak pola event');
 
-        const { type, app_user_id, expiration_at_ms, product_id, store } = event;
+        const { type, app_user_id, expiration_at_ms, product_id, store, cancel_reason } = event;
         if (!app_user_id) return res.status(400).send('Bad Request: brak app_user_id');
 
-        console.log(`revenuecatWebhook: type=${type} user=${app_user_id}`);
+        console.log(`revenuecatWebhook: type=${type} user=${app_user_id} cancel_reason=${cancel_reason || '-'}`);
+
+        // USER_CANCELLED = user wyłączył auto-odnowienie, ale ma dostęp do końca okresu → ACTIVE
+        // BILLING_ERROR, DEVELOPER_INITIATED itp. → EXPIRED natychmiast
+        const isUserCancelledAutoRenew = type === 'CANCELLATION' && cancel_reason === 'USER_CANCELLED';
 
         const ACTIVE_EVENTS  = ['INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION'];
         const EXPIRED_EVENTS = ['CANCELLATION', 'EXPIRATION', 'BILLING_ISSUE'];
+
+        if (isUserCancelledAutoRenew) {
+            // Traktujemy jak ACTIVE — dostęp zachowany, expiresAt już jest ustawione przez poprzedni RENEWAL/INITIAL_PURCHASE
+            console.log(`revenuecatWebhook: CANCELLATION USER_CANCELLED — dostęp zachowany do expiresAt, no-op`);
+            return res.status(200).send('OK');
+        }
 
         if (!ACTIVE_EVENTS.includes(type) && !EXPIRED_EVENTS.includes(type)) {
             // Zdarzenie ignorowane (np. TEST, TRANSFER itp.)
