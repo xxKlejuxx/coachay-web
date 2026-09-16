@@ -735,6 +735,52 @@ exports.onMembershipCreated = onDocumentCreated('memberships/{membershipId}', as
     /* ── usedSlot ── */
     await assignUsedSlot(event.data.ref, m);
 
+    /* ── Cached license fields ── */
+    try {
+        const cacheUpdates = {};
+        const [userSnap, clubSnap] = await Promise.all([
+            db.collection('users').doc(m.userId).get(),
+            m.clubId ? db.collection('clubs').doc(m.clubId).get() : Promise.resolve(null),
+        ]);
+        const sub = userSnap.exists ? userSnap.data().subscription : null;
+        if (sub?.status) {
+            cacheUpdates.cachedUserSubscription = {
+                status:    sub.status,
+                expiresAt: sub.expiresAt || null,
+                productId: sub.productId || null,
+                updatedAt: FieldValue.serverTimestamp(),
+            };
+        }
+        if (clubSnap?.exists) {
+            const lic = clubSnap.data().license;
+            const raw = lic?.valid_until ?? lic?.expiresAt;
+            cacheUpdates.cachedClubLicense = {
+                validUntil: raw?.toDate ? raw.toDate() : (raw ? new Date(raw) : null),
+                scope:      lic?.scope || 'all',
+                updatedAt:  FieldValue.serverTimestamp(),
+            };
+        }
+        if (m.role === 'KIBIC' && m.familySlotParent && m.clubId) {
+            const arSnap = await db.collection('access_rights')
+                .where('uid', '==', m.familySlotParent)
+                .where('club_id', '==', m.clubId)
+                .limit(1).get();
+            if (!arSnap.empty) {
+                const ar = arSnap.docs[0].data();
+                const vRaw = ar.valid_until;
+                cacheUpdates.cachedFamilySlot = {
+                    validUntil: vRaw?.toDate ? vRaw.toDate() : (vRaw ? new Date(vRaw) : null),
+                    slotsTotal: ar.slots_total || null,
+                    slotsUsed:  ar.slots_used  || null,
+                    updatedAt:  FieldValue.serverTimestamp(),
+                };
+            }
+        }
+        if (Object.keys(cacheUpdates).length) await event.data.ref.update(cacheUpdates);
+    } catch (e) {
+        console.error('✗ cachedLicense onMembershipCreated:', e);
+    }
+
     /* ── Powiadomienia o nadchodzących eventach drużyny ── */
     if (!m.teamId) return;
     const today   = new Date().toISOString().slice(0, 10);
@@ -1164,6 +1210,29 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
     const scopeChanged = newScope !== oldScope;
     if (!totalChanged && !scopeChanged) return;
 
+    // Helper — snapshot licencji klubowej do cache na memberships
+    const _buildClubLicenseCache = (licData) => {
+        const raw = licData?.valid_until ?? licData?.expiresAt;
+        return {
+            validUntil: raw?.toDate ? raw.toDate() : (raw ? new Date(raw) : null),
+            scope:      licData?.scope || 'all',
+            updatedAt:  FieldValue.serverTimestamp(),
+        };
+    };
+    const _writeCachedClubLicense = async (cid, licData) => {
+        const snap = await db.collection('memberships').where('clubId', '==', cid).get();
+        if (snap.empty) return;
+        const cached = _buildClubLicenseCache(licData);
+        const chunks = [];
+        for (let i = 0; i < snap.docs.length; i += 499) chunks.push(snap.docs.slice(i, i + 499));
+        for (const chunk of chunks) {
+            const b = db.batch();
+            for (const d of chunk) b.update(d.ref, { cachedClubLicense: cached });
+            await b.commit();
+        }
+        console.log(`onClubLicenseUpdated: cachedClubLicense → ${snap.size} memberships klubu ${cid}`);
+    };
+
     // Scope all → trainers_only: cofnij sloty rodziców
     if (scopeChanged && newScope === 'trainers_only' && oldScope !== 'trainers_only') {
         const parentSlots = await db.collection('memberships')
@@ -1178,6 +1247,7 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
             });
             console.log(`onClubLicenseUpdated: ${clubId} — cofnięto ${parentSlots.size} slotów rodzicom (scope→trainers_only)`);
         }
+        await _writeCachedClubLicense(clubId, after.license);
         return;
     }
 
@@ -1259,10 +1329,12 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
         if (maxOneParent && c.isParent && c.m.playerId) takenPlayerIds.add(c.m.playerId);
         newUsed++;
     }
-    if (newUsed === used) return;
-    batch.update(clubRef, { 'license.used': newUsed });
-    await batch.commit();
-    console.log(`onClubLicenseUpdated: ${clubId} — przydzielono ${newUsed - used} slotów (${newUsed}/${newTotal})`);
+    if (newUsed > used) {
+        batch.update(clubRef, { 'license.used': newUsed });
+        await batch.commit();
+        console.log(`onClubLicenseUpdated: ${clubId} — przydzielono ${newUsed - used} slotów (${newUsed}/${newTotal})`);
+    }
+    await _writeCachedClubLicense(clubId, after.license);
 });
 
 exports.sendReminders = onSchedule('every 60 minutes', async () => {
@@ -2117,6 +2189,28 @@ async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id,
     }
     await batch.commit();
     console.log(`applyFamilyLicenseUpdate: uid=${uid} type=${type} → ${familyDocs.length} access_rights, valid_until=${validUntil?.toISOString()}`);
+
+    // Propaguj cachedFamilySlot na memberships KIBIC powiązanych z tym rodzicem
+    const kibicSnap = await db.collection('memberships').where('familySlotParent', '==', uid).get();
+    if (!kibicSnap.empty) {
+        const arByClub = {};
+        for (const d of familyDocs) arByClub[d.data().club_id] = d.data();
+        const kibicBatch = db.batch();
+        for (const doc of kibicSnap.docs) {
+            const clubId = doc.data().clubId;
+            const ar = arByClub[clubId] || familyDocs[0].data();
+            kibicBatch.update(doc.ref, {
+                cachedFamilySlot: {
+                    validUntil:  validUntil || null,
+                    slotsTotal:  ar.slots_total || null,
+                    slotsUsed:   ar.slots_used  || null,
+                    updatedAt:   FieldValue.serverTimestamp(),
+                },
+            });
+        }
+        await kibicBatch.commit();
+        console.log(`applyFamilyLicenseUpdate: cachedFamilySlot → ${kibicSnap.size} KIBIC memberships`);
+    }
 }
 
 async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS) {
@@ -2171,5 +2265,24 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
             if (m.usedSlot === 1) continue;
             await assignUsedSlot(memDoc.ref, m);
         }
+    }
+
+    // Zapisz cachedUserSubscription na wszystkich memberships usera
+    const allMems = await db.collection('memberships').where('userId', '==', userId).get();
+    if (!allMems.empty) {
+        const cachedSub = {
+            status:    updates['subscription.status'],
+            expiresAt: updates['subscription.expiresAt'] || null,
+            productId: product_id || null,
+            updatedAt: FieldValue.serverTimestamp(),
+        };
+        const chunks = [];
+        for (let i = 0; i < allMems.docs.length; i += 499) chunks.push(allMems.docs.slice(i, i + 499));
+        for (const chunk of chunks) {
+            const b = db.batch();
+            for (const d of chunk) b.update(d.ref, { cachedUserSubscription: cachedSub });
+            await b.commit();
+        }
+        console.log(`applyLicenseUpdate: cachedUserSubscription → ${allMems.size} memberships uid=${userId}`);
     }
 }
