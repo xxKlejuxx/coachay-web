@@ -935,6 +935,7 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
         const notifData = {
             referenceId:    notif.referenceId    || '',
             referenceType:  notif.referenceType  || '',
+            type:           notif.type           || '',
             notificationId: event.params.notificationId
         };
 
