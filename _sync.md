@@ -4,6 +4,7 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-17 00:00] [WEB] [DONE] Pola cachedLicense na memberships — wdrożone i backfillowane, APP może zacząć używać (patrz wpis poniżej)
 [2026-09-16 00:00] [APP] [INFO] syncEntitlementToAccessRights — slots_total/slots_used bezpieczne, brak konfliktu z webhookiem (patrz wpis poniżej)
 [2026-09-16 00:00] [APP] [INFO] Koncepcja V2 (po premierze): denormalizacja statusu licencji na memberships (patrz wpis poniżej)
 [2026-09-16 00:00] [WEB] [DONE] functions/index.js — revenuecatWebhook: nowy routing dla produktów rodzinnych + applyFamilyLicenseUpdate
@@ -57,6 +58,105 @@ Webhook działa po stronie Cloud Functions — APP nic nie musi zmieniać. Logik
 
 ### Znany mniejszy problem (niższy priorytet, brak fix)
 `slots_used` na `access_rights` rodzica nie jest automatycznie zwalniany gdy Kibic kupuje własną licencję ind (P0.5 wygrywa wcześniej, `releaseFamilySlot()` się nie woła). Nie psuje dostępu, tylko zawyża zajętość puli rodzica. `releaseFamilySlot()` wołana jest dziś tylko ręcznie przy blokowaniu Kibica.
+
+---
+
+## Pola cachedLicense na memberships — pełny plan i rekomendacja dla APP (2026-09-17)
+
+### Co zostało wdrożone (WEB — functions/index.js, commit 99108f7)
+
+Na każdym dokumencie `memberships` WEB zapisuje 3 nowe pola cache. Backfill wykonany na wszystkich istniejących memberships (40 dokumentów).
+
+#### Schemat pól
+
+```
+cachedUserSubscription: {
+  status:    'ACTIVE' | 'EXPIRED'   // kopia users/{uid}.subscription.status
+  expiresAt: Timestamp | null        // kopia users/{uid}.subscription.expiresAt
+  productId: string | null
+  updatedAt: Timestamp
+} | null
+
+cachedClubLicense: {
+  validUntil: Timestamp | null       // kopia clubs/{clubId}.license.valid_until
+  used:       number                 // kopia clubs/{clubId}.license.used
+  total:      number                 // kopia clubs/{clubId}.license.total
+  updatedAt:  Timestamp
+} | null
+
+cachedFamilySlot: {                  // TYLKO na memberships KIBIC (role=='KIBIC')
+  validUntil: Timestamp | null       // kopia access_rights rodzica.valid_until
+  slotsTotal: number | null          // kopia access_rights rodzica.slots_total
+  slotsUsed:  number | null          // kopia access_rights rodzica.slots_used
+  updatedAt:  Timestamp
+} | null
+```
+
+#### Kto i kiedy aktualizuje
+
+| Pole | Trigger WEB | Kiedy odpala |
+|---|---|---|
+| `cachedUserSubscription` | `applyLicenseUpdate` (revenuecatWebhook) | INITIAL_PURCHASE / RENEWAL / CANCELLATION / EXPIRATION (ind) |
+| `cachedClubLicense` | `onClubLicenseUpdated` | zmiana `license.total` lub `license.scope` na klubie |
+| `cachedClubLicense` | `onMembershipCreated` | nowy membership — stempel przy tworzeniu |
+| `cachedFamilySlot` | `applyFamilyLicenseUpdate` (revenuecatWebhook) | RENEWAL / CANCELLATION / EXPIRATION (family) — propagacja na wszystkich KIBIC z `familySlotParent==uid` |
+| wszystkie 3 | `onMembershipCreated` | nowy membership — stempel stanu przy tworzeniu |
+
+#### Aktualność pól — co jest best-effort
+
+`cachedClubLicense.used` i `cachedFamilySlot.slotsUsed` mogą być nieaktualne przez krótki czas po zdarzeniach takich jak: przydzielenie slotu po wygaśnięciu trialu (CF cron `assignExpiredTrialSlots`), lazy-claim slotu family przy logowaniu, ręczne blokowanie Kibica. Są to zdarzenia rzadkie (raz na miesiąc/rok per user). **Nie wpływa to na poprawność gate'a dostępu** — indywidualny dostęp Kibica/Rodzica jest determinowany przez `usedSlot` (już na membership), nie przez globalne `used`/`total`. Te pola służą głównie do wyświetlenia stanu puli w UI.
+
+### Rekomendacja dla APP
+
+**Cel:** zastąpić kaskadę odczytów Firestore w `getAccessStatus()` jednym zapytaniem `memberships where userId==uid`, z lokalnym liczeniem priorytetu P0.5→P1→P0→P3→P4 z pól cache.
+
+#### Wymagany defensywny fallback
+
+Memberships sprzed backfillu lub bez pola (edge case) muszą działać bez błędu — brak pola = brak oznaczenia, nie crash. Sprawdzaj przez `??` lub `if (m.cachedUserSubscription)`.
+
+#### Mapowanie pól cache na priorytety
+
+```
+P0.5 — ind subscription:
+  cachedUserSubscription.status === 'ACTIVE'
+  && cachedUserSubscription.expiresAt > now
+  → ACTIVE (nie czytaj users/{uid})
+
+P0 — trial:
+  membership.trialEndsAt > now
+  → ACTIVE (pole już jest na membership — bez zmian)
+
+P3 — club slot:
+  membership.usedSlot === 1                        // czy user MA slot
+  && cachedClubLicense.validUntil > now            // czy klub MA aktywną licencję
+  && cachedClubLicense.total > 0                   // czy licencja jest skonfigurowana
+  → ACTIVE (nie czytaj clubs/{clubId})
+
+P4 — family (tylko KIBIC):
+  membership.familySlotParent != null              // slot zaclaimowany
+  && cachedFamilySlot.validUntil > now             // licencja rodzica aktywna
+  && cachedFamilySlot.slotsTotal > 1               // pula ma więcej niż 1 slot
+  → ACTIVE (nie czytaj access_rights)
+
+P1 — own access_rights (licencja ind B2B):
+  access_rights/{uid}_{clubId} — ten odczyt zostaje, bo source='access_rights' dotyczy
+  małej grupy userów B2B; można go zoptymalizować osobno później
+```
+
+#### Odczyty które zostają (niezmienione na razie)
+
+- `access_rights` dla P1 (B2B, mały ruch)
+- `users/{uid}` tylko gdy `cachedUserSubscription` brak (defensive fallback)
+- `clubs/{clubId}` tylko gdy `cachedClubLicense` brak (defensive fallback)
+
+#### Kolejność wdrożenia po stronie APP (sugestia)
+
+1. Dodaj odczyt pól cache z `memberships` — już dostępne w tym samym zapytaniu co dziś
+2. Zastąp odczyt `users/{uid}` (P0.5) sprawdzeniem `cachedUserSubscription` (z fallbackiem)
+3. Zastąp odczyt `clubs/{clubId}` (P3) sprawdzeniem `cachedClubLicense` (z fallbackiem)
+4. Zastąp skan RODZIC-membershipów + odczyt `access_rights` (P4) sprawdzeniem `cachedFamilySlot` (z fallbackiem)
+
+Krok 2 przyniesie największe oszczędności (P0.5 odpada dla wszystkich płacących userów). Kroki 3 i 4 są kolejno mniejsze.
 
 ---
 
