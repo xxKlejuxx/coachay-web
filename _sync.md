@@ -4,6 +4,8 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-17 00:00] [APP] [TODO] Lokalne powiadomienia 1h przed wydarzeniem — spec gotowy (patrz wpis poniżej)
+[2026-09-17 00:00] [WEB] [DONE] onNotificationCreated — type dodany do push data payload (EVENT_CANCELLED/UPDATED bez fetcha Firestore)
 [2026-09-17 00:00] [WEB] [DONE] willRenew na subscription + memberships cached fields — szacowanie przychodów (patrz wpis poniżej)
 [2026-09-17 00:00] [WEB] [DONE] revenuecatWebhook — fix: CANCELLATION USER_CANCELLED nie kończy dostępu (patrz wpis poniżej)
 [2026-09-17 00:00] [WEB] [DONE] Pola cachedLicense na memberships — wdrożone i backfillowane, APP może zacząć używać (patrz wpis poniżej)
@@ -2642,3 +2644,97 @@ db.collection('users')
 ### Dla APP — brak zmian wymaganych po stronie zakupu
 
 Webhook zapisuje `willRenew` automatycznie. APP może opcjonalnie odczytać `willRenew` z `CustomerInfo` RC SDK i pokazać UI (patrz poprzedni wpis o CANCELLATION USER_CANCELLED).
+
+---
+
+## Lokalne powiadomienia 1h przed wydarzeniem — spec dla APP (2026-09-17)
+
+### Status
+WEB gotowy. Implementacja leży w 100% po stronie APP (expo-notifications). Wchodzi po premierze MVP.
+
+### Co WEB wysyła w push data payload (od teraz)
+
+```js
+// data payload każdego pusha (onNotificationCreated)
+{
+    referenceId:    eventId,           // ID wydarzenia w Firestore
+    referenceType:  'event',           // typ referencji
+    type:           'EVENT_CANCELLED', // ← NOWE: typ zdarzenia (wcześniej był tylko w tytule)
+    notificationId: '...'
+}
+```
+
+Typy zdarzeń eventowych: `EVENT_NEW`, `EVENT_UPDATED`, `EVENT_CANCELLED`
+
+### Logika APP (do zaimplementowania)
+
+```typescript
+import * as Notifications from 'expo-notifications';
+
+// Inicjalizacja w root app
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+// Planowanie przypomnienia — identifier = eventId zapewnia idempotentność (nadpisuje stare)
+export const scheduleEventReminder = async (event: any) => {
+  const reminderTime = new Date(new Date(event.dateTime).getTime() - 60 * 60 * 1000);
+  if (reminderTime <= new Date()) return; // już minęło lub za mniej niż godzinę
+  await Notifications.scheduleNotificationAsync({
+    identifier: event.id,
+    content: {
+      title: `⚽ Już czas się ruszyć!`,
+      body: `Za godzinę: "${event.title}". Sprawdź zbiórkę!`,
+      sound: true,
+      data: { screen: 'EventDetails', eventId: event.id },
+    },
+    trigger: reminderTime,
+  });
+};
+
+export const cancelEventReminder = async (eventId: string) => {
+  await Notifications.cancelScheduledNotificationAsync(eventId);
+};
+```
+
+### Reakcja na push server-side (bez zbędnych odczytów Firestore)
+
+```typescript
+// W handlerze przychodzących pushów (background/foreground):
+const handlePush = async (notification) => {
+  const { type, referenceId, referenceType } = notification.request.content.data;
+  if (referenceType !== 'event') return;
+
+  if (type === 'EVENT_CANCELLED') {
+    // 0 odczytów Firestore — mamy eventId w payloadzie
+    await cancelEventReminder(referenceId);
+  }
+
+  if (type === 'EVENT_UPDATED') {
+    // Odśwież cały 7-dniowy kalendarz → reschedule wszystkich przypomnień
+    // (1 fetch listy eventów — takie samo odświeżenie jak przy wejściu w ekran)
+    await syncEventRemindersForNext7Days();
+  }
+};
+```
+
+### Ochrona przed limitem iOS (64 zaplanowane notyfikacje)
+
+Nasze istniejące okno 7-dniowe (eventy wyświetlane max 7 dni w przód) naturalnie ogranicza kolejkę lokalną. Przy typowym klubie (1-2 treningi/mecze tygodniowo) = max ~14 powiadomień — daleko od limitu 64.
+
+### Android edge case — Xiaomi/Oppo/Redmi
+
+W `app.json`:
+```json
+{
+  "android": {
+    "useNextNotificationsApi": true
+  }
+}
+```
+
+W Profil → Ustawienia: przycisk "Jeśli nie dostajesz przypomnień → wyłącz optymalizację baterii dla Coachay".
