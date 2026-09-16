@@ -2053,21 +2053,19 @@ exports.revenuecatWebhook = onRequest(
 
         console.log(`revenuecatWebhook: type=${type} user=${app_user_id} cancel_reason=${cancel_reason || '-'}`);
 
-        // USER_CANCELLED = user wyłączył auto-odnowienie, ale ma dostęp do końca okresu → ACTIVE
-        // BILLING_ERROR, DEVELOPER_INITIATED itp. → EXPIRED natychmiast
-        const isUserCancelledAutoRenew = type === 'CANCELLATION' && cancel_reason === 'USER_CANCELLED';
-
         const ACTIVE_EVENTS  = ['INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION'];
         const EXPIRED_EVENTS = ['CANCELLATION', 'EXPIRATION', 'BILLING_ISSUE'];
 
-        if (isUserCancelledAutoRenew) {
-            // Traktujemy jak ACTIVE — dostęp zachowany, expiresAt już jest ustawione przez poprzedni RENEWAL/INITIAL_PURCHASE
-            console.log(`revenuecatWebhook: CANCELLATION USER_CANCELLED — dostęp zachowany do expiresAt, no-op`);
-            return res.status(200).send('OK');
-        }
+        // willRenew: true gdy aktywna subskrypcja z auto-odnowieniem,
+        //            false gdy user wyłączył auto-odnowienie (dostęp zachowany do expiresAt),
+        //            null  gdy subskrypcja wygasła (EXPIRATION/BILLING_ISSUE)
+        const willRenew = ACTIVE_EVENTS.includes(type) ? true
+            : (type === 'CANCELLATION' && cancel_reason === 'USER_CANCELLED') ? false
+            : null;
 
-        if (!ACTIVE_EVENTS.includes(type) && !EXPIRED_EVENTS.includes(type)) {
-            // Zdarzenie ignorowane (np. TEST, TRANSFER itp.)
+        const isUserCancelled = willRenew === false;
+
+        if (!isUserCancelled && !ACTIVE_EVENTS.includes(type) && !EXPIRED_EVENTS.includes(type)) {
             console.log(`revenuecatWebhook: zdarzenie ${type} zignorowane`);
             return res.status(200).send('OK');
         }
@@ -2078,7 +2076,7 @@ exports.revenuecatWebhook = onRequest(
             const isFamilyProduct = baseProductId.startsWith('coachay_family_');
 
             if (isFamilyProduct) {
-                await applyFamilyLicenseUpdate(app_user_id, type, expiration_at_ms, product_id, ACTIVE_EVENTS);
+                await applyFamilyLicenseUpdate(app_user_id, type, expiration_at_ms, product_id, ACTIVE_EVENTS, willRenew);
             } else {
                 // Znajdź użytkownika po app_user_id (= userId w Coachay)
                 const userSnap = await db.collection('users').doc(app_user_id).get();
@@ -2090,9 +2088,9 @@ exports.revenuecatWebhook = onRequest(
                         console.warn(`revenuecatWebhook: user ${app_user_id} nie istnieje`);
                         return res.status(200).send('OK'); // 200 żeby RC nie retry'ował
                     }
-                    await applyLicenseUpdate(byField.docs[0].ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS);
+                    await applyLicenseUpdate(byField.docs[0].ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew);
                 } else {
-                    await applyLicenseUpdate(userSnap.ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS);
+                    await applyLicenseUpdate(userSnap.ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew);
                 }
             }
 
@@ -2175,8 +2173,9 @@ exports.moderateEvents = onDocumentWritten('events/{id}', (event) =>
 
 /* ─────────────────────────────────────────────────── */
 
-async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id, ACTIVE_EVENTS) {
+async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id, ACTIVE_EVENTS, willRenew = null) {
     const isActive = ACTIVE_EVENTS.includes(type);
+    const isUserCancelled = willRenew === false;
     const arSnap = await db.collection('access_rights').where('uid', '==', uid).get();
     const familyDocs = arSnap.docs.filter(d => d.data().source === 'family_license');
     if (familyDocs.length === 0) {
@@ -2186,6 +2185,25 @@ async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id,
     if (familyDocs.length > 1) {
         console.warn(`applyFamilyLicenseUpdate: uid=${uid} ma ${familyDocs.length} family docs — aktualizuję wszystkie`);
     }
+
+    if (isUserCancelled) {
+        // Tylko willRenew = false — valid_until i status bez zmian
+        const batch = db.batch();
+        for (const doc of familyDocs) batch.update(doc.ref, { willRenew: false, updatedAt: FieldValue.serverTimestamp() });
+        await batch.commit();
+        const kibicSnap = await db.collection('memberships').where('familySlotParent', '==', uid).get();
+        if (!kibicSnap.empty) {
+            const kibicBatch = db.batch();
+            for (const doc of kibicSnap.docs) kibicBatch.update(doc.ref, {
+                'cachedFamilySlot.willRenew': false,
+                'cachedFamilySlot.updatedAt': FieldValue.serverTimestamp(),
+            });
+            await kibicBatch.commit();
+        }
+        console.log(`applyFamilyLicenseUpdate: USER_CANCELLED uid=${uid} → willRenew=false na ${familyDocs.length} access_rights`);
+        return;
+    }
+
     let validUntil;
     if (isActive && expiration_at_ms) {
         validUntil = new Date(expiration_at_ms);
@@ -2198,6 +2216,7 @@ async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id,
         const updates = { updatedAt: FieldValue.serverTimestamp() };
         if (validUntil) updates.valid_until = validUntil;
         if (product_id) updates.productId = product_id;
+        if (willRenew !== null) updates.willRenew = willRenew;
         batch.update(doc.ref, updates);
     }
     await batch.commit();
@@ -2217,6 +2236,7 @@ async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id,
                     validUntil:  validUntil || null,
                     slotsTotal:  ar.slots_total || null,
                     slotsUsed:   ar.slots_used  || null,
+                    willRenew:   willRenew ?? null,
                     updatedAt:   FieldValue.serverTimestamp(),
                 },
             });
@@ -2226,14 +2246,38 @@ async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id,
     }
 }
 
-async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS) {
+async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew = null) {
     const isActive = ACTIVE_EVENTS.includes(type);
+    const isUserCancelled = willRenew === false;
+    const userId = userRef.id;
+
+    if (isUserCancelled) {
+        // Tylko willRenew = false — status, expiresAt i logika slotów bez zmian
+        await userRef.update({ 'subscription.willRenew': false, 'subscription.updatedAt': FieldValue.serverTimestamp() });
+        const allMems = await db.collection('memberships').where('userId', '==', userId).get();
+        if (!allMems.empty) {
+            const chunks = [];
+            for (let i = 0; i < allMems.docs.length; i += 499) chunks.push(allMems.docs.slice(i, i + 499));
+            for (const chunk of chunks) {
+                const b = db.batch();
+                for (const d of chunk) b.update(d.ref, {
+                    'cachedUserSubscription.willRenew': false,
+                    'cachedUserSubscription.updatedAt': FieldValue.serverTimestamp(),
+                });
+                await b.commit();
+            }
+        }
+        console.log(`applyLicenseUpdate: USER_CANCELLED uid=${userId} → willRenew=false`);
+        return;
+    }
+
     const updates = {
         'subscription.status':    isActive ? 'ACTIVE' : 'EXPIRED',
         'subscription.updatedAt': FieldValue.serverTimestamp(),
     };
     if (product_id) updates['subscription.productId'] = product_id;
     if (store)      updates['subscription.store']     = store;
+    if (willRenew !== null) updates['subscription.willRenew'] = willRenew;
     if (expiration_at_ms) {
         const _expDate = new Date(expiration_at_ms);
         _expDate.setUTCHours(23, 55, 0, 0);
@@ -2242,7 +2286,6 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
         updates['subscription.expiresAt'] = FieldValue.serverTimestamp();
     }
     await userRef.update(updates);
-    const userId = userRef.id;
     console.log(`revenuecatWebhook: user ${userId} → subscription.status=${updates['subscription.status']}`);
 
     if (isActive) {
@@ -2287,6 +2330,7 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
             status:    updates['subscription.status'],
             expiresAt: updates['subscription.expiresAt'] || null,
             productId: product_id || null,
+            willRenew: willRenew ?? null,
             updatedAt: FieldValue.serverTimestamp(),
         };
         const chunks = [];
