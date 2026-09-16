@@ -4,6 +4,7 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-17 00:00] [WEB] [DONE] willRenew na subscription + memberships cached fields — szacowanie przychodów (patrz wpis poniżej)
 [2026-09-17 00:00] [WEB] [DONE] revenuecatWebhook — fix: CANCELLATION USER_CANCELLED nie kończy dostępu (patrz wpis poniżej)
 [2026-09-17 00:00] [WEB] [DONE] Pola cachedLicense na memberships — wdrożone i backfillowane, APP może zacząć używać (patrz wpis poniżej)
 [2026-09-16 00:00] [APP] [INFO] syncEntitlementToAccessRights — slots_total/slots_used bezpieczne, brak konfliktu z webhookiem (patrz wpis poniżej)
@@ -2600,3 +2601,44 @@ https://play.google.com/store/account/subscriptions?package=<PACKAGE_NAME>
 ```
 
 **Skąd user anuluje / przywraca subskrypcję:** wyłącznie w Google Play (Settings → Subscriptions) lub iOS App Store — NIE w naszej aplikacji. Aplikacja może tylko pokazać link.
+
+---
+
+## willRenew — śledzenie auto-odnowienia subskrypcji (2026-09-17)
+
+### Nowe pole: willRenew
+
+Każde zdarzenie RC zapisuje teraz `willRenew` na wszystkich powiązanych dokumentach.
+
+| Zdarzenie RC | willRenew | Znaczenie |
+|---|---|---|
+| `INITIAL_PURCHASE` / `RENEWAL` / `UNCANCELLATION` | `true` | Subskrypcja odnowi się automatycznie |
+| `CANCELLATION` + `USER_CANCELLED` | `false` | User wyłączył auto-odnowienie, ma dostęp do expiresAt |
+| `EXPIRATION` / `BILLING_ISSUE` | `null` | Subskrypcja zakończona, pole nie jest zapisywane |
+
+### Gdzie jest zapisywane
+
+| Dokument | Pole |
+|---|---|
+| `users/{uid}` | `subscription.willRenew` |
+| `memberships/{id}` | `cachedUserSubscription.willRenew` |
+| `access_rights/{id}` (family) | `willRenew` |
+| `memberships/{id}` (KIBIC) | `cachedFamilySlot.willRenew` |
+
+### Zastosowanie — szacowanie przychodów
+
+```
+aktywni z auto-odnowieniem = users gdzie subscription.status == 'ACTIVE' && subscription.willRenew == true
+przychód_przyszły_miesiąc  = COUNT × cena_produktu
+```
+
+W Firestore:
+```js
+db.collection('users')
+  .where('subscription.status', '==', 'ACTIVE')
+  .where('subscription.willRenew', '==', true)
+```
+
+### Dla APP — brak zmian wymaganych po stronie zakupu
+
+Webhook zapisuje `willRenew` automatycznie. APP może opcjonalnie odczytać `willRenew` z `CustomerInfo` RC SDK i pokazać UI (patrz poprzedni wpis o CANCELLATION USER_CANCELLED).
