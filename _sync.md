@@ -4,6 +4,8 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-17 00:00] [APP] [TODO] Badge/Bell — nowa logika licznika z events.attendance + tasks + chat (patrz wpis poniżej)
+[2026-09-17 00:00] [WEB] [DONE] onEventCreated — fix: push tylko w oknie reminderHoursBefore, nie przy tworzeniu (patrz wpis poniżej)
 [2026-09-17 00:00] [APP] [TODO] Lokalne powiadomienia 1h przed wydarzeniem — spec gotowy (patrz wpis poniżej)
 [2026-09-17 00:00] [WEB] [DONE] onNotificationCreated — type dodany do push data payload (EVENT_CANCELLED/UPDATED bez fetcha Firestore)
 [2026-09-17 00:00] [WEB] [DONE] willRenew na subscription + memberships cached fields — szacowanie przychodów (patrz wpis poniżej)
@@ -2738,3 +2740,84 @@ W `app.json`:
 ```
 
 W Profil → Ustawienia: przycisk "Jeśli nie dostajesz przypomnień → wyłącz optymalizację baterii dla Coachay".
+
+---
+
+## onEventCreated — fix logiki pushów (2026-09-17)
+
+### Co się zmieniło (WEB)
+
+`onEventCreated` teraz sprawdza okno `reminderHoursBefore` zanim wyśle push:
+- Event za 6 miesięcy → **0 pushów** przy tworzeniu — `sendReminders` wyśle we właściwym czasie
+- Event w oknie (np. za 1h, `reminderHoursBefore=48`) → push od razu ✓
+- Default gdy pole nie ustawione: **48h**
+
+`sendReminders` (cron co godzinę) teraz działa poprawnie — `notifExists` nie blokuje go bo `onEventCreated` nie zostawia już "przedwczesnego" duplikatu.
+
+### Co APP musi zrobić
+
+**Brak zmian wymaganych** dla istniejącego mechanizmu pushów.
+
+Lokalny scheduler powiadomień (spec w poprzednim wpisie) działa niezależnie od serwera — czyta `reminderHoursBefore` z eventu i sam liczy czas:
+```typescript
+const reminderTime = new Date(event.date + 'T' + event.timeFrom).getTime()
+                   - (event.reminderHoursBefore ?? 48) * 3600000;
+```
+
+---
+
+## Badge / Bell — nowa logika licznika (2026-09-17)
+
+### Decyzja architektoniczna
+
+Bell (ikona z licznikiem) **zostaje**. Centrum historii powiadomień (lista do scrollowania) **do usunięcia** — niepotrzebna warstwa, generuje reads z `notifications`.
+
+### Nowa logika licznika (co zlicza badge)
+
+Badge ma pokazywać to co user MOŻE TERAZ ZROBIĆ — nie archiwum. Liczymy z danych już pobranych w RAM (0 dodatkowych Firestore reads):
+
+| Typ | Warunek zliczania |
+|---|---|
+| Eventy | event w oknie `reminderHoursBefore` + childId w `invited` ale NIE w `confirmed`/`declined` |
+| Zadania | zadanie niewykonane, przypisane do usera |
+| Czat | nieprzeczytane wiadomości |
+
+### Dla APP — do zaimplementowania
+
+```typescript
+function calcBadgeCount({ events, tasks, messages, myChildIds, now }) {
+  let count = 0;
+
+  // Eventy wymagające potwierdzenia (widoczne = w oknie reminderHoursBefore)
+  for (const ev of events) {
+    const rh = ev.reminderHoursBefore ?? 48;
+    const evTime = new Date(ev.date + 'T' + (ev.timeFrom || '00:00')).getTime();
+    if (now < evTime - rh * 3600000) continue; // poza oknem
+    if (now > evTime) continue;                 // już minął
+    if (ev.status === 'CANCELLED') continue;
+
+    for (const childId of myChildIds) {
+      const invited   = ev.attendance?.invited   || [];
+      const confirmed = ev.attendance?.confirmed || [];
+      const declined  = ev.attendance?.declined  || [];
+      if (invited.includes(childId) && !confirmed.includes(childId) && !declined.includes(childId)) {
+        count++;
+      }
+    }
+  }
+
+  // Zadania niewykonane
+  count += tasks.filter(t => !t.isDone && t.assignedTo?.includes(myUserId)).length;
+
+  // Nieprzeczytane czaty
+  count += messages.filter(m => !m.isRead).length;
+
+  return count;
+}
+```
+
+`Notifications.setBadgeCountAsync(count)` — ustawia licznik na ikonie appki.
+
+### Dla WEB — do zaimplementowania
+
+Przepisać `calcBadgeCount` w `functions/index.js` (używaną przy wysyłaniu pushów Expo) oraz licznik przy ikonie bell w UI — ta sama logika co wyżej, zamiast czytania z `notifications`.
