@@ -460,6 +460,16 @@ exports.onEventCreated = onDocumentCreated('events/{eventId}', async (event) => 
         return;
     }
 
+    // Pomiń jeśli event jest poza oknem reminderHoursBefore — sendReminders wyśle we właściwym czasie
+    const rh = data.reminderHoursBefore != null ? data.reminderHoursBefore : 48;
+    if (rh > 0) {
+        const evTime = new Date(data.date + 'T' + (data.timeFrom || '00:00')).getTime();
+        if (Date.now() < evTime - rh * 3600000) {
+            console.log(`⏭ Event ${event.params.eventId} poza oknem ${rh}h — push odłożony do sendReminders`);
+            return;
+        }
+    }
+
     try {
         await sendNotificationsForEvent({ ...data, id: event.params.eventId });
     } catch (e) {
