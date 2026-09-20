@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20260915a"></script>
+<script src="_i18n.js?v=20260921c"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <style>
 :root { --phone-h: 750px; }
@@ -83,6 +83,16 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-result-win  { background: rgba(74,222,128,0.12); color: #16A34A; }
 .mc-result-loss { background: rgba(248,113,113,0.10); color: #DC2626; }
 .mc-result-draw { background: rgba(107,114,128,0.12); color: #6B7280; }
+.mc-live-indicator { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-d); font-size: 13px; font-weight: 800; color: #DC2626; letter-spacing: .05em; }
+.mc-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #DC2626; animation: mc-pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
+@keyframes mc-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
+.mc-scoreboard { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 8px 0 4px; }
+.mc-sb-team { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.mc-sb-name { font-family: var(--font-d); font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; text-align: center; line-height: 1.2; }
+.mc-sb-name--our { color: #16A34A; }
+.mc-sb-name--opp { color: #DC2626; }
+.mc-sb-score { font-family: var(--font-d); font-size: 38px; font-weight: 900; color: var(--czarny); line-height: 1; }
+.mc-sb-sep { font-family: var(--font-d); font-size: 28px; font-weight: 900; color: var(--szary); padding-bottom: 4px; }
 .mc-counts { display: flex; gap: 8px; margin-top: 8px; }
 .mcc { flex: 1; border-radius: 12px; padding: 8px; text-align: center; }
 .mcc-g { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25); }
@@ -1055,14 +1065,18 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         }
 
         _parentsCanAssist = true;
+        let _teamName = '';
         try {
             const teamDoc = await db.collection('teams').doc(teamId).get();
             if (teamDoc.exists) {
-                const ml = teamDoc.data().settings?.matchLive;
+                const td = teamDoc.data();
+                const ml = td.settings?.matchLive;
                 if (ml && ml.parentsCanAssist === false) _parentsCanAssist = false;
+                _teamName = td.name || '';
             }
         } catch (e) {}
         const parentsCanAssist = _parentsCanAssist;
+        const teamName = _teamName;
 
         const carousel = document.getElementById('mecz-carousel');
         const dotsEl   = document.getElementById('mecz-dots');
@@ -1070,7 +1084,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         dotsEl.innerHTML = '';
 
         _mecze = visible;
-        visible.forEach(match => { carousel.appendChild(renderMatchCard(match, todayStr, userCache, parentsCanAssist)); });
+        visible.forEach(match => { carousel.appendChild(renderMatchCard(match, todayStr, userCache, parentsCanAssist, teamName)); });
 
         // Live listener — re-renderuje kartę gdy wynik meczu się zmienia
         if (_liveMatchUnsub) { _liveMatchUnsub(); _liveMatchUnsub = null; }
@@ -1083,7 +1097,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 const updatedMatch = { ...liveMatch, matchData: ev.matchData || {}, attendance: ev.attendance || liveMatch.attendance };
                 _mecze[liveIdx] = updatedMatch;
                 const cards = carousel.querySelectorAll('.mecz-card');
-                if (cards[liveIdx]) cards[liveIdx].replaceWith(renderMatchCard(updatedMatch, todayStr, userCache, parentsCanAssist));
+                if (cards[liveIdx]) cards[liveIdx].replaceWith(renderMatchCard(updatedMatch, todayStr, userCache, parentsCanAssist, teamName));
             });
         }
 
@@ -1101,7 +1115,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         }
     }
 
-    function renderMatchCard(match, todayStr, userCache, parentsCanAssist) {
+    function renderMatchCard(match, todayStr, userCache, parentsCanAssist, teamName) {
         const card = document.createElement('div');
         const md = match.matchData || {};
         const isFinished = md.matchStatus === 'FINISHED';
@@ -1113,24 +1127,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         let label = isFinished ? 'ZAKOŃCZONY' : isLive ? '🔴 NA ŻYWO' : (md.homeAway === 'HOME' ? 'MECZ DOMOWY' : 'MECZ WYJAZDOWY');
 
-        let resultHtml = '';
-        if (isFinished && md.result) {
-            const isCoach = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
-            const outcome = md.result.outcome;
-            const outcomeLabel = outcome === 'WIN' ? 'Wygrana' : outcome === 'LOSS' ? 'Przegrana' : 'Remis';
-            const outcomeClass = outcome === 'WIN' ? 'mc-result-win' : outcome === 'LOSS' ? 'mc-result-loss' : 'mc-result-draw';
-            if (isCoach) {
-                resultHtml = `<div class="mc-wynik"><span class="mc-wynik-label">Wynik:</span>${md.result.our} : ${md.result.opponent}</div><span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
-            } else {
-                resultHtml = `<span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
-            }
-        }
-
-        let liveHtml = '';
-        if (isLive && md.result) {
-            liveHtml = `<div class="mc-wynik"><span class="mc-wynik-label">Wynik:</span>${md.result.our ?? 0} : ${md.result.opponent ?? 0}</div>`;
-        }
-
         let bg = isFinished && md.result?.outcome === 'WIN' ? '🏆' : isLive ? '🔴' : '⚽';
 
         const att = match.attendance || {};
@@ -1139,18 +1135,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const decl  = (att.declined  || []).filter(id => id.includes('player_')).length;
         const noResp = Math.max(0, invP.length - conf - decl);
 
-        const invCoaches = (att.invited || []).filter(id => !id.includes('player_') && userCache[id] && (userCache[id].role === 'TRENER_GLOWNY' || userCache[id].role === 'TRENER_POMOCNICZY'));
-        const coachListHtml = invCoaches.length > 0 ? `<div class="mc-coaches">🎽 ${invCoaches.map(id => userCache[id].name).join(', ')}</div>` : '';
-
         const la = md.liveAssistant;
-        let assistantHtml = '';
-        if (la && la.userId) {
-            const aName = la.displayName || (userCache[la.userId] ? userCache[la.userId].name : la.userId);
-            assistantHtml = `<div class="mc-assistant">📋 Obsługuje: <strong>${aName}</strong></div>`;
-        } else if (!isFinished) {
-            assistantHtml = `<div class="mc-assistant mc-assistant-free">📋 Mecz wolny — brak obsługi</div>`;
-        }
-
         const isCoachRole = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
         const isParent = currentUserData.role === 'RODZIC';
         const isLiveAssistant = la && la.userId === currentUserData.userId;
@@ -1161,15 +1146,14 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             if (isUpcoming) {
                 statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-upcoming">⏳ Przed meczem</span></div>`;
             } else if (isLive) {
-                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">🔴 Na żywo</span><button class="mc-action-btn mc-btn-end" onclick="endMatch('${matchId}')">⏹ Zakończ</button></div>`;
-                if (la && la.userId && la.userId !== currentUserData.userId) {
-                    statusRowHtml += `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-takeover" onclick="takeoverMatch('${matchId}')">🔄 Przejmij obsługę</button></div>`;
-                }
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">🔴 Na żywo</span></div>`;
             } else if (isFinished) {
                 statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-finished">✅ Zakończony</span><button class="mc-action-btn mc-btn-takeover" onclick="reopenMatch('${matchId}')">↩ Cofnij zakończenie</button></div>`;
             }
         } else if (isParent && parentsCanAssist && !isFinished) {
-            if (!la || !la.userId) {
+            if (isLive && !isLiveAssistant) {
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-live-indicator"><span class="mc-live-dot"></span>NA ŻYWO</span></div>`;
+            } else if (!la || !la.userId) {
                 if (isMatchDay) {
                     statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-claim" onclick="claimMatch('${matchId}')">📋 Obsługuję mecz</button></div>`;
                 }
@@ -1177,7 +1161,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-request" onclick="requestTakeover('${matchId}')">🔄 Poproś o przejęcie</button></div>`;
             } else if (isLiveAssistant) {
                 if (isLive) {
-                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">🔴 Na żywo</span><button class="mc-action-btn mc-btn-end" onclick="endMatch('${matchId}')">⏹ Zakończ</button></div>`;
+                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">🔴 Na żywo</span></div>`;
                 } else if (isUpcoming) {
                     statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-upcoming">⏳ Przed meczem</span></div>`;
                 }
@@ -1188,17 +1172,58 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const descHtml = descText ? `<div class="mc-desc">${descText}</div>` : '';
         const venueText = trunc(match.location?.venueName || '', 30);
 
-        card.innerHTML = `
-            <div class="mecz-card-bg">${bg}</div>
-            <div class="mc-tytul">${trunc(match.title || md.opponent || '', 22)}</div>
-            ${descHtml}
-            <div class="mc-info">${venueText ? `<span class="mc-info-venue">📍 ${venueText}</span>` : ''}<span class="mc-info-time">🕐 ${formatDateDisplay(match.date)} · ${match.timeFrom || ''}</span></div>
-            ${resultHtml}${liveHtml}
-            <div class="mc-counts">
+        const titleRaw = match.title || md.opponent || '';
+        const titleHasVS = /\bvs\.?\s/i.test(titleRaw) || /\bvs\.?$/i.test(titleRaw);
+        const tytulHtml = (isLive && titleHasVS) ? '' : `<div class="mc-tytul">${trunc(titleRaw, 22)}</div>`;
+
+        // Scoreboard dla LIVE
+        let scoreboardHtml = '';
+        let countsHtml = '';
+        if (isLive) {
+            const ourScore  = md.result?.our      ?? 0;
+            const oppScore  = md.result?.opponent  ?? 0;
+            // spróbuj wyciągnąć nazwy z tytułu "X vs Y"
+            const vsMatch = titleRaw.match(/^(.+?)\s+vs\.?\s+(.+)$/i);
+            const ourName  = teamName  || (vsMatch ? vsMatch[1].trim() : '') || 'Drużyna';
+            const oppName  = md.opponent || (vsMatch ? vsMatch[2].trim() : '') || 'Przeciwnik';
+            scoreboardHtml = `
+                <div class="mc-scoreboard">
+                    <div class="mc-sb-team">
+                        <div class="mc-sb-name mc-sb-name--our">${ourName}</div>
+                        <div class="mc-sb-score">${ourScore}</div>
+                    </div>
+                    <div class="mc-sb-sep">:</div>
+                    <div class="mc-sb-team">
+                        <div class="mc-sb-name mc-sb-name--opp">${oppName}</div>
+                        <div class="mc-sb-score">${oppScore}</div>
+                    </div>
+                </div>`;
+        } else {
+            let resultHtml = '';
+            if (isFinished && md.result) {
+                const outcome = md.result.outcome;
+                const outcomeLabel = outcome === 'WIN' ? 'Wygrana' : outcome === 'LOSS' ? 'Przegrana' : 'Remis';
+                const outcomeClass = outcome === 'WIN' ? 'mc-result-win' : outcome === 'LOSS' ? 'mc-result-loss' : 'mc-result-draw';
+                if (isCoachRole) {
+                    resultHtml = `<div class="mc-wynik"><span class="mc-wynik-label">Wynik:</span>${md.result.our} : ${md.result.opponent}</div><span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
+                } else {
+                    resultHtml = `<span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
+                }
+            }
+            countsHtml = `${resultHtml}<div class="mc-counts">
                 <div class="mcc mcc-g"><div class="mcc-n mn-g">${conf}</div><div class="mcc-l">${_tP('home.presentLabel', 'Obecni')}</div></div>
                 <div class="mcc mcc-r"><div class="mcc-n mn-r">${decl}</div><div class="mcc-l">${_tP('home.absentLabel', 'Nieobecni')}</div></div>
                 <div class="mcc mcc-s"><div class="mcc-n mn-s">${noResp}</div><div class="mcc-l">${_tP('home.noResponseLabel', 'Brak odp.')}</div></div>
-            </div>
+            </div>`;
+        }
+
+        card.innerHTML = `
+            <div class="mecz-card-bg">${bg}</div>
+            ${tytulHtml}
+            ${descHtml}
+            <div class="mc-info">${venueText ? `<span class="mc-info-venue">📍 ${venueText}</span>` : ''}<span class="mc-info-time">🕐 ${formatDateDisplay(match.date)} · ${match.timeFrom || ''}</span></div>
+            ${scoreboardHtml}${countsHtml}
+            ${statusRowHtml}
         `;
         // card.onclick = () => openMeczPanel(matchId);
         return card;
@@ -3053,6 +3078,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 </script>
 </body>
 </html>
+
+
+
+
 
 
 

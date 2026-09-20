@@ -6,7 +6,7 @@
 <title>COACHAY — Ustawienia</title>
 <link rel="stylesheet" href="_global.css?v=20260802d">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20260915a"></script>
+<script src="_i18n.js?v=20260921c"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
@@ -90,7 +90,6 @@
             <span class="ctx-arrow">▾</span>
         </div>
         <div class="top-bar-right">
-            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
             <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
         </div>
     </div>
@@ -125,6 +124,14 @@
                 <div class="si-body">
                     <div class="si-text" data-i18n="settings.positionsRowTitle">Pozycje zawodników</div>
                     <div class="si-desc" data-i18n="settings.positionsRowDesc">Widoczność na profilach i w meczu</div>
+                </div>
+                <div class="si-right"><span class="si-arr">›</span></div>
+            </div>
+            <div class="si" id="si-reminder" onclick="openPanel('reminder')">
+                <span class="si-icon">🔔</span>
+                <div class="si-body">
+                    <div class="si-text" data-i18n="settings.reminderRowTitle">Powiadomienie przed eventem</div>
+                    <div class="si-desc" id="si-reminder-desc"></div>
                 </div>
                 <div class="si-right"><span class="si-arr">›</span></div>
             </div>
@@ -212,6 +219,22 @@
             <div class="pozycje-list" id="pozycje-list"></div>
             <button class="btn-primary" style="width:100%;padding:14px;" onclick="savePozycje()" data-i18n="settings.positionsSaveButton">Zapisz</button>
             <div id="pozycje-msg" style="font-size:17px;font-weight:700;text-align:center;min-height:18px;"></div>
+        </div>
+    </div>
+
+    <!-- Panel: Powiadomienie przed eventem -->
+    <div class="detail-panel" id="panel-reminder">
+        <div class="dp-header">
+            <button class="dp-back" onclick="closePanel('reminder')">←</button>
+            <div class="dp-title" data-i18n="settings.reminderPanelTitle">Powiadomienie przed eventem</div>
+        </div>
+        <div class="dp-scroll">
+            <div class="dp-form-group">
+                <label class="dp-form-lbl" data-i18n="settings.reminderHoursLabel">Czas przed eventem</label>
+                <select class="dp-form-inp" id="inp-reminder-hours"></select>
+            </div>
+            <button class="btn-primary" style="width:100%;padding:14px;" onclick="saveReminder()" data-i18n="settings.reminderSaveButton">Zapisz</button>
+            <div id="reminder-msg" style="font-size:17px;font-weight:700;text-align:center;min-height:18px;"></div>
         </div>
     </div>
 
@@ -344,6 +367,7 @@ let _clubId  = '';
 let _licenseDoc = null;
 
 const POZYCJE_DEF = [
+    { id: 'general' },
     { id: 'gk'  },
     { id: 'def' },
     { id: 'mid' },
@@ -383,6 +407,7 @@ window.addEventListener('DOMContentLoaded', () => {
             loadSezon(team);
             loadPozycje(team);
             loadLicencja();
+            loadReminder();
         }
     });
 });
@@ -505,6 +530,56 @@ async function savePozycje() {
         setTimeout(() => closePanel('pozycje'), 900);
     } catch(e) {
         console.error('savePozycje:', e);
+        showMsg(msg, t('settings.saveErrorLabel'), false);
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   POWIADOMIENIE PRZED EVENTEM
+══════════════════════════════════════════════════ */
+async function loadReminder() {
+    if (!_clubId) return;
+    const sel = document.getElementById('inp-reminder-hours');
+    if (!sel) return;
+    // Wypełnij select opcjami 1-24h
+    sel.innerHTML = Array.from({ length: 24 }, (_, i) => {
+        const h = i + 1;
+        return `<option value="${h}">${h}h</option>`;
+    }).join('');
+    try {
+        const clubDoc = await db.collection('clubs').doc(_clubId).get();
+        const rh = clubDoc.exists ? (clubDoc.data().reminderHoursBefore ?? 1) : 1;
+        sel.value = String(rh);
+        _updateReminderDesc(rh);
+    } catch (e) {
+        sel.value = '1';
+        _updateReminderDesc(1);
+    }
+}
+
+function _updateReminderDesc(h) {
+    const el = document.getElementById('si-reminder-desc');
+    if (!el) return;
+    el.textContent = typeof t === 'function'
+        ? t('settings.reminderRowDescFormat', { h })
+        : `${h}h przed eventem`;
+}
+
+async function saveReminder() {
+    const msg = document.getElementById('reminder-msg');
+    const sel = document.getElementById('inp-reminder-hours');
+    const rh  = parseInt(sel?.value || '1', 10);
+    if (!_clubId) { showMsg(msg, t('settings.noTeamError'), false); return; }
+    try {
+        await db.collection('clubs').doc(_clubId).update({
+            reminderHoursBefore: rh,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        _updateReminderDesc(rh);
+        showMsg(msg, t('settings.savedLabel'), true);
+        setTimeout(() => closePanel('reminder'), 900);
+    } catch (e) {
+        console.error('saveReminder:', e);
         showMsg(msg, t('settings.saveErrorLabel'), false);
     }
 }
@@ -791,6 +866,10 @@ async function saveLicencja() {
 </script>
 </body>
 </html>
+
+
+
+
 
 
 

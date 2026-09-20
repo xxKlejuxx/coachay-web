@@ -36,6 +36,8 @@ const I18N = {
         dateChange: (d) => `📅 Data: ${d}`,
         timeChange: (t) => `🕐 Godzina: ${t}`,
         placeChange: (p) => `📍 Miejsce: ${p}`,
+        reminderTitle:  (typeName, timeStr) => `${typeName} już za ${timeStr}`,
+        reminderReady:  'czy jesteś gotowy?',
         locale: 'pl-PL',
     },
     en: {
@@ -47,6 +49,8 @@ const I18N = {
         dateChange: (d) => `📅 Date: ${d}`,
         timeChange: (t) => `🕐 Time: ${t}`,
         placeChange: (p) => `📍 Location: ${p}`,
+        reminderTitle:  (typeName, timeStr) => `${typeName} in ${timeStr}`,
+        reminderReady:  'are you ready?',
         locale: 'en-GB',
     },
 };
@@ -930,6 +934,32 @@ async function calcBadgeCount(userId) {
     return (counts.events || 0) + (counts.tasks || 0) + (counts.messages || 0);
 }
 
+// Wysyła bezpośredni push (bez zapisu w Firestore) — używany przez reminder
+async function sendDirectPush(userId, title, body) {
+    try {
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (!userDoc.exists) return;
+        const userData = userDoc.data();
+        const expoToken = (userData.pushToken || '').trim() || null;
+        const fcmToken  = (userData.fcmToken  || '').trim() || null;
+        if (expoToken && Expo.isExpoPushToken(expoToken)) {
+            await expo.sendPushNotificationsAsync([{
+                to: expoToken, sound: 'default',
+                title, body,
+                data: { type: 'EVENT_REMINDER' }
+            }]);
+        } else if (fcmToken) {
+            await getMessaging().send({
+                token: fcmToken,
+                notification: { title, body },
+                data: { type: 'EVENT_REMINDER' }
+            });
+        }
+    } catch (e) {
+        console.error(`sendDirectPush(${userId}):`, e);
+    }
+}
+
 // Wysyła silent push z aktualnym badgeCounts do usera
 async function sendBadgePush(userId) {
     const userDoc = await db.collection('users').doc(userId).get();
@@ -1468,7 +1498,98 @@ exports.sendReminders = onSchedule('every 60 minutes', async () => {
         console.error('❌ sendReminders:', e);
     }
 });
-/* 
+/* ═══════════════════════════════════════════════════
+   TRIGGER 3b: Powiadomienia przed eventem (co 15 minut)
+   Ustawienie per klub: clubs/{clubId}.reminderHoursBefore
+   Wysyła push do wszystkich członków drużyny na X h przed eventem
+   ═══════════════════════════════════════════════════ */
+exports.sendEventReminders = onSchedule('every 15 minutes', async () => {
+    const now = Date.now();
+    const today    = new Date(now).toISOString().slice(0, 10);
+    const tomorrow = new Date(now + 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const windowMs = 7.5 * 60 * 1000; // ±7.5 min
+
+    try {
+        // 1. Załaduj ustawienia wszystkich klubów
+        const clubsSnap = await db.collection('clubs').get();
+        const clubRhMap = {};
+        for (const d of clubsSnap.docs) {
+            const rh = d.data().reminderHoursBefore;
+            if (rh && rh > 0) clubRhMap[d.id] = rh;
+        }
+        if (Object.keys(clubRhMap).length === 0) return;
+
+        // 2. Załaduj mapę teamId → clubId
+        const teamsSnap = await db.collection('teams').get();
+        const teamClubMap = {};
+        for (const d of teamsSnap.docs) {
+            if (d.data().clubId) teamClubMap[d.id] = d.data().clubId;
+        }
+
+        // 3. Pobierz eventy dziś/jutro
+        const evSnap = await db.collection('events')
+            .where('date', '>=', today)
+            .where('date', '<=', tomorrow)
+            .get();
+
+        for (const evDoc of evSnap.docs) {
+            const ev = { ...evDoc.data(), id: evDoc.id };
+            if (!ev.teamId) continue;
+
+            const clubId = teamClubMap[ev.teamId];
+            if (!clubId) continue;
+            const rh = clubRhMap[clubId];
+            if (!rh || rh <= 0) continue;
+
+            if (ev.status === 'cancelled') continue;
+            if (ev.reminderSentAt) continue;
+
+            const evTime      = new Date(ev.date + 'T' + (ev.timeFrom || '00:00')).getTime();
+            const reminderTime = evTime - rh * 3600000;
+
+            if (Math.abs(now - reminderTime) > windowMs) continue;
+            if (evTime <= now) continue;
+
+            const minsLeft = Math.round((evTime - now) / 60000);
+
+            function buildTimeStr(mins) {
+                if (mins < 60) return `${mins} min`;
+                const h = Math.floor(mins / 60);
+                const m = mins % 60;
+                return m > 0 ? `${h}h ${m}min` : `${h}h`;
+            }
+            const timeStr = buildTimeStr(minsLeft);
+
+            // Oznacz jako wysłane PRZED wysyłką (anty-duplikat)
+            await db.collection('events').doc(ev.id).update({ reminderSentAt: new Date().toISOString() });
+
+            // Pobierz wszystkich członków drużyny
+            const mbrSnap = await db.collection('memberships')
+                .where('teamId', '==', ev.teamId)
+                .where('status', 'in', ['active', 'ACTIVE', 'grace', 'demo'])
+                .get();
+
+            const userIds = [...new Set(
+                mbrSnap.docs.map(d => d.data().userId).filter(Boolean)
+            )];
+
+            for (const userId of userIds) {
+                const lang = await getLang(userId);
+                const i18n = I18N[lang] || I18N.pl;
+                const typeName = i18n.types[ev.type] || i18n.types.INNE;
+                const title = i18n.reminderTitle(typeName, timeStr);
+                const body  = `${ev.title || typeName} - ${i18n.reminderReady}`;
+                await sendDirectPush(userId, title, body);
+            }
+
+            console.log(`✅ Reminder: ${ev.id} (${ev.date} ${ev.timeFrom}) → ${userIds.length} users, rh=${rh}h`);
+        }
+    } catch (e) {
+        console.error('❌ sendEventReminders:', e);
+    }
+});
+
+/*
    TRIGGER 4: Automatyczne zakończenie meczy o północy
    Codziennie o 00:00 zakancza mecze LIVE z dnia poprzedniego
 */

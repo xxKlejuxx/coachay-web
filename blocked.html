@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>COACHAY — Brak dostępu</title>
+<title>COACHAY â€” Brak dostÄ™pu</title>
 <link rel="stylesheet" href="_global.css?v=20260826e">
 <link rel="stylesheet" href="_desktop.css?v=20260826e">
-<script src="_i18n.js?v=20260915a"></script>
+<script src="_i18n.js?v=20260921c"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -16,14 +16,14 @@
 .screen-body::-webkit-scrollbar { display: none; }
 .screen-body > * { flex-shrink: 0; }
 
-/* Ukryj sidebar — blocked to full-screen */
+/* Ukryj sidebar â€” blocked to full-screen */
 #app-sidebar, .sidebar { display: none !important; }
 
-/* ── Top bar (uproszczony — tylko ctx-switcher) ── */
+/* â”€â”€ Top bar (uproszczony â€” tylko ctx-switcher) â”€â”€ */
 .blocked-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; padding: 0 16px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 body:has(#app-sidebar) .blocked-topbar { display: none; }
 
-/* ── Ctx overlay (aktywne memberships) ── */
+/* â”€â”€ Ctx overlay (aktywne memberships) â”€â”€ */
 .blocked-ctx-ov { position: absolute; top: var(--top-h); left: 0; right: 0; background: var(--tlo-karta); border-bottom: 1px solid var(--border2); z-index: 100; padding: 12px 16px; display: none; }
 .blocked-ctx-ov.open { display: block; }
 body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
@@ -37,7 +37,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .blocked-ctx-arrow { font-size: 16px; color: var(--szary); }
 .blocked-ctx-empty { text-align: center; padding: 12px; font-size: 12px; color: var(--szary); font-weight: 600; }
 
-/* ── Karta blokady ── */
+/* â”€â”€ Karta blokady â”€â”€ */
 .blocked-card { margin: 24px 16px 0; background: var(--tlo-karta); border: 1px solid rgba(239,68,68,0.35); border-radius: 20px; padding: 28px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .blocked-icon { font-size: 44px; line-height: 1; }
 .blocked-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
@@ -45,7 +45,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .blocked-logout-btn { margin-top: 8px; padding: 12px 32px; border-radius: var(--r-pill); background: var(--tlo-karta2); border: 1px solid var(--border2); color: var(--szary-j); font-size: 12px; font-weight: 900; cursor: pointer; }
 .blocked-logout-btn:active { opacity: 0.7; }
 
-/* ── Karta wygaśnięcia płatności — trener (może zapłacić) ── */
+/* â”€â”€ Karta wygaĹ›niÄ™cia pĹ‚atnoĹ›ci â€” trener (moĹĽe zapĹ‚aciÄ‡) â”€â”€ */
 .payment-card { margin: 24px 16px 0; border-radius: 20px; padding: 28px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: linear-gradient(160deg, rgba(245,158,11,0.08), rgba(239,68,68,0.06)); border: 1px solid rgba(245,158,11,0.3); }
 .payment-icon { font-size: 44px; line-height: 1; }
 .payment-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
@@ -55,7 +55,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .payment-btn-secondary { width: 100%; padding: 12px; border-radius: var(--r-pill); background: transparent; border: 1px solid var(--border2); color: var(--szary-j); font-size: 12px; font-weight: 800; cursor: pointer; }
 .payment-btn-secondary:active { background: var(--tlo-karta2); }
 
-/* ── Karta kodu zaproszenia ── */
+/* â”€â”€ Karta kodu zaproszenia â”€â”€ */
 .invite-card { margin: 16px 16px 0; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 .invite-label { font-size: 10px; font-weight: 800; color: var(--szary); text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
 .invite-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
@@ -68,7 +68,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .invite-msg.ok  { color: #34d399; display: block; }
 .invite-msg.err { color: #ef4444; display: block; }
 
-/* ── Karta testowego zakupu (tylko isPlatformAdmin) ── */
+/* â”€â”€ Karta testowego zakupu (tylko isPlatformAdmin) â”€â”€ */
 .dev-card { margin: 16px 16px 0; background: var(--tlo-karta); border: 1px solid rgba(99,102,241,0.4); border-radius: 16px; overflow: hidden; }
 .dev-card-title { font-size: 10px; font-weight: 900; color: #818cf8; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 14px 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
 .dev-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
@@ -85,56 +85,56 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 <div class="phone">
     <div class="notch"></div>
 
-    <!-- Top bar — tylko ctx-switcher -->
+    <!-- Top bar â€” tylko ctx-switcher -->
     <div class="blocked-topbar">
         <div class="ctx-switcher" onclick="toggleBlockedCtx()">
             <div class="ctx-dot" id="ctx-dot">?</div>
             <div class="ctx-text">
                 <span class="ctx-klub" id="ctx-klub">Coachay</span>
-                <span class="ctx-team" id="ctx-team" data-i18n="blocked.noAccessTeamLabel">Brak dostępu</span>
+                <span class="ctx-team" id="ctx-team" data-i18n="blocked.noAccessTeamLabel">Brak dostÄ™pu</span>
             </div>
-            <span class="ctx-arrow">▾</span>
+            <span class="ctx-arrow">â–ľ</span>
         </div>
     </div>
 
     <!-- Ctx overlay -->
     <div class="blocked-ctx-ov" id="blocked-ctx-ov">
-        <div class="blocked-ctx-title" data-i18n="blocked.ctxSwitchTitle">Przełącz konto</div>
+        <div class="blocked-ctx-title" data-i18n="blocked.ctxSwitchTitle">PrzeĹ‚Ä…cz konto</div>
         <div id="blocked-ctx-list"></div>
     </div>
 
     <!-- Baner impersonacji support -->
     <div id="imp-support-banner" style="display:none; margin:8px 18px; padding:12px 16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:14px; align-items:center; gap:10px;">
-        <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">⚠ Tryb impersonacji — widok tego usera</span>
-        <button onclick="exitSupportImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">← Wróć</button>
+        <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">âš  Tryb impersonacji â€” widok tego usera</span>
+        <button onclick="exitSupportImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">â† WrĂłÄ‡</button>
     </div>
 
-    <!-- Główna zawartość -->
+    <!-- GĹ‚Ăłwna zawartoĹ›Ä‡ -->
     <div class="screen-body">
 
-        <!-- Karta blokady (domyślna) -->
+        <!-- Karta blokady (domyĹ›lna) -->
         <div class="blocked-card" id="card-suspended">
-            <div class="blocked-icon">🔒</div>
-            <div class="blocked-title" data-i18n="blocked.noAccessTitle">Brak dostępu do klubu</div>
-            <div class="blocked-text" data-i18n="blocked.noAccessBody">Nie masz aktywnego dostępu do żadnego klubu. Skontaktuj się z administratorem lub wpisz kod zaproszenia.</div>
-            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
+            <div class="blocked-icon">đź”’</div>
+            <div class="blocked-title" data-i18n="blocked.noAccessTitle">Brak dostÄ™pu do klubu</div>
+            <div class="blocked-text" data-i18n="blocked.noAccessBody">Nie masz aktywnego dostÄ™pu do ĹĽadnego klubu. Skontaktuj siÄ™ z administratorem lub wpisz kod zaproszenia.</div>
+            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj siÄ™</button>
         </div>
 
-        <!-- Karta wygaśnięcia płatności — trener (może zapłacić) -->
+        <!-- Karta wygaĹ›niÄ™cia pĹ‚atnoĹ›ci â€” trener (moĹĽe zapĹ‚aciÄ‡) -->
         <div class="payment-card" id="card-payment" style="display:none">
-            <div class="payment-icon">💳</div>
-            <div class="payment-title" data-i18n="blocked.expiredTitle">Dostęp wygasł</div>
-            <div class="payment-text" data-i18n="blocked.expiredBody">Okres próbny lub subskrypcja dobiegły końca. Wybierz plan, aby dalej korzystać z Coachay.</div>
-            <button class="payment-btn-primary" id="btn-pay" onclick="goToPayment()" data-i18n="blocked.choosePlanButton">Wybierz plan →</button>
-            <button class="payment-btn-secondary" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
+            <div class="payment-icon">đź’ł</div>
+            <div class="payment-title" data-i18n="blocked.expiredTitle">DostÄ™p wygasĹ‚</div>
+            <div class="payment-text" data-i18n="blocked.expiredBody">Okres prĂłbny lub subskrypcja dobiegĹ‚y koĹ„ca. Wybierz plan, aby dalej korzystaÄ‡ z Coachay.</div>
+            <button class="payment-btn-primary" id="btn-pay" onclick="goToPayment()" data-i18n="blocked.choosePlanButton">Wybierz plan â†’</button>
+            <button class="payment-btn-secondary" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj siÄ™</button>
         </div>
 
-        <!-- Karta wygaśnięcia — rodzic / zawodnik / kibic (nie płaci) -->
+        <!-- Karta wygaĹ›niÄ™cia â€” rodzic / zawodnik / kibic (nie pĹ‚aci) -->
         <div class="blocked-card" id="card-payment-member" style="display:none">
-            <div class="blocked-icon">⏰</div>
+            <div class="blocked-icon">âŹ°</div>
             <div class="blocked-title" data-i18n="blocked.noLicenseTitle">Klub nie ma licencji</div>
-            <div class="blocked-text" data-i18n="blocked.noLicenseBody">Dostęp do aplikacji wygasł. Skontaktuj się z trenerem — to on odnawia dostęp dla całego klubu.</div>
-            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
+            <div class="blocked-text" data-i18n="blocked.noLicenseBody">DostÄ™p do aplikacji wygasĹ‚. Skontaktuj siÄ™ z trenerem â€” to on odnawia dostÄ™p dla caĹ‚ego klubu.</div>
+            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj siÄ™</button>
         </div>
 
         <!-- Kod zaproszenia -->
@@ -149,7 +149,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 
         <!-- Testowy zakup licencji (tylko isPlatformAdmin) -->
         <div class="dev-card" id="dev-purchase-card" style="display:none">
-            <div class="dev-card-title">🧪 Aktywuj dostęp (test)</div>
+            <div class="dev-card-title">đź§Ş Aktywuj dostÄ™p (test)</div>
             <div class="dev-card-body" id="dev-purchase-body">
                 <div class="dev-msg" id="dev-msg"></div>
             </div>
@@ -167,7 +167,7 @@ const _params  = new URLSearchParams(location.search);
 const _reason  = _params.get('reason') || '';
 const _clubId  = _params.get('clubId') || '';
 
-/* ── Init ── */
+/* â”€â”€ Init â”€â”€ */
 window.addEventListener('DOMContentLoaded', () => {
     initFirebase();
     applyReason();
@@ -204,15 +204,15 @@ function applyReason() {
     } else if (_reason === 'club_pool_full') {
         document.getElementById('card-suspended').style.display = 'none';
         document.getElementById('ctx-team').textContent = t('blocked.expiredTitle');
-        // Karta 1 — kup własną licencję
+        // Karta 1 â€” kup wĹ‚asnÄ… licencjÄ™
         const cp = document.getElementById('card-payment');
         cp.style.display = 'flex';
         cp.querySelector('.payment-title').textContent = t('blocked.poolFullTitle');
         cp.querySelector('.payment-text').textContent  = t('blocked.poolFullBody');
-        // Karta 2 — skontaktuj się z trenerem
+        // Karta 2 â€” skontaktuj siÄ™ z trenerem
         const cm = document.getElementById('card-payment-member');
         cm.style.display = 'flex';
-        cm.querySelector('.blocked-icon').textContent  = '👤';
+        cm.querySelector('.blocked-icon').textContent  = 'đź‘¤';
         cm.querySelector('.blocked-title').textContent = t('blocked.poolFullContactTitle');
         cm.querySelector('.blocked-text').textContent  = t('blocked.poolFullContactBody');
     }
@@ -226,7 +226,7 @@ async function initBlocked(authUser) {
     blockedUserId = getCurrentUserId();
     if (!blockedUserId || !db) return;
 
-    // Sprawdź isPlatformAdmin — tylko wtedy dev-purchase widoczne
+    // SprawdĹş isPlatformAdmin â€” tylko wtedy dev-purchase widoczne
     try {
         const uDoc = await db.collection('users').doc(blockedUserId).get();
         if (uDoc.exists && uDoc.data().isPlatformAdmin === true) {
@@ -259,7 +259,7 @@ async function initBlocked(authUser) {
                 if (hasActiveLicense) {
                     document.getElementById('card-payment').style.display = 'none';
                     document.getElementById('card-payment-member').style.display = 'flex';
-                    document.querySelector('#card-payment-member .blocked-icon').textContent = '🏢';
+                    document.querySelector('#card-payment-member .blocked-icon').textContent = 'đźŹ˘';
                     document.querySelector('#card-payment-member .blocked-title').textContent = t('blocked.trainerHasLicenseTitle');
                     document.querySelector('#card-payment-member .blocked-text').textContent = t('blocked.trainerHasLicenseBody');
                 } else {
@@ -274,7 +274,7 @@ async function initBlocked(authUser) {
         }
     }
 
-    // Dev purchase — inicjalizacja po sprawdzeniu roli
+    // Dev purchase â€” inicjalizacja po sprawdzeniu roli
     if (_reason === 'payment_expired' && _clubId) {
         try {
             const mSnap = await db.collection('memberships')
@@ -292,7 +292,7 @@ async function initBlocked(authUser) {
     renderBlockedCtx(activeMemberships);
 }
 
-/* ── Ctx switcher ── */
+/* â”€â”€ Ctx switcher â”€â”€ */
 function toggleBlockedCtx() {
     document.getElementById('blocked-ctx-ov').classList.toggle('open');
 }
@@ -307,7 +307,7 @@ async function renderBlockedCtx(memberships) {
     }
 
     listEl.innerHTML = '';
-    const roleNames = { TRENER_GLOWNY: 'Trener główny', TRENER_POMOCNICZY: 'Trener pomocniczy', RODZIC: 'Rodzic', ZAWODNIK: 'Zawodnik', KIBIC: 'Kibic' };
+    const roleNames = { TRENER_GLOWNY: 'Trener gĹ‚Ăłwny', TRENER_POMOCNICZY: 'Trener pomocniczy', RODZIC: 'Rodzic', ZAWODNIK: 'Zawodnik', KIBIC: 'Kibic' };
 
     for (const m of memberships) {
         let teamName = '', clubName = m.clubId || '', color = 'var(--akcent)';
@@ -329,9 +329,9 @@ async function renderBlockedCtx(memberships) {
             <div class="blocked-ctx-dot" style="background:${color}">${(clubName.charAt(0) || '?').toUpperCase()}</div>
             <div class="blocked-ctx-info">
                 <div class="blocked-ctx-klub">${clubName}</div>
-                <div class="blocked-ctx-team">${teamName ? teamName + ' · ' : ''}${roleNames[role] || role}</div>
+                <div class="blocked-ctx-team">${teamName ? teamName + ' Â· ' : ''}${roleNames[role] || role}</div>
             </div>
-            <span class="blocked-ctx-arrow">›</span>
+            <span class="blocked-ctx-arrow">â€ş</span>
         `;
         item.addEventListener('click', () => {
             localStorage.setItem('selectedMembershipId', m.id);
@@ -342,7 +342,7 @@ async function renderBlockedCtx(memberships) {
     }
 }
 
-/* ── Testowy zakup licencji (tylko isPlatformAdmin) ── */
+/* â”€â”€ Testowy zakup licencji (tylko isPlatformAdmin) â”€â”€ */
 async function initDevPurchase(role, clubId) {
     if (!clubId) return;
     const card = document.getElementById('dev-purchase-card');
@@ -357,15 +357,15 @@ async function initDevPurchase(role, clubId) {
     const buttons = [];
 
     if (isTrainer) {
-        buttons.push({ label: '💳 Kup licencję indywidualną (1 rok)', sub: 'Tworzy access_rights dla Ciebie', fn: () => devBuyIndividual(blockedUserId, clubId) });
-        buttons.push({ label: '🏢 Kup licencję klubową B2B (10 slotów, 1 rok)', sub: 'Aktualizuje clubs.license — obejmuje wszystkich trenerów i rodziców', fn: () => devBuyClub(clubId, 10) });
+        buttons.push({ label: 'đź’ł Kup licencjÄ™ indywidualnÄ… (1 rok)', sub: 'Tworzy access_rights dla Ciebie', fn: () => devBuyIndividual(blockedUserId, clubId) });
+        buttons.push({ label: 'đźŹ˘ Kup licencjÄ™ klubowÄ… B2B (10 slotĂłw, 1 rok)', sub: 'Aktualizuje clubs.license â€” obejmuje wszystkich trenerĂłw i rodzicĂłw', fn: () => devBuyClub(clubId, 10) });
     }
     if (isRodzic) {
-        buttons.push({ label: '💳 Kup licencję indywidualną (1 rok)', sub: 'Tworzy access_rights dla Ciebie', fn: () => devBuyIndividual(blockedUserId, clubId) });
-        buttons.push({ label: '👨‍👩‍👧‍👦 Kup licencję Family (5 kibiców, 1 rok)', sub: 'Tworzy access_rights z slots_total=6', fn: () => devBuyFamily(blockedUserId, clubId, 6) });
+        buttons.push({ label: 'đź’ł Kup licencjÄ™ indywidualnÄ… (1 rok)', sub: 'Tworzy access_rights dla Ciebie', fn: () => devBuyIndividual(blockedUserId, clubId) });
+        buttons.push({ label: 'đź‘¨â€Ťđź‘©â€Ťđź‘§â€Ťđź‘¦ Kup licencjÄ™ Family (5 kibicĂłw, 1 rok)', sub: 'Tworzy access_rights z slots_total=6', fn: () => devBuyFamily(blockedUserId, clubId, 6) });
     }
     if (isKibic) {
-        buttons.push({ label: 'ℹ️ Kibic nie kupuje licencji', sub: 'Dostęp pochodzi z licencji Family rodzica. Poproś rodzica o zakup.', fn: null });
+        buttons.push({ label: 'â„ąď¸Ź Kibic nie kupuje licencji', sub: 'DostÄ™p pochodzi z licencji Family rodzica. PoproĹ› rodzica o zakup.', fn: null });
     }
 
     body.innerHTML = '<div class="dev-msg" id="dev-msg"></div>';
@@ -378,22 +378,22 @@ async function initDevPurchase(role, clubId) {
         else btn.onclick = async () => {
             btn.disabled = true;
             const msg = document.getElementById('dev-msg');
-            msg.textContent = 'Tworzę rekord...';
+            msg.textContent = 'TworzÄ™ rekord...';
             msg.className = 'dev-msg ok';
             try {
                 await b.fn();
-                msg.textContent = 'Weryfikuję dostęp...';
+                msg.textContent = 'WeryfikujÄ™ dostÄ™p...';
                 const access = await getAccessStatus(blockedUserId, clubId, { claimSlot: true });
                 if (access.status === 'ACTIVE' || access.status === 'TRIAL') {
-                    msg.textContent = `✓ Dostęp aktywny (${access.source}) — przekierowanie...`;
+                    msg.textContent = `âś“ DostÄ™p aktywny (${access.source}) â€” przekierowanie...`;
                     setTimeout(() => window.location.href = 'start.html', 1500);
                 } else {
-                    msg.textContent = `⚠ getAccessStatus zwrócił: ${access.status} (${access.source})`;
+                    msg.textContent = `âš  getAccessStatus zwrĂłciĹ‚: ${access.status} (${access.source})`;
                     msg.className = 'dev-msg err';
                     btn.disabled = false;
                 }
             } catch(e) {
-                msg.textContent = 'Błąd: ' + e.message;
+                msg.textContent = 'BĹ‚Ä…d: ' + e.message;
                 msg.className = 'dev-msg err';
                 btn.disabled = false;
             }
@@ -436,7 +436,7 @@ async function devBuyClub(clubId, total) {
     });
 }
 
-/* ── Kod zaproszenia ── */
+/* â”€â”€ Kod zaproszenia â”€â”€ */
 async function redeemCode() {
     const code  = document.getElementById('invite-input').value.trim().toUpperCase();
     const msgEl = document.getElementById('invite-msg');
@@ -501,7 +501,7 @@ async function redeemCode() {
         setTimeout(() => { window.location.href = 'start.html'; }, 1200);
 
     } catch (e) {
-        console.error('❌ redeemCode:', e);
+        console.error('âťŚ redeemCode:', e);
         msgEl.className = 'invite-msg err';
         msgEl.textContent = t('blocked.inviteConnectError');
     }
@@ -509,3 +509,7 @@ async function redeemCode() {
 </script>
 </body>
 </html>
+
+
+
+

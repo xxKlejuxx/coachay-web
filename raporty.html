@@ -6,7 +6,7 @@
 <title>COACHAY — Raporty</title>
 <link rel="stylesheet" href="_global.css?v=20260730a">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20260915a"></script>
+<script src="_i18n.js?v=20260921c"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
@@ -99,7 +99,6 @@
             <span class="ctx-arrow">▾</span>
         </div>
         <div class="top-bar-right">
-            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
             <div class="menu-btn" id="menu-btn" onclick="toggleMenu()">
                 <div class="menu-btn-lines"><span></span><span></span><span></span></div>
             </div>
@@ -136,10 +135,15 @@
 
                 <div class="form-group">
                     <label class="form-lbl" data-i18n="raporty.reportTypeLabel">Lista raportów:</label>
-                    <select class="rap-select" id="rap-typ-raportu"></select>
+                    <select class="rap-select" id="rap-typ-raportu" onchange="onRaportTypChange()"></select>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="rap-sekcja-druzyna" style="display:none;">
+                    <label class="form-lbl">Drużyna</label>
+                    <select class="rap-select" id="rap-druzyna-select"><option value="">— ładowanie... —</option></select>
+                </div>
+
+                <div class="form-group" id="rap-sekcja-okres">
                     <label class="form-lbl" data-i18n="raporty.periodLabel">Okres</label>
                     <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span data-i18n="raporty.periodSingleDay">📅 Na dzień</span></label>
                     <div class="rap-row2" id="rap-okres-miesiac">
@@ -155,14 +159,14 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="rap-sekcja-zajecia">
                     <label class="form-lbl" data-i18n="raporty.eventTypeLabel">Rodzaj zajęć</label>
                     <label class="rap-chk-row"><input type="checkbox" id="rap-typ-trening" checked><span data-i18n="raporty.checkTraining">⚽ Treningi</span></label>
                     <label class="rap-chk-row"><input type="checkbox" id="rap-typ-mecz"><span data-i18n="raporty.checkMatch">🏆 Mecze</span></label>
                     <label class="rap-chk-row"><input type="checkbox" id="rap-typ-wyjazd"><span data-i18n="raporty.checkTrip">🚌 Wyjazdy</span></label>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="rap-sekcja-format">
                     <label class="form-lbl" data-i18n="raporty.formatLabel">Format pliku</label>
                     <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-pdf" checked><span data-i18n="raporty.formatPdf">📄 PDF</span></label>
                     <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-csv"><span data-i18n="raporty.formatCsv">📋 CSV</span></label>
@@ -172,7 +176,7 @@
                 <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="generujRaport()" id="rap-btn-generuj" data-i18n="raporty.generateButton">Generuj raport</button>
                 <div class="rap-msg" id="rap-msg"></div>
 
-                <div class="rap-info-box" data-i18n="raporty.infoLegend">
+                <div class="rap-info-box" id="rap-sekcja-legenda" data-i18n="raporty.infoLegend">
                     Legenda: 1 = obecny, 0 = nieobecny (bez zgłoszenia), 2 = absencja zgłoszona z wyprzedzeniem, puste pole = brak zajęć tego dnia.
                 </div>
 
@@ -247,6 +251,14 @@ const RAPORTY_REJESTR = {
     szczegolowy: {
         get label() { return typeof t === 'function' ? t('raporty.typeDetailed') : 'Szczegółowy raport zajęć (per trening/mecz)'; },
         generujDane: (ctx) => ctx.typy.map(typ => budujPakietSzczegolowy(typ, ctx))
+    },
+    kody_rodzicow: {
+        get label() { return typeof t === 'function' ? t('raporty.typeInviteCodes') : '🔑 Karteczki z kodami dla rodziców'; },
+        specjalny: 'karteczki'
+    },
+    bez_rodzica: {
+        get label() { return typeof t === 'function' ? t('raporty.typeWithoutParent') : '👤 Zawodnicy bez rodzica'; },
+        specjalny: 'bez_rodzica'
     }
 };
 
@@ -350,6 +362,47 @@ function jestZaproszony(e, pid) {
     return invited.includes(pid) || invited.includes('__TEAM__');
 }
 
+function onRaportTypChange() {
+    const key = document.getElementById('rap-typ-raportu').value;
+    const def = RAPORTY_REJESTR[key];
+    const isKarteczki   = def?.specjalny === 'karteczki';
+    const isBezRodzica  = def?.specjalny === 'bez_rodzica';
+    const uzywaTeam     = isKarteczki || isBezRodzica;
+    const uzywaOkres    = !uzywaTeam;
+    document.getElementById('rap-sekcja-druzyna').style.display  = uzywaTeam  ? '' : 'none';
+    document.getElementById('rap-sekcja-okres').style.display    = uzywaOkres ? '' : 'none';
+    document.getElementById('rap-sekcja-zajecia').style.display  = uzywaOkres ? '' : 'none';
+    document.getElementById('rap-sekcja-format').style.display   = uzywaOkres ? '' : 'none';
+    document.getElementById('rap-sekcja-legenda').style.display  = uzywaOkres ? '' : 'none';
+    const _tR2 = (key, fb) => typeof t === 'function' ? t(key) : fb;
+    let btnLabel = _tR2('raporty.generateButton', 'Generuj raport');
+    if (isKarteczki)  btnLabel = _tR2('raporty.printCardsButton', '🖨️ Drukuj karteczki');
+    if (isBezRodzica) btnLabel = _tR2('raporty.printListButton',  '🖨️ Drukuj listę');
+    document.getElementById('rap-btn-generuj').textContent = btnLabel;
+    document.getElementById('rap-msg').textContent = '';
+    if (uzywaTeam) zaladujDruzyny();
+}
+
+let _druzynyZaladowane = false;
+async function zaladujDruzyny() {
+    if (_druzynyZaladowane) return;
+    _druzynyZaladowane = true;
+    try {
+        const snap = await db.collection('teams').where('clubId', '==', currentClubId).get();
+        const druzyny = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(t => t.status !== 'INACTIVE')
+            .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pl'));
+        const sel = document.getElementById('rap-druzyna-select');
+        sel.innerHTML = druzyny.map(d => {
+            const nazwa = d.teamName || d.displayName || d.name || d.id;
+            return `<option value="${d.id}"${d.id === currentTeamId ? ' selected' : ''}>${nazwa}</option>`;
+        }).join('');
+    } catch (e) {
+        console.error('zaladujDruzyny:', e);
+    }
+}
+
 /* ── Generowanie raportu — nie wie nic o konkretnym raporcie, deleguje do rejestru ── */
 async function generujRaport() {
     const msgEl = document.getElementById('rap-msg');
@@ -358,6 +411,16 @@ async function generujRaport() {
 
     const typRaportuKey = document.getElementById('rap-typ-raportu').value;
     const raportDef = RAPORTY_REJESTR[typRaportuKey];
+
+    if (raportDef?.specjalny === 'karteczki') {
+        await generujKarteczkiRodzicow();
+        return;
+    }
+
+    if (raportDef?.specjalny === 'bez_rodzica') {
+        await generujBezRodzica();
+        return;
+    }
 
     const typy = [];
     if (document.getElementById('rap-typ-trening').checked) typy.push('TRENING');
@@ -433,6 +496,294 @@ async function generujRaport() {
         btn.disabled = false;
         btn.textContent = _tR('raporty.generateButton', 'Generuj raport');
     }
+}
+
+/* ══════════════════════════════════════════════════════
+   KARTECZKI Z KODAMI DLA RODZICÓW
+═══════════════════════════════════════════════════════ */
+async function generujKarteczkiRodzicow() {
+    const msgEl = document.getElementById('rap-msg');
+    const btn   = document.getElementById('rap-btn-generuj');
+    btn.disabled = true;
+    btn.textContent = 'Ładowanie...';
+    msgEl.textContent = '';
+    msgEl.className = 'rap-msg';
+
+    try {
+        const teamId = document.getElementById('rap-druzyna-select').value || currentTeamId;
+        const now = new Date();
+
+        // pobierz aktywnych zawodników drużyny
+        const playersSnap = await db.collection('players').get();
+        const activePlayers = {};
+        for (const d of playersSnap.docs) {
+            const p = d.data();
+            if (p.teams && p.teams.some(t => t.teamId === teamId && t.status === 'ACTIVE')) {
+                activePlayers[d.id] = p;
+            }
+        }
+
+        const snap = await db.collection('inviteCodes')
+            .where('teamId', '==', teamId)
+            .where('type',   '==', 'RODZIC')
+            .where('isUsed', '==', false)
+            .get();
+
+        // filtruj wygasłe i kody bez aktywnego zawodnika
+        const kody = snap.docs
+            .map(d => d.data())
+            .filter(k => k.expiresAt?.toDate?.() > now && activePlayers[k.playerId])
+            .sort((a, b) => {
+                const na = activePlayers[a.playerId] ? nazwaZawodnika(activePlayers[a.playerId]) : (a.playerName || '');
+                const nb = activePlayers[b.playerId] ? nazwaZawodnika(activePlayers[b.playerId]) : (b.playerName || '');
+                return na.localeCompare(nb, 'pl');
+            });
+
+        if (kody.length === 0) {
+            msgEl.textContent = 'Brak aktywnych kodów dla rodziców w tej drużynie.';
+            msgEl.className = 'rap-msg err';
+            return;
+        }
+
+        // grupuj po playerId — numeruj Rodzic 1, Rodzic 2...
+        const grupy = {};
+        for (const k of kody) {
+            if (!grupy[k.playerId]) grupy[k.playerId] = [];
+            grupy[k.playerId].push(k);
+        }
+
+        const karteczki = [];
+        for (const pid of Object.keys(grupy)) {
+            const lista = grupy[pid];
+            const playerName = activePlayers[pid] ? nazwaZawodnika(activePlayers[pid]) : (lista[0].playerName || '—');
+            lista.forEach((k, idx) => {
+                karteczki.push({
+                    playerName,
+                    rodziLabel: lista.length > 1 ? `Rodzic ${idx + 1}` : 'Rodzic',
+                    code: k.code || '—'
+                });
+            });
+        }
+
+        drukujKarteczki(karteczki);
+        msgEl.textContent = `✓ Otwarto okno druku — ${karteczki.length} karteczek`;
+        msgEl.className = 'rap-msg ok';
+    } catch (e) {
+        console.error(e);
+        msgEl.textContent = 'Błąd podczas pobierania kodów.';
+        msgEl.className = 'rap-msg err';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = typeof t === 'function' ? t('raporty.printCardsButton') : '🖨️ Drukuj karteczki';
+    }
+}
+
+function drukujKarteczki(karteczki) {
+    const html = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Karteczki z kodami</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #fff; }
+  .siatka {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    width: 210mm;
+    margin: 0 auto;
+    padding: 8mm;
+  }
+  .karteczka {
+    width: 95mm;
+    height: 89mm;
+    border: 1.5px dashed #bbb;
+    padding: 10mm 8mm 8mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  .k-www {
+    font-size: 11px;
+    color: #999;
+    letter-spacing: .04em;
+    font-weight: 600;
+    text-transform: lowercase;
+  }
+  .k-zawodnik {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111;
+    line-height: 1.2;
+  }
+  .k-rodzic-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .k-kod {
+    font-size: 28px;
+    font-weight: 900;
+    color: #000;
+    letter-spacing: .12em;
+    font-family: 'Courier New', monospace;
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 6px 14px;
+    border: 1.5px solid #ddd;
+  }
+  .k-qr-placeholder {
+    display: flex;
+    gap: 10mm;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    height: 12mm;
+  }
+  @media print {
+    body { margin: 0; }
+    .siatka { padding: 8mm; }
+    @page { size: A4 portrait; margin: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="siatka">
+${karteczki.map(k => `  <div class="karteczka">
+    <div class="k-www">www.coachay.com</div>
+    <div class="k-zawodnik">${escHtml(k.playerName)}</div>
+    <div class="k-rodzic-label">${escHtml(k.rodziLabel)}</div>
+    <div class="k-kod">${escHtml(k.code)}</div>
+    <div class="k-qr-placeholder"></div>
+  </div>`).join('\n')}
+</div>
+<script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (w) { w.document.write(html); w.document.close(); }
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ══════════════════════════════════════════════════════
+   ZAWODNICY BEZ RODZICA
+═══════════════════════════════════════════════════════ */
+async function generujBezRodzica() {
+    const msgEl = document.getElementById('rap-msg');
+    const btn   = document.getElementById('rap-btn-generuj');
+    btn.disabled = true;
+    btn.textContent = 'Ładowanie...';
+    msgEl.textContent = '';
+    msgEl.className = 'rap-msg';
+
+    try {
+        const teamId = document.getElementById('rap-druzyna-select').value || currentTeamId;
+
+        // 1. Pobierz aktywnych zawodników drużyny
+        const playersSnap = await db.collection('players').get();
+        const activePlayers = playersSnap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(p => p.teams && p.teams.some(t => t.teamId === teamId && t.status === 'ACTIVE'))
+            .sort((a, b) => nazwaZawodnika(a).localeCompare(nazwaZawodnika(b), 'pl'));
+
+        if (activePlayers.length === 0) {
+            msgEl.textContent = 'Brak aktywnych zawodników w tej drużynie.';
+            msgEl.className = 'rap-msg err';
+            return;
+        }
+
+        // 2. Pobierz memberships RODZIC dla tych zawodników (porcjami po 30)
+        const playerIds = activePlayers.map(p => p.id);
+        const rodziczeMap = {}; // playerId -> czy ma aktywnego rodzica
+
+        const chunkSize = 30;
+        for (let i = 0; i < playerIds.length; i += chunkSize) {
+            const chunk = playerIds.slice(i, i + chunkSize);
+            const snap = await db.collection('memberships')
+                .where('playerId', 'in', chunk)
+                .where('role', '==', 'RODZIC')
+                .get();
+            for (const d of snap.docs) {
+                const m = d.data();
+                const st = (m.status || '').toLowerCase();
+                if (st === 'active' || st === 'grace' || st === 'pending') {
+                    rodziczeMap[m.playerId] = true;
+                }
+            }
+        }
+
+        // 3. Filtruj zawodników bez aktywnego rodzica
+        const bezRodzica = activePlayers.filter(p => !rodziczeMap[p.id]);
+
+        if (bezRodzica.length === 0) {
+            msgEl.textContent = '✓ Wszyscy aktywni zawodnicy mają zarejestrowanego rodzica.';
+            msgEl.className = 'rap-msg ok';
+            return;
+        }
+
+        const teamName = document.getElementById('rap-druzyna-select').selectedOptions?.[0]?.text || '';
+        drukujBezRodzica(bezRodzica, teamName);
+        msgEl.textContent = `✓ Otwarto okno druku — ${bezRodzica.length} zawodników bez rodzica`;
+        msgEl.className = 'rap-msg ok';
+    } catch (e) {
+        console.error(e);
+        msgEl.textContent = 'Błąd podczas pobierania danych.';
+        msgEl.className = 'rap-msg err';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = typeof t === 'function' ? t('raporty.printListButton') : '🖨️ Drukuj listę';
+    }
+}
+
+function drukujBezRodzica(zawodnicy, teamName) {
+    const rows = zawodnicy.map((p, i) => `
+  <tr class="${i % 2 === 1 ? 'alt' : ''}">
+    <td class="lp">${i + 1}</td>
+    <td>${escHtml(nazwaZawodnika(p))}</td>
+  </tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Zawodnicy bez rodzica</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #111; padding: 10mm; }
+  h1 { font-size: 18px; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #555; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: #1e3a5f; color: #fff; padding: 7px 10px; text-align: left; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e0e0e0; }
+  td.lp { width: 40px; color: #888; }
+  tr.alt td { background: #f5f8fc; }
+  @page { size: A4 portrait; margin: 10mm; }
+  @media print { body { padding: 0; } }
+</style>
+</head>
+<body>
+<h1>👤 Zawodnicy bez zarejestrowanego rodzica</h1>
+<div class="sub">${escHtml(teamName)} &nbsp;|&nbsp; ${zawodnicy.length} zawodników</div>
+<table>
+  <thead><tr><th>#</th><th>Zawodnik</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=800,height=600');
+    if (w) { w.document.write(html); w.document.close(); }
 }
 
 async function pobierzAktywnychZawodnikow() {
@@ -752,6 +1103,10 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
+
+
 
 
 

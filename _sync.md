@@ -4,6 +4,9 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-09-21 00:00] [WEB] [DONE] sendEventReminders — nowa Cloud Function (co 15 min), powiadomienie przed eventem, ustawienie per klub (clubs/{clubId}.reminderHoursBefore), okno ±7.5 min, push do wszystkich członków drużyny
+[2026-09-21 00:00] [WEB] [DONE] ustawienia.html — nowy wiersz + panel "Powiadomienie przed eventem" (admin only), select 1-24h, zapis do clubs/{clubId}.reminderHoursBefore
+[2026-09-21 00:00] [WEB] [DONE] i18n — dodane klucze settings.reminder*, LOCALE_V → 20260921c; push w języku użytkownika (getLang per userId, I18N.pl/en.reminderTitle + reminderReady)
 [2026-09-17 00:00] [APP] [TODO] Badge/Bell — nowa logika licznika z events.attendance + tasks + chat (patrz wpis poniżej)
 [2026-09-17 00:00] [WEB] [DONE] onEventCreated — fix: push tylko w oknie reminderHoursBefore, nie przy tworzeniu (patrz wpis poniżej)
 [2026-09-17 00:00] [APP] [TODO] Lokalne powiadomienia 1h przed wydarzeniem — spec gotowy (patrz wpis poniżej)
@@ -3023,3 +3026,221 @@ Notifications.addNotificationReceivedListener((notification) => {
 **3. Android — silent push działa bez dodatkowej konfiguracji** (Expo obsługuje `_contentAvailable` automatycznie).
 
 **Uwaga:** handler `addNotificationReceivedListener` odpala się gdy appka jest na **foreground**. Dla **background/killed** — iOS budzi appkę w tle przez `UIBackgroundModes` i Expo obsługuje to przez background task. Jeśli appka jest całkowicie zamknięta na Androidzie i nie ma foreground service — silent push może nie obudzić appki (ograniczenie systemu Android, nie Expo).
+
+---
+
+[2026-09-20] [WEB] [DONE] start.html + 6 ekranów — dzwonek (bell) usunięty z całego www
+
+Przycisk 🔔 usunięty z: `start.html`, `druzyna.html`, `raporty.html`, `klub.html`, `profil.html`, `ustawienia.html`, `trenerzy.html`. WWW nie obsługuje powiadomień — badge i bell są wyłącznie w APP.
+
+---
+
+[2026-09-20] [WEB] [DONE] druzyna.html — pozycja zawodnika domyślnie "Ogólna"
+
+Jeśli trener nie wpisze pozycji przy dodawaniu zawodnika, pole `position` zapisuje się jako `"Ogólna"` zamiast pustego stringa. Dotyczy funkcji `zapiszZawodnika()`.
+
+**APP:** analogicznie — przy tworzeniu zawodnika bez pozycji ustawić `"Ogólna"` jako wartość domyślną.
+
+---
+
+[2026-09-20] [WEB] [DONE] druzyna.html — przycisk "Rozłącz profil rodzica" aktywny tylko gdy rodzic podpięty
+
+Przycisk widoczny dla trenera zawsze, ale `disabled` + `opacity:0.35` gdy `_allRodzice` i `_allKibice` nie mają żadnego aktywnego wpisu. Stan ustawiany na końcu `zaladujPowiazaneKonta()` po załadowaniu memberships.
+
+**APP:** analogicznie — przycisk "Rozłącz" w szczegółach zawodnika powinien być nieaktywny gdy brak aktywnych rodziców/kibiców.
+
+---
+
+## Raport: Karteczki z kodami dla rodziców (2026-09-20)
+
+**WEB: zaimplementowane w `raporty.html`. APP: do zaimplementowania analogicznie (patrz niżej).**
+
+Nowy typ raportu w ekranie Raporty → "🔑 Karteczki z kodami dla rodziców".
+
+### Jak działa
+
+1. Trener wybiera drużynę z listy (domyślnie aktualnie wybrana)
+2. Klika "🖨️ Drukuj karteczki"
+3. Otwiera się okno druku z karteczkami gotowymi do wydruku i pocięcia
+
+### Co pobiera
+
+- `inviteCodes` where `teamId == wybranaId` AND `type == 'RODZIC'` AND `isUsed == false`
+- Filtruje wygasłe (`expiresAt > now`)
+- Filtruje tylko kody dla **aktywnych zawodników** w wybranej drużynie (cross-reference z `players`)
+- Nazwa zawodnika pobierana z `players` (nie z pola `playerName` na kodzie — może być puste dla starych kodów)
+
+### Format karteczki
+
+```
+www.coachay.com
+[Imię i Nazwisko Zawodnika]
+RODZIC / RODZIC 1 / RODZIC 2
+[KOD]
+[placeholder na QR kody — do dodania]
+```
+
+- Jeśli zawodnik ma 2 aktywne kody → dwie karteczki: "Rodzic 1" i "Rodzic 2"
+- **6 karteczek na stronę A4** (2 kolumny × 3 rzędy), przerywana linia cięcia
+- Sortowanie alfabetyczne po nazwisku zawodnika
+- `window.print()` odpala się automatycznie
+
+### APP — do zaimplementowania
+
+APP ma własny ekran raportów — należy dodać analogiczny raport "Karteczki z kodami dla rodziców":
+
+**Zapytanie Firestore:**
+```
+inviteCodes
+  where teamId == wybranyTeamId
+  where type   == 'RODZIC'
+  where isUsed == false
+```
+Filtruj po stronie klienta: `expiresAt > now` + tylko aktywni zawodnicy (cross-reference z `players` gdzie `teams[].teamId == teamId && teams[].status == 'ACTIVE'`).
+
+**Logika grupowania:**
+- Grupuj kody po `playerId`
+- Jeśli zawodnik ma >1 kod → etykiety "Rodzic 1", "Rodzic 2"
+- Nazwę zawodnika bierz z `players`, nie z pola `playerName` na kodzie (może być puste)
+
+**Wynik:** lista karteczek do wydruku lub podglądu PDF w APP (np. przez `expo-print` lub `react-native-pdf`).
+
+### TODO (kolejny krok — obie platformy)
+
+Dodać kody QR (Apple App Store z lewej, Google Play z prawej) na każdej karteczce. Na WWW placeholder już jest w HTML (`k-qr-placeholder`, opacity:0).
+
+---
+
+## Match Live — scoreboard na www dashboard (2026-09-20)
+
+### Zmiana w start.html — karta meczu podczas LIVE
+
+Gdy `matchData.matchStatus === 'LIVE'` karta meczu na dashboardzie zmienia układ:
+
+**Przed (zawsze):** tytuł meczu + 3 kwadraty z liczbą obecnych/nieobecnych/brak odpowiedzi
+
+**Teraz (tylko LIVE):** scoreboard z dwoma stronami + `onSnapshot` który aktualizuje wynik w czasie rzeczywistym
+
+#### Scoreboard layout
+
+```
+[ NAZWA DRUŻYNY ]    [ NAZWA PRZECIWNIKA ]
+      2          :         0
+```
+
+- **Lewa strona** — `teamName` (z `teams/{teamId}.name`) — kolor zielony (`#16A34A`)
+- **Prawa strona** — `matchData.opponent` — kolor czerwony (`#DC2626`)
+- **Wynik** — `matchData.result.our` : `matchData.result.opponent`, duża czcionka `var(--font-d)` 38px
+
+#### Logika nazw (fallback)
+
+Jeśli `teamName` lub `matchData.opponent` są puste, próbuje wyciągnąć nazwy z tytułu eventu:
+
+```
+"Legia vs Wisła" → lewa: "Legia", prawa: "Wisła"
+```
+
+Kolejność priorytetów:
+- Lewa: `teamName` z Firestore → lewa część tytułu przed `vs` → `'Drużyna'`
+- Prawa: `matchData.opponent` → prawa część tytułu po `vs` → `'Przeciwnik'`
+
+#### Ukrywanie tytułu podczas LIVE
+
+Jeśli mecz jest LIVE **i** tytuł zawiera `vs` (case-insensitive) → `mc-tytul` jest ukryty (scoreboard zastępuje tytuł). Jeśli tytuł nie zawiera `vs` — tytuł jest widoczny nad scoreboardem.
+
+#### onSnapshot
+
+`loadNextMatch` zakłada listener `onSnapshot` na dokument LIVE eventu. Przy każdej zmianie `matchData` karta jest re-renderowana przez `renderMatchCard` bez przeładowania całego dashboardu. Listener jest czyszczony (`_liveMatchUnsub`) przy kolejnym wywołaniu `loadNextMatch`.
+
+### Dla APP
+
+APP powinna implementować analogiczny scoreboard dla ekranu dashboardu gdy mecz jest LIVE:
+- Lewa: nazwa drużyny (zielona) + wynik nasz
+- Prawa: nazwa przeciwnika (czerwona) + wynik przeciwnika
+- `onSnapshot` na live event lub obsługa silent pushów `MATCH_SCORE` / `MATCH_LIVE` / `MATCH_FINISHED`
+
+---
+
+[2026-09-20] [WEB] [DONE] raporty.html — nowy raport "Zawodnicy bez rodzica"
+
+## Raport: Zawodnicy bez rodzica (2026-09-20)
+
+Nowy typ raportu w ekranie Raporty → "👤 Zawodnicy bez rodzica".
+
+### Parametry (takie same jak Karteczki)
+
+- Wybór drużyny (selektor wszystkich drużyn klubu, aktywnych)
+- Brak pola okresu, zajęć, formatu, legendy
+
+### Logika
+
+1. Pobierz aktywnych zawodników wybranej drużyny (`players` gdzie `teams[].teamId == teamId && teams[].status == 'ACTIVE'`)
+2. Pobierz memberships `role == 'RODZIC'` dla tych zawodników (zapytania partiami po 30 — limit Firestore `in`)
+3. Filtruj: akceptuj membership o statusie `active`, `grace`, `pending`
+4. Zawodnicy bez żadnego aktywnego RODZIC membership → lista "bez rodzica"
+5. Jeśli wszyscy mają rodzica → komunikat ✓ bez druku
+
+### Wynik
+
+Okno druku z tabelką A4 (numerowana lista: lp + nazwisko imię). Auto `window.print()`.
+
+### APP — do zaimplementowania
+
+Ekran raportów w APP powinien mieć analogiczny raport "Zawodnicy bez rodzica":
+- Zapytanie: `memberships` gdzie `playerId in [activePlayerIds]` i `role == 'RODZIC'`
+- Partiami po 30 (Firestore `in` limit)
+- Filtruj aktywne statusy: `active`, `grace`, `pending`
+- Wynik: lista do podglądu lub eksportu PDF
+
+---
+
+[2026-09-21] [WEB] [DONE] raporty.html — i18n dla nowych raportów (karteczki + bez rodzica)
+
+Dodano klucze tłumaczeń do `locales/pl.json` i `locales/en.json`:
+- `raporty.typeInviteCodes` — etykieta raportu "Karteczki z kodami dla rodziców"
+- `raporty.typeWithoutParent` — etykieta raportu "Zawodnicy bez rodzica"
+- `raporty.printCardsButton` — tekst przycisku "🖨️ Drukuj karteczki"
+- `raporty.printListButton` — tekst przycisku "🖨️ Drukuj listę"
+
+Zaktualizowano `RAPORTY_REJESTR` — nowe wpisy używają `get label() { return t(...) }` jak starsze raporty.
+Podbito `LOCALE_V` w `_i18n.js` → `20260920b` (wymusza odświeżenie cache localStorage we wszystkich plikach HTML).
+
+---
+
+[2026-09-21] [WEB] [DONE] ustawienia.html — pozycja "Ogólna" na liście pozycji zawodników
+
+Dodano `{ id: 'general' }` jako pierwszy wpis w `POZYCJE_DEF` w `ustawienia.html`.
+Klucze i18n: `settings.positions.general` = "⚽ Ogólna" (pl) / "⚽ General" (en).
+Pozycja widoczna na pierwszym miejscu listy z togglem włącz/wyłącz.
+
+### APP — do zaimplementowania
+
+Analogiczna zmiana w liście pozycji w APP — dodać "⚽ Ogólna" / "⚽ General" jako pierwszą pozycję.
+
+---
+
+[2026-09-21] [WEB] [DONE] druzyna.html — pole Pozycja jako dropdown zamiast wolnego tekstu
+
+### Zmiana
+
+Pole "Pozycja" w formularzu nowego/edytowanego zawodnika zmienione z `<input type="text">` na `<select>` z listą pozycji zsynchronizowaną z ustawieniami drużyny.
+
+### Jak działa
+
+- Lista opcji pochodzi z `teams/{teamId}.settings.positions.enabled` (te same pozycje co w Ustawienia > Pozycje zawodników)
+- Jeśli drużyna nie ma skonfigurowanych pozycji — pokazuje wszystkie 7 pozycji z `POZYCJE_DEF`
+- Pierwsza opcja: "⚽ Ogólna" (domyślna dla nowego zawodnika)
+- Etykiety tłumaczone przez i18n (`settings.positions.{id}`), wartości to ID niezależne od języka
+
+### Backward compatibility
+
+Gracze ze starymi pozycjami wpisanymi jako wolny tekst (PL lub EN, z emoji lub bez) są mapowani przez `POZYCJE_LEGACY_MAP`:
+- "Bramkarz", "🥅 Bramkarz", "Goalkeeper" → `gk`
+- "Ogólna", "⚽ Ogólna", "General" → `general`
+- itd. dla wszystkich 7 pozycji
+
+### APP — do zaimplementowania
+
+- Pole pozycji na ekranie edycji zawodnika → picker/dropdown z listą pozycji z `teams/{teamId}.settings.positions.enabled`
+- Użyć tych samych ID: `general`, `gk`, `def`, `mid`, `fwd`, `cb`, `win`
+- Zastosować analogiczny `POZYCJE_LEGACY_MAP` przy odczycie starych danych
