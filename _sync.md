@@ -2766,58 +2766,153 @@ const reminderTime = new Date(event.date + 'T' + event.timeFrom).getTime()
 
 ---
 
-## Badge / Bell — nowa logika licznika (2026-09-17)
+## Badge / Bell — architektura licznika (2026-09-17)
 
-### Decyzja architektoniczna
+### Decyzja
 
-Bell (ikona z licznikiem) **zostaje**. Centrum historii powiadomień (lista do scrollowania) **do usunięcia** — niepotrzebna warstwa, generuje reads z `notifications`.
+Badge (licznik na ikonie appki) pokazuje co user MOŻE TERAZ ZROBIĆ:
 
-### Nowa logika licznika (co zlicza badge)
-
-Badge ma pokazywać to co user MOŻE TERAZ ZROBIĆ — nie archiwum. Liczymy z danych już pobranych w RAM (0 dodatkowych Firestore reads):
-
-| Typ | Warunek zliczania |
+| Typ | Warunek |
 |---|---|
-| Eventy | event w oknie `reminderHoursBefore` + childId w `invited` ale NIE w `confirmed`/`declined` |
-| Zadania | zadanie niewykonane, przypisane do usera |
-| Czat | nieprzeczytane wiadomości |
+| `events` | event w oknie `reminderHoursBefore` + playerIs użytkownika w `invited` ale NIE w `confirmed`/`declined` |
+| `tasks` | zadanie niewykonane, przypisane do usera |
+| `messages` | nieprzeczytane wiadomości |
 
-### Dla APP — do zaimplementowania
+Bell na WEB **usunięty** — www nie potrzebuje.  
+Historia powiadomień (overlay) **usunięta** — niepotrzebna warstwa.
 
-```typescript
-function calcBadgeCount({ events, tasks, messages, myChildIds, now }) {
-  let count = 0;
+---
 
-  // Eventy wymagające potwierdzenia (widoczne = w oknie reminderHoursBefore)
-  for (const ev of events) {
-    const rh = ev.reminderHoursBefore ?? 48;
-    const evTime = new Date(ev.date + 'T' + (ev.timeFrom || '00:00')).getTime();
-    if (now < evTime - rh * 3600000) continue; // poza oknem
-    if (now > evTime) continue;                 // już minął
-    if (ev.status === 'CANCELLED') continue;
+### Architektura: denormalizowany licznik + Silent Push
 
-    for (const childId of myChildIds) {
-      const invited   = ev.attendance?.invited   || [];
-      const confirmed = ev.attendance?.confirmed || [];
-      const declined  = ev.attendance?.declined  || [];
-      if (invited.includes(childId) && !confirmed.includes(childId) && !declined.includes(childId)) {
-        count++;
-      }
-    }
-  }
+**Problem:** obliczanie badge wymaga wielu odczytów Firestore (memberships → playerIds, events, tasks, notifications). Przy każdym pushu to za drogie.
 
-  // Zadania niewykonane
-  count += tasks.filter(t => !t.isDone && t.assignedTo?.includes(myUserId)).length;
+**Rozwiązanie:**
+1. Liczniki przechowywane na `users/{userId}.badgeCounts` — jeden odczyt
+2. CF aktualizuje przez `FieldValue.increment(±1)` przy każdej zmianie
+3. CF wysyła **Silent Push** z aktualnym rozbijem → APP ustawia badge bez żadnego Firestore read
 
-  // Nieprzeczytane czaty
-  count += messages.filter(m => !m.isRead).length;
+---
 
-  return count;
+### Struktura danych — `users/{userId}`
+
+```
+badgeCounts: {
+  events:   2,   // eventy niepotwierdzone w oknie reminderHoursBefore
+  tasks:    1,   // zadania niewykonane
+  messages: 3    // nieprzeczytane wiadomości
 }
 ```
 
-`Notifications.setBadgeCountAsync(count)` — ustawia licznik na ikonie appki.
+---
 
-### Dla WEB — do zaimplementowania
+### Cloud Functions — kto aktualizuje liczniki
 
-Przepisać `calcBadgeCount` w `functions/index.js` (używaną przy wysyłaniu pushów Expo) oraz licznik przy ikonie bell w UI — ta sama logika co wyżej, zamiast czytania z `notifications`.
+| Trigger CF | Co aktualizuje | Operacja |
+|---|---|---|
+| `onEventUpdated` (attendance zmiana) | `badgeCounts.events` dla zaproszonych userów | `increment(+1)` / `increment(-1)` |
+| `onTaskUpdated` (completedBy / rejectedBy) | `badgeCounts.tasks` dla assignedTo | `increment(-1)` |
+| `onTaskCreated` | `badgeCounts.tasks` dla assignedTo | `increment(+1)` |
+| `onNotificationCreated` (referenceType=message) | `badgeCounts.messages` dla userId | `increment(+1)` |
+| `onNotificationUpdated` (isRead: false→true) | `badgeCounts.messages` dla userId | `increment(-1)` |
+
+Po każdej aktualizacji `badgeCounts` — CF wysyła **Silent Push** do tokena użytkownika.
+
+---
+
+### Silent Push — payload
+
+CF wysyła push z `contentAvailable: true` (iOS) / `priority: 'normal'` (Android) bez tytułu i treści:
+
+```json
+{
+  "to": "<expo_token>",
+  "sound": null,
+  "badge": 6,
+  "data": {
+    "type": "BADGE_UPDATE",
+    "events": 2,
+    "tasks": 1,
+    "messages": 3
+  },
+  "_contentAvailable": true
+}
+```
+
+Nie pojawia się jako dymek. Budzi appkę w tle.
+
+---
+
+### Dla APP — do zaimplementowania
+
+**1. Nasłuch na silent push:**
+
+```typescript
+import * as Notifications from 'expo-notifications';
+
+// W głównym komponencie (App.tsx), obok istniejącego listenera pushów:
+Notifications.addNotificationReceivedListener((notification) => {
+  const data = notification.request.content.data;
+  if (data?.type === 'BADGE_UPDATE') {
+    const total = (data.events ?? 0) + (data.tasks ?? 0) + (data.messages ?? 0);
+    Notifications.setBadgeCountAsync(total);
+    // Opcjonalnie: zaktualizuj lokalny stan Redux/Context jeśli chcesz pokazywać rozbicie w UI
+  }
+});
+```
+
+**2. Badge przy starcie appki (foreground):**
+
+Przy każdym uruchomieniu appki pobierz `users/{userId}.badgeCounts` i ustaw badge — na wypadek gdyby silent push nie dotarł (np. appka była offline):
+
+```typescript
+async function syncBadgeOnStartup(userId: string) {
+  const userDoc = await db.collection('users').doc(userId).get();
+  const counts = userDoc.data()?.badgeCounts ?? { events: 0, tasks: 0, messages: 0 };
+  const total = (counts.events ?? 0) + (counts.tasks ?? 0) + (counts.messages ?? 0);
+  await Notifications.setBadgeCountAsync(total);
+}
+```
+
+Wywoływać po zalogowaniu i przy `AppState` zmianie na `'active'`.
+
+**3. Przy potwierdzeniu attendance przez usera (in-app):**
+
+Gdy user potwierdza/odmawia event w appce — nie czekaj na silent push, zaktualizuj badge lokalnie od razu:
+
+```typescript
+// Po zapisie do Firestore (attendance update)
+const currentBadge = await Notifications.getBadgeCountAsync();
+if (currentBadge > 0) {
+  await Notifications.setBadgeCountAsync(currentBadge - 1);
+}
+```
+
+---
+
+### CF triggery — implementacja (2026-09-20)
+
+Zaimplementowane w `functions/index.js`:
+
+| Trigger | Zdarzenie | Operacja na `users/{userId}.badgeCounts` |
+|---|---|---|
+| `onNotificationCreated` | `requiresAction: true` (attendance) | `events += 1` |
+| `onNotificationCreated` | `referenceType: 'message'` | `messages += 1` |
+| `onNotificationUpdated` | `actionDone` false→true | `events -= 1` + silent push |
+| `onNotificationUpdated` | `isRead` false→true (message) | `messages -= 1` + silent push |
+| `onTaskCreated` | `status: PENDING` + `assignedTo` | `tasks += 1` + silent push |
+| `onTaskUpdated` | nowi w `completedBy`/`rejectedBy` | `tasks -= 1` + silent push |
+
+`calcBadgeCount(userId)` = 1 odczyt `users/{userId}`, suma `events + tasks + messages`.
+
+`sendBadgePush(userId)` = odczyt `users/{userId}` → silent Expo push z `badge` + rozbijem.
+
+Backfill initial state: skrypt `functions/backfill-badge-counts.js` (uruchomiony 2026-09-20).
+
+---
+
+### Obserwability — po co rozbicie w payloadzie
+
+Silent push niesie `events`, `tasks`, `messages` osobno — nie tylko total. Dzięki temu:
+- Jeśli badge = 5 ale `events=0, tasks=0, messages=0` → licznik zjechał, wiadomo że CF nie zaktualizowało
+- Można debugować który obszar nie działa bez dodatkowych odczytów

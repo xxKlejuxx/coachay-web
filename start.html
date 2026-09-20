@@ -413,7 +413,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             <span class="ctx-arrow">▾</span>
         </div>
         <div class="top-bar-right">
-            <button class="bell-btn" onclick="toggleNotifOv()">🔔<span class="bell-count" id="bell-count" style="display:none"></span></button>
             <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
         </div>
     </div>
@@ -421,10 +420,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         <div class="ov-label" data-i18n="common.selectClubAndTeam">Wybierz klub i zespół</div>
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
-    </div>
-    <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
-    <div class="notif-overlay" id="notif-ov">
-        <div class="notif-hdr"><span class="notif-tytul" data-i18n="common.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="common.clearRead">Wyczyść przeczytane</span></div>
     </div>
 
     <div class="screen-body">
@@ -1912,7 +1907,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 }
             }
             await reloadTasks();
-            await loadAndRenderNotifications();
         } catch (e) { console.error('❌ Błąd zapisu zadania:', e); }
     }
 
@@ -1930,7 +1924,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             await db.collection('tasks').doc(taskId).update({ completedBy: completed, rejectedBy: rejected, rejectReasons: reasons, status: 'PENDING' });
             await syncTaskNotification(taskId, userId, null);
             await reloadTasks();
-            await loadAndRenderNotifications();
         } catch (e) { console.error('❌ Błąd resetu zadania:', e); }
     }
 
@@ -1964,7 +1957,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 await createNotification({ userId: task.createdBy, teamId: task.teamId, type: 'TASK_REJECTED', title: `${userName} — ${t('addTask.rejectNotif')||'zadanie odrzucone'}`, body: `${task.title}${reasonText}`, referenceId: taskId, referenceType: 'task', requiresAction: false, priority: 'NORMAL' });
             }
             await reloadTasks();
-            await loadAndRenderNotifications();
         } catch (e) { console.error('❌ Błąd odrzucenia zadania:', e); }
     }
 
@@ -2118,7 +2110,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             loadNextMatch(teamId),
             loadUpcomingEvents(teamId),
             loadTasks(teamId, currentUserData.userId),
-            loadAndRenderNotifications()
         ]);
         loadCalWidget(teamId);
     }

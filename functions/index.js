@@ -879,52 +879,37 @@ exports.onMembershipUpdated = onDocumentUpdated('memberships/{membershipId}', as
 const { Expo } = require('expo-server-sdk');
 const expo = new Expo(); // v2
 
-// Badge = obecności do potwierdzenia + nieprzeczytane chaty + zadania niewykonane
-async function calcBadgeCount(userId, teamId) {
-    const _now = Date.now();
-    const _DAY7 = 7 * 24 * 60 * 60 * 1000;
-    const queries = [
-        db.collection('notifications').where('userId', '==', userId).get()
-    ];
-    if (teamId) {
-        queries.push(
-            db.collection('tasks')
-                .where('teamId', '==', teamId)
-                .where('assignedTo', 'array-contains', userId)
-                .where('status', '==', 'PENDING')
-                .get()
-        );
+// Badge = suma z users/{userId}.badgeCounts (aktualizowanej przez triggery)
+async function calcBadgeCount(userId) {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return 0;
+    const counts = userDoc.data().badgeCounts || {};
+    return (counts.events || 0) + (counts.tasks || 0) + (counts.messages || 0);
+}
+
+// Wysyła silent push z aktualnym badgeCounts do usera
+async function sendBadgePush(userId) {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return;
+    const userData = userDoc.data();
+    const expoToken = (userData.pushToken || '').trim() || null;
+    if (!expoToken || !Expo.isExpoPushToken(expoToken)) return;
+    const counts = userData.badgeCounts || {};
+    const events   = counts.events   || 0;
+    const tasks    = counts.tasks    || 0;
+    const messages = counts.messages || 0;
+    const total = events + tasks + messages;
+    try {
+        await expo.sendPushNotificationsAsync([{
+            to: expoToken,
+            badge: total,
+            sound: null,
+            _contentAvailable: true,
+            data: { type: 'BADGE_UPDATE', events, tasks, messages },
+        }]);
+    } catch (e) {
+        console.error(`sendBadgePush(${userId}):`, e);
     }
-    const [notifSnap, taskSnap] = await Promise.all(queries);
-    let count = 0;
-    for (const d of notifSnap.docs) {
-        const n = d.data();
-        if (n.status === 'DELETE' || n.actionResult === 'expired') continue;
-        if (n.visibleFrom && new Date(n.visibleFrom).getTime() > _now) continue;
-        // Obecność do potwierdzenia — tylko przyszłe eventy w oknie 7 dni
-        if (n.requiresAction && !n.actionDone) {
-            if (n.eventDate) {
-                const evMs = new Date(n.eventDate).getTime();
-                if (evMs < _now) continue; // event już minął
-                if (evMs - _now > _DAY7) continue; // za daleko w przyszłości
-            }
-            count++;
-            continue;
-        }
-        // Nieprzeczytany czat
-        if (n.referenceType === 'message' && !n.isRead) {
-            count++;
-        }
-    }
-    if (taskSnap) {
-        for (const d of taskSnap.docs) {
-            const t = d.data();
-            if (!(t.completedBy || []).includes(userId) && !(t.rejectedBy || []).includes(userId)) {
-                count++;
-            }
-        }
-    }
-    return count;
 }
 
 exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId}', async (event) => {
@@ -932,11 +917,22 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
     if (!notif || !notif.userId) return;
 
     try {
-        const userDoc = await db.collection('users').doc(notif.userId).get();
+        const userRef = db.collection('users').doc(notif.userId);
+
+        // Aktualizuj badgeCounts przed odczytem (żeby badge w pushu był aktualny)
+        const badgeField = notif.requiresAction
+            ? 'badgeCounts.events'
+            : notif.referenceType === 'message'
+                ? 'badgeCounts.messages'
+                : null;
+        if (badgeField) {
+            await userRef.update({ [badgeField]: FieldValue.increment(1) });
+        }
+
+        const userDoc = await userRef.get();
         if (!userDoc.exists) return;
         const userData = userDoc.data();
 
-        // Filtruj puste/null tokeny
         const expoToken = (userData.pushToken || '').trim() || null;
         const fcmToken  = (userData.fcmToken  || '').trim() || null;
 
@@ -952,8 +948,7 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
         // --- Expo push (natywna aplikacja iOS/Android) ---
         const isValidExpoToken = expoToken && Expo.isExpoPushToken(expoToken);
         if (isValidExpoToken) {
-            const badgeCount = await calcBadgeCount(notif.userId, notif.teamId || null);
-
+            const badgeCount = await calcBadgeCount(notif.userId);
             const chunks = expo.chunkPushNotifications([{
                 to: expoToken, sound: 'default', badge: badgeCount,
                 title, body, data: notifData
@@ -984,6 +979,57 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
             console.error('onNotificationCreated error:', e);
         }
     }
+});
+
+exports.onNotificationUpdated = onDocumentUpdated('notifications/{notificationId}', async (event) => {
+    const before = event.data.before.data();
+    const after  = event.data.after.data();
+    if (!after?.userId) return;
+
+    const userRef = db.collection('users').doc(after.userId);
+    let changed = false;
+
+    // Attendance zdecydowane → decrement events
+    if (after.requiresAction && !before.actionDone && after.actionDone) {
+        await userRef.update({ 'badgeCounts.events': FieldValue.increment(-1) });
+        changed = true;
+    }
+    // Wiadomość przeczytana → decrement messages
+    if (after.referenceType === 'message' && !before.isRead && after.isRead) {
+        await userRef.update({ 'badgeCounts.messages': FieldValue.increment(-1) });
+        changed = true;
+    }
+
+    if (changed) await sendBadgePush(after.userId);
+});
+
+exports.onTaskCreated = onDocumentCreated('tasks/{taskId}', async (event) => {
+    const task = event.data.data();
+    if (!task || task.status !== 'PENDING' || !(task.assignedTo?.length)) return;
+
+    const batch = db.batch();
+    for (const uid of task.assignedTo) {
+        batch.update(db.collection('users').doc(uid), { 'badgeCounts.tasks': FieldValue.increment(1) });
+    }
+    await batch.commit();
+    for (const uid of task.assignedTo) await sendBadgePush(uid);
+});
+
+exports.onTaskUpdated = onDocumentUpdated('tasks/{taskId}', async (event) => {
+    const before = event.data.before.data();
+    const after  = event.data.after.data();
+
+    const beforeDone = new Set([...(before.completedBy || []), ...(before.rejectedBy || [])]);
+    const afterDone  = new Set([...(after.completedBy  || []), ...(after.rejectedBy  || [])]);
+    const newlyDone  = [...afterDone].filter(uid => !beforeDone.has(uid));
+    if (!newlyDone.length) return;
+
+    const batch = db.batch();
+    for (const uid of newlyDone) {
+        batch.update(db.collection('users').doc(uid), { 'badgeCounts.tasks': FieldValue.increment(-1) });
+    }
+    await batch.commit();
+    for (const uid of newlyDone) await sendBadgePush(uid);
 });
 
 /* ═══════════════════════════════════════════════════
