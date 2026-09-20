@@ -2982,3 +2982,44 @@ if (data?.type === 'MATCH_FINISHED') {
 ```
 
 Alternatywnie: przy każdym z tych pushów wywołaj `onSnapshot` jeśli jeszcze nie jest aktywny — dane przyjdą same.
+
+### APP — wymagania żeby silent push działał
+
+**1. `app.json` — iOS background modes (bez tego iOS blokuje budzenie w tle):**
+
+```json
+"ios": {
+  "infoPlist": {
+    "UIBackgroundModes": ["remote-notification", "fetch"]
+  }
+}
+```
+
+**2. Handler powiadomień — nasłuch na wszystkie ciche pushe:**
+
+```typescript
+import * as Notifications from 'expo-notifications';
+
+// Wywołać raz przy starcie appki (np. w App.tsx)
+Notifications.addNotificationReceivedListener((notification) => {
+  const data = notification.request.content.data;
+
+  switch (data?.type) {
+    case 'MATCH_LIVE':
+    case 'MATCH_SCORE':
+    case 'MATCH_FINISHED':
+      // odśwież kartę meczu — dane są w data.our, data.opponent, data.outcome
+      refreshMatchCard(data.eventId, data);
+      break;
+
+    case 'BADGE_UPDATE':
+      const total = (data.events ?? 0) + (data.tasks ?? 0) + (data.messages ?? 0);
+      Notifications.setBadgeCountAsync(total);
+      break;
+  }
+});
+```
+
+**3. Android — silent push działa bez dodatkowej konfiguracji** (Expo obsługuje `_contentAvailable` automatycznie).
+
+**Uwaga:** handler `addNotificationReceivedListener` odpala się gdy appka jest na **foreground**. Dla **background/killed** — iOS budzi appkę w tle przez `UIBackgroundModes` i Expo obsługuje to przez background task. Jeśli appka jest całkowicie zamknięta na Androidzie i nie ma foreground service — silent push może nie obudzić appki (ograniczenie systemu Android, nie Expo).
