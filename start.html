@@ -77,7 +77,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-desc { font-size: 16px; font-weight: 600; color: #666; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mc-info { font-size: 16px; font-weight: 700; color: #777; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
 .mc-info-venue { color: var(--szary); }
-.mc-wynik { font-size: 29px; font-weight: 900; color: var(--bialy); margin: 4px 0; }
+.mc-wynik { font-size: 29px; font-weight: 900; color: var(--czarny); margin: 4px 0; }
 .mc-wynik-label { font-size: 19px; font-weight: 700; color: var(--szary); margin-right: 6px; }
 .mc-result-info { font-size: 19px; font-weight: 900; padding: 3px 12px; border-radius: 999px; }
 .mc-result-win  { background: rgba(74,222,128,0.12); color: #16A34A; }
@@ -1072,6 +1072,21 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         _mecze = visible;
         visible.forEach(match => { carousel.appendChild(renderMatchCard(match, todayStr, userCache, parentsCanAssist)); });
 
+        // Live listener — re-renderuje kartę gdy wynik meczu się zmienia
+        if (_liveMatchUnsub) { _liveMatchUnsub(); _liveMatchUnsub = null; }
+        const liveMatch = visible.find(m => m.matchData?.matchStatus === 'LIVE');
+        if (liveMatch) {
+            const liveIdx = visible.indexOf(liveMatch);
+            _liveMatchUnsub = db.collection('events').doc(liveMatch.eventId || liveMatch.id).onSnapshot(doc => {
+                if (!doc.exists) return;
+                const ev = doc.data();
+                const updatedMatch = { ...liveMatch, matchData: ev.matchData || {}, attendance: ev.attendance || liveMatch.attendance };
+                _mecze[liveIdx] = updatedMatch;
+                const cards = carousel.querySelectorAll('.mecz-card');
+                if (cards[liveIdx]) cards[liveIdx].replaceWith(renderMatchCard(updatedMatch, todayStr, userCache, parentsCanAssist));
+            });
+        }
+
         if (visible.length > 1) {
             visible.forEach((_, idx) => {
                 const dot = document.createElement('div');
@@ -1265,6 +1280,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     let _meczPanelMatch = null;
     let _meczPanelUnsub = null;
     let _meczPanelPlayers = [];
+    let _liveMatchUnsub = null;
     let _meczTeamName = '';
 
     function openMeczPanel(matchId) {
