@@ -494,8 +494,51 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
     const today   = new Date().toISOString().slice(0, 10);
     if (after.date < today) return; // Przeszłe eventy — bez powiadomień
 
+    // ── Match live: ciche pushe o statusie i wyniku ──────────────────────
+    if (after.type === 'MECZ') {
+        const bmd = before.matchData || {};
+        const amd = after.matchData  || {};
+        const statusChanged = bmd.matchStatus !== amd.matchStatus;
+        const scoreChanged  = bmd.result?.our !== amd.result?.our || bmd.result?.opponent !== amd.result?.opponent;
+
+        if (statusChanged || scoreChanged) {
+            let pushData = null;
+            if (statusChanged && amd.matchStatus === 'LIVE') {
+                pushData = { type: 'MATCH_LIVE', eventId };
+            } else if (statusChanged && amd.matchStatus === 'FINISHED') {
+                pushData = { type: 'MATCH_FINISHED', eventId,
+                    our: amd.result?.our ?? 0, opponent: amd.result?.opponent ?? 0,
+                    outcome: amd.result?.outcome || '' };
+            } else if (scoreChanged && amd.matchStatus === 'LIVE') {
+                pushData = { type: 'MATCH_SCORE', eventId,
+                    our: amd.result?.our ?? 0, opponent: amd.result?.opponent ?? 0 };
+            }
+
+            if (pushData) {
+                try {
+                    const recipients = await resolveInvitedUserIds(after, null);
+                    const uniqueIds = [...new Set(recipients.map(r => r.userId))];
+                    const tokenDocs = await Promise.all(uniqueIds.map(uid => db.collection('users').doc(uid).get()));
+                    const messages = [];
+                    for (const doc of tokenDocs) {
+                        if (!doc.exists) continue;
+                        const token = (doc.data().pushToken || '').trim();
+                        if (token && Expo.isExpoPushToken(token)) {
+                            messages.push({ to: token, sound: null, _contentAvailable: true, data: pushData });
+                        }
+                    }
+                    if (messages.length > 0) {
+                        for (const chunk of expo.chunkPushNotifications(messages)) {
+                            await expo.sendPushNotificationsAsync(chunk);
+                        }
+                        console.log(`Match silent push [${pushData.type}] → ${messages.length} tokenów`);
+                    }
+                } catch (e) { console.error('Match silent push error:', e); }
+            }
+        }
+    }
+
     // Guard: jeśli żadne istotne pole się nie zmieniło, zakończ od razu
-    // (live-score update lub zmiana attendance nie generuje powiadomień)
     const significantChange =
         before.status     !== after.status     ||
         before.date       !== after.date       ||

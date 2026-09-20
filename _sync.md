@@ -2944,3 +2944,41 @@ if (liveEvent) {
 Komunikat pojawia się gdy `liveAssistant === null`. Dla użytkownika (rodzic, zawodnik) ta informacja operacyjna jest myląca — mecz LIVE bez asystenta nadal trwa normalnie.
 
 **Do poprawki:** nie wyświetlać komunikatu "brak obsługi" dla ról RODZIC / ZAWODNIK / KIBIC. Komunikat jest istotny tylko dla TRENER_GLOWNY / TRENER_POMOCNICZY.
+
+---
+
+## Match Live — ciche pushe (2026-09-20)
+
+CF `onEventUpdated` wysyła ciche pushe do wszystkich zaproszonych gdy zmienia się stan meczu:
+
+| Zdarzenie | `data.type` | Dodatkowe pola w `data` |
+|---|---|---|
+| Mecz rozpoczęty (`matchStatus` → `LIVE`) | `MATCH_LIVE` | `eventId` |
+| Zmiana wyniku (podczas LIVE) | `MATCH_SCORE` | `eventId`, `our`, `opponent` |
+| Mecz zakończony (`matchStatus` → `FINISHED`) | `MATCH_FINISHED` | `eventId`, `our`, `opponent`, `outcome` |
+
+Push jest cichy: `sound: null`, `_contentAvailable: true` — nie pojawia się jako dymek.
+
+### APP — do zaimplementowania
+
+Nasłuchuj pushów danych w tle i reaguj:
+
+```typescript
+// W handlerze powiadomień (notification received listener)
+const data = notification.request.content.data;
+
+if (data?.type === 'MATCH_LIVE') {
+  // odśwież kartę meczu — event teraz LIVE
+  refreshMatchCard(data.eventId);
+}
+if (data?.type === 'MATCH_SCORE') {
+  // zaktualizuj wynik na karcie bez pełnego reload
+  updateMatchScore(data.eventId, data.our, data.opponent);
+}
+if (data?.type === 'MATCH_FINISHED') {
+  // oznacz mecz jako zakończony, pokaż wynik końcowy
+  updateMatchFinished(data.eventId, data.our, data.opponent, data.outcome);
+}
+```
+
+Alternatywnie: przy każdym z tych pushów wywołaj `onSnapshot` jeśli jeszcze nie jest aktywny — dane przyjdą same.
