@@ -2916,3 +2916,31 @@ Backfill initial state: skrypt `functions/backfill-badge-counts.js` (uruchomiony
 Silent push niesie `events`, `tasks`, `messages` osobno — nie tylko total. Dzięki temu:
 - Jeśli badge = 5 ale `events=0, tasks=0, messages=0` → licznik zjechał, wiadomo że CF nie zaktualizowało
 - Można debugować który obszar nie działa bez dodatkowych odczytów
+
+---
+
+## APP — karta meczu LIVE (2026-09-20)
+
+### Problem 1: wynik nie aktualizuje się automatycznie
+
+Karta meczu na dashboardzie APP pobiera dane jednorazowo. Gdy trener zmienia wynik, APP nie widzi zmiany bez ręcznego odświeżenia.
+
+**Do zaimplementowania:** nasłuch `onSnapshot` na dokumencie eventu gdy `matchStatus === 'LIVE'`. Re-renderować kartę meczu gdy dane się zmienią (wynik, status).
+
+```typescript
+// Po załadowaniu listy eventów — jeśli jest LIVE mecz, subskrybuj
+const liveEvent = events.find(e => e.matchData?.matchStatus === 'LIVE');
+if (liveEvent) {
+  const unsub = db.collection('events').doc(liveEvent.id).onSnapshot(doc => {
+    const updated = { ...liveEvent, ...doc.data() };
+    // zaktualizuj kartę meczu w UI
+  });
+  // cleanup przy unmount / zmianie kontekstu
+}
+```
+
+### Problem 2: "Mecz wolny — brak obsługi" wyświetla się niepotrzebnie
+
+Komunikat pojawia się gdy `liveAssistant === null`. Dla użytkownika (rodzic, zawodnik) ta informacja operacyjna jest myląca — mecz LIVE bez asystenta nadal trwa normalnie.
+
+**Do poprawki:** nie wyświetlać komunikatu "brak obsługi" dla ról RODZIC / ZAWODNIK / KIBIC. Komunikat jest istotny tylko dla TRENER_GLOWNY / TRENER_POMOCNICZY.
