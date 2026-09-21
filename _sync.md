@@ -3194,6 +3194,7 @@ Ekran raportów w APP powinien mieć analogiczny raport "Zawodnicy bez rodzica":
 
 ---
 
+[2026-09-21] [WEB] [DONE] druzyna.html — tytuły paneli "Edytuj zawodnika" / "Nowy zawodnik" przetłumaczone przez t() (klucze druzyna.editPlayerTitle / druzyna.newPlayerTitle); wcześniej hardcoded PL
 [2026-09-21] [WEB] [DONE] raporty.html — i18n dla nowych raportów (karteczki + bez rodzica)
 
 Dodano klucze tłumaczeń do `locales/pl.json` i `locales/en.json`:
