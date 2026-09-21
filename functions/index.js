@@ -934,8 +934,9 @@ async function calcBadgeCount(userId) {
     return (counts.events || 0) + (counts.tasks || 0) + (counts.messages || 0);
 }
 
-// Wysyła bezpośredni push (bez zapisu w Firestore) — używany przez reminder
-async function sendDirectPush(userId, title, body) {
+// Wysyła cichy push EVENT_REMINDER (bez tytułu/treści) — appka mobilna
+// sama dociąga event po referenceId i buduje lokalne powiadomienie
+async function sendDirectPush(userId, eventId) {
     try {
         const userDoc = await db.collection('users').doc(userId).get();
         if (!userDoc.exists) return;
@@ -944,15 +945,15 @@ async function sendDirectPush(userId, title, body) {
         const fcmToken  = (userData.fcmToken  || '').trim() || null;
         if (expoToken && Expo.isExpoPushToken(expoToken)) {
             await expo.sendPushNotificationsAsync([{
-                to: expoToken, sound: 'default',
-                title, body,
-                data: { type: 'EVENT_REMINDER' }
+                to: expoToken,
+                sound: null,
+                _contentAvailable: true,
+                data: { type: 'EVENT_REMINDER', referenceId: eventId }
             }]);
         } else if (fcmToken) {
             await getMessaging().send({
                 token: fcmToken,
-                notification: { title, body },
-                data: { type: 'EVENT_REMINDER' }
+                data: { type: 'EVENT_REMINDER', referenceId: eventId }
             });
         }
     } catch (e) {
@@ -1550,16 +1551,6 @@ exports.sendEventReminders = onSchedule('every 15 minutes', async () => {
             if (Math.abs(now - reminderTime) > windowMs) continue;
             if (evTime <= now) continue;
 
-            const minsLeft = Math.round((evTime - now) / 60000);
-
-            function buildTimeStr(mins) {
-                if (mins < 60) return `${mins} min`;
-                const h = Math.floor(mins / 60);
-                const m = mins % 60;
-                return m > 0 ? `${h}h ${m}min` : `${h}h`;
-            }
-            const timeStr = buildTimeStr(minsLeft);
-
             // Oznacz jako wysłane PRZED wysyłką (anty-duplikat)
             await db.collection('events').doc(ev.id).update({ reminderSentAt: new Date().toISOString() });
 
@@ -1574,12 +1565,7 @@ exports.sendEventReminders = onSchedule('every 15 minutes', async () => {
             )];
 
             for (const userId of userIds) {
-                const lang = await getLang(userId);
-                const i18n = I18N[lang] || I18N.pl;
-                const typeName = i18n.types[ev.type] || i18n.types.INNE;
-                const title = i18n.reminderTitle(typeName, timeStr);
-                const body  = `${ev.title || typeName} - ${i18n.reminderReady}`;
-                await sendDirectPush(userId, title, body);
+                await sendDirectPush(userId, ev.id);
             }
 
             console.log(`✅ Reminder: ${ev.id} (${ev.date} ${ev.timeFrom}) → ${userIds.length} users, rh=${rh}h`);
