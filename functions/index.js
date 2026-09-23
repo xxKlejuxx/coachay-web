@@ -1470,6 +1470,132 @@ exports.onClubLicenseUpdated = onDocumentUpdated('clubs/{clubId}', async (event)
     await _writeCachedClubLicense(clubId, after.license);
 });
 
+/* ═══════════════════════════════════════════════════════════════
+   SCHEDULED: Codziennie 02:30 Warsaw — uzgodnienie slotów klubowych (2026-09-24)
+   Uruchamiane PRZED assignExpiredTrialSlotsV2 (03:00), żeby przydział slotów
+   pracował na prawdziwym stanie. Liczniki license.used są w innych miejscach
+   zmieniane tylko przyrostowo (+1/−1), więc każdy pominięty krok rozjeżdżał je na stałe.
+
+   Zakres: każdy klub z AKTYWNĄ licencją (valid_until > teraz) i license.total > 0.
+
+   AUTO-NAPRAWA (sytuacje jednoznaczne):
+     - usedSlot==1 przy statusie BLOCKED/REMOVED/INACTIVE/DELETE  → usedSlot=0
+     - usedSlot==1 przy roli ZAWODNIK/KIBIC                         → usedSlot=0
+     - ta sama osoba (userId) z >1 slotem w klubie → zostaje najstarszy slot, reszta usedSlot=0
+     - membership klubu bez pola usedSlot                           → usedSlot=0
+     - license.used := faktyczna liczba slotów po powyższych poprawkach
+     - cachedClubLicense na memberships klubu, gdy license.used się zmienił
+
+   TYLKO LOG (sytuacje niejednoznaczne — decyzja człowieka):
+     - więcej slotów niż license.total (przepełniona pula)
+     - scope 'trainers_only', a RODZIC ma slot
+     - maxOneParentPerChild naruszone (2+ rodziców tego samego dziecka na puli)
+   ═══════════════════════════════════════════════════════════════ */
+exports.reconcileClubSlots = onSchedule(
+    { schedule: '30 2 * * *', timeZone: 'Europe/Warsaw' },
+    async () => {
+        const now = new Date();
+        console.log(`▶ reconcileClubSlots start: ${now.toISOString()}`);
+        const tsMs = (x) => x?.toMillis?.() ?? (x ? new Date(x).getTime() : Number.MAX_SAFE_INTEGER);
+
+        const clubsSnap = await db.collection('clubs').where('license.total', '>', 0).get();
+        let checked = 0, changedClubs = 0, zeroedTotal = 0;
+
+        for (const clubDoc of clubsSnap.docs) {
+            const clubId = clubDoc.id;
+            const lic    = clubDoc.data().license || {};
+            const rawExp = lic.valid_until ?? lic.expiresAt;
+            const exp    = rawExp?.toDate ? rawExp.toDate() : (rawExp ? new Date(rawExp) : null);
+            if (!exp || exp <= now) continue;          // tylko aktywne licencje
+            checked++;
+
+            try {
+                const memSnap = await db.collection('memberships').where('clubId', '==', clubId).get();
+                const toZero  = new Map();              // id → { ref, reason }
+                const slotted = [];
+
+                for (const d of memSnap.docs) {
+                    const m = d.data();
+                    if (m.usedSlot === undefined) { toZero.set(d.id, { ref: d.ref, reason: 'brak pola usedSlot' }); continue; }
+                    if (m.usedSlot !== 1) continue;
+                    const role = (m.role   || '').toUpperCase();
+                    const stat = (m.status || '').toUpperCase();
+                    if (_MBR_BLOCKED_STATUS.has(stat)) { toZero.set(d.id, { ref: d.ref, reason: `slot przy statusie ${stat}` }); continue; }
+                    if (_MBR_EXCLUDE_ROLES.has(role))  { toZero.set(d.id, { ref: d.ref, reason: `slot przy roli ${role}` });     continue; }
+                    slotted.push({ d, m, role });
+                }
+
+                // Jedna osoba = jeden slot w klubie (zostaje najstarszy przydział)
+                const byUser = {};
+                for (const s of slotted) {
+                    const key = s.m.userId || `__bez_userId__${s.d.id}`;
+                    (byUser[key] = byUser[key] || []).push(s);
+                }
+                const kept = [];
+                for (const list of Object.values(byUser)) {
+                    list.sort((a, b) => tsMs(a.m.usedSlotUpdatedAt ?? a.m.createdAt) - tsMs(b.m.usedSlotUpdatedAt ?? b.m.createdAt));
+                    kept.push(list[0]);
+                    for (const extra of list.slice(1)) {
+                        toZero.set(extra.d.id, { ref: extra.d.ref, reason: `duplikat slotu osoby ${extra.m.userId}` });
+                    }
+                }
+
+                const actual   = kept.length;
+                const oldUsed  = lic.used ?? 0;
+                const total    = lic.total ?? 0;
+                const scope    = (lic.scope || 'all').toLowerCase();
+
+                // ── Tylko log ──
+                if (actual > total) {
+                    console.warn(`⚠️ reconcileClubSlots: ${clubId} — PRZEPEŁNIONA pula: ${actual} slotów przy total=${total} (bez zmian, decyzja ręczna)`);
+                }
+                if (scope === 'trainers_only') {
+                    const parents = kept.filter(k => k.role === 'RODZIC').map(k => k.d.id);
+                    if (parents.length) console.warn(`⚠️ reconcileClubSlots: ${clubId} — scope trainers_only, a RODZIC ma slot: ${parents.join(', ')}`);
+                }
+                if (lic.maxOneParentPerChild) {
+                    const perPlayer = {};
+                    kept.filter(k => k.role === 'RODZIC' && k.m.playerId)
+                        .forEach(k => (perPlayer[k.m.playerId] = perPlayer[k.m.playerId] || []).push(k.d.id));
+                    for (const [pid, ids] of Object.entries(perPlayer)) {
+                        if (ids.length > 1) console.warn(`⚠️ reconcileClubSlots: ${clubId} — maxOneParentPerChild: dziecko ${pid} ma ${ids.length} rodziców na puli: ${ids.join(', ')}`);
+                    }
+                }
+
+                // ── Auto-naprawa ──
+                if (!toZero.size && actual === oldUsed) continue;
+
+                const entries = [...toZero.entries()];
+                for (let i = 0; i < entries.length; i += 450) {
+                    const b = db.batch();
+                    for (const [, z] of entries.slice(i, i + 450)) {
+                        b.update(z.ref, { usedSlot: 0, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
+                    }
+                    await b.commit();
+                }
+                for (const [id, z] of entries) console.log(`   ↳ ${clubId}: ${id} → usedSlot=0 (${z.reason})`);
+                zeroedTotal += entries.length;
+
+                if (actual !== oldUsed) {
+                    await clubDoc.ref.update({ 'license.used': actual });
+                    const cached = { validUntil: exp, used: actual, total, updatedAt: FieldValue.serverTimestamp() };
+                    const docs = memSnap.docs;
+                    for (let i = 0; i < docs.length; i += 450) {
+                        const b = db.batch();
+                        for (const d of docs.slice(i, i + 450)) b.update(d.ref, { cachedClubLicense: cached });
+                        await b.commit();
+                    }
+                }
+                changedClubs++;
+                console.log(`✓ reconcileClubSlots: ${clubId} — license.used ${oldUsed} → ${actual} (total ${total}), wyzerowano ${entries.length} membership(ów)`);
+            } catch (e) {
+                console.error(`✗ reconcileClubSlots: ${clubId}:`, e);
+            }
+        }
+        console.log(`✅ reconcileClubSlots: sprawdzono ${checked} klubów z aktywną licencją, poprawiono ${changedClubs}, wyzerowano ${zeroedTotal} slotów`);
+    }
+);
+
 exports.sendReminders = onSchedule('every 60 minutes', async () => {
     const now = Date.now();
     const today = new Date().toISOString().slice(0, 10);
