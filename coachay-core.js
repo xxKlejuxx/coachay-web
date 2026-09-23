@@ -99,6 +99,36 @@ function makeMbrId(role) {
     return `mbr_${type}_${dateStr}_${rand}`;
 }
 
+// ???????????????????????????????????????????????????????????????
+// buildMembership ? JEDNO ?r?d?o struktury dokumentu membership (WEB)
+// Ka?dy zapis nowego membership z panelu WWW przechodzi przez t? funkcj?.
+// - uzupe?nia brakuj?ce pola bazowe warto?ciami domy?lnymi
+// - pola podane przez wywo?uj?cego maj? pierwsze?stwo
+// - createdBy jest ZAWSZE nadpisywane na 'WEB_PANEL' (audyt: web vs aplikacja mobilna 'MOBILE_APP')
+// ???????????????????????????????????????????????????????????????
+const MEMBERSHIP_CREATED_BY = 'WEB_PANEL';
+function buildMembership(fields) {
+    const base = {
+        membershipId: null,
+        userId:       null,
+        clubId:       null,
+        teamId:       null,
+        playerId:     null,
+        role:         null,
+        trainerRole:  null,
+        status:       'ACTIVE',
+        displayName:  '',
+        isDemo:       false,
+        usedSlot:     0,
+        joinedAt:     new Date().toISOString(),
+        createdAt:    firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const doc = { ...base, ...(fields || {}), createdBy: MEMBERSHIP_CREATED_BY };
+    if (!doc.membershipId || !doc.role) console.warn('?? buildMembership: brak membershipId lub role', doc);
+    if (!doc.clubId) console.warn('?? buildMembership: puste clubId dla', doc.membershipId, doc);
+    return doc;
+}
+
 // Generuj ID ogłoszenia: annou_RRRRMMDD_NNNNNNN
 function makeAnnouId() {
     const dateStr = new Date().toISOString().slice(0,10).replace(/-/g,'');
@@ -2701,7 +2731,7 @@ async function loadCtxOverlay(user, membership, team) {
                             const now = new Date();
                             const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
                             const mbrId = makeMbrId('TRENER_GLOWNY');
-                            await db.collection('memberships').doc(mbrId).set({
+                            await db.collection('memberships').doc(mbrId).set(buildMembership({
                                 membershipId: mbrId,
                                 userId,
                                 teamId: tid,
@@ -2713,7 +2743,7 @@ async function loadCtxOverlay(user, membership, team) {
                                 isClubAdmin: true,
                                 joinedAt: now.toISOString(),
                                 createdAt: now.toISOString()
-                            });
+                            }));
                             await switchTeam(mbrId, tName);
                         } catch(e) {
                             console.error('❌ auto-membership admin:', e);

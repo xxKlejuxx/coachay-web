@@ -482,14 +482,14 @@ async function redeemCode() {
             } catch(e) {}
         }
 
-        await db.collection('memberships').doc(membershipId).set({
+        await db.collection('memberships').doc(membershipId).set(buildMembership({
             membershipId, userId: blockedUserId,
             teamId: codeData.teamId || null, clubId,
             role, trainerRole: role === 'TRENER' ? 'TRENER_POMOCNICZY' : null,
             playerId: codeData.playerId || null,
             displayName, status: 'ACTIVE',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        }));
 
         await codeDoc.ref.update({ isUsed: true, usedBy: blockedUserId, usedAt: now.toISOString() });
 

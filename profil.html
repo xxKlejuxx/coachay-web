@@ -1281,7 +1281,7 @@ async function redeemInviteCode() {
                 { userId: currentUserId, clubIds: firebase.firestore.FieldValue.arrayUnion(clubId) }, { merge: true });
 
             const mbrId = makeMbrId(codeData.type);
-            await db.collection('memberships').doc(mbrId).set({
+            await db.collection('memberships').doc(mbrId).set(buildMembership({
                 membershipId: mbrId,
                 userId:       currentUserId,
                 clubId,
@@ -1292,7 +1292,7 @@ async function redeemInviteCode() {
                 status:       'ACTIVE',
                 displayName,
                 createdAt:    firebase.firestore.FieldValue.serverTimestamp()
-            });
+            }));
             await codeDoc.ref.update({ isUsed: true, usedBy: currentUserId, usedAt: now.toISOString() });
             localStorage.setItem('selectedMembershipId', mbrId);
             try { await db.collection('users').doc(currentUserId).update({ selectedMembershipId: mbrId }); } catch(e) {}
@@ -1318,7 +1318,7 @@ async function redeemInviteCode() {
             let lastMbrId = null;
             for (const parentMbr of dzieci) {
                 const mbrId = makeMbrId(codeData.type);
-                await db.collection('memberships').doc(mbrId).set({
+                await db.collection('memberships').doc(mbrId).set(buildMembership({
                     membershipId: mbrId,
                     userId:       currentUserId,
                     clubId:       parentMbr.clubId || codeData.clubId || null,
@@ -1329,7 +1329,7 @@ async function redeemInviteCode() {
                     status:       'ACTIVE',
                     displayName,
                     createdAt:    firebase.firestore.FieldValue.serverTimestamp()
-                });
+                }));
                 lastMbrId = mbrId;
             }
             await codeDoc.ref.update({ isUsed: true, usedBy: currentUserId, usedAt: now.toISOString() });
@@ -1343,7 +1343,7 @@ async function redeemInviteCode() {
                 { userId: currentUserId, clubIds: firebase.firestore.FieldValue.arrayUnion(codeData.clubId) }, { merge: true });
 
             const mbrId = makeMbrId(codeData.type);
-            await db.collection('memberships').doc(mbrId).set({
+            await db.collection('memberships').doc(mbrId).set(buildMembership({
                 membershipId: mbrId,
                 userId: currentUserId,
                 clubId: codeData.clubId || null,
@@ -1354,7 +1354,7 @@ async function redeemInviteCode() {
                 status: 'ACTIVE',
                 displayName,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            }));
             await codeDoc.ref.update({ isUsed: true, usedBy: currentUserId, usedAt: now.toISOString() });
             localStorage.setItem('selectedMembershipId', mbrId);
             try { await db.collection('users').doc(currentUserId).update({ selectedMembershipId: mbrId }); } catch(e) {}

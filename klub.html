@@ -931,12 +931,12 @@ async function saveTeam() {
                     localStorage.setItem('selectedMembershipId', existingMbrId);
                 } else {
                     const ownerMbrId = makeMbrId('TRENER_GLOWNY');
-                    await db.collection('memberships').doc(ownerMbrId).set({
+                    await db.collection('memberships').doc(ownerMbrId).set(buildMembership({
                         membershipId: ownerMbrId, userId: currentUserId, teamId, clubId: currentClubId,
                         role: 'TRENER_GLOWNY', trainerRole: 'TRENER_GLOWNY', status: 'ACTIVE',
                         displayName: currentMembership?.displayName || '', isClubAdmin,
                         joinedAt: now, isDemo: false
-                    });
+                    }));
                 }
             }
 
@@ -947,11 +947,11 @@ async function saveTeam() {
                 const isCreatorUpdated = userId === currentUserId && !creatorInList && currentMembership?.teamId === teamId;
                 if (!isCreatorUpdated) {
                     const mbrId = makeMbrId(role);
-                    await db.collection('memberships').doc(mbrId).set({
+                    await db.collection('memberships').doc(mbrId).set(buildMembership({
                         membershipId: mbrId, userId, teamId, clubId: currentClubId,
                         role, trainerRole: role, status: 'ACTIVE',
                         displayName: getTrainerName(userId), joinedAt: now
-                    });
+                    }));
                 }
             }
 
@@ -1000,11 +1000,11 @@ async function saveTeam() {
                         await removedSnap.docs[0].ref.update({ role, trainerRole: role, status: 'ACTIVE', rejoinedAt: now });
                     } else {
                         const mbrId = makeMbrId(role);
-                        await db.collection('memberships').doc(mbrId).set({
+                        await db.collection('memberships').doc(mbrId).set(buildMembership({
                             membershipId: mbrId, userId, teamId, clubId: currentClubId,
                             role, trainerRole: role, status: 'ACTIVE',
                             displayName: getTrainerName(userId), joinedAt: now
-                        });
+                        }));
                     }
                 }
             }
@@ -1023,11 +1023,11 @@ async function saveTeam() {
                 if (!hasOther) {
                     // Brak innych drużyn — utwórz club-level membership (teamId: null)
                     const clubMbrId = makeMbrId('TRENER_POMOCNICZY');
-                    await db.collection('memberships').doc(clubMbrId).set({
+                    await db.collection('memberships').doc(clubMbrId).set(buildMembership({
                         membershipId: clubMbrId, userId, teamId: null,
                         clubId: currentClubId, role: 'TRENER_POMOCNICZY', trainerRole: 'TRENER_POMOCNICZY',
                         status: 'ACTIVE', displayName: getTrainerName(userId), joinedAt: now, isDemo: false
-                    });
+                    }));
                 }
             }
 
@@ -1209,12 +1209,12 @@ async function confirmTransfer() {
 
         // 2. Utwórz nowe membership ZAWODNIKA
         const newMbrId = makeMbrId('ZAWODNIK');
-        await db.collection('memberships').doc(newMbrId).set({
+        await db.collection('memberships').doc(newMbrId).set(buildMembership({
             membershipId: newMbrId, userId: oldUserId, teamId: transferToTeamId,
             clubId: currentClubId, playerId, role: 'ZAWODNIK', status: 'ACTIVE',
             displayName: name, joinedAt: now, isDemo: false, usedSlot: 0,
             ...(oldTrialEndsAt ? { trialEndsAt: oldTrialEndsAt } : {})
-        });
+        }));
 
         // 3. Przenieś RODZIC i KIBIC
         // Dwa osobne queries zamiast 'in' (unikamy composite index)
@@ -1271,7 +1271,7 @@ async function confirmTransfer() {
 
             const famMbrId = makeMbrId(data.role);
             const famMbrRef = db.collection('memberships').doc(famMbrId);
-            await famMbrRef.set({
+            await famMbrRef.set(buildMembership({
                 membershipId: famMbrId,
                 userId: parentUserId || null,
                 teamId: transferToTeamId,
@@ -1284,7 +1284,7 @@ async function confirmTransfer() {
                 isDemo: data.isDemo || false,
                 usedSlot: 0,
                 ...(data.trialEndsAt ? { trialEndsAt: data.trialEndsAt } : {})
-            });
+            }));
             if (data.role === 'RODZIC' && parentUserId && typeof tryAssignClubSlot === 'function') {
                 try { const newFamDoc = await famMbrRef.get(); await tryAssignClubSlot(newFamDoc, currentClubId); } catch(e) { /* slot przydzieli CF */ }
             }
