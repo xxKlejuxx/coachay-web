@@ -3567,12 +3567,18 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         const skipOwnLicense = false;
 
         if (!skipOwnLicense) {
+            // 2026-09-23: licencja INDYWIDUALNA liczy si? wy??cznie z P0.5 (users.subscription,
+            // aktualizowane przez webhook RevenueCat ? tak?e przy wyga?ni?ciu).
+            // access_rights z source 'individual' to stare kopie zapisywane przez APP przy zakupie,
+            // NIE aktualizowane przy wyga?ni?ciu ? ignorowane (dawa?y dost?p mimo wygas?ej subskrypcji).
+            // W P1 licz? si? tylko: licencja rodzinna (slots_total), admin_perpetual i inne nie-indywidualne.
             const arSnap = await db.collection('access_rights')
                 .where('uid', '==', uid)
                 .where('club_id', '==', clubId)
-                .limit(1).get();
-            if (!arSnap.empty) {
-                const ar         = arSnap.docs[0].data();
+                .get();
+            const arDoc = arSnap.docs.find(d => (d.data().source || '') !== 'individual');
+            if (arDoc) {
+                const ar         = arDoc.data();
                 const validUntil = ar.valid_until?.toDate?.() ?? new Date(ar.valid_until);
                 if (validUntil > now)
                     return _r('ACTIVE', ar.source || 'individual', validUntil);
