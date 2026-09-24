@@ -931,7 +931,7 @@ async function calcBadgeCount(userId) {
     const userDoc = await db.collection('users').doc(userId).get();
     if (!userDoc.exists) return 0;
     const counts = userDoc.data().badgeCounts || {};
-    return (counts.events || 0) + (counts.tasks || 0) + (counts.messages || 0);
+    return Math.max(0, counts.events || 0) + Math.max(0, counts.tasks || 0) + Math.max(0, counts.messages || 0);
 }
 
 // Wysyła cichy push EVENT_REMINDER (bez tytułu/treści) — appka mobilna
@@ -973,9 +973,9 @@ async function sendBadgePush(userId) {
     const expoToken = (userData.pushToken || '').trim() || null;
     if (!expoToken || !Expo.isExpoPushToken(expoToken)) return;
     const counts = userData.badgeCounts || {};
-    const events   = counts.events   || 0;
-    const tasks    = counts.tasks    || 0;
-    const messages = counts.messages || 0;
+    const events   = Math.max(0, counts.events   || 0);
+    const tasks    = Math.max(0, counts.tasks    || 0);
+    const messages = Math.max(0, counts.messages || 0);
     const total = events + tasks + messages;
     try {
         await expo.sendPushNotificationsAsync([{
@@ -998,11 +998,17 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
         const userRef = db.collection('users').doc(notif.userId);
 
         // Aktualizuj badgeCounts przed odczytem (żeby badge w pushu był aktualny)
-        const badgeField = notif.requiresAction
+        // 2026-09-24: events +1 tylko gdy event jest już widoczny na tablicy (okno reminderHoursBefore, domyślnie 48h).
+        // Eventy wchodzące w okno później dolicza nocny reconcileBadgeCounts.
+        let badgeField = notif.requiresAction
             ? 'badgeCounts.events'
             : notif.referenceType === 'message'
                 ? 'badgeCounts.messages'
                 : null;
+        if (badgeField === 'badgeCounts.events' && notif.referenceType === 'event' && notif.referenceId) {
+            const evDoc = await db.collection('events').doc(notif.referenceId).get().catch(() => null);
+            if (!evDoc?.exists || !_isEventInBadgeWindow(evDoc.data(), Date.now())) badgeField = null;
+        }
         if (badgeField) {
             await userRef.update({ [badgeField]: FieldValue.increment(1) });
         }
@@ -2847,3 +2853,104 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
         console.log(`applyLicenseUpdate: cachedUserSubscription → ${allMems.size} memberships uid=${userId}`);
     }
 }
+
+
+/* ---------------------------------------------------------------
+   2026-09-24 (decyzja Rafała): badgeCounts liczone jak ekran główny.
+   events   = pary (event, dziecko/zawodnik) do potwierdzenia, które są WIDOCZNE na tablicy:
+              - status != CANCELLED, requireConfirmation, mecz nie FINISHED
+              - data od dziś (PL) do +7 dni, a gdy reminderHoursBefore (domyślnie 48) > 0:
+                teraz >= start eventu - reminderHoursBefore h
+              - zaproszony (__TEAM__ lub playerId), brak w confirmed/declined, brak aktywnej nieobecności
+              - liczą tylko RODZIC (childrenIds) i ZAWODNIK (playerId); trener/kibic = 0 (nie potwierdzają)
+   tasks    = zadania PENDING przypisane do usera, bez completedBy/rejectedBy
+   messages = nieprzeczytane powiadomienia o wiadomościach
+   --------------------------------------------------------------- */
+function _isEventInBadgeWindow(ev, nowMs) {
+    if (!ev || ev.status === 'CANCELLED' || !ev.date) return false;
+    const today = _warsawDateStr(nowMs);
+    const maxDay = _warsawDateStr(nowMs + 7 * 86400000);
+    if (ev.date < today || ev.date > maxDay) return false;
+    const rh = ev.reminderHoursBefore != null ? ev.reminderHoursBefore : 48;
+    if (rh > 0) {
+        const evTime = _warsawLocalToMs(ev.date, ev.timeFrom || '00:00');
+        if (nowMs < evTime - rh * 3600000) return false;
+    }
+    return true;
+}
+
+async function _computeBadgeCounts(nowMs) {
+    const today = _warsawDateStr(nowMs);
+    const [memSnap, evSnap, absSnap, taskSnap, msgSnap, usersSnap] = await Promise.all([
+        db.collection('memberships').where('status', 'in', ['ACTIVE', 'active']).get(), // 'active' - stare rekordy demo
+        db.collection('events').where('date', '>=', today).get(),
+        db.collection('absences').where('isActive', '==', true).get(),
+        db.collection('tasks').where('status', '==', 'PENDING').get(),
+        db.collection('notifications').where('referenceType', '==', 'message').where('isRead', '==', false).get(),
+        db.collection('users').get(),
+    ]);
+    const evByTeam = {};
+    for (const d of evSnap.docs) {
+        const ev = { id: d.id, ...d.data() };
+        if (!ev.teamId || !ev.requireConfirmation) continue;
+        if (ev.type === 'MECZ' && ev.matchData?.matchStatus === 'FINISHED') continue;
+        if (!_isEventInBadgeWindow(ev, nowMs)) continue;
+        (evByTeam[ev.teamId] = evByTeam[ev.teamId] || []).push(ev);
+    }
+    const absences = absSnap.docs.map(d => d.data());
+    const pendingKeys = {}; // userId -> Set("eventId|playerId")
+    for (const d of memSnap.docs) {
+        const m = d.data();
+        if (!m.userId || !m.teamId) continue;
+        let ids = [];
+        if (m.role === 'RODZIC') ids = [...new Set([...(m.childrenIds || []), ...(m.playerId ? [m.playerId] : [])])]; // rodzic: membership per dziecko (playerId) lub childrenIds
+        else if (m.role === 'ZAWODNIK') ids = m.playerId ? [m.playerId] : [];
+        else continue;
+        for (const ev of (evByTeam[m.teamId] || [])) {
+            const att = ev.attendance || {};
+            const inv = att.invited || [];
+            const conf = att.confirmed || [], decl = att.declined || [];
+            for (const pid of ids) {
+                if (!inv.includes('__TEAM__') && !inv.includes(pid)) continue;
+                if (conf.includes(pid) || decl.includes(pid)) continue;
+                if (absences.some(a => a.playerId === pid && a.dateFrom <= ev.date && a.dateTo >= ev.date)) continue;
+                (pendingKeys[m.userId] = pendingKeys[m.userId] || new Set()).add(ev.id + '|' + pid);
+            }
+        }
+    }
+    const tasksBy = {};
+    for (const d of taskSnap.docs) {
+        const t = d.data();
+        for (const uid of (t.assignedTo || [])) {
+            if ((t.completedBy || []).includes(uid) || (t.rejectedBy || []).includes(uid)) continue;
+            tasksBy[uid] = (tasksBy[uid] || 0) + 1;
+        }
+    }
+    const msgBy = {};
+    for (const d of msgSnap.docs) { const n = d.data(); if (n.userId) msgBy[n.userId] = (msgBy[n.userId] || 0) + 1; }
+    return { usersSnap, calc: (uid) => ({ events: pendingKeys[uid]?.size || 0, tasks: tasksBy[uid] || 0, messages: msgBy[uid] || 0 }) };
+}
+
+exports.reconcileBadgeCounts = onSchedule(
+    { schedule: '40 2 * * *', timeZone: 'Europe/Warsaw' },
+    async () => {
+        const nowMs = Date.now();
+        const { usersSnap, calc } = await _computeBadgeCounts(nowMs);
+        let changed = 0;
+        const toPush = [];
+        let batch = db.batch(), inBatch = 0;
+        for (const u of usersSnap.docs) {
+            const cur = u.data().badgeCounts || {};
+            const nw = calc(u.id);
+            if ((cur.events ?? null) === nw.events && (cur.tasks ?? null) === nw.tasks && (cur.messages ?? null) === nw.messages) continue;
+            console.log(`badgeCounts ${u.id}: events ${cur.events ?? '-'} -> ${nw.events}, tasks ${cur.tasks ?? '-'} -> ${nw.tasks}, messages ${cur.messages ?? '-'} -> ${nw.messages}`);
+            batch.update(u.ref, { badgeCounts: { ...nw, updatedAt: FieldValue.serverTimestamp() } });
+            changed++; inBatch++;
+            if (u.data().pushToken) toPush.push(u.id);
+            if (inBatch >= 400) { await batch.commit(); batch = db.batch(); inBatch = 0; }
+        }
+        if (inBatch) await batch.commit();
+        for (const uid of toPush) await sendBadgePush(uid);
+        console.log(`reconcileBadgeCounts: ${usersSnap.size} userow, zmienionych ${changed}, badge push ${toPush.length}`);
+    }
+);
