@@ -2577,7 +2577,17 @@ async function loadCtxOverlay(user, membership, team) {
     const nameEl = document.getElementById('ctx-ov-klub-name');
     const roleEl = document.getElementById('ctx-ov-klub-role');
     if (nameEl) nameEl.textContent = clubName;
-    if (roleEl) roleEl.textContent = roleNames[effectiveRole] || effectiveRole;
+    // 2026-09-24: przy KLUBIE rola klubowa, nie rola z wybranej drużyny (ta jest przy roczniku).
+    // "Administrator klubu" gdy isClubAdmin w którymkolwiek membershipie tego klubu, inaczej pusto.
+    if (roleEl) {
+        const _mbrsForClub = getCurrentUserData()?.allMemberships || [];
+        const _isClubAdminHere = !!(membership?.isClubAdmin ||
+            _mbrsForClub.some(m => m.isClubAdmin === true && (m.clubId || '') === clubId));
+        roleEl.textContent = _isClubAdminHere
+            ? ((typeof t === 'function' && t('trenerzy.clubAdminLabel') !== 'trenerzy.clubAdminLabel')
+                ? t('trenerzy.clubAdminLabel') : 'Administrator klubu')
+            : '';
+    }
 
     // Top-bar dot
     const topDot = document.getElementById('ctx-dot');
