@@ -1596,6 +1596,144 @@ exports.reconcileClubSlots = onSchedule(
     }
 );
 
+/* ═══════════════════════════════════════════════════════════════
+   authIndex — utrzymanie po stronie serwera (2026-09-24, sync #0015/#0017)
+
+   authIndex/{authUid} = { userId, clubIds: [..] } czytają WYŁĄCZNIE reguły
+   Firestore (inMyClub). Klienci (web + appka) nadal zapisują go przy własnej
+   rejestracji / dołączeniu kodem (reguła memberships.create wymaga klubu w
+   authIndex PRZED zapisem membershipu). Serwer domyka przypadki, których klient
+   nie może obsłużyć (trener/admin dodaje INNĄ osobę — cudzego authIndex klient
+   zapisać nie może) oraz naprawia rozjazdy (konta ręczne, zły typ pola itp.).
+
+   Zasady:
+     - clubIds ZAWSZE tablica; serwer tylko DODAJE kluby z aktywnych membershipów
+       (usuwanie klubów wyłącznie jako log — decyzja ręczna, żeby nie odciąć dostępu)
+     - userId = id dokumentu users, którego authUid == id dokumentu authIndex
+     - konta demo z authUid równym userId (stare placeholdery, nie prawdziwe UID) — pomijane
+   ═══════════════════════════════════════════════════════════════ */
+const _AUTHIDX_BLOCKED = new Set(['BLOCKED', 'REMOVED', 'INACTIVE', 'DELETE']);
+
+async function _ensureAuthIndexClub(userId, clubId, reason) {
+    const uSnap = await db.collection('users').doc(userId).get();
+    if (!uSnap.exists) return;
+    const authUid = (uSnap.data().authUid || '').trim();
+    if (!authUid || authUid === userId) return;          // brak / placeholder demo
+
+    const ref = db.collection('authIndex').doc(authUid);
+    await db.runTransaction(async (t) => {
+        const snap = await t.get(ref);
+        if (!snap.exists) {
+            t.set(ref, { userId, clubIds: [clubId] });
+            console.log(`✓ authIndex: utworzono ${authUid} → ${userId} [${clubId}] (${reason})`);
+            return;
+        }
+        const d = snap.data() || {};
+        const upd = {};
+        const notes = [];
+        if (d.userId !== userId) { upd.userId = userId; notes.push(`userId ${JSON.stringify(d.userId)} → ${userId}`); }
+        if (!Array.isArray(d.clubIds)) {
+            const cur = typeof d.clubIds === 'string' && d.clubIds ? [d.clubIds] : [];
+            upd.clubIds = [...new Set([...cur, clubId])];
+            notes.push(`clubIds ${JSON.stringify(d.clubIds)} → lista`);
+        } else if (!d.clubIds.includes(clubId)) {
+            upd.clubIds = FieldValue.arrayUnion(clubId);
+            notes.push(`+${clubId}`);
+        }
+        if (notes.length) {
+            t.set(ref, upd, { merge: true });
+            console.log(`✓ authIndex: ${authUid} (${userId}) — ${notes.join('; ')} (${reason})`);
+        }
+    });
+}
+
+// Natychmiast po utworzeniu/zmianie membershipu (także gdy trener dodaje INNĄ osobę)
+exports.syncAuthIndexOnMembership = onDocumentWritten('memberships/{membershipId}', async (event) => {
+    const after = event.data?.after?.exists ? event.data.after.data() : null;
+    if (!after) return;                                          // usunięcie — nic nie dodajemy
+    const { userId, clubId } = after;
+    if (!userId || !clubId) return;
+    if (_AUTHIDX_BLOCKED.has((after.status || '').toUpperCase())) return;
+    const before = event.data?.before?.exists ? event.data.before.data() : null;
+    // Pomiń, jeśli nic istotnego się nie zmieniło (oszczędność odczytów)
+    if (before && before.userId === userId && before.clubId === clubId &&
+        !_AUTHIDX_BLOCKED.has((before.status || '').toUpperCase())) return;
+    try {
+        await _ensureAuthIndexClub(userId, clubId, `membership ${event.params.membershipId}`);
+    } catch (e) {
+        console.error(`✗ syncAuthIndexOnMembership ${event.params.membershipId}:`, e);
+    }
+});
+
+// Codziennie 02:20 Warsaw — pełne uzgodnienie authIndex z users + memberships
+exports.reconcileAuthIndex = onSchedule(
+    { schedule: '20 2 * * *', timeZone: 'Europe/Warsaw' },
+    async () => {
+        console.log(`▶ reconcileAuthIndex start: ${new Date().toISOString()}`);
+        const [usersSnap, memSnap, idxSnap] = await Promise.all([
+            db.collection('users').get(),
+            db.collection('memberships').get(),
+            db.collection('authIndex').get(),
+        ]);
+
+        const activeClubs = {};                                  // userId → Set(clubId)
+        for (const d of memSnap.docs) {
+            const m = d.data();
+            if (!m.userId || !m.clubId) continue;
+            if (_AUTHIDX_BLOCKED.has((m.status || '').toUpperCase())) continue;
+            (activeClubs[m.userId] = activeClubs[m.userId] || new Set()).add(m.clubId);
+        }
+        const byAuth = {};                                       // authUid → [userId]
+        for (const d of usersSnap.docs) {
+            const a = (d.data().authUid || '').trim();
+            if (a) (byAuth[a] = byAuth[a] || []).push(d.id);
+        }
+        const idx = Object.fromEntries(idxSnap.docs.map(d => [d.id, d]));
+
+        let fixed = 0, warned = 0;
+        for (const [authUid, uids] of Object.entries(byAuth)) {
+            if (uids.length > 1) { console.warn(`⚠️ reconcileAuthIndex: authUid ${authUid} ma ${uids.length} users: ${uids.join(', ')}`); warned++; continue; }
+            const userId = uids[0];
+            if (authUid === userId) continue;                    // placeholder demo
+            const expected = [...(activeClubs[userId] || [])];
+            const doc = idx[authUid];
+            const ref = db.collection('authIndex').doc(authUid);
+
+            if (!doc) {
+                if (!expected.length) continue;
+                await ref.set({ userId, clubIds: expected });
+                console.log(`✓ reconcileAuthIndex: utworzono ${authUid} → ${userId} [${expected.join(', ')}]`);
+                fixed++;
+                continue;
+            }
+            const d = doc.data() || {};
+            const cur = Array.isArray(d.clubIds) ? d.clubIds : (typeof d.clubIds === 'string' && d.clubIds ? [d.clubIds] : []);
+            const upd = {};
+            const notes = [];
+            if (d.userId !== userId) { upd.userId = userId; notes.push(`userId ${JSON.stringify(d.userId)} → ${userId}`); }
+            const missing = expected.filter(c => !cur.includes(c));
+            if (!Array.isArray(d.clubIds) || missing.length) {
+                upd.clubIds = [...new Set([...cur, ...expected])];
+                if (!Array.isArray(d.clubIds)) notes.push(`clubIds ${JSON.stringify(d.clubIds)} → lista`);
+                if (missing.length) notes.push(`+[${missing.join(', ')}]`);
+            }
+            if (notes.length) {
+                await ref.set(upd, { merge: true });
+                console.log(`✓ reconcileAuthIndex: ${authUid} (${userId}) — ${notes.join('; ')}`);
+                fixed++;
+            }
+            const extra = cur.filter(c => !expected.includes(c));
+            if (extra.length) { console.warn(`⚠️ reconcileAuthIndex: ${authUid} (${userId}) — kluby bez aktywnego membershipu: [${extra.join(', ')}] (bez zmian)`); warned++; }
+            const otherFields = Object.keys(d).filter(k => k !== 'userId' && k !== 'clubIds');
+            if (otherFields.length) { console.warn(`⚠️ reconcileAuthIndex: ${authUid} — dodatkowe pola: [${otherFields.join(', ')}] (bez zmian)`); warned++; }
+        }
+        for (const [id, doc] of Object.entries(idx)) {
+            if (!byAuth[id]) { console.warn(`⚠️ reconcileAuthIndex: authIndex/${id} osierocony (brak users z tym authUid, userId=${doc.data()?.userId})`); warned++; }
+        }
+        console.log(`✅ reconcileAuthIndex: sprawdzono ${Object.keys(byAuth).length} kont, naprawiono ${fixed}, ostrzeżeń ${warned}`);
+    }
+);
+
 exports.sendReminders = onSchedule('every 60 minutes', async () => {
     const now = Date.now();
     const today = new Date().toISOString().slice(0, 10);
