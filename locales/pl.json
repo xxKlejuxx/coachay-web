@@ -1081,6 +1081,8 @@
   "codeStatusExpired": "⏰ Wygasły",
   "codeActiveDays": "🔵 {{days}}d",
   "noActiveCodes": "Brak aktywnych kodów.",
+  "accessCodesLabel": "Kody dostępu",
+  "showInactiveCodes": "Pokaż nieaktywne",
   "noGeneratedCodes": "Brak wygenerowanych kodów.",
   "allSlotsUsed": "Wszystkie sloty licencji są zajęte.",
   "codeCopiedToast": "Kod {{code}} skopiowany do schowka",

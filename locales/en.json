@@ -1081,6 +1081,8 @@
   "codeStatusExpired": "⏰ Expired",
   "codeActiveDays": "🔵 {{days}}d",
   "noActiveCodes": "No active codes.",
+  "accessCodesLabel": "Access codes",
+  "showInactiveCodes": "Show inactive",
   "noGeneratedCodes": "No generated codes.",
   "allSlotsUsed": "All license slots are used.",
   "codeCopiedToast": "Code {{code}} copied to clipboard",
