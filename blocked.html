@@ -137,6 +137,12 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
             <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
         </div>
 
+        <!-- Sprawdź ponownie (2026-09-24): ponowne sprawdzenie dostępu bez wychodzenia z ekranu -->
+        <div id="recheck-box" style="display:flex; flex-direction:column; gap:6px;">
+            <button class="invite-btn" id="btn-recheck" onclick="recheckAccess()" data-i18n="blocked.recheckButton">Sprawdź ponownie</button>
+            <div id="recheck-msg" style="font-size:12px; color:var(--szary); text-align:center; min-height:14px;"></div>
+        </div>
+
         <!-- Kod zaproszenia -->
         <div class="invite-card">
             <div class="invite-label" data-i18n="blocked.inviteCardLabel">Masz kod zaproszenia?</div>
@@ -218,6 +224,34 @@ function applyReason() {
         cm.querySelector('.blocked-title').textContent = t('blocked.poolFullContactTitle');
         cm.querySelector('.blocked-text').textContent  = t('blocked.poolFullContactBody');
     }
+}
+
+function _trb(k, fb) { const v = (typeof t === 'function') ? t(k) : k; return (!v || v === k) ? fb : v; }
+
+// Sprawdź ponownie: liczy dostęp od nowa (ta sama kaskada co start.html).
+// Dostęp OK -> start.html; nadal brak -> komunikat, zostajemy na ekranie.
+async function recheckAccess() {
+    const btn = document.getElementById('btn-recheck');
+    const msg = document.getElementById('recheck-msg');
+    btn.disabled = true;
+    msg.style.color = 'var(--szary)';
+    msg.textContent = _trb('blocked.recheckChecking', 'Sprawdzam…');
+    try {
+        if (!blockedUserId) blockedUserId = getCurrentUserId();
+        if (!_clubId || !blockedUserId) { window.location.href = 'start.html'; return; }
+        const access = await getAccessStatus(blockedUserId, _clubId, { claimSlot: true });
+        if (access && access.status !== 'EXPIRED' && access.status !== 'BLOCKED') {
+            msg.textContent = _trb('blocked.recheckOk', 'Dostęp aktywny – przekierowanie…');
+            setTimeout(() => { window.location.href = 'start.html'; }, 800);
+            return;
+        }
+        msg.style.color = 'var(--warn)';
+        msg.textContent = _trb('blocked.recheckStillBlocked', 'Dostęp nadal nieaktywny.');
+    } catch (e) {
+        msg.style.color = 'var(--warn)';
+        msg.textContent = _trb('blocked.recheckError', 'Błąd sprawdzania dostępu') + ': ' + e.message;
+    }
+    btn.disabled = false;
 }
 
 function goToPayment() {
