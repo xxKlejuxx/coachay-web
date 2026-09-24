@@ -944,12 +944,16 @@ async function sendDirectPush(userId, eventId) {
         const expoToken = (userData.pushToken || '').trim() || null;
         const fcmToken  = (userData.fcmToken  || '').trim() || null;
         if (expoToken && Expo.isExpoPushToken(expoToken)) {
-            await expo.sendPushNotificationsAsync([{
+            const tickets = await expo.sendPushNotificationsAsync([{
                 to: expoToken,
                 sound: null,
                 _contentAvailable: true,
+                priority: 'high',
                 data: { type: 'EVENT_REMINDER', referenceId: eventId }
             }]);
+            // 2026-09-24: diagnostyka — status odpowiedzi Expo (ok / error + powód, np. DeviceNotRegistered)
+            const tk = tickets?.[0] || {};
+            console.log(`EVENT_REMINDER → ${userId} expo ${expoToken.slice(0, 30)}… ticket: ${tk.status}${tk.id ? ' id=' + tk.id : ''}${tk.message ? ' msg=' + tk.message : ''}${tk.details?.error ? ' err=' + tk.details.error : ''}`);
         } else if (fcmToken) {
             await getMessaging().send({
                 token: fcmToken,
@@ -1788,11 +1792,13 @@ function _warsawDateStr(ms) {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
 }
 
-exports.sendEventReminders = onSchedule('every 15 minutes', async () => {
+// 2026-09-24 (decyzja Rafała): stałe minuty :05/:20/:35/:50 (deploy nie przesuwa rytmu), okno ±10 min.
+// Push może przyjść do ~10 min przed czasem przypomnienia albo do ~5 min po — akceptowane.
+exports.sendEventReminders = onSchedule({ schedule: '5,20,35,50 * * * *', timeZone: 'Europe/Warsaw' }, async () => {
     const now = Date.now();
     const today    = _warsawDateStr(now);                        // dzień wg czasu polskiego
     const tomorrow = _warsawDateStr(now + 24 * 3600 * 1000);
-    const windowMs = 7.5 * 60 * 1000; // ±7.5 min
+    const windowMs = 10 * 60 * 1000; // ±10 min
 
     try {
         // 1. Załaduj ustawienia wszystkich klubów
