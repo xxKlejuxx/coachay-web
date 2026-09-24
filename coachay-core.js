@@ -3560,7 +3560,11 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         const _sub = userDocForSub.exists ? userDocForSub.data().subscription : null;
         if (_sub?.status === 'ACTIVE' && _sub?.expiresAt) {
             const _subExpiry = _sub.expiresAt.toDate ? _sub.expiresAt.toDate() : new Date(_sub.expiresAt);
-            if (_subExpiry > now) return _r('ACTIVE', 'individual', _subExpiry);
+            // 2026-09-24: margines 10 min po expiresAt, gdy willRenew=true - RENEWAL z RevenueCat
+            // bywa opóźniony (sandbox ~1-1,5 min po końcu okresu). Bez marginesu gdy willRenew!=true.
+            const _RENEW_GRACE_MS = 10 * 60 * 1000;
+            const _subLimit = _sub.willRenew === true ? new Date(_subExpiry.getTime() + _RENEW_GRACE_MS) : _subExpiry;
+            if (_subLimit > now) return _r('ACTIVE', 'individual', _subExpiry);
         }
 
         // ── P1: Własna licencja (access_rights) ───────────────────
