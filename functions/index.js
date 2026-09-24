@@ -2644,6 +2644,25 @@ exports.moderateEvents = onDocumentWritten('events/{id}', (event) =>
 
 /* ─────────────────────────────────────────────────── */
 
+/* 2026-09-24: koniec licencji = 23:55 CZASU POLSKIEGO dnia wygaśnięcia (dzień wg kalendarza PL).
+   Wcześniej setUTCHours(23,55) dawało 23:55 UTC = 01:55 następnego dnia w Polsce.
+   Uwzględnia czas letni/zimowy (Europe/Warsaw). */
+function _endOfDayWarsaw(ms) {
+    const d = new Date(ms);
+    const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit' })
+        .formatToParts(d).filter(x => x.type !== 'literal').map(x => [x.type, x.value]));
+    const guess = Date.UTC(+p.year, +p.month - 1, +p.day, 23, 55, 0, 0);
+    const offMin = (t) => {
+        const s = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Warsaw', timeZoneName: 'longOffset' })
+            .formatToParts(new Date(t)).find(x => x.type === 'timeZoneName').value;
+        const m = s.match(/GMT([+-])(\d{2}):(\d{2})/);
+        return m ? (m[1] === '-' ? -1 : 1) * (+m[2] * 60 + +m[3]) : 0;
+    };
+    let res = guess - offMin(guess) * 60000;
+    res = guess - offMin(res) * 60000;                 // korekta na przejściu DST
+    return new Date(res);
+}
+
 async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id, ACTIVE_EVENTS, willRenew = null) {
     const isActive = ACTIVE_EVENTS.includes(type);
     const isUserCancelled = willRenew === false;
@@ -2677,8 +2696,8 @@ async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id,
 
     let validUntil;
     if (isActive && expiration_at_ms) {
-        validUntil = new Date(expiration_at_ms);
-        validUntil.setUTCHours(23, 55, 0, 0);
+        validUntil = _endOfDayWarsaw(expiration_at_ms);
+        console.log(`applyFamilyLicenseUpdate: RC expiration_at_ms=${expiration_at_ms} (${new Date(expiration_at_ms).toISOString()}) → valid_until ${validUntil.toISOString()}`);
     } else if (!isActive) {
         validUntil = new Date();
     }
@@ -2750,8 +2769,8 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
     if (store)      updates['subscription.store']     = store;
     if (willRenew !== null) updates['subscription.willRenew'] = willRenew;
     if (expiration_at_ms) {
-        const _expDate = new Date(expiration_at_ms);
-        _expDate.setUTCHours(23, 55, 0, 0);
+        const _expDate = _endOfDayWarsaw(expiration_at_ms);
+        console.log(`applyLicenseUpdate: RC expiration_at_ms=${expiration_at_ms} (${new Date(expiration_at_ms).toISOString()}) → expiresAt ${_expDate.toISOString()}`);
         updates['subscription.expiresAt'] = _expDate;
     } else if (!isActive) {
         updates['subscription.expiresAt'] = FieldValue.serverTimestamp();
