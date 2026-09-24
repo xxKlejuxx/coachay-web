@@ -256,67 +256,72 @@ const _fmtPL = (d) => d ? new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/W
 const _toDate = (x) => x ? (x.toDate ? x.toDate() : new Date(x)) : null;
 const _esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// 2026-09-24 (decyzja Rafała, jak APP 1.0.53): pokazujemy JEDNĄ licencję - tę, która kończy się / skończyła NAJPÓŹNIEJ
+// (individual / family / club). Brak jakiejkolwiek -> okres próbny (tylko gdy już minął).
 async function _licenseInfoHtml(access, ok) {
     const now = new Date();
     const yes = _trb('blocked.licYes', 'tak'), no = _trb('blocked.licNo', 'nie');
     const until = _trb('blocked.licUntil', 'do');
-    const renewTxt = (w) => _trb('blocked.licAutoRenew', 'odnawiana automatycznie') + ': <b>' + (w === true ? yes : no) + '</b>';
-    const stateTxt = (active, expiry, willRenew) => {
-        if (active) return '<span style="color:var(--ok, #22c55e)">' + _trb('blocked.licActive', 'aktywna') + '</span>';
-        if (willRenew === true && expiry && expiry <= now) return '<span style="color:var(--warn)">' + _trb('blocked.licAwaitingRenewal', 'czeka na odnowienie') + '</span>';
-        return '<span style="color:var(--warn)">' + _trb('blocked.licExpired', 'wygasła') + '</span>';
-    };
     const SRC = {
         individual: _trb('blocked.licIndividual', 'Licencja indywidualna'),
-        family_license: _trb('blocked.licFamily', 'Licencja rodzinna'), family: _trb('blocked.licFamily', 'Licencja rodzinna'),
-        club_license: _trb('blocked.licClub', 'Licencja klubu'), club_pool: _trb('blocked.licClub', 'Licencja klubu'),
+        family: _trb('blocked.licFamily', 'Licencja rodzinna'), family_license: _trb('blocked.licFamily', 'Licencja rodzinna'),
+        club: _trb('blocked.licClub', 'Licencja klubu'), club_license: _trb('blocked.licClub', 'Licencja klubu'), club_pool: _trb('blocked.licClub', 'Licencja klubu'),
         trial: _trb('blocked.licTrial', 'Okres próbny'),
     };
     const rows = [];
-    const head = ok
+    rows.push(ok
         ? '✅ <b>' + _trb('blocked.recheckAccessActive', 'Dostęp aktywny') + '</b>' + (SRC[access?.source] ? ' – ' + _esc(SRC[access.source]) : '') + (access?.expiryDate ? ' (' + until + ' ' + _fmtPL(_toDate(access.expiryDate)) + ')' : '')
-        : '⛔ <b>' + _trb('blocked.recheckAccessNone', 'Brak dostępu') + '</b>';
-    rows.push(head);
+        : '⛔ <b>' + _trb('blocked.recheckAccessNone', 'Brak dostępu') + '</b>');
 
-    // Licencja indywidualna (users.subscription - RevenueCat)
-    try {
-        const u = await db.collection('users').doc(blockedUserId).get();
-        const sub = u.exists ? u.data().subscription : null;
-        if (sub) {
-            const exp = _toDate(sub.expiresAt);
-            const active = sub.status === 'ACTIVE' && exp && exp > now;
-            rows.push('<b>' + SRC.individual + '</b>: ' + stateTxt(active, exp, sub.willRenew) + ' · ' + until + ' ' + _fmtPL(exp) + ' · ' + renewTxt(sub.willRenew));
-        }
-    } catch (e) {}
+    // 1. Źródła równolegle
+    const [uDoc, cDoc, arSnap, mSnap] = await Promise.all([
+        db.collection('users').doc(blockedUserId).get().catch(() => null),
+        db.collection('clubs').doc(_clubId).get().catch(() => null),
+        db.collection('access_rights').where('uid', '==', blockedUserId).where('club_id', '==', _clubId).get().catch(() => null),
+        db.collection('memberships').where('userId', '==', blockedUserId).where('clubId', '==', _clubId).get().catch(() => null),
+    ]);
+    const mems = mSnap ? mSnap.docs.map(d => d.data()) : [];
+    const cd = cDoc?.exists ? cDoc.data() : {};
 
-    // Licencja rodzinna (access_rights, nie 'individual')
-    try {
-        const ar = await db.collection('access_rights').where('uid', '==', blockedUserId).where('club_id', '==', _clubId).get();
-        ar.docs.map(d => d.data()).filter(a => (a.source || '') !== 'individual').forEach(a => {
-            const exp = _toDate(a.valid_until);
-            const label = (a.slots_total || 0) > 1 ? SRC.family : _trb('blocked.licOther', 'Licencja') + ' (' + _esc(a.source || '-') + ')';
-            rows.push('<b>' + label + '</b>: ' + stateTxt(exp && exp > now, exp, a.willRenew) + ' · ' + until + ' ' + _fmtPL(exp) + ' · ' + renewTxt(a.willRenew));
-        });
-    } catch (e) {}
+    // 2. Kandydaci: tylko licencje, które user kiedykolwiek miał (mają datę końca)
+    const cand = [];
+    const sub = uDoc?.exists ? uDoc.data().subscription : null;
+    if (sub?.expiresAt) cand.push({ type: 'individual', exp: _toDate(sub.expiresAt), willRenew: sub.willRenew });
+    (arSnap ? arSnap.docs.map(d => d.data()) : []).filter(a => (a.source || '') !== 'individual' && a.valid_until)
+        .forEach(a => cand.push({ type: 'family', exp: _toDate(a.valid_until), willRenew: a.willRenew }));
+    if (cd.license?.valid_until) {
+        const act = mems.find(m => String(m.status || '').toUpperCase() === 'ACTIVE') || mems[0] || {};
+        cand.push({ type: 'club', exp: _toDate(cd.license.valid_until), used: cd.license.used, total: cd.license.total, yourSlot: act.usedSlot === 1 });
+    }
 
-    // Licencja klubu + slot + okres próbny
-    try {
-        const c = await db.collection('clubs').doc(_clubId).get();
-        const lic = c.exists ? c.data().license : null;
-        const mDoc = (typeof _getMembershipForClub === 'function') ? await _getMembershipForClub(blockedUserId, _clubId) : null;
-        const m = mDoc?.data() || {};
-        if (lic && (lic.total || 0) > 0) {
-            const exp = _toDate(lic.valid_until);
-            rows.push('<b>' + SRC.club_license + '</b>: ' + stateTxt(exp && exp > now, exp, null) + ' · ' + until + ' ' + _fmtPL(exp)
-                + ' · ' + _trb('blocked.licSlots', 'miejsca') + ' ' + (lic.used ?? '?') + '/' + lic.total
-                + ' · ' + _trb('blocked.licYourSlot', 'Twój slot') + ': <b>' + (m.usedSlot === 1 ? yes : no) + '</b>');
+    let lic = null;
+    if (cand.length) {
+        // 3. Najpóźniejsza data końca
+        lic = cand.sort((a, b) => (b.exp?.getTime() || 0) - (a.exp?.getTime() || 0))[0];
+    } else {
+        // 4. Brak licencji -> trial = najwcześniejszy membership w klubie (+90 dni), fallback clubs.createdAt; tylko gdy już minął
+        const firsts = mems.map(m => _toDate(m.createdAt)).filter(d => d && !isNaN(d));
+        const start = firsts.length ? new Date(Math.min(...firsts.map(d => d.getTime()))) : _toDate(cd.createdAt);
+        if (start) {
+            const tEnd = new Date(start.getTime() + 90 * 86400000);
+            if (tEnd <= now) lic = { type: 'trial', exp: tEnd };
         }
-        const joined = _toDate(m.createdAt) || _toDate(c.exists ? c.data().createdAt : null);
-        if (joined) {
-            const tEnd = new Date(joined.getTime() + 90 * 86400000);
-            rows.push('<b>' + SRC.trial + '</b>: ' + stateTxt(tEnd > now, tEnd, null) + ' · ' + until + ' ' + _fmtPL(tEnd));
-        }
-    } catch (e) {}
+    }
+
+    // 5. Render
+    if (lic) {
+        let state;
+        if (lic.exp && lic.exp > now) state = '<span style="color:var(--ok, #22c55e)">' + _trb('blocked.licActive', 'aktywna') + '</span>';
+        else if ((lic.type === 'individual' || lic.type === 'family') && lic.willRenew === true) state = '<span style="color:var(--warn)">' + _trb('blocked.licAwaitingRenewal', 'czeka na odnowienie') + '</span>';
+        else state = '<span style="color:var(--warn)">' + _trb('blocked.licExpired', 'wygasła') + '</span>';
+        let line = '<b>' + SRC[lic.type] + '</b>: ' + state + ' · ' + until + ' ' + _fmtPL(lic.exp);
+        if (lic.type === 'individual' || lic.type === 'family')
+            line += ' · ' + _trb('blocked.licAutoRenew', 'odnawiana automatycznie') + ': <b>' + (lic.willRenew === true ? yes : no) + '</b>';
+        if (lic.type === 'club')
+            line += ' · ' + _trb('blocked.licSlots', 'miejsca') + ' ' + (lic.used ?? '?') + '/' + (lic.total ?? '?')
+                  + ' · ' + _trb('blocked.licYourSlot', 'Twój slot') + ': <b>' + (lic.yourSlot ? yes : no) + '</b>';
+        rows.push(line);
+    }
 
     rows.push('<span style="opacity:.7">' + _trb('blocked.licCheckedAt', 'Sprawdzono') + ': ' + _fmtPL(now) + '</span>');
     let html = '<div style="text-align:left; line-height:1.6; font-size:12px; margin-top:6px;">' + rows.join('<br>') + '</div>';
