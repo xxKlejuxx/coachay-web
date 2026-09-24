@@ -1814,7 +1814,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             subHtml = `<div class="ev-sub">${trunc(item.body, 80)}</div>`;
         }
 
-        const orgHtml   = item.createdBy ? `<div class="ev-org">${t('organizerLabel', {name: trunc(item.createdBy, 25)})}</div>` : '';
+        const orgHtml   = item.createdBy ? `<div class="ev-org">${t('home.organizerLabel', {name: trunc(item.createdBy, 25)})}</div>` : '';
         const evDescHtml = item.description ? `<div class="ev-desc">${trunc(item.description, 60)}</div>` : '';
 
         let actHtml = '';
