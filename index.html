@@ -1706,7 +1706,7 @@ async function doRegisterTrainer() {
         var membershipId = makeMbrId('TRENER_GLOWNY');
         await db.collection('authIndex').doc(uid).set({ userId: userCode, clubIds: [clubId] });
         await db.collection('users').doc(userCode).set({ userId:userCode, authUid:uid, email, phone:null, firstName:fname, lastName:lname, displayName, createdAt:now, isDemo:false });
-        await db.collection('clubs').doc(clubId).set({ clubId, clubName:klubName, owner:userCode, createdBy:userCode, createdAt:now });
+        await db.collection('clubs').doc(clubId).set({ clubId, clubName:klubName, owner:userCode, createdBy:userCode, createdAt:now, reminderHoursBefore:1 });
         await db.collection('memberships').doc(membershipId).set(buildMembership({ membershipId, userId:userCode, teamId:null, clubId, playerId:null, role:'TRENER_GLOWNY', status:'active', displayName, joinedAt:now, createdAt:firebase.firestore.Timestamp.fromDate(new Date()), isDemo:false }));
         var trainerId = 'trainer_'+dateStr+'_'+Math.floor(Math.random()*9000000+1000000);
         await db.collection('trainers').doc(trainerId).set({ trainerId, clubId, userId:userCode, displayName, firstName:fname, lastName:lname, role:'TRENER_GLOWNY', isActive:true, isClubAdmin:true, registrationStatus:'ACTIVE', createdAt:now });

@@ -928,6 +928,7 @@
   "reminderRowDescFormat": "{{h}}h przed eventem",
   "reminderRowDescOff": "Wyłączone",
   "reminderPanelTitle": "Powiadomienie przed eventem",
+  "reminderOffLabel": "Wyłączone",
   "reminderHoursLabel": "Czas przed eventem",
   "reminderSaveButton": "Zapisz",
   "licenseRowTitle": "Licencja klubowa",

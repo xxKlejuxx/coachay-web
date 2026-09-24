@@ -542,24 +542,32 @@ async function loadReminder() {
     const sel = document.getElementById('inp-reminder-hours');
     if (!sel) return;
     // Wypełnij select opcjami 1-24h
-    sel.innerHTML = Array.from({ length: 24 }, (_, i) => {
+    // 2026-09-24: 0 = wyłączone (brak pola / null w bazie = 0). Nowe kluby dostają 1h przy zakładaniu.
+    sel.innerHTML = `<option value="0">${_reminderOffLabel()}</option>` + Array.from({ length: 24 }, (_, i) => {
         const h = i + 1;
         return `<option value="${h}">${h}h</option>`;
     }).join('');
     try {
         const clubDoc = await db.collection('clubs').doc(_clubId).get();
-        const rh = clubDoc.exists ? (clubDoc.data().reminderHoursBefore ?? 1) : 1;
+        const rh = clubDoc.exists ? (clubDoc.data().reminderHoursBefore ?? 0) : 0;
         sel.value = String(rh);
         _updateReminderDesc(rh);
     } catch (e) {
-        sel.value = '1';
-        _updateReminderDesc(1);
+        sel.value = '0';
+        _updateReminderDesc(0);
     }
+}
+
+function _reminderOffLabel() {
+    const k = 'settings.reminderOffLabel';
+    const v = typeof t === 'function' ? t(k) : null;
+    return (v && v !== k) ? v : 'Wyłączone';
 }
 
 function _updateReminderDesc(h) {
     const el = document.getElementById('si-reminder-desc');
     if (!el) return;
+    if (!h) { el.textContent = _reminderOffLabel(); return; }
     el.textContent = typeof t === 'function'
         ? t('settings.reminderRowDescFormat', { h })
         : `${h}h przed eventem`;
@@ -568,7 +576,7 @@ function _updateReminderDesc(h) {
 async function saveReminder() {
     const msg = document.getElementById('reminder-msg');
     const sel = document.getElementById('inp-reminder-hours');
-    const rh  = parseInt(sel?.value || '1', 10);
+    const rh  = parseInt(sel?.value || '0', 10);
     if (!_clubId) { showMsg(msg, t('settings.noTeamError'), false); return; }
     try {
         await db.collection('clubs').doc(_clubId).update({

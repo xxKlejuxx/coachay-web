@@ -1768,10 +1768,30 @@ exports.sendReminders = onSchedule('every 60 minutes', async () => {
    Ustawienie per klub: clubs/{clubId}.reminderHoursBefore
    Wysyła push do wszystkich członków drużyny na X h przed eventem
    ═══════════════════════════════════════════════════ */
+/* 2026-09-24: data+godzina eventu to czas POLSKI (Europe/Warsaw), a nie UTC.
+   Zwraca timestamp (ms) dla "YYYY-MM-DD" + "HH:MM" w strefie Europe/Warsaw (z DST). */
+function _warsawLocalToMs(dateStr, timeStr) {
+    const [y, mo, d] = (dateStr || '').split('-').map(Number);
+    const [hh, mm]   = (timeStr || '00:00').split(':').map(Number);
+    const guess = Date.UTC(y, (mo || 1) - 1, d || 1, hh || 0, mm || 0, 0, 0);
+    const offMin = (t) => {
+        const s = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Warsaw', timeZoneName: 'longOffset' })
+            .formatToParts(new Date(t)).find(x => x.type === 'timeZoneName').value;
+        const m = s.match(/GMT([+-])(\d{2}):(\d{2})/);
+        return m ? (m[1] === '-' ? -1 : 1) * (+m[2] * 60 + +m[3]) : 0;
+    };
+    let res = guess - offMin(guess) * 60000;
+    res = guess - offMin(res) * 60000;
+    return res;
+}
+function _warsawDateStr(ms) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
+}
+
 exports.sendEventReminders = onSchedule('every 15 minutes', async () => {
     const now = Date.now();
-    const today    = new Date(now).toISOString().slice(0, 10);
-    const tomorrow = new Date(now + 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const today    = _warsawDateStr(now);                        // dzień wg czasu polskiego
+    const tomorrow = _warsawDateStr(now + 24 * 3600 * 1000);
     const windowMs = 7.5 * 60 * 1000; // ±7.5 min
 
     try {
@@ -1809,7 +1829,7 @@ exports.sendEventReminders = onSchedule('every 15 minutes', async () => {
             if (ev.status === 'cancelled') continue;
             if (ev.reminderSentAt) continue;
 
-            const evTime      = new Date(ev.date + 'T' + (ev.timeFrom || '00:00')).getTime();
+            const evTime      = _warsawLocalToMs(ev.date, ev.timeFrom || '00:00');   // czas PL, nie UTC
             const reminderTime = evTime - rh * 3600000;
 
             if (Math.abs(now - reminderTime) > windowMs) continue;
@@ -1832,7 +1852,7 @@ exports.sendEventReminders = onSchedule('every 15 minutes', async () => {
                 await sendDirectPush(userId, ev.id);
             }
 
-            console.log(`✅ Reminder: ${ev.id} (${ev.date} ${ev.timeFrom}) → ${userIds.length} users, rh=${rh}h`);
+            console.log(`✅ Reminder: ${ev.id} (${ev.date} ${ev.timeFrom} PL = ${new Date(evTime).toISOString()}) → cichy push ${new Date(now).toISOString()} do ${userIds.length} users, rh=${rh}h`);
         }
     } catch (e) {
         console.error('❌ sendEventReminders:', e);
