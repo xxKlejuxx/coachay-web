@@ -953,6 +953,7 @@ async function sendDirectPush(userId, eventId) {
             }]);
             // 2026-09-24: diagnostyka — status odpowiedzi Expo (ok / error + powód, np. DeviceNotRegistered)
             const tk = tickets?.[0] || {};
+            await _recordPushTicket(tk, { userId, type: 'EVENT_REMINDER', referenceId: eventId, token: expoToken });
             console.log(`EVENT_REMINDER → ${userId} expo ${expoToken.slice(0, 30)}… ticket: ${tk.status}${tk.id ? ' id=' + tk.id : ''}${tk.message ? ' msg=' + tk.message : ''}${tk.details?.error ? ' err=' + tk.details.error : ''}`);
         } else if (fcmToken) {
             await getMessaging().send({
@@ -978,13 +979,14 @@ async function sendBadgePush(userId) {
     const messages = Math.max(0, counts.messages || 0);
     const total = events + tasks + messages;
     try {
-        await expo.sendPushNotificationsAsync([{
+        const bTickets = await expo.sendPushNotificationsAsync([{
             to: expoToken,
             badge: total,
             sound: null,
             _contentAvailable: true,
             data: { type: 'BADGE_UPDATE', events, tasks, messages },
         }]);
+        await _recordPushTicket(bTickets?.[0], { userId, type: 'BADGE_UPDATE', referenceId: null, token: expoToken });
     } catch (e) {
         console.error(`sendBadgePush(${userId}):`, e);
     }
@@ -1038,7 +1040,8 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
                 title, body, data: notifData
             }]);
             for (const chunk of chunks) {
-                await expo.sendPushNotificationsAsync(chunk);
+                const nTickets = await expo.sendPushNotificationsAsync(chunk);
+                await _recordPushTicket(nTickets?.[0], { userId: notif.userId, type: notif.type || 'NOTIFICATION', referenceId: notif.referenceId || null, token: expoToken });
             }
             console.log(`Expo push wyslany do ${notif.userId}`);
         }
@@ -2952,5 +2955,65 @@ exports.reconcileBadgeCounts = onSchedule(
         if (inBatch) await batch.commit();
         for (const uid of toPush) await sendBadgePush(uid);
         console.log(`reconcileBadgeCounts: ${usersSnap.size} userow, zmienionych ${changed}, badge push ${toPush.length}`);
+    }
+);
+
+
+/* ---------------------------------------------------------------
+   2026-09-24 (decyzja Rafała): diagnostyka dostarczenia pushów Expo.
+   Ticket (odpowiedź przy wysyłce) = Expo przyjęło do kolejki. Receipt (po kilku min.) = wynik
+   dostarczenia do Google/Apple, np. ok / DeviceNotRegistered / InvalidCredentials / MessageTooBig.
+   Zapis: push_receipts/{ticketId}; sprawdzanie: checkPushReceipts (co 15 min, bilety >= 15 min).
+   --------------------------------------------------------------- */
+async function _recordPushTicket(ticket, { userId, type, referenceId, token }) {
+    try {
+        if (!ticket) return;
+        if (ticket.status !== 'ok' || !ticket.id) {
+            console.warn(`PUSH TICKET ERROR ${type} user=${userId}: ${ticket.message || ''} ${ticket.details?.error || ''}`);
+            return;
+        }
+        await db.collection('push_receipts').doc(ticket.id).set({
+            ticketId: ticket.id, userId: userId || null, type: type || null, referenceId: referenceId || null,
+            tokenPrefix: (token || '').slice(0, 30), sentAt: FieldValue.serverTimestamp(), checked: false,
+        });
+    } catch (e) { console.error('_recordPushTicket:', e.message); }
+}
+
+exports.checkPushReceipts = onSchedule(
+    { schedule: '10,25,40,55 * * * *', timeZone: 'Europe/Warsaw' },
+    async () => {
+        const nowMs = Date.now();
+        const snap = await db.collection('push_receipts').where('checked', '==', false).limit(1000).get();
+        const due = snap.docs.filter(d => { const t = d.data().sentAt?.toMillis?.(); return t && t <= nowMs - 15 * 60 * 1000; });
+        let ok = 0, err = 0, pending = 0;
+        if (due.length) {
+            const byId = Object.fromEntries(due.map(d => [d.id, d]));
+            for (const chunk of expo.chunkPushNotificationReceiptIds(Object.keys(byId))) {
+                let receipts = {};
+                try { receipts = await expo.getPushNotificationReceiptsAsync(chunk); }
+                catch (e) { console.error('getPushNotificationReceiptsAsync:', e.message); continue; }
+                for (const id of chunk) {
+                    const d = byId[id], m = d.data(), r = receipts[id];
+                    if (!r) {
+                        if (m.sentAt.toMillis() < nowMs - 24 * 3600 * 1000) {
+                            await d.ref.update({ checked: true, receiptStatus: 'no_receipt', checkedAt: FieldValue.serverTimestamp() });
+                            console.warn(`PUSH RECEIPT ${m.type} user=${m.userId}: brak receiptu po 24 h (ticket ${id})`);
+                        } else pending++;
+                        continue;
+                    }
+                    const upd = { checked: true, receiptStatus: r.status, checkedAt: FieldValue.serverTimestamp() };
+                    if (r.status === 'ok') { ok++; console.log(`PUSH RECEIPT ${m.type} user=${m.userId} ref=${m.referenceId || '-'}: ok (dostarczone do Google/Apple)`); }
+                    else {
+                        err++;
+                        upd.receiptError = r.details?.error || null; upd.receiptMessage = r.message || null;
+                        console.warn(`PUSH RECEIPT ${m.type} user=${m.userId} ref=${m.referenceId || '-'}: ERROR ${r.details?.error || ''} - ${r.message || ''} (token ${m.tokenPrefix})`);
+                    }
+                    await d.ref.update(upd);
+                }
+            }
+        }
+        const old = await db.collection('push_receipts').where('checkedAt', '<', new Date(nowMs - 30 * 86400000)).limit(400).get();
+        if (!old.empty) { const b = db.batch(); old.docs.forEach(d => b.delete(d.ref)); await b.commit(); }
+        if (due.length || !old.empty) console.log(`checkPushReceipts: do sprawdzenia ${due.length}, ok ${ok}, błędy ${err}, bez receiptu jeszcze ${pending}, usunięte stare ${old.size}`);
     }
 );
