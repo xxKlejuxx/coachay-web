@@ -54,6 +54,9 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .payment-btn-primary:active { opacity: 0.85; transform: scale(0.98); }
 .payment-btn-secondary { width: 100%; padding: 12px; border-radius: var(--r-pill); background: transparent; border: 1px solid var(--border2); color: var(--szary-j); font-size: 12px; font-weight: 800; cursor: pointer; }
 .payment-btn-secondary:active { background: var(--tlo-karta2); }
+.payment-btn-recheck { width: 100%; padding: 12px; border-radius: var(--r-pill); background: transparent; border: 1px solid var(--border2); color: var(--bialy); font-size: 12px; font-weight: 800; cursor: pointer; }
+.payment-btn-recheck:active { background: var(--tlo-karta2); }
+.payment-btn-recheck:disabled { opacity: 0.6; cursor: default; }
 
 /* ── Karta kodu zaproszenia ── */
 .invite-card { margin: 16px 16px 0; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
@@ -126,6 +129,9 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
             <div class="payment-title" data-i18n="blocked.expiredTitle">Dostęp wygasł</div>
             <div class="payment-text" data-i18n="blocked.expiredBody">Okres próbny lub subskrypcja dobiegły końca. Wybierz plan, aby dalej korzystać z Coachay.</div>
             <button class="payment-btn-primary" id="btn-pay" onclick="goToPayment()" data-i18n="blocked.choosePlanButton">Wybierz plan →</button>
+            <!-- Sprawdź ponownie (2026-09-24): ponowne sprawdzenie dostępu bez wychodzenia z ekranu -->
+            <button class="payment-btn-recheck" id="btn-recheck" onclick="recheckAccess()" data-i18n="blocked.recheckButton">Sprawdź ponownie</button>
+            <div id="recheck-msg" style="font-size:12px; color:var(--szary); text-align:center; min-height:14px;"></div>
             <button class="payment-btn-secondary" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
         </div>
 
@@ -135,12 +141,6 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
             <div class="blocked-title" data-i18n="blocked.noLicenseTitle">Klub nie ma licencji</div>
             <div class="blocked-text" data-i18n="blocked.noLicenseBody">Dostęp do aplikacji wygasł. Skontaktuj się z trenerem — to on odnawia dostęp dla całego klubu.</div>
             <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
-        </div>
-
-        <!-- Sprawdź ponownie (2026-09-24): ponowne sprawdzenie dostępu bez wychodzenia z ekranu -->
-        <div id="recheck-box" style="display:flex; flex-direction:column; gap:6px;">
-            <button class="invite-btn" id="btn-recheck" onclick="recheckAccess()" data-i18n="blocked.recheckButton">Sprawdź ponownie</button>
-            <div id="recheck-msg" style="font-size:12px; color:var(--szary); text-align:center; min-height:14px;"></div>
         </div>
 
         <!-- Kod zaproszenia -->
