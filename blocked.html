@@ -240,18 +240,88 @@ async function recheckAccess() {
         if (!blockedUserId) blockedUserId = getCurrentUserId();
         if (!_clubId || !blockedUserId) { window.location.href = 'start.html'; return; }
         const access = await getAccessStatus(blockedUserId, _clubId, { claimSlot: true });
-        if (access && access.status !== 'EXPIRED' && access.status !== 'BLOCKED') {
-            msg.textContent = _trb('blocked.recheckOk', 'Dostęp aktywny – przekierowanie…');
-            setTimeout(() => { window.location.href = 'start.html'; }, 800);
-            return;
-        }
-        msg.style.color = 'var(--warn)';
-        msg.textContent = _trb('blocked.recheckStillBlocked', 'Dostęp nadal nieaktywny.');
+        const ok = !!(access && access.status !== 'EXPIRED' && access.status !== 'BLOCKED');
+        msg.innerHTML = await _licenseInfoHtml(access, ok);
+        msg.style.color = 'var(--szary-j)';
     } catch (e) {
         msg.style.color = 'var(--warn)';
         msg.textContent = _trb('blocked.recheckError', 'Błąd sprawdzania dostępu') + ': ' + e.message;
     }
     btn.disabled = false;
+}
+
+// 2026-09-24 (Rafał): po „Sprawdź ponownie” pokaż jaką licencję user ma/miał,
+// koniec (data + godzina PL) i czy odnawiana automatycznie. APP robi to samo.
+const _fmtPL = (d) => d ? new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(d) : '–';
+const _toDate = (x) => x ? (x.toDate ? x.toDate() : new Date(x)) : null;
+const _esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+async function _licenseInfoHtml(access, ok) {
+    const now = new Date();
+    const yes = _trb('blocked.licYes', 'tak'), no = _trb('blocked.licNo', 'nie');
+    const until = _trb('blocked.licUntil', 'do');
+    const renewTxt = (w) => _trb('blocked.licAutoRenew', 'odnawiana automatycznie') + ': <b>' + (w === true ? yes : no) + '</b>';
+    const stateTxt = (active, expiry, willRenew) => {
+        if (active) return '<span style="color:var(--ok, #22c55e)">' + _trb('blocked.licActive', 'aktywna') + '</span>';
+        if (willRenew === true && expiry && expiry <= now) return '<span style="color:var(--warn)">' + _trb('blocked.licAwaitingRenewal', 'czeka na odnowienie') + '</span>';
+        return '<span style="color:var(--warn)">' + _trb('blocked.licExpired', 'wygasła') + '</span>';
+    };
+    const SRC = {
+        individual: _trb('blocked.licIndividual', 'Licencja indywidualna'),
+        family_license: _trb('blocked.licFamily', 'Licencja rodzinna'), family: _trb('blocked.licFamily', 'Licencja rodzinna'),
+        club_license: _trb('blocked.licClub', 'Licencja klubu'), club_pool: _trb('blocked.licClub', 'Licencja klubu'),
+        trial: _trb('blocked.licTrial', 'Okres próbny'),
+    };
+    const rows = [];
+    const head = ok
+        ? '✅ <b>' + _trb('blocked.recheckAccessActive', 'Dostęp aktywny') + '</b>' + (SRC[access?.source] ? ' – ' + _esc(SRC[access.source]) : '') + (access?.expiryDate ? ' (' + until + ' ' + _fmtPL(_toDate(access.expiryDate)) + ')' : '')
+        : '⛔ <b>' + _trb('blocked.recheckAccessNone', 'Brak dostępu') + '</b>';
+    rows.push(head);
+
+    // Licencja indywidualna (users.subscription - RevenueCat)
+    try {
+        const u = await db.collection('users').doc(blockedUserId).get();
+        const sub = u.exists ? u.data().subscription : null;
+        if (sub) {
+            const exp = _toDate(sub.expiresAt);
+            const active = sub.status === 'ACTIVE' && exp && exp > now;
+            rows.push('<b>' + SRC.individual + '</b>: ' + stateTxt(active, exp, sub.willRenew) + ' · ' + until + ' ' + _fmtPL(exp) + ' · ' + renewTxt(sub.willRenew));
+        }
+    } catch (e) {}
+
+    // Licencja rodzinna (access_rights, nie 'individual')
+    try {
+        const ar = await db.collection('access_rights').where('uid', '==', blockedUserId).where('club_id', '==', _clubId).get();
+        ar.docs.map(d => d.data()).filter(a => (a.source || '') !== 'individual').forEach(a => {
+            const exp = _toDate(a.valid_until);
+            const label = (a.slots_total || 0) > 1 ? SRC.family : _trb('blocked.licOther', 'Licencja') + ' (' + _esc(a.source || '-') + ')';
+            rows.push('<b>' + label + '</b>: ' + stateTxt(exp && exp > now, exp, a.willRenew) + ' · ' + until + ' ' + _fmtPL(exp) + ' · ' + renewTxt(a.willRenew));
+        });
+    } catch (e) {}
+
+    // Licencja klubu + slot + okres próbny
+    try {
+        const c = await db.collection('clubs').doc(_clubId).get();
+        const lic = c.exists ? c.data().license : null;
+        const mDoc = (typeof _getMembershipForClub === 'function') ? await _getMembershipForClub(blockedUserId, _clubId) : null;
+        const m = mDoc?.data() || {};
+        if (lic && (lic.total || 0) > 0) {
+            const exp = _toDate(lic.valid_until);
+            rows.push('<b>' + SRC.club_license + '</b>: ' + stateTxt(exp && exp > now, exp, null) + ' · ' + until + ' ' + _fmtPL(exp)
+                + ' · ' + _trb('blocked.licSlots', 'miejsca') + ' ' + (lic.used ?? '?') + '/' + lic.total
+                + ' · ' + _trb('blocked.licYourSlot', 'Twój slot') + ': <b>' + (m.usedSlot === 1 ? yes : no) + '</b>');
+        }
+        const joined = _toDate(m.createdAt) || _toDate(c.exists ? c.data().createdAt : null);
+        if (joined) {
+            const tEnd = new Date(joined.getTime() + 90 * 86400000);
+            rows.push('<b>' + SRC.trial + '</b>: ' + stateTxt(tEnd > now, tEnd, null) + ' · ' + until + ' ' + _fmtPL(tEnd));
+        }
+    } catch (e) {}
+
+    rows.push('<span style="opacity:.7">' + _trb('blocked.licCheckedAt', 'Sprawdzono') + ': ' + _fmtPL(now) + '</span>');
+    let html = '<div style="text-align:left; line-height:1.6; font-size:12px; margin-top:6px;">' + rows.join('<br>') + '</div>';
+    if (ok) html += '<button class="payment-btn-primary" style="margin-top:8px" onclick="window.location.href=\'start.html\'">' + _trb('blocked.recheckGoToApp', 'Przejdź do aplikacji') + '</button>';
+    return html;
 }
 
 function goToPayment() {
