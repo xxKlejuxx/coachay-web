@@ -3047,3 +3047,32 @@ exports.checkPushReceipts = onSchedule(
         if (due.length || !old.empty) console.log(`checkPushReceipts: do sprawdzenia ${due.length}, ok ${ok}, błędy ${err}, bez receiptu jeszcze ${pending}, usunięte stare ${old.size}`);
     }
 );
+
+
+/* ---------------------------------------------------------------
+   2026-09-25 (decyzja Rafała): zawodnicy pobierani TYLKO z drużyny/klubu.
+   Firestore nie filtruje po tablicy obiektów players.teams[], więc serwer utrzymuje pola do zapytań:
+   - teamIds: [teamId, ...]  (wszystkie drużyny z teams[], dowolny status; status filtruje klient)
+   - clubId: klub drużyny ACTIVE (isPrimary pierwsza), inaczej pierwszej z listy
+   Zapis tylko przy zmianie (brak pętli). Działa niezależnie od tego, czy zapisał web, czy appka.
+   --------------------------------------------------------------- */
+exports.onPlayerWrittenIndex = onDocumentWritten('players/{playerId}', async (event) => {
+    const after = event.data.after?.exists ? event.data.after.data() : null;
+    if (!after) return;
+    const teams = Array.isArray(after.teams) ? after.teams : [];
+    const teamIds = [...new Set(teams.map(t => t && t.teamId).filter(Boolean))].sort();
+    const pick = teams.find(t => t?.status === 'ACTIVE' && t?.isPrimary) || teams.find(t => t?.status === 'ACTIVE') || teams[0];
+    let clubId = after.clubId || null;
+    if (pick?.teamId) {
+        const tDoc = await db.collection('teams').doc(pick.teamId).get().catch(() => null);
+        if (tDoc?.exists && tDoc.data().clubId) clubId = tDoc.data().clubId;
+    }
+    const cur = Array.isArray(after.teamIds) ? [...after.teamIds].sort() : null;
+    const upd = {};
+    if (JSON.stringify(cur) !== JSON.stringify(teamIds)) upd.teamIds = teamIds;
+    if ((after.clubId || null) !== clubId && clubId) upd.clubId = clubId;
+    if (Object.keys(upd).length) {
+        await event.data.after.ref.update(upd);
+        console.log(`onPlayerWrittenIndex ${event.params.playerId}: ${JSON.stringify(upd)}`);
+    }
+});

@@ -2174,7 +2174,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         try {
             const [events, playersSnap] = await Promise.all([
                 getTeamEvents(teamId),
-                db.collection('players').get()
+                playersOfTeamQuery(teamId, _activeClubId).get()
             ]);
             calAllEvents  = events;
             calAllPlayers = playersSnap.docs.map(d => ({ id: d.id, ...d.data() }))

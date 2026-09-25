@@ -451,9 +451,9 @@ function getTargetId(invited) {
 async function getTeamPlayers(teamId) {
     if (!db) return [];
     try {
-        const snapshot = await db.collection('players').get();
+        const snapshot = await playersOfTeamQuery(teamId).get();
 
-        // Filtruj lokalnie (bo Firestore nie wspiera array-contains z obiektem)
+        // Status (ACTIVE) filtrowany lokalnie
         const players = snapshot.docs
             .map(doc => {
                 const data = doc.data();
@@ -779,22 +779,13 @@ async function getMembership(userId, clubId) {
 async function getUserMemberships(userId) {
     if (!db || !userId) return [];
     try {
-        // Nowe memberships mają pole status; legacy mają isActive: true (brak status)
-        const [snapNew, snapLegacy] = await Promise.all([
-            db.collection('memberships')
-                .where('userId', '==', userId)
-                .where('status', 'in', ['active', 'ACTIVE', 'grace', 'demo'])
-                .get(),
-            db.collection('memberships')
-                .where('userId', '==', userId)
-                .where('isActive', '==', true)
-                .get()
-        ]);
+        // 2026-09-25: jedno zapytanie (legacy isActive bez status - w bazie 0 rekordów)
+        const snapNew = await db.collection('memberships')
+            .where('userId', '==', userId)
+            .where('status', 'in', ['active', 'ACTIVE', 'grace', 'demo'])
+            .get();
         const byId = {};
         snapNew.docs.forEach(d => { byId[d.id] = { id: d.id, ...d.data() }; });
-        snapLegacy.docs.forEach(d => {
-            if (!byId[d.id]) byId[d.id] = { id: d.id, ...d.data() };
-        });
         // Odfiltruj zablokowane/usunięte (mogą się trafić przez isActive)
         return Object.values(byId).filter(m =>
             m.status !== 'BLOCKED' && m.status !== 'REMOVED'
@@ -874,6 +865,19 @@ async function getCurrentMembership() {
      if (!session) { window.location.href = 'index.html'; return; }
      const { user, membership, team } = session;
 ══════════════════════════════════════════════════════════════════ */
+// 2026-09-25: krótka pamięć odczytów w obrębie startu strony (5 s), żeby ten sam dokument nie był czytany 2x
+const _docMemo = new Map();
+function _rememberDoc(path, snap) { _docMemo.set(path, { snap, t: Date.now() }); }
+function _recentDoc(path) { const m = _docMemo.get(path); if (!m) return null; if (Date.now() - m.t > 5000) { _docMemo.delete(path); return null; } return m.snap; }
+
+// 2026-09-25 (decyzja Rafała): zawodnicy TYLKO z drużyny. Pola teamIds/clubId utrzymuje serwer (onPlayerWrittenIndex).
+function playersOfTeamQuery(teamId, clubId) {
+    let q = db.collection('players');
+    const c = clubId || window._sessionClubId || null;
+    if (c) q = q.where('clubId', '==', c);
+    return q.where('teamIds', 'array-contains', teamId);
+}
+
 async function initSession() {
     const userId = getCurrentUserId();
     if (!userId || !db) return null;
@@ -881,6 +885,7 @@ async function initSession() {
     try {
         // 1. Pobierz dane usera (source:server omija IndexedDB cache)
         const userDoc = await db.collection('users').doc(userId).get({ source: 'server' });
+        _rememberDoc('users/' + userId, userDoc); // 2026-09-25: getAccessStatus użyje tego odczytu zamiast drugiego
         if (!userDoc.exists) {
             console.error('❌ Brak usera:', userId);
             if (!isDemoMode()) {
@@ -1002,6 +1007,7 @@ async function initSession() {
         }
 
         // 4. Pobierz drużynę na podstawie membership.teamId
+        window._sessionClubId = membership?.clubId || null; // 2026-09-25: do zapytań players (filtr klubu)
         const resolvedTeamId = membership.teamId;
         let team = null;
         if (resolvedTeamId) {
@@ -1834,7 +1840,11 @@ async function countUnreadNotifications(userId) {
 /* ── UI: Overlay powiadomień ── */
 let notifData = [];
 
+// 2026-09-25 (decyzja Rafała): na webie nie ma dzwonka - powiadomień nie pobieramy (kod zostaje na przyszłość).
+const WEB_NOTIFICATIONS_ENABLED = false;
+
 async function loadAndRenderNotifications() {
+    if (!WEB_NOTIFICATIONS_ENABLED) return;
     const userId = getCurrentUserId();
     if (!userId) return;
 
@@ -3259,6 +3269,7 @@ function mzChange(btn, delta, min, max) {
 
 /* ── Auto-load: licznik powiadomień na dzwonku ── */
 document.addEventListener('DOMContentLoaded', function () {
+    if (!WEB_NOTIFICATIONS_ENABLED) return; // 2026-09-25: dzwonek wyłączony na webie
     // Czekaj aż initFirebase zostanie wywołane przez ekran
     let attempts = 0;
     const checkInterval = setInterval(async () => {
@@ -3336,12 +3347,10 @@ const TRIAL_SHOW_DAYS = [15, 10, 5, 1, 0];
 
 /** Zwraca pierwsze aktywne membership usera dla danego klubu lub null. */
 async function _getMembershipForClub(uid, clubId) {
-    const [s1, s2] = await Promise.all([
-        db.collection('memberships').where('userId','==',uid).where('clubId','==',clubId).where('status','==','ACTIVE').limit(1).get(),
-        db.collection('memberships').where('userId','==',uid).where('clubId','==',clubId).where('status','==','active').limit(1).get()
-    ]);
-    const docs = [...s1.docs, ...s2.docs];
-    return docs.length > 0 ? docs[0] : null;
+    // 2026-09-25: jedno zapytanie zamiast dwóch (ACTIVE / active)
+    const snap = await db.collection('memberships').where('userId','==',uid).where('clubId','==',clubId)
+        .where('status','in',['ACTIVE','active']).limit(1).get();
+    return snap.empty ? null : snap.docs[0];
 }
 
 /**
@@ -3556,7 +3565,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         // ── P0.5: Globalna subskrypcja ind (RevenueCat) ──────────────
         // Sprawdzana przed access_rights — działa we WSZYSTKICH klubach użytkownika,
         // niezależnie od tego czy access_rights istnieje dla tego konkretnego clubId.
-        const userDocForSub = await db.collection('users').doc(uid).get();
+        const userDocForSub = _recentDoc('users/' + uid) || await db.collection('users').doc(uid).get();
         const _sub = userDocForSub.exists ? userDocForSub.data().subscription : null;
         if (_sub?.status === 'ACTIVE' && _sub?.expiresAt) {
             const _subExpiry = _sub.expiresAt.toDate ? _sub.expiresAt.toDate() : new Date(_sub.expiresAt);

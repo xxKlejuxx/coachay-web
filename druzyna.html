@@ -971,7 +971,7 @@ async function zaladujZawodnikow() {
     lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">Ładowanie...</div>';
 
     try {
-        const snap = await db.collection('players').get();
+        const snap = await playersOfTeamQuery(aktualnyTeamId, aktualnyClubId).get();
         const isKibic = aktualnaRola === 'KIBIC';
         const myPlayerIds = getMyPlayerIds();
         wszyscyZawodnicy = snap.docs
@@ -1215,11 +1215,15 @@ async function zaladujFrekwencje(player, sezon) {
     // Pobierz eventy drużyny z okresu (tylko przeszłe — do dziś lub końca sezonu)
     let events = [];
     try {
+        // 2026-09-25: tylko eventy tego zawodnika z okresu sezonu (zamiast wszystkich eventów drużyny)
         const snap = await db.collection('events')
             .where('teamId', '==', aktualnyTeamId)
+            .where('attendance.invited', 'array-contains', pid)
+            .where('date', '>=', fromStr)
+            .where('date', '<=', toStr)
             .get();
         events = snap.docs.map(d => d.data())
-            .filter(e => e.status !== 'DELETE' && e.date >= fromStr && e.date <= toStr);
+            .filter(e => e.status !== 'DELETE');
     } catch (e) {
         el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Brak danych.</div>';
         return;
@@ -2450,7 +2454,7 @@ async function doImportCSV() {
 
     try {
         // Pobierz istniejących zawodników do wykrycia duplikatów
-        const existingSnap = await db.collection('players').get();
+        const existingSnap = await playersOfTeamQuery(aktualnyTeamId, aktualnyClubId).get();
         const existingPlayers = existingSnap.docs
             .map(d => d.data())
             .filter(p => (p.teams || []).some(t => t.teamId === aktualnyTeamId && t.status === 'ACTIVE'));

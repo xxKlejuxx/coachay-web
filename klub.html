@@ -434,7 +434,7 @@ async function loadTeamStats() {
     const teamIds = allTeams.map(t => t.id || t.teamId).filter(Boolean);
     if (!teamIds.length) { teamStats = {}; mainTrainerByTeam = {}; return; }
     try {
-        const playersSnap = await db.collection('players').get();
+        const playersSnap = await db.collection('players').where('clubId', '==', currentClubId).get(); // 2026-09-25: tylko klub
 
         // Licz trenerów z memberships (obie wersje statusu: 'ACTIVE' i 'active')
         const trainerCount = {};  // teamId → liczba trenerów
@@ -707,7 +707,7 @@ async function loadTeamPlayers(teamId) {
     scroll.innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('common.loading') : 'Ładowanie...') + '</div>';
     try {
         // Pobierz WSZYSTKICH zawodników (aktywni + zablokowani + usunięci)
-        const snap = await db.collection('players').get();
+        const snap = await playersOfTeamQuery(teamId, currentClubId).get();
         const players = snap.docs
             .map(d => ({ id: d.id, ...d.data() }))
             .filter(p => (p.teams || []).some(tm => tm.teamId === teamId && tm.status !== 'INACTIVE'))
@@ -1073,7 +1073,7 @@ async function deleteTeam() {
     // Policz zawodników w drużynie
     let teamPlayers = [];
     try {
-        const playersSnap = await db.collection('players').get();
+        const playersSnap = await playersOfTeamQuery(teamId, currentClubId).get();
         teamPlayers = playersSnap.docs
             .map(d => ({ id: d.id, ...d.data() }))
             .filter(p => (p.teams || []).some(t => t.teamId === teamId));

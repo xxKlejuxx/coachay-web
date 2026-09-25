@@ -413,7 +413,11 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ── Panel open/close ── */
-function openPanel(id)  { document.getElementById('panel-' + id).classList.add('open'); }
+function openPanel(id)  {
+    document.getElementById('panel-' + id).classList.add('open');
+    if (id === 'licencja' && !_licUsersLoaded) { _licUsersLoaded = true; loadLicencjaUsers(); } // 2026-09-25: lista dopiero po otwarciu panelu
+}
+let _licUsersLoaded = false;
 function closePanel(id) { document.getElementById('panel-' + id).classList.remove('open'); }
 
 function toggleSwitch(el) { el.classList.toggle('on'); }
@@ -760,7 +764,8 @@ async function loadLicencja() {
         const descMap = { all: t('settings.licenseScopeAll'), trainers_only: t('settings.licenseScopeTrainersOnly') };
         document.getElementById('si-licencja-desc').textContent = descMap[_licScope] || _licScope;
 
-        loadLicencjaUsers();
+        // 2026-09-25: lista użytkowników licencji tylko gdy panel otwarty (inaczej przy otwarciu panelu)
+        if (document.getElementById('panel-licencja')?.classList.contains('open')) loadLicencjaUsers(); else _licUsersLoaded = false;
     } catch (e) {
         console.error('loadLicencja:', e);
     }

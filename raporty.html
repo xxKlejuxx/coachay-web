@@ -514,7 +514,7 @@ async function generujKarteczkiRodzicow() {
         const now = new Date();
 
         // pobierz aktywnych zawodników drużyny
-        const playersSnap = await db.collection('players').get();
+        const playersSnap = await playersOfTeamQuery(teamId, currentClubId).get();
         const activePlayers = {};
         for (const d of playersSnap.docs) {
             const p = d.data();
@@ -690,7 +690,7 @@ async function generujBezRodzica() {
         const teamId = document.getElementById('rap-druzyna-select').value || currentTeamId;
 
         // 1. Pobierz aktywnych zawodników drużyny
-        const playersSnap = await db.collection('players').get();
+        const playersSnap = await playersOfTeamQuery(teamId, currentClubId).get();
         const activePlayers = playersSnap.docs
             .map(d => ({ id: d.id, ...d.data() }))
             .filter(p => p.teams && p.teams.some(t => t.teamId === teamId && t.status === 'ACTIVE'))
@@ -787,7 +787,7 @@ function drukujBezRodzica(zawodnicy, teamName) {
 }
 
 async function pobierzAktywnychZawodnikow() {
-    const snap = await db.collection('players').get();
+    const snap = await playersOfTeamQuery(currentTeamId, currentClubId).get();
     return snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
         .filter(p => p.teams && p.teams.some(t => t.teamId === currentTeamId && t.status === 'ACTIVE'))
@@ -795,9 +795,11 @@ async function pobierzAktywnychZawodnikow() {
 }
 
 async function pobierzEventyOkresu(dataOd, dataDo) {
-    const snap = await db.collection('events').where('teamId', '==', currentTeamId).get();
+    // 2026-09-25: okres filtrowany w zapytaniu (nie cała historia drużyny)
+    const snap = await db.collection('events').where('teamId', '==', currentTeamId)
+        .where('date', '>=', dataOd).where('date', '<=', dataDo).get();
     return snap.docs.map(d => d.data())
-        .filter(e => e.status !== 'DELETE' && e.date >= dataOd && e.date <= dataDo);
+        .filter(e => e.status !== 'DELETE');
 }
 
 async function pobierzAktywneAbsencje() {
