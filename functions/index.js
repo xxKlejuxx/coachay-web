@@ -2432,6 +2432,9 @@ exports.cleanupEvents = onSchedule('every day 03:30', async () => {
     const now = new Date();
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 3600 * 1000);
     console.log(`cleanupEvents start: ${now.toISOString()}`);
+    // 2026-09-25 (decyzja Rafała): usunięte eventy (status DELETE) ZOSTAJĄ w bazie do statystyk - brak hard-delete.
+    console.log('cleanupEvents: wyłączone (usunięte eventy zostają do statystyk)');
+    if (true) return;
     try {
         const snap = await db.collection('events').where('status', '==', 'DELETE').get();
         if (snap.empty) { console.log('cleanupEvents: brak eventów do usunięcia'); return; }
