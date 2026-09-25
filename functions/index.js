@@ -999,21 +999,8 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
     try {
         const userRef = db.collection('users').doc(notif.userId);
 
-        // Aktualizuj badgeCounts przed odczytem (żeby badge w pushu był aktualny)
-        // 2026-09-24: events +1 tylko gdy event jest już widoczny na tablicy (okno reminderHoursBefore, domyślnie 48h).
-        // Eventy wchodzące w okno później dolicza nocny reconcileBadgeCounts.
-        let badgeField = notif.requiresAction
-            ? 'badgeCounts.events'
-            : notif.referenceType === 'message'
-                ? 'badgeCounts.messages'
-                : null;
-        if (badgeField === 'badgeCounts.events' && notif.referenceType === 'event' && notif.referenceId) {
-            const evDoc = await db.collection('events').doc(notif.referenceId).get().catch(() => null);
-            if (!evDoc?.exists || !_isEventInBadgeWindow(evDoc.data(), Date.now())) badgeField = null;
-        }
-        if (badgeField) {
-            await userRef.update({ [badgeField]: FieldValue.increment(1) });
-        }
+        // 2026-09-25 (decyzja Rafała): zamiast +1 - przeliczenie badgeCounts usera od zera (przed odczytem badge do pusha)
+        await _refreshBadges([notif.userId], { push: false, reason: 'notification_created' });
 
         const userDoc = await userRef.get();
         if (!userDoc.exists) return;
@@ -1068,55 +1055,45 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
     }
 });
 
+// 2026-09-25 (decyzja Rafała): triggery nie robią już +1/-1 - przeliczają badgeCounts dotkniętych userów od zera.
 exports.onNotificationUpdated = onDocumentUpdated('notifications/{notificationId}', async (event) => {
     const before = event.data.before.data();
     const after  = event.data.after.data();
     if (!after?.userId) return;
-
-    const userRef = db.collection('users').doc(after.userId);
-    let changed = false;
-
-    // Attendance zdecydowane → decrement events
-    if (after.requiresAction && !before.actionDone && after.actionDone) {
-        await userRef.update({ 'badgeCounts.events': FieldValue.increment(-1) });
-        changed = true;
-    }
-    // Wiadomość przeczytana → decrement messages
-    if (after.referenceType === 'message' && !before.isRead && after.isRead) {
-        await userRef.update({ 'badgeCounts.messages': FieldValue.increment(-1) });
-        changed = true;
-    }
-
-    if (changed) await sendBadgePush(after.userId);
+    const changed = (!!before.actionDone !== !!after.actionDone) || (!!before.isRead !== !!after.isRead);
+    if (changed) await _refreshBadges([after.userId], { reason: 'notification_updated' });
 });
 
 exports.onTaskCreated = onDocumentCreated('tasks/{taskId}', async (event) => {
     const task = event.data.data();
-    if (!task || task.status !== 'PENDING' || !(task.assignedTo?.length)) return;
-
-    const batch = db.batch();
-    for (const uid of task.assignedTo) {
-        batch.update(db.collection('users').doc(uid), { 'badgeCounts.tasks': FieldValue.increment(1) });
-    }
-    await batch.commit();
-    for (const uid of task.assignedTo) await sendBadgePush(uid);
+    if (!task?.assignedTo?.length) return;
+    await _refreshBadges(task.assignedTo, { reason: 'task_created' });
 });
 
 exports.onTaskUpdated = onDocumentUpdated('tasks/{taskId}', async (event) => {
-    const before = event.data.before.data();
-    const after  = event.data.after.data();
+    const before = event.data.before.data() || {};
+    const after  = event.data.after.data() || {};
+    const key = (t) => JSON.stringify([t.status, t.assignedTo || [], t.completedBy || [], t.rejectedBy || []]);
+    if (key(before) === key(after)) return;
+    const uids = [...new Set([...(before.assignedTo || []), ...(after.assignedTo || [])])];
+    if (uids.length) await _refreshBadges(uids, { reason: 'task_updated' });
+});
 
-    const beforeDone = new Set([...(before.completedBy || []), ...(before.rejectedBy || [])]);
-    const afterDone  = new Set([...(after.completedBy  || []), ...(after.rejectedBy  || [])]);
-    const newlyDone  = [...afterDone].filter(uid => !beforeDone.has(uid));
-    if (!newlyDone.length) return;
-
-    const batch = db.batch();
-    for (const uid of newlyDone) {
-        batch.update(db.collection('users').doc(uid), { 'badgeCounts.tasks': FieldValue.increment(-1) });
+// Zmiana eventu (edycja, odwołanie, usunięcie, obecność) -> przelicz rodziców i zawodników drużyny
+exports.onEventChangedBadges = onDocumentWritten('events/{eventId}', async (event) => {
+    const before = event.data.before?.exists ? event.data.before.data() : null;
+    const after  = event.data.after?.exists  ? event.data.after.data()  : null;
+    const key = (e) => e ? JSON.stringify([e.status, e.date, e.timeFrom, e.reminderHoursBefore ?? null, !!e.requireConfirmation, e.teamId,
+        e.type, e.matchData?.matchStatus || null, e.attendance?.invited || [], e.attendance?.confirmed || [], e.attendance?.declined || []]) : null;
+    if (key(before) === key(after)) return;
+    const teams = [...new Set([before?.teamId, after?.teamId].filter(Boolean))];
+    if (!teams.length) return;
+    const uids = new Set();
+    for (const teamId of teams) {
+        const ms = await db.collection('memberships').where('teamId', '==', teamId).get();
+        ms.docs.forEach(d => { const m = d.data(); if (m.userId && (m.role === 'RODZIC' || m.role === 'ZAWODNIK')) uids.add(m.userId); });
     }
-    await batch.commit();
-    for (const uid of newlyDone) await sendBadgePush(uid);
+    if (uids.size) await _refreshBadges([...uids], { reason: 'event_' + (!before ? 'created' : !after ? 'deleted' : 'updated') + ':' + event.params.eventId });
 });
 
 /* ═══════════════════════════════════════════════════
@@ -2882,37 +2859,26 @@ function _isEventInBadgeWindow(ev, nowMs) {
     return true;
 }
 
-async function _computeBadgeCounts(nowMs) {
-    const today = _warsawDateStr(nowMs);
-    const [memSnap, evSnap, absSnap, taskSnap, msgSnap, usersSnap] = await Promise.all([
-        db.collection('memberships').where('status', 'in', ['ACTIVE', 'active']).get(), // 'active' - stare rekordy demo
-        db.collection('events').where('date', '>=', today).get(),
-        db.collection('absences').where('isActive', '==', true).get(),
-        db.collection('tasks').where('status', '==', 'PENDING').get(),
-        db.collection('notifications').where('referenceType', '==', 'message').where('isRead', '==', false).get(),
-        db.collection('users').get(),
-    ]);
+// Rdzeń liczenia (wspólny dla przeliczenia nocnego i per-user)
+function _badgeCalc(memDatas, events, absences, tasks, msgs, nowMs) {
     const evByTeam = {};
-    for (const d of evSnap.docs) {
-        const ev = { id: d.id, ...d.data() };
+    for (const ev of events) {
         if (!ev.teamId || !ev.requireConfirmation) continue;
         if (ev.type === 'MECZ' && ev.matchData?.matchStatus === 'FINISHED') continue;
         if (!_isEventInBadgeWindow(ev, nowMs)) continue;
         (evByTeam[ev.teamId] = evByTeam[ev.teamId] || []).push(ev);
     }
-    const absences = absSnap.docs.map(d => d.data());
-    const pendingKeys = {}; // userId -> Set("eventId|playerId")
-    for (const d of memSnap.docs) {
-        const m = d.data();
+    const pendingKeys = {};
+    for (const m of memDatas) {
         if (!m.userId || !m.teamId) continue;
+        if (String(m.status || '').toUpperCase() !== 'ACTIVE') continue;
         let ids = [];
-        if (m.role === 'RODZIC') ids = [...new Set([...(m.childrenIds || []), ...(m.playerId ? [m.playerId] : [])])]; // rodzic: membership per dziecko (playerId) lub childrenIds
+        if (m.role === 'RODZIC') ids = [...new Set([...(m.childrenIds || []), ...(m.playerId ? [m.playerId] : [])])];
         else if (m.role === 'ZAWODNIK') ids = m.playerId ? [m.playerId] : [];
         else continue;
         for (const ev of (evByTeam[m.teamId] || [])) {
             const att = ev.attendance || {};
-            const inv = att.invited || [];
-            const conf = att.confirmed || [], decl = att.declined || [];
+            const inv = att.invited || [], conf = att.confirmed || [], decl = att.declined || [];
             for (const pid of ids) {
                 if (!inv.includes('__TEAM__') && !inv.includes(pid)) continue;
                 if (conf.includes(pid) || decl.includes(pid)) continue;
@@ -2922,20 +2888,81 @@ async function _computeBadgeCounts(nowMs) {
         }
     }
     const tasksBy = {};
-    for (const d of taskSnap.docs) {
-        const t = d.data();
+    for (const t of tasks) {
+        if (t.status !== 'PENDING') continue;
         for (const uid of (t.assignedTo || [])) {
             if ((t.completedBy || []).includes(uid) || (t.rejectedBy || []).includes(uid)) continue;
             tasksBy[uid] = (tasksBy[uid] || 0) + 1;
         }
     }
     const msgBy = {};
-    for (const d of msgSnap.docs) { const n = d.data(); if (n.userId) msgBy[n.userId] = (msgBy[n.userId] || 0) + 1; }
-    return { usersSnap, calc: (uid) => ({ events: pendingKeys[uid]?.size || 0, tasks: tasksBy[uid] || 0, messages: msgBy[uid] || 0 }) };
+    for (const n of msgs) { if (n.userId && n.referenceType === 'message' && n.isRead === false) msgBy[n.userId] = (msgBy[n.userId] || 0) + 1; }
+    return (uid) => ({ events: pendingKeys[uid]?.size || 0, tasks: tasksBy[uid] || 0, messages: msgBy[uid] || 0 });
 }
 
+async function _computeBadgeCounts(nowMs) {
+    const today = _warsawDateStr(nowMs);
+    const [memSnap, evSnap, absSnap, taskSnap, msgSnap, usersSnap] = await Promise.all([
+        db.collection('memberships').where('status', 'in', ['ACTIVE', 'active']).get(),
+        db.collection('events').where('date', '>=', today).get(),
+        db.collection('absences').where('isActive', '==', true).get(),
+        db.collection('tasks').where('status', '==', 'PENDING').get(),
+        db.collection('notifications').where('referenceType', '==', 'message').where('isRead', '==', false).get(),
+        db.collection('users').get(),
+    ]);
+    const calc = _badgeCalc(memSnap.docs.map(d => d.data()), evSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+        absSnap.docs.map(d => d.data()), taskSnap.docs.map(d => d.data()), msgSnap.docs.map(d => d.data()), nowMs);
+    return { usersSnap, calc };
+}
+
+// Przeliczenie tylko dla wskazanych userów (zapytania zawężone, 'in' max 30)
+async function _computeBadgeCountsFor(userIds, nowMs) {
+    const today = _warsawDateStr(nowMs);
+    const chunks = (arr) => { const out = []; for (let i = 0; i < arr.length; i += 30) out.push(arr.slice(i, i + 30)); return out; };
+    const memDatas = [], msgs = [], tasks = [];
+    for (const ch of chunks(userIds)) {
+        const [m, n, t] = await Promise.all([
+            db.collection('memberships').where('userId', 'in', ch).get(),
+            db.collection('notifications').where('userId', 'in', ch).get(),
+            db.collection('tasks').where('assignedTo', 'array-contains-any', ch).get(),
+        ]);
+        m.docs.forEach(d => memDatas.push(d.data()));
+        n.docs.forEach(d => msgs.push(d.data()));
+        t.docs.forEach(d => tasks.push(d.data()));
+    }
+    const teamIds = [...new Set(memDatas.filter(m => String(m.status || '').toUpperCase() === 'ACTIVE').map(m => m.teamId).filter(Boolean))];
+    const events = [];
+    for (const ch of chunks(teamIds)) {
+        const e = await db.collection('events').where('teamId', 'in', ch).get();
+        e.docs.forEach(d => { const ev = { id: d.id, ...d.data() }; if (ev.date >= today) events.push(ev); });
+    }
+    const absSnap = await db.collection('absences').where('isActive', '==', true).get();
+    return _badgeCalc(memDatas, events, absSnap.docs.map(d => d.data()), tasks, msgs, nowMs);
+}
+
+// Zapisz przeliczone badgeCounts (tylko gdy się zmieniły) + opcjonalnie cichy push BADGE_UPDATE
+async function _refreshBadges(userIds, { push = true, reason = '' } = {}) {
+    try {
+        const uids = [...new Set((userIds || []).filter(Boolean))];
+        if (!uids.length) return;
+        const calc = await _computeBadgeCountsFor(uids, Date.now());
+        for (const uid of uids) {
+            const ref = db.collection('users').doc(uid);
+            const doc = await ref.get();
+            if (!doc.exists) continue;
+            const cur = doc.data().badgeCounts || {};
+            const nw = calc(uid);
+            if (cur.events === nw.events && cur.tasks === nw.tasks && cur.messages === nw.messages) continue;
+            await ref.update({ badgeCounts: { ...nw, updatedAt: FieldValue.serverTimestamp() } });
+            console.log(`badgeCounts [${reason}] ${uid}: events ${cur.events ?? '-'} -> ${nw.events}, tasks ${cur.tasks ?? '-'} -> ${nw.tasks}, messages ${cur.messages ?? '-'} -> ${nw.messages}`);
+            if (push && doc.data().pushToken) await sendBadgePush(uid);
+        }
+    } catch (e) { console.error('_refreshBadges:', e); }
+}
+
+// 2026-09-25 (decyzja Rafała): 00:05 - zaraz po północy wypadają niepotwierdzone eventy z poprzedniego dnia
 exports.reconcileBadgeCounts = onSchedule(
-    { schedule: '40 2 * * *', timeZone: 'Europe/Warsaw' },
+    { schedule: '5 0 * * *', timeZone: 'Europe/Warsaw' },
     async () => {
         const nowMs = Date.now();
         const { usersSnap, calc } = await _computeBadgeCounts(nowMs);
@@ -2945,8 +2972,8 @@ exports.reconcileBadgeCounts = onSchedule(
         for (const u of usersSnap.docs) {
             const cur = u.data().badgeCounts || {};
             const nw = calc(u.id);
-            if ((cur.events ?? null) === nw.events && (cur.tasks ?? null) === nw.tasks && (cur.messages ?? null) === nw.messages) continue;
-            console.log(`badgeCounts ${u.id}: events ${cur.events ?? '-'} -> ${nw.events}, tasks ${cur.tasks ?? '-'} -> ${nw.tasks}, messages ${cur.messages ?? '-'} -> ${nw.messages}`);
+            if (cur.events === nw.events && cur.tasks === nw.tasks && cur.messages === nw.messages) continue;
+            console.log(`badgeCounts [nightly] ${u.id}: events ${cur.events ?? '-'} -> ${nw.events}, tasks ${cur.tasks ?? '-'} -> ${nw.tasks}, messages ${cur.messages ?? '-'} -> ${nw.messages}`);
             batch.update(u.ref, { badgeCounts: { ...nw, updatedAt: FieldValue.serverTimestamp() } });
             changed++; inBatch++;
             if (u.data().pushToken) toPush.push(u.id);
