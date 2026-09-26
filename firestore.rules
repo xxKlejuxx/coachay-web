@@ -42,6 +42,14 @@ service cloud.firestore {
         : null;
     }
 
+    // memberships bywają odpytywane tylko po playerId (bez userId/clubId/teamId) — trzeba
+    // dociągnąć clubId z players/{playerId}, analogicznie do teamClubId (2026-09-26, hotfix memberships)
+    function playerClubId(playerId) {
+      return playerId != null && exists(/databases/$(database)/documents/players/$(playerId))
+        ? get(/databases/$(database)/documents/players/$(playerId)).data.clubId
+        : null;
+    }
+
     // authIndex — tylko własny dokument
     match /authIndex/{authUid} {
       allow read, write: if request.auth != null && request.auth.uid == authUid;
@@ -61,9 +69,18 @@ service cloud.firestore {
       allow update, delete: if isVerified() && inMyClub(clubId);
     }
 
-    // memberships — create podczas rejestracji; legacy docs z clubId==null dostępne dla zweryfikowanych
+    // memberships — create podczas rejestracji; legacy docs z clubId==null dostępne dla zweryfikowanych.
+    // 2026-09-26 (hotfix): odczyt jest odpytywany przez klienta różnymi filtrami (userId, clubId,
+    // teamId, samo playerId) w kilkudziesięciu miejscach web — pojedyncza gałąź po clubId nie
+    // wystarczała (Firestore odrzuca całe zapytanie-listę gdy where() nie pasuje do pola w regule).
+    // Osobna, sprawdzalna gałąź na każde faktycznie używane pole filtra.
     match /memberships/{membershipId} {
-      allow read: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
+      allow read: if isVerified() && (
+        resource.data.userId == myAppUserId() ||
+        inMyClub(resource.data.clubId) ||
+        inMyTeam(resource.data.teamId) ||
+        inMyClub(playerClubId(resource.data.playerId))
+      );
       allow create: if request.auth != null && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
       allow update, delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
     }
