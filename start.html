@@ -942,11 +942,15 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         _activeTeamId = teamId;
         _activeClubId = clubId;
 
-        if (db && teamId) {
-            db.collection('messages').where('teamId', '==', teamId).get()
-                .then(() => console.log('✅ Cache wiadomości podgrzany'))
-                .catch(() => {});
-        }
+        // 2026-09-26 (Rafał, po sync #0052 od APP): wykomentowane - "podgrzewacz cache" bez żadnego
+        // ekranu, który by z niego korzystał (web nie ma UI czatu). Wynik był całkowicie ignorowany
+        // (.then(()=>...) bez argumentu), a zapytanie i tak ściągało WSZYSTKIE prywatne wiadomości
+        // drużyny do przeglądarki każdego jej członka - po co ściągać, jak nie ma ekranu.
+        // if (db && teamId) {
+        //     db.collection('messages').where('teamId', '==', teamId).get()
+        //         .then(() => console.log('✅ Cache wiadomości podgrzany'))
+        //         .catch(() => {});
+        // }
 
         const isCoachRole = _effectiveRole === 'TRENER_GLOWNY' || _effectiveRole === 'TRENER_POMOCNICZY' || _isPlatformAdmin;
         const taskAdd = document.getElementById('task-add-btn');
