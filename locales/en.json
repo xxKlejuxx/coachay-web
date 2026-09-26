@@ -1782,6 +1782,8 @@
   "present": "Present",
   "absent": "Absent",
   "absentCoach": "Absent (coach)",
+  "absentLong": "Absent (long-term)",
+  "absentUntil": "until",
   "pending": "No reply",
   "noPersons": "No persons",
   "edit": "Edit",

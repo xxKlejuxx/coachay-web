@@ -1782,6 +1782,8 @@
   "present": "Obecny",
   "absent": "Nieobecny",
   "absentCoach": "Nieobecny (trener)",
+  "absentLong": "Nieobecny (dłuższa)",
+  "absentUntil": "do",
   "pending": "Brak odp.",
   "noPersons": "Brak osób",
   "edit": "Edytuj",

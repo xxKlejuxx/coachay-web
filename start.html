@@ -1131,8 +1131,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         const att = match.attendance || {};
         const invP  = (att.invited || []).filter(id => id.includes('player_'));
-        const conf  = (att.confirmed || []).filter(id => id.includes('player_')).length;
-        const decl  = (att.declined  || []).filter(id => id.includes('player_')).length;
+        const confSet = new Set(att.confirmed || []);
+        const conf  = invP.filter(id => confSet.has(id)).length;
+        // 2026-09-26: nieobecność długoterminowa liczy się jako "nieobecny" tak samo jak declined/markedAbsent
+        // (priorytet PO confirmed) — 1:1 z appką (sync #0041, countAttendance()).
+        const decl  = invP.filter(id => !confSet.has(id) && ((att.declined || []).includes(id) || (att.markedAbsent || []).includes(id) || findAbsenceFor(id, match.date))).length;
         const noResp = Math.max(0, invP.length - conf - decl);
 
         const la = md.liveAssistant;
@@ -1456,8 +1459,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const dateStr = match.date ? formatDateDisplay(match.date) : '';
         const timeStr = match.timeFrom ? ` · ${match.timeFrom}` : '';
         const venue = match.location?.venueName ? ` · 📍 ${match.location.venueName}` : '';
+        const mpConfSet = new Set(att.confirmed || []);
         const conf  = (att.confirmed || []).filter(id => id.includes('player_')).length;
-        const decl  = (att.declined  || []).filter(id => id.includes('player_')).length;
+        // 2026-09-26: nieobecność długoterminowa liczy się jako "nieobecny" (priorytet PO confirmed) — 1:1 z appką (sync #0041).
+        const decl  = playerIds.filter(id => !mpConfSet.has(id) && ((att.declined || []).includes(id) || (att.markedAbsent || []).includes(id) || findAbsenceFor(id, match.date))).length;
         const noRsp = Math.max(0, playerIds.length - conf - decl);
         const countersHtml = `<div class="mp-counts">
             <div class="mp-mcc mp-mcc-g"><div class="mp-mcc-n mp-mn-g">${conf}</div><div class="mp-mcc-l">${_tP('home.presentLabel', 'Obecni')}</div></div>
@@ -1664,11 +1669,9 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             return true;
         });
 
-        let activeAbsences = [];
-        try {
-            const absSnap = await db.collection('absences').where('isActive', '==', true).get();
-            activeAbsences = absSnap.docs.map(d => d.data());
-        } catch (e) {}
+        // 2026-09-26: filtr po teamId — wcześniej to zapytanie było platform-wide (odczyt WSZYSTKICH aktywnych
+        // nieobecności ze wszystkich klubów/drużyn), niepotrzebnie drogie.
+        const activeAbsences = await getTeamAbsences(teamId);
 
         const oids = [...new Set(upEv.map(e => e.createdBy).filter(Boolean))];
         for (const o of oids) { if (!orgNames[o]) orgNames[o] = await getUserName(o); }
@@ -2167,24 +2170,48 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     let calSelectedDate = null;
     let calAllEvents    = [];
     let calAllPlayers   = [];
+    let calAllAbsences  = [];
 
     const CAL_DOT_COLORS = { 'TRENING': '#3B82F6', 'MECZ': '#10B981', 'WYJAZD': '#F59E0B', 'INNE': '#6B7280' };
 
+    // 2026-09-26: nieobecności zawodnika (długoterminowe, kolekcja `absences`) — replikacja logiki appki (sync #0041):
+    // odczyt krzyżowy po stronie klienta, filtrowany po teamId (nigdy platform-wide).
+    async function getTeamAbsences(teamId) {
+        try {
+            const snap = await db.collection('absences')
+                .where('teamId', '==', teamId)
+                .where('isActive', '==', true)
+                .get();
+            return snap.docs.map(d => d.data());
+        } catch (e) {
+            console.error('❌ getTeamAbsences', e);
+            return [];
+        }
+    }
+
     async function loadCalWidget(teamId) {
         try {
-            const [events, playersSnap] = await Promise.all([
+            const [events, playersSnap, absences] = await Promise.all([
                 getTeamEvents(teamId),
-                playersOfTeamQuery(teamId, _activeClubId).get()
+                playersOfTeamQuery(teamId, _activeClubId).get(),
+                getTeamAbsences(teamId)
             ]);
             calAllEvents  = events;
             calAllPlayers = playersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
                 .filter(p => p.teams && p.teams.some(t => t.teamId === teamId && t.status === 'ACTIVE') && p.isActive !== false);
+            calAllAbsences = absences;
         } catch(e) {
             console.error('❌ loadCalWidget', e);
         }
         renderCalGrid();
         selectCalDay(getLocalDateStr());
         _loadAddPanelMembers();
+    }
+
+    // Zwraca aktywną nieobecność zawodnika `playerId` pokrywającą datę `dateStr` (YYYY-MM-DD), albo null.
+    function findAbsenceFor(playerId, dateStr) {
+        if (!playerId || !dateStr) return null;
+        return calAllAbsences.find(a => a.playerId === playerId && a.dateFrom <= dateStr && a.dateTo >= dateStr) || null;
     }
 
     function navigateCalMonth(delta) {
@@ -2294,8 +2321,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             const invP = invited.includes('__TEAM__')
                 ? calAllPlayers.map(p => p.playerId)
                 : invited.filter(id => id.includes('player_'));
-            const conf   = (att.confirmed || []).filter(id => id.includes('player_')).length;
-            const decl   = (att.declined  || []).filter(id => id.includes('player_')).length;
+            const dayConfSet = new Set(att.confirmed || []);
+            const conf   = invP.filter(id => dayConfSet.has(id)).length;
+            // 2026-09-26: nieobecność długoterminowa liczy się jako "nieobecny" (priorytet PO confirmed) — 1:1 z appką (sync #0041).
+            const decl   = invP.filter(id => !dayConfSet.has(id) && ((att.declined || []).includes(id) || (att.markedAbsent || []).includes(id) || findAbsenceFor(id, ev.date))).length;
             const noResp = Math.max(0, invP.length - conf - decl);
             const tc    = (ev.type || '').toLowerCase();
             const isCancEv = ev.status === 'CANCELLED';
@@ -2411,7 +2440,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             let green = 0, red = 0, grey = 0;
             playerIds.forEach(id => {
                 if (confirmed.includes(id)) green++;
-                else if (declined.includes(id) || markedAbsent.includes(id)) red++;
+                // 2026-09-26: nieobecność długoterminowa liczy się jako "nieobecny" (priorytet PO confirmed) — 1:1 z appką (sync #0041).
+                else if (declined.includes(id) || markedAbsent.includes(id) || findAbsenceFor(id, ev.date)) red++;
                 else grey++;
             });
             html += `
@@ -2469,6 +2499,17 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const isReadOnly = ev.status === 'CANCELLED';
         function renderPerson(p) {
             let statusClass, statusText, reasonHtml = '';
+            // 2026-09-26: nieobecność długoterminowa (kolekcja `absences`) ma priorytet nad statusem obecności —
+            // 1:1 z logiką appki (sync #0041): sprawdzana PRZED confirmed/declined/markedAbsent, blokuje edycję.
+            const absence = findAbsenceFor(p.id, ev.date);
+            if (absence) {
+                statusClass = 'absent';
+                statusText = t('eventDetail.absentLong');
+                const untilTxt = formatDateShort(absence.dateTo);
+                const reasonTxt = absence.reason ? `"${absence.reason}"` : '';
+                reasonHtml = `<div class="att-reason">${t('eventDetail.absentUntil')} ${untilTxt}${reasonTxt ? ' · ' + reasonTxt : ''}</div>`;
+                return `<div class="att-row"><div class="att-avatar">${p.initials}</div><div class="att-info"><div class="att-name">${p.name}</div><div class="att-role">${p.role}</div>${reasonHtml}</div><div class="att-status ${statusClass}">${statusText}</div></div>`;
+            }
             if (confirmed.includes(p.id))     { statusClass='present'; statusText=t('eventDetail.present'); }
             else if (declined.includes(p.id)) { statusClass='absent';  statusText=t('eventDetail.absent'); if (reasons[p.id]) reasonHtml=`<div class="att-reason">"${reasons[p.id]}"</div>`; }
             else if (markedAbsent.includes(p.id)) { statusClass='absent'; statusText=t('eventDetail.absentCoach'); }
