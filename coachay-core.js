@@ -1248,12 +1248,17 @@ async function getTeamTasks(teamId, userId, isCoach, limit = 20) {
 }
 
 // Pobierz wydarzenia drużyny
-async function getTeamEvents(teamId) {
+// 2026-09-26 (sync #0054 od APP, koszty): opcjonalny zakres dat (dateFrom/dateTo, format YYYY-MM-DD)
+// - dashboard i widget meczu wcześniej ściągały całą historię eventów drużyny i filtrowały okno w JS.
+// Bez argumentów zachowanie jest jak dawniej (pełna historia) - używane tam gdzie faktycznie potrzebna
+// (np. widget kalendarza z nawigacją między miesiącami).
+async function getTeamEvents(teamId, dateFrom = null, dateTo = null) {
     if (!db) return [];
     try {
-        const snapshot = await db.collection('events')
-            .where('teamId', '==', teamId)
-            .get({ source: 'server' });
+        let q = db.collection('events').where('teamId', '==', teamId);
+        if (dateFrom) q = q.where('date', '>=', dateFrom);
+        if (dateTo)   q = q.where('date', '<=', dateTo);
+        const snapshot = await q.get({ source: 'server' });
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(e => e.status !== 'DELETE');
     } catch (error) {

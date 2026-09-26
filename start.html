@@ -1015,11 +1015,6 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     async function loadNextMatch(teamId) {
-        const allEv = await getTeamEvents(teamId);
-        const matches = allEv.filter(e => e.type === 'MECZ').map(e => {
-            if (!e.matchData) e.matchData = { matchStatus: 'UPCOMING' };
-            return e;
-        });
         const todayStr = getLocalDateStr();
 
         let matchDays = DEFAULT_MATCH_DAYS;
@@ -1030,13 +1025,18 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 if (s?.dashboard?.matchDays) matchDays = s.dashboard.matchDays;
             }
         } catch (e) {}
-
         const maxDate = getLocalDateStr(new Date(new Date().getTime() + matchDays * 86400000));
+
+        // 2026-09-26 (sync #0054 od APP, koszty): zakres dat w zapytaniu zamiast pełnej historii drużyny
+        const allEv = await getTeamEvents(teamId, todayStr, maxDate);
+        const matches = allEv.filter(e => e.type === 'MECZ').map(e => {
+            if (!e.matchData) e.matchData = { matchStatus: 'UPCOMING' };
+            return e;
+        });
         const _myPlayerIds = getMyPlayerIds();
         const _userId = currentUserData?.userId;
 
         const visible = matches.filter(m => {
-            if (m.date < todayStr || m.date > maxDate) return false;
             if (m.status === 'CANCELLED') return false;
             if (!isVisible(m)) return false;
             const inv = m.attendance?.invited || [];
@@ -1661,10 +1661,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const isKibic  = currentUserData.role === 'KIBIC';
         const myPlayerIds = getMyPlayerIds();
 
-        const allEv = await getTeamEvents(teamId);
+        // 2026-09-26 (sync #0054 od APP, koszty): zakres dat w zapytaniu zamiast pełnej historii drużyny
+        const allEv = await getTeamEvents(teamId, todayStr, maxStr);
         const upEv  = allEv.filter(e => {
             if (e.status === 'CANCELLED') return false;
-            if (e.date < todayStr || e.date > maxStr) return false;
             const rh = e.reminderHoursBefore != null ? e.reminderHoursBefore : 48;
             if (rh > 0) {
                 const evTime = new Date(e.date + 'T' + (e.timeFrom || '00:00')).getTime();
