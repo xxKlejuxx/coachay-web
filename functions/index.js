@@ -3091,3 +3091,85 @@ exports.onPlayerWrittenIndex = onDocumentWritten('players/{playerId}', async (ev
         console.log(`onPlayerWrittenIndex ${event.params.playerId}: ${JSON.stringify(upd)}`);
     }
 });
+
+/* ---------------------------------------------------------------
+   2026-09-26 (uzgodnione z APP, sync #0038/#0039): Znacznik zmian dla delta-sync.
+   Pola na teams/{teamId}:
+     - membersChangedAt  — zmieniło się COKOLWIEK w składzie drużyny (dowolna rola: ZAWODNIK/RODZIC/KIBIC/TRENER*)
+     - playersChangedAt  — zmienił się skład ZAWODNIKÓW konkretnie (membership roli ZAWODNIK, albo dane zawodnika w players/*)
+   To tylko znacznik "coś się zmieniło w tym zakresie" — appka/web przy niezgodności odświeża CAŁY zakres.
+   Osobny, dokładniejszy mechanizm delta-sync po `updatedAt` (appka #153) działa niezależnie/równolegle.
+   Transfer zawodnika (klub.html confirmTransfer) tworzy nowe membership w toTeamId i dezaktywuje stare
+   w fromTeamId — oba zapisy przechodzą przez ten sam trigger, więc znacznik dostaje OBIE drużyny.
+   --------------------------------------------------------------- */
+async function _touchTeamMarkers(teamIds, fields) {
+    const ids = [...new Set((teamIds || []).filter(Boolean))];
+    if (!ids.length || !Object.keys(fields).length) return;
+    await Promise.all(ids.map(id =>
+        db.collection('teams').doc(id).set(fields, { merge: true }).catch(e =>
+            console.error(`✗ _touchTeamMarkers teams/${id}:`, e))
+    ));
+}
+
+// Pola membershipu istotne dla znacznika składu (zmiana usedSlot/cachedClubLicense/timestampów NIE liczy się).
+const _MBR_MARKER_FIELDS = ['teamId', 'playerId', 'userId', 'role', 'status', 'displayName'];
+function _mbrMarkerSnapshot(d) {
+    if (!d) return null;
+    const o = {};
+    for (const k of _MBR_MARKER_FIELDS) o[k] = d[k] ?? null;
+    return o;
+}
+
+exports.onMembershipWrittenTouchTeamMarker = onDocumentWritten('memberships/{membershipId}', async (event) => {
+    const before = event.data?.before?.exists ? event.data.before.data() : null;
+    const after  = event.data?.after?.exists ? event.data.after.data() : null;
+    if (!before && !after) return;
+
+    const beforeSnap = _mbrMarkerSnapshot(before);
+    const afterSnap  = _mbrMarkerSnapshot(after);
+    if (JSON.stringify(beforeSnap) === JSON.stringify(afterSnap)) return; // nic istotnego się nie zmieniło
+
+    const ts = FieldValue.serverTimestamp();
+    const beforeTeamId = before?.teamId || null;
+    const afterTeamId  = after?.teamId || null;
+
+    // membersChangedAt — dotyczy obu drużyn, jeśli membership przeniesiono (fromTeamId + toTeamId)
+    await _touchTeamMarkers([beforeTeamId, afterTeamId], { membersChangedAt: ts });
+
+    // playersChangedAt — tylko gdy rola (przed LUB po) to ZAWODNIK
+    const touchedForPlayers = new Set();
+    if (before?.role === 'ZAWODNIK' && beforeTeamId) touchedForPlayers.add(beforeTeamId);
+    if (after?.role === 'ZAWODNIK' && afterTeamId) touchedForPlayers.add(afterTeamId);
+    if (touchedForPlayers.size) await _touchTeamMarkers([...touchedForPlayers], { playersChangedAt: ts });
+
+    console.log(`✓ onMembershipWrittenTouchTeamMarker ${event.params.membershipId}: teams=[${[...new Set([beforeTeamId, afterTeamId].filter(Boolean))].join(', ')}], players=[${[...touchedForPlayers].join(', ')}]`);
+});
+
+// Pola playera istotne dla znacznika składu zawodników (edycja imienia/aktywności/przypisania do drużyn).
+const _PLAYER_MARKER_FIELDS = ['name', 'firstName', 'lastName', 'isActive'];
+function _playerMarkerSnapshot(d) {
+    if (!d) return null;
+    const o = {};
+    for (const k of _PLAYER_MARKER_FIELDS) o[k] = d[k] ?? null;
+    o.teams = (Array.isArray(d.teams) ? d.teams : []).map(t => `${t?.teamId}:${t?.status}`).sort();
+    return o;
+}
+
+exports.onPlayerWrittenTouchTeamMarker = onDocumentWritten('players/{playerId}', async (event) => {
+    const before = event.data?.before?.exists ? event.data.before.data() : null;
+    const after  = event.data?.after?.exists ? event.data.after.data() : null;
+    if (!before && !after) return;
+
+    const beforeSnap = _playerMarkerSnapshot(before);
+    const afterSnap  = _playerMarkerSnapshot(after);
+    if (JSON.stringify(beforeSnap) === JSON.stringify(afterSnap)) return; // nic istotnego się nie zmieniło
+
+    const beforeTeamIds = (Array.isArray(before?.teams) ? before.teams : []).map(t => t?.teamId).filter(Boolean);
+    const afterTeamIds  = (Array.isArray(after?.teams)  ? after.teams  : []).map(t => t?.teamId).filter(Boolean);
+    const teamIds = [...new Set([...beforeTeamIds, ...afterTeamIds])];
+    if (!teamIds.length) return;
+
+    const ts = FieldValue.serverTimestamp();
+    await _touchTeamMarkers(teamIds, { playersChangedAt: ts });
+    console.log(`✓ onPlayerWrittenTouchTeamMarker ${event.params.playerId}: teams=[${teamIds.join(', ')}]`);
+});
