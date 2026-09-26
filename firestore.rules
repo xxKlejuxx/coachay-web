@@ -24,6 +24,24 @@ service cloud.firestore {
       );
     }
 
+    // 2026-09-26: kolekcje bez własnego clubId (tasks, messages) mają tylko teamId —
+    // trzeba dociągnąć clubId z dokumentu teams/{teamId}, żeby użyć inMyClub().
+    function teamClubId(teamId) {
+      return teamId != null && exists(/databases/$(database)/documents/teams/$(teamId))
+        ? get(/databases/$(database)/documents/teams/$(teamId)).data.clubId
+        : null;
+    }
+    function inMyTeam(teamId) {
+      return inMyClub(teamClubId(teamId));
+    }
+
+    // notifications są kluczowane po `userId` aplikacji (nie Auth UID) — authIndex.userId to mapping.
+    function myAppUserId() {
+      return exists(/databases/$(database)/documents/authIndex/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/authIndex/$(request.auth.uid)).data.userId
+        : null;
+    }
+
     // authIndex — tylko własny dokument
     match /authIndex/{authUid} {
       allow read, write: if request.auth != null && request.auth.uid == authUid;
@@ -78,7 +96,70 @@ service cloud.firestore {
       allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
 
-    // Wszystkie pozostałe kolekcje — tylko zweryfikowani (events, notifications, itp.)
+    // 2026-09-26: PILNE (zgłoszone przez APP, sync #0047) — poniższe kolekcje trafiały do
+    // catch-all na dole (isVerified() bez żadnego scopingu klub/drużyna) — każdy zalogowany
+    // user (nawet konto z innego klubu) mógł czytać/pisać dane WSZYSTKICH klubów: harmonogramy,
+    // treść czatu, powody nieobecności (dane zdrowotne dzieci), zadania, dane licencyjne.
+
+    // events — harmonogram/mecze (type:'MECZ' z matchData) — izolacja po clubId
+    match /events/{eventId} {
+      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+    }
+
+    // absences — dane zdrowotne/nieobecności dzieci — izolacja po clubId
+    match /absences/{absenceId} {
+      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+    }
+
+    // trainingTopics — izolacja po clubId
+    match /trainingTopics/{topicId} {
+      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+    }
+
+    // tasks — mają tylko teamId (bez clubId) — izolacja przez teams/{teamId}.clubId
+    match /tasks/{taskId} {
+      allow read: if isVerified() && inMyTeam(resource.data.teamId);
+      allow create: if request.auth != null && inMyTeam(request.resource.data.teamId);
+      allow update, delete: if isVerified() && inMyTeam(resource.data.teamId);
+    }
+
+    // messages — czat drużynowy (funkcja appki mobilnej) — izolacja przez teamId -> clubId
+    match /messages/{messageId} {
+      allow read: if isVerified() && inMyTeam(resource.data.teamId);
+      allow create: if request.auth != null && inMyTeam(request.resource.data.teamId);
+      allow update, delete: if isVerified() && inMyTeam(resource.data.teamId);
+    }
+
+    // matches — wg decisions.md kolekcja zlikwidowana (mecze żyją w events, type:'MECZ');
+    // zostaje zabezpieczona tak samo jak events na wypadek zalegających/starych dokumentów.
+    match /matches/{matchId} {
+      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
+      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+    }
+
+    // notifications — per-user (kluczowane po userId aplikacji, nie Auth UID)
+    match /notifications/{notifId} {
+      allow read: if isVerified() && resource.data.userId == myAppUserId();
+      allow create: if request.auth != null && request.resource.data.userId == myAppUserId();
+      allow update, delete: if isVerified() && resource.data.userId == myAppUserId();
+    }
+
+    // access_rights — dane licencyjne (uid + club_id). Scoping po club_id (nie tylko własny uid),
+    // bo P4 (sloty rodzinne) wymaga że dziecko (KIBIC) czyta wpis RODZICA w tym samym klubie —
+    // ograniczenie do samego siebie złamałoby tę funkcję.
+    match /access_rights/{arId} {
+      allow read: if isVerified() && inMyClub(resource.data.club_id);
+      allow write: if request.auth != null && inMyClub(request.resource.data.club_id);
+    }
+
+    // Wszystkie pozostałe kolekcje — tylko zweryfikowani (fallback dla nieaudytowanych kolekcji)
     match /{document=**} {
       allow read, write: if isVerified();
     }
