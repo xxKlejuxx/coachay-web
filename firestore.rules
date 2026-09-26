@@ -134,9 +134,15 @@ service cloud.firestore {
       allow update, delete: if isVerified() && inMyTeam(resource.data.teamId);
     }
 
-    // absences — dane zdrowotne/nieobecności dzieci — izolacja po clubId
+    // absences — dane zdrowotne/nieobecności dzieci. 2026-09-26 (hotfix): odpytywane w web
+    // trzema różnymi kombinacjami pól (clubId, teamId, samo playerId) - jedna gałąź nie
+    // wystarczała (patrz memberships wyżej - ten sam mechanizm Firestore).
     match /absences/{absenceId} {
-      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow read: if isVerified() && (
+        inMyClub(resource.data.clubId) ||
+        inMyTeam(resource.data.teamId) ||
+        inMyClub(playerClubId(resource.data.playerId))
+      );
       allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
       allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
