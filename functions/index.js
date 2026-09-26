@@ -654,6 +654,99 @@ const _MBR_EXCLUDE_ROLES   = new Set(['KIBIC', 'ZAWODNIK']);
 const _MBR_BLOCKED_STATUS  = new Set(['BLOCKED', 'REMOVED', 'INACTIVE', 'DELETE']);
 const _MBR_TRAINER_ROLES   = new Set(['TRENER', 'TRENER_GLOWNY', 'TRENER_POMOCNICZY']);
 
+/* ═══════════════════════════════════════════════════
+   HELPER: przelicz license.used TYLKO dla jednego klubu, od zera,
+   z faktycznych usedSlot=1 na jego membershipach (2026-09-26).
+   Wołane od razu po każdej zmianie slotu (webhook, assign, blocked),
+   żeby nie czekać na nocny reconcileClubSlots. Celowo per-klub,
+   nie przelicza całej platformy.
+   ═══════════════════════════════════════════════════ */
+async function _reconcileOneClub(clubId, { warn = false } = {}) {
+    if (!clubId) return null;
+    const tsMs = (x) => x?.toMillis?.() ?? (x ? new Date(x).getTime() : Number.MAX_SAFE_INTEGER);
+    try {
+        const clubRef  = db.collection('clubs').doc(clubId);
+        const clubSnap = await clubRef.get();
+        if (!clubSnap.exists) return null;
+        const lic    = clubSnap.data().license || {};
+        const rawExp = lic.valid_until ?? lic.expiresAt;
+        const exp    = rawExp?.toDate ? rawExp.toDate() : (rawExp ? new Date(rawExp) : null);
+        if (!exp || exp <= new Date() || !(lic.total > 0)) return null; // tylko aktywne licencje z pulą
+
+        const memSnap = await db.collection('memberships').where('clubId', '==', clubId).get();
+        const toZero  = new Map();
+        const slotted = [];
+        for (const d of memSnap.docs) {
+            const m2 = d.data();
+            if (m2.usedSlot === undefined) { toZero.set(d.id, { ref: d.ref, reason: 'brak pola usedSlot' }); continue; }
+            if (m2.usedSlot !== 1) continue;
+            const role2 = (m2.role   || '').toUpperCase();
+            const stat2 = (m2.status || '').toUpperCase();
+            if (_MBR_BLOCKED_STATUS.has(stat2)) { toZero.set(d.id, { ref: d.ref, reason: `slot przy statusie ${stat2}` }); continue; }
+            if (_MBR_EXCLUDE_ROLES.has(role2))  { toZero.set(d.id, { ref: d.ref, reason: `slot przy roli ${role2}` });     continue; }
+            slotted.push({ d, m: m2, role: role2 });
+        }
+
+        // Jedna osoba = jeden slot w klubie (zostaje najstarszy przydział)
+        const byUser = {};
+        for (const s of slotted) {
+            const key = s.m.userId || `__bez_userId__${s.d.id}`;
+            (byUser[key] = byUser[key] || []).push(s);
+        }
+        const kept = [];
+        for (const list of Object.values(byUser)) {
+            list.sort((a, b) => tsMs(a.m.usedSlotUpdatedAt ?? a.m.createdAt) - tsMs(b.m.usedSlotUpdatedAt ?? b.m.createdAt));
+            kept.push(list[0]);
+            for (const extra of list.slice(1)) {
+                toZero.set(extra.d.id, { ref: extra.d.ref, reason: `duplikat slotu osoby ${extra.m.userId}` });
+            }
+        }
+
+        const actual  = kept.length;
+        const oldUsed = lic.used ?? 0;
+        const total   = lic.total ?? 0;
+
+        if (warn) {
+            if (actual > total) console.warn(`⚠️ _reconcileOneClub: ${clubId} — PRZEPEŁNIONA pula: ${actual} slotów przy total=${total} (decyzja ręczna)`);
+            if ((lic.scope || 'all').toLowerCase() === 'trainers_only') {
+                const parents = kept.filter(k => k.role === 'RODZIC').map(k => k.d.id);
+                if (parents.length) console.warn(`⚠️ _reconcileOneClub: ${clubId} — scope trainers_only, a RODZIC ma slot: ${parents.join(', ')}`);
+            }
+            if (lic.maxOneParentPerChild) {
+                const perPlayer = {};
+                kept.filter(k => k.role === 'RODZIC' && k.m.playerId).forEach(k => (perPlayer[k.m.playerId] = perPlayer[k.m.playerId] || []).push(k.d.id));
+                for (const [pid, ids] of Object.entries(perPlayer)) {
+                    if (ids.length > 1) console.warn(`⚠️ _reconcileOneClub: ${clubId} — maxOneParentPerChild: dziecko ${pid} ma ${ids.length} rodziców na puli: ${ids.join(', ')}`);
+                }
+            }
+        }
+
+        if (!toZero.size && actual === oldUsed) return { changed: false, actual, oldUsed };
+
+        const entries = [...toZero.entries()];
+        for (let i = 0; i < entries.length; i += 450) {
+            const b = db.batch();
+            for (const [, z] of entries.slice(i, i + 450)) b.update(z.ref, { usedSlot: 0, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
+            await b.commit();
+        }
+        if (actual !== oldUsed) {
+            await clubRef.update({ 'license.used': actual });
+            const cached = { validUntil: exp, used: actual, total, updatedAt: FieldValue.serverTimestamp() };
+            const docs = memSnap.docs;
+            for (let i = 0; i < docs.length; i += 450) {
+                const b = db.batch();
+                for (const d of docs.slice(i, i + 450)) b.update(d.ref, { cachedClubLicense: cached });
+                await b.commit();
+            }
+        }
+        console.log(`✓ _reconcileOneClub: ${clubId} — license.used ${oldUsed} → ${actual} (total ${total}), wyzerowano ${entries.length}`);
+        return { changed: true, actual, oldUsed };
+    } catch (e) {
+        console.error(`✗ _reconcileOneClub: ${clubId}:`, e);
+        return null;
+    }
+}
+
 async function assignUsedSlot(membershipRef, m) {
     const role   = (m.role   || '').toUpperCase();
     const status = (m.status || '').toUpperCase();
@@ -700,36 +793,33 @@ async function assignUsedSlot(membershipRef, m) {
                     t.update(membershipRef, { usedSlot: 0, ..._slotTs });
                     t.update(clubRef, { 'license.used': Math.max(0, used - 1) });
                 });
+                await _reconcileOneClub(clubId);
             } else {
                 await membershipRef.update({ usedSlot: 0, ..._slotTs });
             }
             return;
         }
 
-        // Dedup: userId już ma usedSlot=1 w tym klubie (inny membership tej samej osoby)
-        const existingSlot = await db.collection('memberships')
-            .where('clubId', '==', clubId)
-            .where('userId', '==', userId)
-            .where('usedSlot', '==', 1)
-            .limit(1).get();
-        if (!existingSlot.empty) return membershipRef.update({ usedSlot: 0, ..._slotTs });
-
-        // maxOneParentPerChild: sprawdź czy playerId ma już innego rodzica na puli
+        // 2026-09-26 (Rafał): dedup + maxOneParentPerChild + limit puli — WSZYSTKO w jednej
+        // transakcji, czytane przez t.get() a nie osobnym zapytaniem przed transakcją.
+        // Powód: RevenueCat potrafi wysłać CANCELLATION + EXPIRATION dla tego samego zdarzenia
+        // niemal jednocześnie → dwa równoległe wywołania assignUsedSlot dla różnych membershipów
+        // tej samej osoby. Skoro obie transakcje piszą do tego samego clubRef, Firestore
+        // serializuje je i retry'uje tę, która przegra wyścig — więc nie może już dojść do
+        // podwójnego przydziału slotu tej samej osobie (a stąd rozjazdu license.used).
         const clubRef = db.collection('clubs').doc(clubId);
-        if (isParent && m.playerId) {
-            const clubDocMOP = await clubRef.get();
-            if (clubDocMOP.exists && clubDocMOP.data().license?.maxOneParentPerChild) {
-                const sibParent = await db.collection('memberships')
-                    .where('clubId', '==', clubId)
-                    .where('playerId', '==', m.playerId)
-                    .where('usedSlot', '==', 1)
-                    .limit(1).get();
-                if (!sibParent.empty) return membershipRef.update({ usedSlot: 0, ..._slotTs });
-            }
-        }
-
-        // Transakcja: sprawdź scope + limit, przydziel slot
         await db.runTransaction(async (t) => {
+            const mSnap = await t.get(membershipRef);
+            if (mSnap.data()?.usedSlot === 1) return; // ktoś już przydzielił w międzyczasie
+
+            const dupSnap = await t.get(
+                db.collection('memberships')
+                    .where('clubId', '==', clubId)
+                    .where('userId', '==', userId)
+                    .where('usedSlot', '==', 1)
+            );
+            if (!dupSnap.empty) { t.update(membershipRef, { usedSlot: 0, ..._slotTs }); return; }
+
             const clubSnap = await t.get(clubRef);
             if (!clubSnap.exists) { t.update(membershipRef, { usedSlot: 0, ..._slotTs }); return; }
 
@@ -739,12 +829,25 @@ async function assignUsedSlot(membershipRef, m) {
             const used  = club.license?.used  || 0;
 
             if (isParent && scope === 'trainers_only') { t.update(membershipRef, { usedSlot: 0, ..._slotTs }); return; }
-            if (total === 0 || used >= total)          { t.update(membershipRef, { usedSlot: 0, ..._slotTs }); return; }
+
+            if (isParent && m.playerId && club.license?.maxOneParentPerChild) {
+                const sibSnap = await t.get(
+                    db.collection('memberships')
+                        .where('clubId', '==', clubId)
+                        .where('playerId', '==', m.playerId)
+                        .where('usedSlot', '==', 1)
+                );
+                if (!sibSnap.empty) { t.update(membershipRef, { usedSlot: 0, ..._slotTs }); return; }
+            }
+
+            if (total === 0 || used >= total) { t.update(membershipRef, { usedSlot: 0, ..._slotTs }); return; }
 
             t.update(membershipRef, { usedSlot: 1, ..._slotTs });
             t.update(clubRef, { 'license.used': used + 1 });
             console.log(`✓ usedSlot=1: ${userId} → ${clubId} (${used + 1}/${total})`);
         });
+        // Natychmiastowa korekta per-klub (safety net) — nie czekamy do nocy na reconcileClubSlots.
+        await _reconcileOneClub(clubId);
     } catch (e) {
         console.error('✗ assignUsedSlot:', e);
         await membershipRef.update({ usedSlot: 0, ..._slotTs });
@@ -910,6 +1013,8 @@ exports.onMembershipUpdated = onDocumentUpdated('memberships/{membershipId}', as
                 console.log(`✓ onMembershipUpdated: slot zwolniony [${after.userId}/${after.clubId}] status→${after.status}`);
             }
         });
+        // Natychmiastowa korekta per-klub (safety net) — nie czekamy do nocy na reconcileClubSlots.
+        await _reconcileOneClub(after.clubId);
     } catch (e) {
         console.error('✗ onMembershipUpdated:', e);
     }
@@ -1486,103 +1591,21 @@ exports.reconcileClubSlots = onSchedule(
     async () => {
         const now = new Date();
         console.log(`▶ reconcileClubSlots start: ${now.toISOString()}`);
-        const tsMs = (x) => x?.toMillis?.() ?? (x ? new Date(x).getTime() : Number.MAX_SAFE_INTEGER);
 
+        // 2026-09-26: cała logika przeliczania jednego klubu przeniesiona do _reconcileOneClub,
+        // żeby ta sama funkcja robiła to i tutaj (nocny bezpiecznik dla wszystkich klubów),
+        // i od razu po każdej zmianie slotu (webhook/assign/blocked) — bez dwóch wersji tej
+        // samej logiki, które mogłyby się rozjechać.
         const clubsSnap = await db.collection('clubs').where('license.total', '>', 0).get();
-        let checked = 0, changedClubs = 0, zeroedTotal = 0;
+        let checked = 0, changedClubs = 0;
 
         for (const clubDoc of clubsSnap.docs) {
             const clubId = clubDoc.id;
-            const lic    = clubDoc.data().license || {};
-            const rawExp = lic.valid_until ?? lic.expiresAt;
-            const exp    = rawExp?.toDate ? rawExp.toDate() : (rawExp ? new Date(rawExp) : null);
-            if (!exp || exp <= now) continue;          // tylko aktywne licencje
             checked++;
-
-            try {
-                const memSnap = await db.collection('memberships').where('clubId', '==', clubId).get();
-                const toZero  = new Map();              // id → { ref, reason }
-                const slotted = [];
-
-                for (const d of memSnap.docs) {
-                    const m = d.data();
-                    if (m.usedSlot === undefined) { toZero.set(d.id, { ref: d.ref, reason: 'brak pola usedSlot' }); continue; }
-                    if (m.usedSlot !== 1) continue;
-                    const role = (m.role   || '').toUpperCase();
-                    const stat = (m.status || '').toUpperCase();
-                    if (_MBR_BLOCKED_STATUS.has(stat)) { toZero.set(d.id, { ref: d.ref, reason: `slot przy statusie ${stat}` }); continue; }
-                    if (_MBR_EXCLUDE_ROLES.has(role))  { toZero.set(d.id, { ref: d.ref, reason: `slot przy roli ${role}` });     continue; }
-                    slotted.push({ d, m, role });
-                }
-
-                // Jedna osoba = jeden slot w klubie (zostaje najstarszy przydział)
-                const byUser = {};
-                for (const s of slotted) {
-                    const key = s.m.userId || `__bez_userId__${s.d.id}`;
-                    (byUser[key] = byUser[key] || []).push(s);
-                }
-                const kept = [];
-                for (const list of Object.values(byUser)) {
-                    list.sort((a, b) => tsMs(a.m.usedSlotUpdatedAt ?? a.m.createdAt) - tsMs(b.m.usedSlotUpdatedAt ?? b.m.createdAt));
-                    kept.push(list[0]);
-                    for (const extra of list.slice(1)) {
-                        toZero.set(extra.d.id, { ref: extra.d.ref, reason: `duplikat slotu osoby ${extra.m.userId}` });
-                    }
-                }
-
-                const actual   = kept.length;
-                const oldUsed  = lic.used ?? 0;
-                const total    = lic.total ?? 0;
-                const scope    = (lic.scope || 'all').toLowerCase();
-
-                // ── Tylko log ──
-                if (actual > total) {
-                    console.warn(`⚠️ reconcileClubSlots: ${clubId} — PRZEPEŁNIONA pula: ${actual} slotów przy total=${total} (bez zmian, decyzja ręczna)`);
-                }
-                if (scope === 'trainers_only') {
-                    const parents = kept.filter(k => k.role === 'RODZIC').map(k => k.d.id);
-                    if (parents.length) console.warn(`⚠️ reconcileClubSlots: ${clubId} — scope trainers_only, a RODZIC ma slot: ${parents.join(', ')}`);
-                }
-                if (lic.maxOneParentPerChild) {
-                    const perPlayer = {};
-                    kept.filter(k => k.role === 'RODZIC' && k.m.playerId)
-                        .forEach(k => (perPlayer[k.m.playerId] = perPlayer[k.m.playerId] || []).push(k.d.id));
-                    for (const [pid, ids] of Object.entries(perPlayer)) {
-                        if (ids.length > 1) console.warn(`⚠️ reconcileClubSlots: ${clubId} — maxOneParentPerChild: dziecko ${pid} ma ${ids.length} rodziców na puli: ${ids.join(', ')}`);
-                    }
-                }
-
-                // ── Auto-naprawa ──
-                if (!toZero.size && actual === oldUsed) continue;
-
-                const entries = [...toZero.entries()];
-                for (let i = 0; i < entries.length; i += 450) {
-                    const b = db.batch();
-                    for (const [, z] of entries.slice(i, i + 450)) {
-                        b.update(z.ref, { usedSlot: 0, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
-                    }
-                    await b.commit();
-                }
-                for (const [id, z] of entries) console.log(`   ↳ ${clubId}: ${id} → usedSlot=0 (${z.reason})`);
-                zeroedTotal += entries.length;
-
-                if (actual !== oldUsed) {
-                    await clubDoc.ref.update({ 'license.used': actual });
-                    const cached = { validUntil: exp, used: actual, total, updatedAt: FieldValue.serverTimestamp() };
-                    const docs = memSnap.docs;
-                    for (let i = 0; i < docs.length; i += 450) {
-                        const b = db.batch();
-                        for (const d of docs.slice(i, i + 450)) b.update(d.ref, { cachedClubLicense: cached });
-                        await b.commit();
-                    }
-                }
-                changedClubs++;
-                console.log(`✓ reconcileClubSlots: ${clubId} — license.used ${oldUsed} → ${actual} (total ${total}), wyzerowano ${entries.length} membership(ów)`);
-            } catch (e) {
-                console.error(`✗ reconcileClubSlots: ${clubId}:`, e);
-            }
+            const result = await _reconcileOneClub(clubId, { warn: true });
+            if (result?.changed) changedClubs++;
         }
-        console.log(`✅ reconcileClubSlots: sprawdzono ${checked} klubów z aktywną licencją, poprawiono ${changedClubs}, wyzerowano ${zeroedTotal} slotów`);
+        console.log(`✅ reconcileClubSlots: sprawdzono ${checked} klubów z pulą, poprawiono ${changedClubs}`);
     }
 );
 
@@ -2782,28 +2805,20 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
     console.log(`revenuecatWebhook: user ${userId} → subscription.status=${updates['subscription.status']}`);
 
     if (isActive) {
-        // User kupił własną subskrypcję → zwolnij wszystkie sloty klubowe
+        // User kupił własną subskrypcję → zwolnij wszystkie sloty klubowe.
+        // 2026-09-26: zamiast ręcznego -N na license.used (podatnego na rozjazd przy
+        // dublowanych webhookach RC — CANCELLATION+EXPIRATION dla tego samego zdarzenia),
+        // zerujemy usedSlot i od razu przeliczamy dotknięte kluby od zera (_reconcileOneClub).
         const slottedSnap = await db.collection('memberships')
             .where('userId', '==', userId).where('usedSlot', '==', 1).get();
         if (!slottedSnap.empty) {
-            const clubDecrement = {};
-            for (const d of slottedSnap.docs) {
-                const cid = d.data().clubId;
-                if (cid) clubDecrement[cid] = (clubDecrement[cid] || 0) + 1;
-            }
+            const clubIds = new Set();
+            for (const d of slottedSnap.docs) { const cid = d.data().clubId; if (cid) clubIds.add(cid); }
             const batch = db.batch();
             for (const d of slottedSnap.docs) batch.update(d.ref, { usedSlot: 0, usedSlotUpdatedAt: FieldValue.serverTimestamp() });
             await batch.commit();
-            for (const [cid, cnt] of Object.entries(clubDecrement)) {
-                await db.runTransaction(async (t) => {
-                    const cRef  = db.collection('clubs').doc(cid);
-                    const cSnap = await t.get(cRef);
-                    if (!cSnap.exists) return;
-                    const used = cSnap.data().license?.used || 0;
-                    t.update(cRef, { 'license.used': Math.max(0, used - cnt) });
-                });
-            }
-            console.log(`revenuecatWebhook: user ${userId} — zwolniono ${slottedSnap.size} slot(ów) klubowych`);
+            for (const cid of clubIds) await _reconcileOneClub(cid);
+            console.log(`revenuecatWebhook: user ${userId} — zwolniono ${slottedSnap.size} slot(ów) klubowych (${[...clubIds].join(', ')})`);
         }
     } else {
         // User stracił własną subskrypcję → sprawdź eligibility na slot klubowy
