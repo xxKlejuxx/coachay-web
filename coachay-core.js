@@ -73,17 +73,25 @@ function initFirebase() {
         // }
         db = firebase.firestore();
         auth = firebase.auth();
-        // Offline persistence — dane w IndexedDB, kolejne wizyty błyskawiczne.
-        // 2026-09-26: PRAWDZIWA przyczyna zawieszonego logowania na Safari (nie App Check —
-        // to był ślepy trop, patrz komentarz wyżej). enablePersistence() MUSI się rozstrzygnąć
-        // (resolve lub reject) zanim jakiekolwiek inne zapytanie do Firestore ruszy — SDK v8/compat
-        // kolejkuje WSZYSTKIE operacje wewnętrznie dopóki init persistence trwa. Safari/WebKit ma
-        // udokumentowany bug: przy "Zapobiegaj śledzeniu między witrynami" indexedDB.open() czasem
-        // nigdy nie wywołuje ani onsuccess ani onerror — wisi w nieskończoność. Efekt: cała appka
-        // zawiesza się (kółko kręci się bez końca) BEZ ŻADNEGO błędu w konsoli, bo nic nigdy się
-        // nie odrzuca. Dlatego: najpierw szybki sanity-check czy IndexedDB w ogóle odpowiada
-        // (z twardym timeoutem) i dopiero wtedy próbujemy włączyć persistence — jeśli IndexedDB
-        // nie odpowie na czas, appka działa dalej w trybie memory-only (bez offline cache, ale żywa).
+        // 2026-09-26: enablePersistence() (offline cache w IndexedDB dla Firestore) CAŁKOWICIE
+        // WYŁĄCZONE NA STAŁE. Historia: próbowaliśmy najpierw wywoływać ją wprost (oryginalny stan)
+        // — na Safari z "Zapobiegaj śledzeniu między witrynami" IndexedDB potrafi wisieć bardzo długo
+        // (WebKit bug), a enablePersistence() MUSI się rozstrzygnąć zanim jakakolwiek inna operacja
+        // Firestore ruszy (SDK kolejkuje to wewnętrznie) — stąd kręcące się bez końca kółko logowania.
+        // Próbowaliśmy potem gate'ować to sanity-checkiem IndexedDB przed wywołaniem — ale
+        // enablePersistence() MUSI być DOSŁOWNIE pierwszym wywołaniem na obiekcie `db` (wymóg SDK),
+        // a jakikolwiek async gap przed nią (nawet sam Promise) daje czas innemu kodowi (np.
+        // auth.onAuthStateChanged gdzieś na stronie) na dotknięcie `db` wcześniej — co kończy się
+        // rzuconym błędem "firestore has already been started and persistence can no longer be
+        // enabled" i tak nie naprawia sprawy (u Rafała kółko nadal kręciło się ~3 min). Wniosek:
+        // ryzyko/koszt tego mechanizmu jest zbyt wysoki względem korzyści (offline cache to tylko
+        // wygoda, nie wymóg) — zostaje wyłączone na stałe. Jeśli ktoś chce to przywrócić w przyszłości:
+        // zrobić to WYŁĄCZNIE jako coś co blokuje CAŁĄ resztę appki (żaden kod nie dotyka `db` przed
+        // rozstrzygnięciem), a nie jako side-effect przy starcie.
+
+        // Firebase AUTH ma WŁASNĄ, ODDZIELNĄ warstwę IndexedDB (firebaseLocalStorageDb) do zapisu
+        // sesji logowania — nie ma tego samego wymogu "musi być pierwszym wywołaniem" co Firestore,
+        // więc tu sanity-check + dynamiczny wybór SESSION/LOCAL jest bezpieczny.
         function _indexedDbUsable(timeoutMs) {
             return new Promise(resolve => {
                 if (!window.indexedDB) return resolve(false);
@@ -104,17 +112,6 @@ function initFirebase() {
                 }
             });
         }
-        // 2026-09-26 cd.: Firebase AUTH ma WŁASNĄ, ODDZIELNĄ warstwę IndexedDB (firebaseLocalStorageDb),
-        // kompletnie niezależną od Firestore.enablePersistence() powyżej. Domyślnie
-        // signInWithEmailAndPassword/onAuthStateChanged itd. próbują użyć tej warstwy do zapisania
-        // sesji — jeśli IndexedDB wisi (ten sam bug Safari), to WISI SAM PRZYCISK "Zaloguj", zanim
-        // jakikolwiek kod Firestore w ogóle się uruchomi. To tłumaczy "loterię": różne wywołania SDK
-        // (Firestore init vs Auth signIn) trafiają na ten sam niestabilny IndexedDB w różnych
-        // momentach. Fix: na podstawie tego samego sanity-checku, jawnie ustawiamy auth persistence
-        // na SESSION (sessionStorage, zero IndexedDB) gdy IndexedDB nie odpowiada — logowanie wtedy
-        // nie przetrwa zamknięcia karty, ale za to w ogóle działa, zamiast wisieć bez końca.
-        // Owija dowolny promise twardym timeoutem — gdy operacja (np. setPersistence/enablePersistence)
-        // sama zawiśnie mimo udanego probe'a, i tak NIE blokujemy logowania w nieskończoność.
         function _withTimeout(promise, timeoutMs) {
             return new Promise(resolve => {
                 let done = false;
@@ -133,21 +130,6 @@ function initFirebase() {
                 auth.setPersistence(authPersistence)
                     .then(() => console.log(usable ? '✅ Auth persistence: LOCAL' : '⚠️ Auth persistence: SESSION (IndexedDB niedostępny)'))
                     .catch(err => console.warn('⚠️ Auth setPersistence error:', err.code || err)),
-                1500
-            );
-
-            if (!usable) {
-                console.warn('⚠️ Persistence: IndexedDB nie odpowiada (Safari ITP?) — pomijam, tryb memory-only');
-                return;
-            }
-            await _withTimeout(
-                db.enablePersistence()
-                    .then(() => console.log('✅ Persistence: IndexedDB aktywny'))
-                    .catch(err => {
-                        if (err.code === 'failed-precondition') console.warn('⚠️ Persistence: wiele kart — wyłączone');
-                        else if (err.code === 'unimplemented') console.warn('⚠️ Persistence: przeglądarka nie wspiera');
-                        else console.warn('⚠️ Persistence error:', err.code);
-                    }),
                 1500
             );
         });
