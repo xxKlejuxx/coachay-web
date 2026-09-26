@@ -2086,15 +2086,17 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     async function loadTasks(teamId, userId) {
-        const tasks = await getTeamTasks(teamId);
+        // 2026-09-26 (sync #0052 od APP): zapytanie do getTeamTasks teraz samo zależy od roli
+        // (createdBy dla trenera, assignedTo dla reszty) - baza nie zwraca już cudzych zadań,
+        // więc tu zostaje tylko dodatkowe ukrywanie starych completed/rejected (nie scoping po roli).
         const role  = currentUserData?.role || '';
         const isCoach = role === 'TRENER_GLOWNY' || role === 'TRENER_POMOCNICZY';
+        const tasks = await getTeamTasks(teamId, userId, isCoach);
         const _now = Date.now();
         const _48h = 48 * 60 * 60 * 1000;
         const my = isCoach
-            ? tasks.filter(t => t.createdBy === userId)
+            ? tasks
             : tasks.filter(t => {
-                if (!t.assignedTo || !t.assignedTo.includes(userId)) return false;
                 const isDone     = (t.completedBy || []).includes(userId);
                 const isRejected = (t.rejectedBy  || []).includes(userId);
                 if (isDone || isRejected) {

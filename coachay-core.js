@@ -1210,11 +1210,18 @@ async function getMembershipsForPlayer(playerId) {
 }
 
 // Pobierz zadania drużyny
-async function getTeamTasks(teamId, limit = 20) {
+// 2026-09-26: zapytanie MUSI zależeć od roli (sync #0052 od APP — mobile v1.0.64, commit d35ea1e).
+// Gołe where('teamId') ściągało WSZYSTKIE zadania drużyny do przeglądarki każdego jej członka —
+// filtrowanie trener/reszta działo się dopiero w UI po ściągnięciu (loadTasks w start.html), czyli
+// cudze przypisania i tak trafiały do pamięci/sieci, tylko appka ich nie renderowała. Wzorzec
+// dashboard/mini-widget z mobile: trener widzi tylko to co SAM stworzył, reszta tylko swoje przypisania.
+async function getTeamTasks(teamId, userId, isCoach, limit = 20) {
     if (!db) return [];
     try {
-        const snapshot = await db.collection('tasks')
-            .where('teamId', '==', teamId)
+        const q = isCoach
+            ? db.collection('tasks').where('teamId', '==', teamId).where('createdBy', '==', userId)
+            : db.collection('tasks').where('teamId', '==', teamId).where('assignedTo', 'array-contains', userId);
+        const snapshot = await q
             .limit(limit)
             .get();
         const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
