@@ -3345,12 +3345,35 @@ async function _checkPinLock(user) {
 const GRACE_DAYS = 7;
 const TRIAL_SHOW_DAYS = [15, 10, 5, 1, 0];
 
-/** Zwraca pierwsze aktywne membership usera dla danego klubu lub null. */
+/** Zwraca aktywne membership usera dla danego klubu (patrz komentarz niżej o priorytecie) lub null. */
 async function _getMembershipForClub(uid, clubId) {
     // 2026-09-25: jedno zapytanie zamiast dwóch (ACTIVE / active)
+    // 2026-09-26 (zgłoszone przez appkę, sync #0044): usunięto limit(1). Rodzic z >1 dzieckiem
+    // w TYM SAMYM klubie ma WIELE membershipów (po jednym na dziecko) — slot klubowy (usedSlot)
+    // jest przydzielany per-membership, nie per-user. limit(1) bez orderBy potrafił zwrócić
+    // dowolny z nich, w tym taki z usedSlot=0, mimo że inny membership tego samego usera miał
+    // usedSlot=1 — getAccessStatus liczył P3 na złym dokumencie i user z realnie przydzielonym
+    // slotem dostawał EXPIRED/BLOCKED. Ten sam bug byłby też u nas (identyczny wzorzec zapytania),
+    // po prostu nie trafiliśmy akurat w złą kolejność wyników.
     const snap = await db.collection('memberships').where('userId','==',uid).where('clubId','==',clubId)
-        .where('status','in',['ACTIVE','active']).limit(1).get();
-    return snap.empty ? null : snap.docs[0];
+        .where('status','in',['ACTIVE','active']).get();
+    if (snap.empty) return null;
+    if (snap.docs.length === 1) return snap.docs[0];
+
+    // Priorytet gdy user ma >1 membership w klubie: ten z przydzielonym slotem (usedSlot===1)
+    // wygrywa zawsze — to on realnie determinuje dostęp. Dalej: rola trenerska nad
+    // RODZIC/KIBIC (rzadki przypadek — ten sam user ma i trenerski, i rodzicielski membership).
+    const ROLE_PRIORITY = { TRENER_GLOWNY: 0, TRENER_POMOCNICZY: 1, TRENER: 1, OWNER: 1, RODZIC: 2, KIBIC: 3, ZAWODNIK: 3 };
+    const sorted = [...snap.docs].sort((a, b) => {
+        const da = a.data(), dbb = b.data();
+        const slotA = da.usedSlot === 1 ? 0 : 1;
+        const slotB = dbb.usedSlot === 1 ? 0 : 1;
+        if (slotA !== slotB) return slotA - slotB;
+        const rA = ROLE_PRIORITY[da.role] ?? 9;
+        const rB = ROLE_PRIORITY[dbb.role] ?? 9;
+        return rA - rB;
+    });
+    return sorted[0];
 }
 
 /**
