@@ -636,7 +636,10 @@ function _licBuildQuery() {
         .where('usedSlot', '==', 1);
     if (showTrainers && !showParents) q = q.where('role', 'in', _TRAINER_ROLES_ARR);
     else if (showParents && !showTrainers) q = q.where('role', '==', 'RODZIC');
-    return q.orderBy('createdAt').limit(_LIC_PAGE_SIZE);
+    // 2026-09-26: orderBy('createdAt') po cichu wycinał z wyniku membershipy bez tego pola
+    // (starsze dokumenty mają tylko joinedAt) — np. Jan Kowalski znikał z listy „kto korzysta
+    // z puli", mimo że realnie zajmuje slot. documentId() ma każdy dokument, więc nic nie ginie.
+    return q.orderBy(firebase.firestore.FieldPath.documentId()).limit(_LIC_PAGE_SIZE);
 }
 
 async function loadLicencjaUsers() {
