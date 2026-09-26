@@ -1517,6 +1517,7 @@ async function doForgotPassword() {
 }
 async function doLogin() {
     clearLoginError();
+    await _persistenceReady;
     var email = document.getElementById('login-email').value.trim();
     var pass  = document.getElementById('login-pass').value;
     if (!email || !pass) { showLoginError(t('login.fillEmailPassword')); return; }
@@ -1562,6 +1563,7 @@ async function doLoginPhone() {
 }
 async function doLoginPhoneConfirm() {
     clearLoginError();
+    await _persistenceReady;
     var code = document.getElementById('login-sms-code').value.trim();
     if (!code || code.length!==6) { showLoginError('Podaj 6-cyfrowy kod SMS'); return; }
     setLoginLoading(true);
@@ -1842,8 +1844,9 @@ async function resendVerification() {
 }
 
 /* ══ GOOGLE ═══════════════════════════════════════════════════ */
-function doLoginWithGoogle() {
+async function doLoginWithGoogle() {
     clearLoginError(); setLoginLoading(true);
+    await _persistenceReady;
     var provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     localStorage.setItem('authRedirectIntent', 'login');
@@ -1869,8 +1872,9 @@ async function doRegisterWithGoogle() {
 }
 
 /* ══ APPLE ════════════════════════════════════════════════════ */
-function doLoginWithApple() {
+async function doLoginWithApple() {
     clearLoginError(); setLoginLoading(true);
+    await _persistenceReady;
     var provider = new firebase.auth.OAuthProvider('apple.com');
     provider.addScope('email'); provider.addScope('name');
     localStorage.setItem('authRedirectIntent', 'login');
@@ -1899,6 +1903,7 @@ async function doRegisterWithApple() {
 
 /* ══ DEMO ═════════════════════════════════════════════════════ */
 async function loginAsDemo(role) {
+    await _persistenceReady;
     localStorage.removeItem('selectedMembershipId');
     localStorage.removeItem('demoMode');
     localStorage.removeItem('demoRole');

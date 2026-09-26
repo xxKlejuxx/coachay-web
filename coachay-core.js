@@ -104,18 +104,52 @@ function initFirebase() {
                 }
             });
         }
-        _persistenceReady = _indexedDbUsable(1500).then(usable => {
+        // 2026-09-26 cd.: Firebase AUTH ma WŁASNĄ, ODDZIELNĄ warstwę IndexedDB (firebaseLocalStorageDb),
+        // kompletnie niezależną od Firestore.enablePersistence() powyżej. Domyślnie
+        // signInWithEmailAndPassword/onAuthStateChanged itd. próbują użyć tej warstwy do zapisania
+        // sesji — jeśli IndexedDB wisi (ten sam bug Safari), to WISI SAM PRZYCISK "Zaloguj", zanim
+        // jakikolwiek kod Firestore w ogóle się uruchomi. To tłumaczy "loterię": różne wywołania SDK
+        // (Firestore init vs Auth signIn) trafiają na ten sam niestabilny IndexedDB w różnych
+        // momentach. Fix: na podstawie tego samego sanity-checku, jawnie ustawiamy auth persistence
+        // na SESSION (sessionStorage, zero IndexedDB) gdy IndexedDB nie odpowiada — logowanie wtedy
+        // nie przetrwa zamknięcia karty, ale za to w ogóle działa, zamiast wisieć bez końca.
+        // Owija dowolny promise twardym timeoutem — gdy operacja (np. setPersistence/enablePersistence)
+        // sama zawiśnie mimo udanego probe'a, i tak NIE blokujemy logowania w nieskończoność.
+        function _withTimeout(promise, timeoutMs) {
+            return new Promise(resolve => {
+                let done = false;
+                const timer = setTimeout(() => { if (!done) { done = true; resolve(); } }, timeoutMs);
+                Promise.resolve(promise).then(
+                    () => { if (done) return; done = true; clearTimeout(timer); resolve(); },
+                    () => { if (done) return; done = true; clearTimeout(timer); resolve(); }
+                );
+            });
+        }
+        _persistenceReady = _indexedDbUsable(1500).then(async usable => {
+            const authPersistence = usable
+                ? firebase.auth.Auth.Persistence.LOCAL
+                : firebase.auth.Auth.Persistence.SESSION;
+            await _withTimeout(
+                auth.setPersistence(authPersistence)
+                    .then(() => console.log(usable ? '✅ Auth persistence: LOCAL' : '⚠️ Auth persistence: SESSION (IndexedDB niedostępny)'))
+                    .catch(err => console.warn('⚠️ Auth setPersistence error:', err.code || err)),
+                1500
+            );
+
             if (!usable) {
                 console.warn('⚠️ Persistence: IndexedDB nie odpowiada (Safari ITP?) — pomijam, tryb memory-only');
                 return;
             }
-            return db.enablePersistence()
-                .then(() => console.log('✅ Persistence: IndexedDB aktywny'))
-                .catch(err => {
-                    if (err.code === 'failed-precondition') console.warn('⚠️ Persistence: wiele kart — wyłączone');
-                    else if (err.code === 'unimplemented') console.warn('⚠️ Persistence: przeglądarka nie wspiera');
-                    else console.warn('⚠️ Persistence error:', err.code);
-                });
+            await _withTimeout(
+                db.enablePersistence()
+                    .then(() => console.log('✅ Persistence: IndexedDB aktywny'))
+                    .catch(err => {
+                        if (err.code === 'failed-precondition') console.warn('⚠️ Persistence: wiele kart — wyłączone');
+                        else if (err.code === 'unimplemented') console.warn('⚠️ Persistence: przeglądarka nie wspiera');
+                        else console.warn('⚠️ Persistence error:', err.code);
+                    }),
+                1500
+            );
         });
         console.log('✅ Firebase initialized');
     }
