@@ -53,14 +53,24 @@ let _persistenceReady = Promise.resolve(); // Promise gotowości IndexedDB
 function initFirebase() {
     if (typeof firebase !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
-        // App Check (reCAPTCHA Enterprise) — blokuje niezautoryzowane klienty przed Firebase API
-        // Enforce włączyć w Firebase Console → App Check po weryfikacji że nie blokuje ruchu
-        if (typeof firebase.appCheck === 'function') {
-            firebase.appCheck().activate(
-                new firebase.appCheck.ReCaptchaEnterpriseProvider('6Lc1QbEtAAAAABhpy26xwWVgR61YUJl7ETZGUThu'),
-                true
-            );
-        }
+        // 2026-09-26: WYŁĄCZONE — zgłoszone przez APP (sync #0046, potwierdzone reprodukcją przez
+        // Rafała): na Safari/iOS z domyślnie włączonym "Zapobiegaj śledzeniu między witrynami"
+        // reCAPTCHA Enterprise próbuje wymienić Private Access Token (mechanizm WebKit), dostaje
+        // 401 z google.com/recaptcha/enterprise/pat i SDK zawiesza się w nieskończoność — logowanie
+        // kręci się bez końca, bez żadnego komunikatu błędu. Sprawdziliśmy przez API App Check
+        // (firebaseappcheck.googleapis.com/v1/projects/{p}/services): enforcementMode dla
+        // firestore.googleapis.com / identitytoolkit.googleapis.com / oauth2.googleapis.com jest
+        // UNENFORCED — czyli ta warstwa i tak nie daje dziś żadnej realnej ochrony, a aktywnie
+        // blokuje logowanie sporej części userów (Safari to domyślna przeglądarka na iOS).
+        // Zanim ktoś włączy to ponownie: (1) upewnić się że problem z Private Access Tokens po
+        // stronie reCAPTCHA Enterprise/WebKit został naprawiony, (2) przetestować na realnym Safari
+        // z domyślnymi ustawieniami prywatności PRZED włączeniem enforcementMode=ENFORCED w konsoli.
+        // if (typeof firebase.appCheck === 'function') {
+        //     firebase.appCheck().activate(
+        //         new firebase.appCheck.ReCaptchaEnterpriseProvider('6Lc1QbEtAAAAABhpy26xwWVgR61YUJl7ETZGUThu'),
+        //         true
+        //     );
+        // }
         db = firebase.firestore();
         auth = firebase.auth();
         // Offline persistence — dane w IndexedDB, kolejne wizyty błyskawiczne
