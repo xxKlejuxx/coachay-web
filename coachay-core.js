@@ -73,14 +73,50 @@ function initFirebase() {
         // }
         db = firebase.firestore();
         auth = firebase.auth();
-        // Offline persistence — dane w IndexedDB, kolejne wizyty błyskawiczne
-        _persistenceReady = db.enablePersistence()
-            .then(() => console.log('✅ Persistence: IndexedDB aktywny'))
-            .catch(err => {
-                if (err.code === 'failed-precondition') console.warn('⚠️ Persistence: wiele kart — wyłączone');
-                else if (err.code === 'unimplemented') console.warn('⚠️ Persistence: przeglądarka nie wspiera');
-                else console.warn('⚠️ Persistence error:', err.code);
+        // Offline persistence — dane w IndexedDB, kolejne wizyty błyskawiczne.
+        // 2026-09-26: PRAWDZIWA przyczyna zawieszonego logowania na Safari (nie App Check —
+        // to był ślepy trop, patrz komentarz wyżej). enablePersistence() MUSI się rozstrzygnąć
+        // (resolve lub reject) zanim jakiekolwiek inne zapytanie do Firestore ruszy — SDK v8/compat
+        // kolejkuje WSZYSTKIE operacje wewnętrznie dopóki init persistence trwa. Safari/WebKit ma
+        // udokumentowany bug: przy "Zapobiegaj śledzeniu między witrynami" indexedDB.open() czasem
+        // nigdy nie wywołuje ani onsuccess ani onerror — wisi w nieskończoność. Efekt: cała appka
+        // zawiesza się (kółko kręci się bez końca) BEZ ŻADNEGO błędu w konsoli, bo nic nigdy się
+        // nie odrzuca. Dlatego: najpierw szybki sanity-check czy IndexedDB w ogóle odpowiada
+        // (z twardym timeoutem) i dopiero wtedy próbujemy włączyć persistence — jeśli IndexedDB
+        // nie odpowie na czas, appka działa dalej w trybie memory-only (bez offline cache, ale żywa).
+        function _indexedDbUsable(timeoutMs) {
+            return new Promise(resolve => {
+                if (!window.indexedDB) return resolve(false);
+                let done = false;
+                const timer = setTimeout(() => { if (!done) { done = true; resolve(false); } }, timeoutMs);
+                try {
+                    const req = indexedDB.open('_coachay_idb_probe');
+                    req.onsuccess = () => {
+                        if (done) return; done = true; clearTimeout(timer);
+                        try { req.result.close(); } catch (e) {}
+                        try { indexedDB.deleteDatabase('_coachay_idb_probe'); } catch (e) {}
+                        resolve(true);
+                    };
+                    req.onerror = () => { if (done) return; done = true; clearTimeout(timer); resolve(false); };
+                    req.onblocked = () => { if (done) return; done = true; clearTimeout(timer); resolve(false); };
+                } catch (e) {
+                    if (!done) { done = true; clearTimeout(timer); resolve(false); }
+                }
             });
+        }
+        _persistenceReady = _indexedDbUsable(1500).then(usable => {
+            if (!usable) {
+                console.warn('⚠️ Persistence: IndexedDB nie odpowiada (Safari ITP?) — pomijam, tryb memory-only');
+                return;
+            }
+            return db.enablePersistence()
+                .then(() => console.log('✅ Persistence: IndexedDB aktywny'))
+                .catch(err => {
+                    if (err.code === 'failed-precondition') console.warn('⚠️ Persistence: wiele kart — wyłączone');
+                    else if (err.code === 'unimplemented') console.warn('⚠️ Persistence: przeglądarka nie wspiera');
+                    else console.warn('⚠️ Persistence error:', err.code);
+                });
+        });
         console.log('✅ Firebase initialized');
     }
 }
