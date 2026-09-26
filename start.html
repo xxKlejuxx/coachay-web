@@ -2195,23 +2195,39 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         }
     }
 
+    // 2026-09-26: eventy ładowane tylko dla aktualnie wyświetlanego miesiąca (patrz _loadCalMonthEvents)
+    // zamiast całej historii drużyny - siatka i tak renderuje wyłącznie dni bieżącego miesiąca (puste
+    // komórki dla dni sąsiednich miesięcy, bez ich danych), więc szerszy zakres nigdy nie był potrzebny.
+    // Players/absences zostają ładowane raz (nie są związane z konkretnym miesiącem).
     async function loadCalWidget(teamId) {
         try {
-            const [events, playersSnap, absences] = await Promise.all([
-                getTeamEvents(teamId),
+            const [playersSnap, absences] = await Promise.all([
                 playersOfTeamQuery(teamId, _activeClubId).get(),
                 getTeamAbsences(teamId)
             ]);
-            calAllEvents  = events;
             calAllPlayers = playersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
                 .filter(p => p.teams && p.teams.some(t => t.teamId === teamId && t.status === 'ACTIVE') && p.isActive !== false);
             calAllAbsences = absences;
         } catch(e) {
-            console.error('❌ loadCalWidget', e);
+            console.error('❌ loadCalWidget (players/absences)', e);
         }
+        await _loadCalMonthEvents(teamId);
         renderCalGrid();
         selectCalDay(getLocalDateStr());
         _loadAddPanelMembers();
+    }
+
+    // Ładuje calAllEvents dla aktualnego calYear/calMonth (wywoływane przy starcie i przy każdej zmianie
+    // miesiąca w navigateCalMonth) - zakres to dokładnie pierwszy..ostatni dzień miesiąca.
+    async function _loadCalMonthEvents(teamId) {
+        const monthStr = String(calYear) + '-' + String(calMonth + 1).padStart(2, '0');
+        const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+        try {
+            calAllEvents = await getTeamEvents(teamId, monthStr + '-01', monthStr + '-' + String(daysInMonth).padStart(2, '0'));
+        } catch (e) {
+            console.error('❌ _loadCalMonthEvents', e);
+            calAllEvents = [];
+        }
     }
 
     // Zwraca aktywną nieobecność zawodnika `playerId` pokrywającą datę `dateStr` (YYYY-MM-DD), albo null.
@@ -2220,10 +2236,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         return calAllAbsences.find(a => a.playerId === playerId && a.dateFrom <= dateStr && a.dateTo >= dateStr) || null;
     }
 
-    function navigateCalMonth(delta) {
+    async function navigateCalMonth(delta) {
         calMonth += delta;
         if (calMonth > 11) { calMonth = 0; calYear++; }
         if (calMonth < 0)  { calMonth = 11; calYear--; }
+        await _loadCalMonthEvents(_activeTeamId);
         renderCalGrid();
         if (calSelectedDate) renderDayInspector(calSelectedDate);
     }
