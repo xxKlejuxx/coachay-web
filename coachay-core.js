@@ -1959,16 +1959,30 @@ async function loadAndRenderNotifications() {
     const nowLocal = new Date();
     const todayStr = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth()+1).padStart(2,'0')}-${String(nowLocal.getDate()).padStart(2,'0')}`;
 
-    // Pobierz absencje (dla sprawdzania przy wyświetlaniu)
-    let activeAbsences = [];
-    try {
-        const absSnap = await db.collection('absences').where('isActive', '==', true).get();
-        activeAbsences = absSnap.docs.map(d => d.data());
-    } catch (e) { }
-
     const toDeactivate = notifData.filter(n =>
         n.actionType === 'ATTENDANCE' && !n.actionDone && n.referenceId
     );
+
+    // Pobierz absencje (dla sprawdzania przy wyświetlaniu) - tylko dla klubów, których
+    // dotyczą faktycznie powiadomienia tego usera (2026-09-26: wcześniej zapytanie bez
+    // filtra klubu opierało się na catch-allu w regułach; po jego usunięciu Firestore
+    // odrzuca całe zapytanie bez pasującego where() - trzeba filtrować po clubId).
+    let activeAbsences = [];
+    try {
+        const teamIds = [...new Set(toDeactivate.map(n => n.teamId).filter(Boolean))];
+        const clubIds = new Set();
+        for (const teamId of teamIds) {
+            const teamDoc = await db.collection('teams').doc(teamId).get();
+            if (teamDoc.exists && teamDoc.data().clubId) clubIds.add(teamDoc.data().clubId);
+        }
+        if (clubIds.size > 0) {
+            const absSnap = await db.collection('absences')
+                .where('clubId', 'in', [...clubIds].slice(0, 30))
+                .where('isActive', '==', true)
+                .get();
+            activeAbsences = absSnap.docs.map(d => d.data());
+        }
+    } catch (e) { }
     for (const n of toDeactivate) {
         try {
             const evDoc = await db.collection('events').doc(n.referenceId).get();

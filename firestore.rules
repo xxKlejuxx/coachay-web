@@ -100,12 +100,21 @@ service cloud.firestore {
     // catch-all na dole (isVerified() bez żadnego scopingu klub/drużyna) — każdy zalogowany
     // user (nawet konto z innego klubu) mógł czytać/pisać dane WSZYSTKICH klubów: harmonogramy,
     // treść czatu, powody nieobecności (dane zdrowotne dzieci), zadania, dane licencyjne.
+    //
+    // 2026-09-26 (sync #0057): powyższa naprawa NIE działała od dnia wdrożenia, bo Firestore
+    // OR-uje reguły po ścieżce — catch-all na dole pasował też do tych kolekcji i wygrywał
+    // przez OR niezależnie od scopingu poniżej. Naprawione przez usunięcie catch-alla.
 
-    // events — harmonogram/mecze (type:'MECZ' z matchData) — izolacja po clubId
+    // events — harmonogram/mecze (type:'MECZ' z matchData) — izolacja przez teamId -> clubId.
+    // 2026-09-26 (hotfix po deployu #0057-fix): realne zapytanie klienta filtruje po teamId
+    // (getTeamEvents), a reguła sprawdzała clubId — niezgodność pola query vs. reguły powodowała
+    // że Firestore odrzucał CAŁE zapytanie-listę (PERMISSION_DENIED), zamiast filtrować per-dokument.
+    // Efekt: pusty dashboard/kalendarz dla wszystkich. Naprawione przez sprawdzanie teamId
+    // (ten sam wzorzec co messages/tasks) - izolacja klubowa zostaje, bo inMyTeam i tak dociąga clubId.
     match /events/{eventId} {
-      allow read: if isVerified() && inMyClub(resource.data.clubId);
-      allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
-      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+      allow read: if isVerified() && inMyTeam(resource.data.teamId);
+      allow create: if request.auth != null && inMyTeam(request.resource.data.teamId);
+      allow update, delete: if isVerified() && inMyTeam(resource.data.teamId);
     }
 
     // absences — dane zdrowotne/nieobecności dzieci — izolacja po clubId
@@ -136,6 +145,15 @@ service cloud.firestore {
       allow update, delete: if isVerified() && inMyTeam(resource.data.teamId);
     }
 
+    // announcements — ogłoszenia drużynowe (auto-generowane + BROADCAST od trenera) —
+    // izolacja przez teamId -> clubId (dodane 2026-09-26, sync #0057 — wcześniej opierało
+    // się wyłącznie na catch-allu)
+    match /announcements/{announcementId} {
+      allow read: if isVerified() && inMyTeam(resource.data.teamId);
+      allow create: if request.auth != null && inMyTeam(request.resource.data.teamId);
+      allow update, delete: if isVerified() && inMyTeam(resource.data.teamId);
+    }
+
     // matches — wg decisions.md kolekcja zlikwidowana (mecze żyją w events, type:'MECZ');
     // zostaje zabezpieczona tak samo jak events na wypadek zalegających/starych dokumentów.
     match /matches/{matchId} {
@@ -159,9 +177,19 @@ service cloud.firestore {
       allow write: if request.auth != null && inMyClub(request.resource.data.club_id);
     }
 
-    // Wszystkie pozostałe kolekcje — tylko zweryfikowani (fallback dla nieaudytowanych kolekcji)
-    match /{document=**} {
-      allow read, write: if isVerified();
+    // config — np. config/legal (wersje zgód RODO/polityka prywatności) — potrzebny odczyt
+    // PRZED logowaniem/rejestracją (dodane 2026-09-26, sync #0058/#0059 — zgłoszone przez APP,
+    // kolekcja w produkcji jeszcze pusta/nieużywana przez web, ale kod app się już do niej odwołuje)
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if false; // zarządzane z konsoli/Cloud Function, nie przez klienta
     }
+
+    // 2026-09-26 (sync #0057): catch-all USUNIĘTY — pasował też do kolekcji już obsłużonych
+    // wyżej i przez OR unieważniał ich scoping (patrz sync #0057 - APP potwierdziło #0058).
+    // Firestore domyślnie ODMAWIA dostępu gdy żadna reguła nie pasuje - to jest bezpieczny
+    // stan domyślny dla kolekcji poza tą listą (np. sparringOffers - martwy feature bez
+    // ekranu w web/app; platform_metrics, push_receipts - wyłącznie Cloud Functions/Admin SDK,
+    // które i tak omijają te reguły).
   }
 }
