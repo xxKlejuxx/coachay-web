@@ -64,17 +64,33 @@ service cloud.firestore {
     }
 
     // users — create podczas rejestracji (przed weryfikacją emaila), read/update przez zweryfikowanych
+    //
+    // 2026-09-30 (KRYTYCZNA POPRAWKA BEZPIECZEŃSTWA — patrz sync, opis pełnej luki):
+    // update/delete NIE miały żadnego ograniczenia "tylko własny dokument" — każdy zweryfikowany
+    // user mógł nadpisać DOWOLNY dokument users/{cudzyId}, w tym pole isPlatformAdmin, z konsoli
+    // przeglądarki (db.collection('users').doc(mojeId).update({isPlatformAdmin:true})) i przyznać
+    // sobie pełen dostęp do panelu support (wszystkie kluby/drużyny/dane licencyjne platformy).
+    // create też nie blokowało ustawienia isPlatformAdmin już przy rejestracji.
+    // Poprawka: (1) update/delete tylko na własnym dokumencie (authUid==uid) lub przez
+    // już-zweryfikowanego platformowego admina; (2) pole isPlatformAdmin zablokowane na stałe
+    // dla klienta (create i update) — ustawiane wyłącznie z konsoli Firebase/Admin SDK.
     match /users/{userId} {
       allow read: if isVerified() || (request.auth != null && resource.data.authUid == request.auth.uid);
-      allow create: if request.auth != null && request.resource.data.authUid == request.auth.uid;
-      allow update, delete: if isVerified();
+      allow create: if request.auth != null && request.resource.data.authUid == request.auth.uid
+        && request.resource.data.get('isPlatformAdmin', false) == false;
+      allow update: if isVerified()
+        && (resource.data.authUid == request.auth.uid || isPlatformAdmin())
+        && request.resource.data.get('isPlatformAdmin', false) == resource.data.get('isPlatformAdmin', false);
+      allow delete: if isVerified() && (resource.data.authUid == request.auth.uid || isPlatformAdmin());
     }
 
-    // clubs — create podczas rejestracji (przed weryfikacją emaila); inMyClub() gwarantuje izolację
+    // clubs — create podczas rejestracji (przed weryfikacją emaila); inMyClub() gwarantuje izolację.
+    // 2026-09-30: read/update/delete też dla isPlatformAdmin() — panel support.html robi pełny,
+    // niefiltrowany db.collection('clubs').get() (lista wszystkich klubów platformy do wyszukiwarki).
     match /clubs/{clubId} {
-      allow read: if isVerified() && inMyClub(clubId);
+      allow read: if isPlatformAdmin() || (isVerified() && inMyClub(clubId));
       allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
-      allow update, delete: if isVerified() && inMyClub(clubId);
+      allow update, delete: if isPlatformAdmin() || (isVerified() && inMyClub(clubId));
     }
 
     // memberships — create podczas rejestracji; legacy docs z clubId==null dostępne dla zweryfikowanych.
@@ -82,20 +98,22 @@ service cloud.firestore {
     // teamId, samo playerId) w kilkudziesięciu miejscach web — pojedyncza gałąź po clubId nie
     // wystarczała (Firestore odrzuca całe zapytanie-listę gdy where() nie pasuje do pola w regule).
     // Osobna, sprawdzalna gałąź na każde faktycznie używane pole filtra.
+    // 2026-09-30: dodano isPlatformAdmin() — panel support.html robi pełny db.collection('memberships').get().
     match /memberships/{membershipId} {
-      allow read: if isVerified() && (
+      allow read: if isPlatformAdmin() || (isVerified() && (
         resource.data.userId == myAppUserId() ||
         inMyClub(resource.data.clubId) ||
         inMyTeam(resource.data.teamId) ||
         inMyClub(playerClubId(resource.data.playerId))
-      );
+      ));
       allow create: if request.auth != null && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
       allow update, delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
     }
 
-    // teams — izolacja po clubId
+    // teams — izolacja po clubId.
+    // 2026-09-30: dodano isPlatformAdmin() — panel support.html robi pełny db.collection('teams').get().
     match /teams/{teamId} {
-      allow read: if isVerified() && inMyClub(resource.data.clubId);
+      allow read: if isPlatformAdmin() || (isVerified() && inMyClub(resource.data.clubId));
       allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
       allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
@@ -203,8 +221,11 @@ service cloud.firestore {
     // access_rights — dane licencyjne (uid + club_id). Scoping po club_id (nie tylko własny uid),
     // bo P4 (sloty rodzinne) wymaga że dziecko (KIBIC) czyta wpis RODZICA w tym samym klubie —
     // ograniczenie do samego siebie złamałoby tę funkcję.
+    // 2026-09-30: dodano isPlatformAdmin() do read — panel support.html robi zapytanie
+    // db.collection('access_rights').where('valid_until', '>', now) po całej kolekcji
+    // (zarządzanie licencjami wszystkich klubów), które inaczej Firestore odrzuca w całości.
     match /access_rights/{arId} {
-      allow read: if isVerified() && inMyClub(resource.data.club_id);
+      allow read: if isPlatformAdmin() || (isVerified() && inMyClub(resource.data.club_id));
       allow write: if request.auth != null && inMyClub(request.resource.data.club_id);
     }
 
