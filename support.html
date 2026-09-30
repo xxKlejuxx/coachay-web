@@ -58,6 +58,26 @@
     padding: 20px 0 8px;
 }
 
+/* ── Zużycie Firebase (2026-09-30) ── */
+.usage-subhead {
+    font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--szary-j); padding: 14px 0 8px;
+}
+.usage-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;
+}
+.usage-card {
+    background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: 14px;
+    padding: 12px 14px;
+}
+.usage-card-title { font-size: 11px; font-weight: 700; color: var(--szary-j); margin-bottom: 6px; }
+.usage-card-now { font-size: 18px; font-weight: 900; color: var(--bialy); }
+.usage-card-pct { font-size: 11px; font-weight: 700; margin-left: 6px; }
+.usage-card-pct.ok   { color: var(--sukces); }
+.usage-card-pct.warn { color: var(--warn); }
+.usage-card-pct.bad  { color: var(--blad); }
+.usage-card-sub { font-size: 10px; color: var(--szary); margin-top: 2px; }
+
 /* ── Stats row ── */
 .sup-stats {
     display: flex; gap: 8px; padding: 0 0 4px;
@@ -445,6 +465,33 @@
         </div>
         <div class="sup-imp-msg" id="imp-msg"></div>
 
+        <!-- Zużycie Firebase / limity darmowego tieru (2026-09-30) -->
+        <div class="s-label">Zużycie Firebase — ostatnie 30 dni</div>
+        <div id="usage-loading" style="font-size:12px;color:var(--szary);padding:8px 0;">Ładowanie...</div>
+        <div id="usage-empty" style="display:none;font-size:12px;color:var(--szary);padding:8px 0;">
+            Brak jeszcze danych — funkcja zbiera je raz dziennie, pierwszy wpis pojawi się po najbliższym uruchomieniu.
+        </div>
+
+        <div id="usage-charts" style="display:none">
+            <div class="usage-subhead">Firestore</div>
+            <div class="usage-grid">
+                <div class="usage-card"><div class="usage-card-title">Storage bazy</div><div id="uc-fs-storage"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Odczyty / dzień</div><div id="uc-fs-reads"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Zapisy / dzień</div><div id="uc-fs-writes"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Usunięcia / dzień</div><div id="uc-fs-deletes"></div></div>
+            </div>
+            <div class="usage-subhead">Hosting</div>
+            <div class="usage-grid">
+                <div class="usage-card"><div class="usage-card-title">Storage (wersje strony)</div><div id="uc-host-storage"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Transfer (miesięcznie)</div><div id="uc-host-transfer"></div></div>
+            </div>
+            <div class="usage-subhead">Cloud Functions</div>
+            <div class="usage-grid">
+                <div class="usage-card"><div class="usage-card-title">Wywołania / dzień</div><div id="uc-fn-invocations"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Czas obliczeń / dzień</div><div id="uc-fn-compute"></div></div>
+            </div>
+        </div>
+
     </div><!-- /sup-container -->
     </div><!-- /screen-body -->
 
@@ -516,6 +563,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             checkImpersonationBanner();
             loadClubs();
+            loadUsageMetrics();
         } else {
             window.location.href = 'index.html';
         }
@@ -1354,6 +1402,107 @@ async function impersonate() {
         console.error('impersonate:', e);
         msgEl.className = 'sup-imp-msg err';
         msgEl.textContent = 'Błąd połączenia.';
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   ZUŻYCIE FIREBASE — wykresy z limitem (2026-09-30, decyzja Rafała:
+   "wykresy muszą pokazywać górną granicę, bo ja nie muszę pamiętać limitów").
+   Dane zapisywane raz dziennie przez Cloud Function collectUsageMetrics
+   do usage_metrics/{YYYY-MM-DD}.
+   ═══════════════════════════════════════════════════ */
+function _fmtBytes(b) {
+    if (b == null) return '—';
+    if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
+    if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+    if (b >= 1024) return (b / 1024).toFixed(0) + ' KB';
+    return b + ' B';
+}
+function _fmtNum(n) {
+    if (n == null) return '—';
+    return n.toLocaleString('pl-PL');
+}
+function _pctClass(pct) {
+    if (pct >= 90) return 'bad';
+    if (pct >= 60) return 'warn';
+    return 'ok';
+}
+
+// Rysuje mały wykres liniowy SVG z poziomą przerywaną linią limitu — limit zawsze
+// mieści się w widocznym zakresie osi Y, nawet jeśli dane są dużo poniżej.
+function _renderUsageChart(containerId, series, limitSeries, fmtFn) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const vals = series.map(p => p.v).filter(v => v != null);
+    if (!vals.length) { el.innerHTML = '<div class="usage-card-sub">Brak danych</div>'; return; }
+
+    const lastVal = vals[vals.length - 1];
+    const lastLimit = limitSeries && limitSeries.length ? limitSeries[limitSeries.length - 1] : null;
+    const pct = lastLimit ? Math.round((lastVal / lastLimit) * 100) : null;
+
+    const W = 220, H = 56, PAD = 3;
+    const maxVal = Math.max(...vals, lastLimit || 0) * 1.08 || 1;
+    const n = series.length;
+    const x = i => PAD + (i / Math.max(n - 1, 1)) * (W - 2 * PAD);
+    const y = v => H - PAD - (Math.min(v, maxVal) / maxVal) * (H - 2 * PAD);
+
+    let path = '';
+    series.forEach((p, i) => {
+        if (p.v == null) return;
+        path += (path ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(p.v).toFixed(1) + ' ';
+    });
+
+    let limitLine = '';
+    if (lastLimit) {
+        const ly = y(lastLimit).toFixed(1);
+        limitLine = `<line x1="${PAD}" y1="${ly}" x2="${W-PAD}" y2="${ly}" stroke="var(--blad)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>`;
+    }
+
+    const pctHtml = pct != null
+        ? `<span class="usage-card-pct ${_pctClass(pct)}">${pct}% limitu</span>`
+        : '';
+
+    el.innerHTML = `
+        <div><span class="usage-card-now">${fmtFn(lastVal)}</span>${pctHtml}</div>
+        <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="margin-top:6px;display:block">
+            ${limitLine}
+            <path d="${path}" fill="none" stroke="var(--akcent)" stroke-width="1.75"/>
+        </svg>
+        <div class="usage-card-sub">${lastLimit ? `limit: ${fmtFn(lastLimit)}` : 'brak jednoznacznego limitu'}</div>
+    `;
+}
+
+async function loadUsageMetrics() {
+    try {
+        const snap = await db.collection('usage_metrics').orderBy('date', 'desc').limit(30).get();
+        const docs = snap.docs.map(d => d.data()).reverse(); // rosnąco po dacie
+        document.getElementById('usage-loading').style.display = 'none';
+        if (!docs.length) {
+            document.getElementById('usage-empty').style.display = 'block';
+            return;
+        }
+        document.getElementById('usage-charts').style.display = 'block';
+
+        const series = (path) => docs.map(d => ({ v: path.split('.').reduce((o,k) => o?.[k], d) ?? null }));
+        const limitSeries = (path) => docs.map(d => path.split('.').reduce((o,k) => o?.[k], d)).filter(v => v != null);
+
+        _renderUsageChart('uc-fs-storage',   series('firestore.storageBytes'), limitSeries('firestore.storageLimitBytes'), _fmtBytes);
+        _renderUsageChart('uc-fs-reads',     series('firestore.readsToday'),   limitSeries('firestore.readsLimitPerDay'),  _fmtNum);
+        _renderUsageChart('uc-fs-writes',    series('firestore.writesToday'),  limitSeries('firestore.writesLimitPerDay'), _fmtNum);
+        _renderUsageChart('uc-fs-deletes',   series('firestore.deletesToday'), limitSeries('firestore.deletesLimitPerDay'),_fmtNum);
+
+        _renderUsageChart('uc-host-storage',  series('hosting.storageBytes'),      limitSeries('hosting.storageLimitBytes'),      _fmtBytes);
+        _renderUsageChart('uc-host-transfer', series('hosting.monthlySentBytes'),  limitSeries('hosting.monthlySentLimitBytes'),  _fmtBytes);
+
+        // Limity Functions są miesięczne — dzielimy /30 tylko do narysowania linii dziennej,
+        // sam limit miesięczny podany jest jawnie w opisie karty.
+        const fnInvLimitDaily = docs.map(d => d.functions?.invocationsLimitPerMonth ? Math.round(d.functions.invocationsLimitPerMonth / 30) : null).filter(v => v != null);
+        const fnCompLimitDaily = docs.map(d => d.functions?.computeLimitSecondsPerMonth ? Math.round(d.functions.computeLimitSecondsPerMonth / 30) : null).filter(v => v != null);
+        _renderUsageChart('uc-fn-invocations', series('functions.invocationsToday'),    fnInvLimitDaily,  _fmtNum);
+        _renderUsageChart('uc-fn-compute',     series('functions.computeSecondsToday'), fnCompLimitDaily, (v) => v.toFixed(0) + ' s');
+    } catch (e) {
+        console.error('loadUsageMetrics:', e);
+        document.getElementById('usage-loading').textContent = 'Błąd wczytywania danych zużycia.';
     }
 }
 </script>

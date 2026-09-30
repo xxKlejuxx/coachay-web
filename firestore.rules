@@ -50,6 +50,14 @@ service cloud.firestore {
         : null;
     }
 
+    // Admin platformy (panel support.html) — ten sam sposób sprawdzania co po stronie klienta
+    // (session.user.isPlatformAdmin), tylko dociągnięty przez myAppUserId() (2026-09-30).
+    function isPlatformAdmin() {
+      return myAppUserId() != null &&
+        exists(/databases/$(database)/documents/users/$(myAppUserId())) &&
+        get(/databases/$(database)/documents/users/$(myAppUserId())).data.isPlatformAdmin == true;
+    }
+
     // authIndex — tylko własny dokument
     match /authIndex/{authUid} {
       allow read, write: if request.auth != null && request.auth.uid == authUid;
@@ -206,6 +214,15 @@ service cloud.firestore {
     match /config/{doc} {
       allow read: if true;
       allow write: if false; // zarządzane z konsoli/Cloud Function, nie przez klienta
+    }
+
+    // usage_metrics — codzienny snapshot zużycia Firebase (Firestore/Hosting/Functions) do
+    // wykresu w panelu support (2026-09-30, decyzja Rafała). Zapisywane wyłącznie przez
+    // Cloud Function (collectUsageMetrics) przez Admin SDK — klient nigdy nie pisze.
+    // Odczyt tylko dla admina platformy (Rafał), nie dla zwykłych userów klubów.
+    match /usage_metrics/{day} {
+      allow read: if isVerified() && isPlatformAdmin();
+      allow write: if false;
     }
 
     // 2026-09-26 (sync #0057): catch-all USUNIĘTY — pasował też do kolekcji już obsłużonych

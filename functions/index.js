@@ -3173,3 +3173,109 @@ exports.onPlayerWrittenTouchTeamMarker = onDocumentWritten('players/{playerId}',
     await _touchTeamMarkers(teamIds, { playersChangedAt: ts });
     console.log(`✓ onPlayerWrittenTouchTeamMarker ${event.params.playerId}: teams=[${teamIds.join(', ')}]`);
 });
+
+/* ═══════════════════════════════════════════════════
+   USAGE METRICS — codzienny snapshot zużycia Firebase (Firestore/Hosting/
+   Functions) do wykresu w panelu support (2026-09-30, decyzja Rafała:
+   "wykresy muszą pokazywać górną granicę, bo ja nie muszę pamiętać limitów").
+   Zapis do usage_metrics/{YYYY-MM-DD} razem z limitem darmowego tieru
+   obowiązującym W DNIU zbierania — jeśli Google kiedyś zmieni limit, stare
+   wykresy nadal pokażą granicę, jaka wtedy obowiązywała.
+   ═══════════════════════════════════════════════════ */
+const { GoogleAuth } = require('google-auth-library');
+const _monitoringAuth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/monitoring.read'] });
+
+async function _monitoringToken() {
+    const client = await _monitoringAuth.getClient();
+    const tok = await client.getAccessToken();
+    return tok.token;
+}
+
+async function _monitoringQuery(token, projectId, metricType, startIso, endIso, aligner, alignPeriod) {
+    const filter = encodeURIComponent(`metric.type="${metricType}"`);
+    const url = `https://monitoring.googleapis.com/v3/projects/${projectId}/timeSeries?filter=${filter}` +
+        `&interval.startTime=${startIso}&interval.endTime=${endIso}` +
+        `&aggregation.alignmentPeriod=${alignPeriod}&aggregation.perSeriesAligner=${aligner}&aggregation.crossSeriesReducer=REDUCE_SUM`;
+    try {
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        if (data.error) { console.error('collectUsageMetrics: query error', metricType, data.error.message); return null; }
+        return data.timeSeries || [];
+    } catch (e) { console.error('collectUsageMetrics: fetch failed', metricType, e.message); return null; }
+}
+function _sumSeries(series) {
+    if (!series) return 0;
+    return series.reduce((sum, t) => sum + (t.points || []).reduce((s, p) => s + Number(p.value.int64Value ?? p.value.doubleValue ?? 0), 0), 0);
+}
+function _latestSeries(series) {
+    if (!series || !series.length || !series[0].points?.length) return null;
+    const p = series[0].points[0];
+    return Number(p.value.int64Value ?? p.value.doubleValue ?? 0);
+}
+
+// Darmowe limity Firebase (2026). Firestore i Cloud Functions nie udostępniają
+// własnej metryki "limit" w Cloud Monitoring, więc trzymane tu ręcznie —
+// Hosting MA własne metryki limitu, pobierane na żywo (patrz query niżej).
+const FREE_LIMITS = {
+    firestoreStorageBytes:    1073741824, // 1 GiB
+    firestoreReadsPerDay:     50000,
+    firestoreWritesPerDay:    20000,
+    firestoreDeletesPerDay:   20000,
+    functionsInvocationsPerMonth:    2000000,
+    functionsComputeSecondsPerMonth: 180000, // vCPU-sekundy
+};
+
+exports.collectUsageMetrics = onSchedule({ schedule: '0 6 * * *', timeZone: 'Europe/Warsaw' }, async () => {
+    const PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+    const nowMs = Date.now();
+    const dateStr = _warsawDateStr(nowMs);
+    const nowIso = new Date(nowMs).toISOString();
+    const dayAgoIso = new Date(nowMs - 24 * 3600 * 1000).toISOString();
+    const sixHAgoIso = new Date(nowMs - 6 * 3600 * 1000).toISOString();
+
+    try {
+        const token = await _monitoringToken();
+
+        const [fsStorage, fsReads, fsWrites, fsDeletes,
+               hostStorage, hostStorageLimit, hostMonthlySent, hostMonthlyLimit,
+               fnInvocations, fnComputeTime, fnEgress] = await Promise.all([
+            _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/storage/data_and_index_storage_bytes', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
+            _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/document/read_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
+            _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/document/write_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
+            _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/document/delete_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
+            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/storage/total_bytes', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
+            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/storage/limit', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
+            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/network/monthly_sent', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
+            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/network/monthly_sent_limit', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
+            _monitoringQuery(token, PROJECT_ID, 'run.googleapis.com/request_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
+            _monitoringQuery(token, PROJECT_ID, 'run.googleapis.com/container/billable_instance_time', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
+            _monitoringQuery(token, PROJECT_ID, 'run.googleapis.com/container/network/sent_bytes_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
+        ]);
+
+        const payload = {
+            date: dateStr,
+            collectedAt: FieldValue.serverTimestamp(),
+            firestore: {
+                storageBytes: _latestSeries(fsStorage), storageLimitBytes: FREE_LIMITS.firestoreStorageBytes,
+                readsToday: _sumSeries(fsReads), readsLimitPerDay: FREE_LIMITS.firestoreReadsPerDay,
+                writesToday: _sumSeries(fsWrites), writesLimitPerDay: FREE_LIMITS.firestoreWritesPerDay,
+                deletesToday: _sumSeries(fsDeletes), deletesLimitPerDay: FREE_LIMITS.firestoreDeletesPerDay,
+            },
+            hosting: {
+                storageBytes: _latestSeries(hostStorage), storageLimitBytes: _latestSeries(hostStorageLimit),
+                monthlySentBytes: _latestSeries(hostMonthlySent), monthlySentLimitBytes: _latestSeries(hostMonthlyLimit),
+            },
+            functions: {
+                invocationsToday: _sumSeries(fnInvocations), invocationsLimitPerMonth: FREE_LIMITS.functionsInvocationsPerMonth,
+                computeSecondsToday: _sumSeries(fnComputeTime), computeLimitSecondsPerMonth: FREE_LIMITS.functionsComputeSecondsPerMonth,
+                // Egress: brak jednego, jednoznacznego darmowego limitu (zależy od regionu docelowego
+                // ruchu) — zapisywane informacyjnie, bez linii granicy na wykresie.
+                egressBytesToday: _sumSeries(fnEgress),
+            },
+        };
+        await db.collection('usage_metrics').doc(dateStr).set(payload, { merge: true });
+        console.log(`collectUsageMetrics [${dateStr}] OK`);
+    } catch (e) {
+        console.error('collectUsageMetrics error:', e);
+    }
+});
