@@ -3213,9 +3213,11 @@ function _latestSeries(series) {
     return Number(p.value.int64Value ?? p.value.doubleValue ?? 0);
 }
 
-// Darmowe limity Firebase (2026). Firestore i Cloud Functions nie udostępniają
-// własnej metryki "limit" w Cloud Monitoring, więc trzymane tu ręcznie —
-// Hosting MA własne metryki limitu, pobierane na żywo (patrz query niżej).
+// Darmowe limity Firebase (2026), trzymane tu ręcznie. Hosting MA własne metryki
+// limitu w Cloud Monitoring, ale na planie Blaze (płatnym) zwracają sentinel
+// "brak limitu" (int64 max) zamiast realnego limitu darmowego tieru — więc
+// Hosting też liczymy na sztywno, tak samo jak Firestore/Functions
+// (2026-09-30, poprawka po pierwszym teście: sentinel psuł wykres).
 const FREE_LIMITS = {
     firestoreStorageBytes:    1073741824, // 1 GiB
     firestoreReadsPerDay:     50000,
@@ -3223,6 +3225,8 @@ const FREE_LIMITS = {
     firestoreDeletesPerDay:   20000,
     functionsInvocationsPerMonth:    2000000,
     functionsComputeSecondsPerMonth: 180000, // vCPU-sekundy
+    hostingStorageBytes:      10 * 1024 * 1024 * 1024, // 10 GiB
+    hostingMonthlySentBytes:  10800 * 1024 * 1024, // ~360 MB/dzień × 30 dni ≈ 10.8 GB/mies.
 };
 
 exports.collectUsageMetrics = onSchedule({ schedule: '0 6 * * *', timeZone: 'Europe/Warsaw' }, async () => {
@@ -3231,22 +3235,21 @@ exports.collectUsageMetrics = onSchedule({ schedule: '0 6 * * *', timeZone: 'Eur
     const dateStr = _warsawDateStr(nowMs);
     const nowIso = new Date(nowMs).toISOString();
     const dayAgoIso = new Date(nowMs - 24 * 3600 * 1000).toISOString();
-    const sixHAgoIso = new Date(nowMs - 6 * 3600 * 1000).toISOString();
 
     try {
         const token = await _monitoringToken();
 
         const [fsStorage, fsReads, fsWrites, fsDeletes,
-               hostStorage, hostStorageLimit, hostMonthlySent, hostMonthlyLimit,
+               hostStorage, hostMonthlySent,
                fnInvocations, fnComputeTime, fnEgress] = await Promise.all([
-            _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/storage/data_and_index_storage_bytes', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
+            // Okno 24h (nie 6h) — metryka storage bytes to gauge próbkowany rzadko,
+            // krótsze okno czasem nie łapało żadnego punktu (2026-09-30, poprawka).
+            _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/storage/data_and_index_storage_bytes', dayAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
             _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/document/read_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
             _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/document/write_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
             _monitoringQuery(token, PROJECT_ID, 'firestore.googleapis.com/document/delete_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
-            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/storage/total_bytes', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
-            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/storage/limit', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
-            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/network/monthly_sent', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
-            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/network/monthly_sent_limit', sixHAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
+            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/storage/total_bytes', dayAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
+            _monitoringQuery(token, PROJECT_ID, 'firebasehosting.googleapis.com/network/monthly_sent', dayAgoIso, nowIso, 'ALIGN_MEAN', '3600s'),
             _monitoringQuery(token, PROJECT_ID, 'run.googleapis.com/request_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
             _monitoringQuery(token, PROJECT_ID, 'run.googleapis.com/container/billable_instance_time', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
             _monitoringQuery(token, PROJECT_ID, 'run.googleapis.com/container/network/sent_bytes_count', dayAgoIso, nowIso, 'ALIGN_SUM', '86400s'),
@@ -3262,8 +3265,8 @@ exports.collectUsageMetrics = onSchedule({ schedule: '0 6 * * *', timeZone: 'Eur
                 deletesToday: _sumSeries(fsDeletes), deletesLimitPerDay: FREE_LIMITS.firestoreDeletesPerDay,
             },
             hosting: {
-                storageBytes: _latestSeries(hostStorage), storageLimitBytes: _latestSeries(hostStorageLimit),
-                monthlySentBytes: _latestSeries(hostMonthlySent), monthlySentLimitBytes: _latestSeries(hostMonthlyLimit),
+                storageBytes: _latestSeries(hostStorage), storageLimitBytes: FREE_LIMITS.hostingStorageBytes,
+                monthlySentBytes: _latestSeries(hostMonthlySent), monthlySentLimitBytes: FREE_LIMITS.hostingMonthlySentBytes,
             },
             functions: {
                 invocationsToday: _sumSeries(fnInvocations), invocationsLimitPerMonth: FREE_LIMITS.functionsInvocationsPerMonth,
