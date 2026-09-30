@@ -1447,10 +1447,20 @@ function _renderUsageChart(containerId, series, limitSeries, fmtFn) {
     const y = v => H - PAD - (Math.min(v, maxVal) / maxVal) * (H - 2 * PAD);
 
     let path = '';
+    let pointCount = 0;
+    let onlyX = 0, onlyY = 0;
     series.forEach((p, i) => {
         if (p.v == null) return;
-        path += (path ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(p.v).toFixed(1) + ' ';
+        pointCount++;
+        onlyX = x(i); onlyY = y(p.v);
+        path += (path ? 'L' : 'M') + onlyX.toFixed(1) + ',' + onlyY.toFixed(1) + ' ';
     });
+    // Pierwszego dnia zbierania (albo po dziurze w danych) mamy tylko 1 punkt — linia
+    // wtedy nie ma czego łączyć, więc rysujemy kropkę, żeby nie wyglądało jak błąd
+    // (2026-09-30, zgłoszone przez Rafała po pierwszym uruchomieniu na żywo).
+    const dotOnly = pointCount === 1
+        ? `<circle cx="${onlyX.toFixed(1)}" cy="${onlyY.toFixed(1)}" r="2.5" fill="var(--akcent)"/>`
+        : '';
 
     let limitLine = '';
     if (lastLimit) {
@@ -1467,6 +1477,7 @@ function _renderUsageChart(containerId, series, limitSeries, fmtFn) {
         <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="margin-top:6px;display:block">
             ${limitLine}
             <path d="${path}" fill="none" stroke="var(--akcent)" stroke-width="1.75"/>
+            ${dotOnly}
         </svg>
         <div class="usage-card-sub">${lastLimit ? `limit: ${fmtFn(lastLimit)}` : 'brak jednoznacznego limitu'}</div>
     `;
