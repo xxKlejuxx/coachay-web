@@ -1392,6 +1392,11 @@ async function createNotification(data) {
         const notif = {
             notificationId: 'notif_' + dateStr + '_' + Date.now().toString().slice(-7),
             userId: data.userId,
+            // 2026-09-30 (PILNE, sync #0063-0067): autor zapisu — potrzebne, bo reguła
+            // notifications.create dziś błędnie wymagała autor==odbiorca (userId), co
+            // blokowało KAŻDĄ notyfikację tworzoną dla kogoś innego (task/message).
+            // Analogiczne pole appka mobilna dodała już w v1.0.70 (sync #0065).
+            fromUserId: getCurrentUserId() || null,
             teamId: data.teamId || null,
             type,
             title: data.title || '',

@@ -211,10 +211,27 @@ service cloud.firestore {
       allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
     }
 
-    // notifications — per-user (kluczowane po userId aplikacji, nie Auth UID)
+    // notifications — per-user (kluczowane po userId aplikacji, nie Auth UID).
+    //
+    // 2026-09-30 (KRYTYCZNY HOTFIX — zgłoszone przez APP, sync #0063-0067): stara reguła
+    // create wymagała request.resource.data.userId == myAppUserId() — czyli autor zapisu
+    // MUSI BYĆ odbiorcą. To jest strukturalnie odwrotne do tego jak działa cały system:
+    // nadawca (trener/rodzic) zawsze tworzy notyfikację DLA KOGOŚ INNEGO (userId to
+    // odbiorca). Efekt: KAŻDA notyfikacja tworzona client-side dla innej osoby (czat,
+    // przypisanie zadania) dostawała PERMISSION_DENIED od dnia wdrożenia tej reguły
+    // (26/27.09) — błąd łykany po cichu (try/catch), stąd niezauważony kilka dni.
+    // Eventy nie były dotknięte (notyfikacje eventowe tworzy wyłącznie Cloud Function
+    // przez Admin SDK, który całkowicie omija reguły Firestore).
+    //
+    // Poprawka: sprawdzamy DWIE rzeczy zamiast jednej — (1) fromUserId (nowe pole,
+    // autor zapisu) zgadza się z tym, kto naprawdę pisze — nie da się podszyć pod
+    // czyjś fromUserId; (2) autor jest w tym samym zespole co teamId na dokumencie —
+    // ten sam wzorzec zaufania co już używany dla messages/tasks.
     match /notifications/{notifId} {
       allow read: if isVerified() && resource.data.userId == myAppUserId();
-      allow create: if request.auth != null && request.resource.data.userId == myAppUserId();
+      allow create: if isVerified()
+        && request.resource.data.fromUserId == myAppUserId()
+        && inMyTeam(request.resource.data.teamId);
       allow update, delete: if isVerified() && resource.data.userId == myAppUserId();
     }
 
