@@ -1601,6 +1601,7 @@ async function generujKod() {
         type: aktualnyTypKodu,
         playerId: pid,
         playerName: aktualnyZawodnik.name || ((aktualnyZawodnik.firstName||'') + ' ' + (aktualnyZawodnik.lastName||'')).trim() || '',
+        forName: (aktualnyZawodnik.firstName||'') + '|' + (aktualnyZawodnik.lastName||''),
         teamId: aktualnyTeamId,
         clubId: aktualnyClubId || null,
         createdBy: aktualnyUserId,

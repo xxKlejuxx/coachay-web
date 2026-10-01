@@ -1593,11 +1593,14 @@ function pickRegType(type) {
 function autoCheckCode(val) { if (val.length===6) checkInviteCode(); }
 async function checkInviteCode() {
     clearRegError();
+    window._codeCheckSeq = (window._codeCheckSeq || 0) + 1;
+    var _seq = window._codeCheckSeq;
     var code = document.getElementById('reg-code').value.trim().toUpperCase();
     if (code.length!==6) { showRegError(t('login.codeMinLength')); return; }
     setRegLoading(true);
     try {
         var snap = await db.collection('inviteCodes').where('code','==',code).where('isUsed','==',false).get();
+        if (_seq !== window._codeCheckSeq) { return; }
         if (snap.empty) { showRegError(t('login.codeInvalid')); setRegLoading(false); return; }
         var codeDoc = snap.docs[0].data();
         var expires = codeDoc.expiresAt?.toDate ? codeDoc.expiresAt.toDate() : new Date(codeDoc.expiresAt);
@@ -1608,6 +1611,7 @@ async function checkInviteCode() {
             var teamDoc = await db.collection('teams').doc(codeDoc.teamId).get();
             if (teamDoc.exists) teamName = teamDoc.data().teamName || teamDoc.data().name || '';
         } catch(e) {}
+        if (_seq !== window._codeCheckSeq) { return; }
         var needsName = ['RODZIC','OBSERWATOR'].includes(codeDoc.type);
         var prefilledName = codeDoc.forName || '';
         if (!prefilledName && codeDoc.type==='ZAWODNIK' && codeDoc.playerId) {
@@ -1619,11 +1623,18 @@ async function checkInviteCode() {
         var fnameEl = document.getElementById('reg-kod-fname');
         var lnameEl = document.getElementById('reg-kod-lname');
         if (!needsName && prefilledName) {
-            var parts = prefilledName.trim().split(' ');
-            fnameEl.value = parts[0]||''; lnameEl.value = parts.slice(1).join(' ')||'';
+            var fn, ln;
+            if (prefilledName.indexOf('|') !== -1) {
+                var p = prefilledName.split('|');
+                fn = p[0] || ''; ln = p.slice(1).join('|') || '';
+            } else {
+                var parts = prefilledName.trim().split(' ');
+                fn = parts[0] || ''; ln = parts.slice(1).join(' ') || '';
+            }
+            fnameEl.value = fn; lnameEl.value = ln;
             fnameEl.readOnly = true; lnameEl.readOnly = true;
             fnameEl.style.opacity = '0.6'; lnameEl.style.opacity = '0.6';
-            window._regName = { fname: parts[0]||'', lname: parts.slice(1).join(' ')||'' };
+            window._regName = { fname: fn, lname: ln };
             document.getElementById('welcome-hi').textContent = t('login.greetingWithName', {name: prefilledName}) + ' 👋';
         } else {
             fnameEl.value=''; lnameEl.value='';
@@ -1667,9 +1678,17 @@ function toggleRodzicConsent() {
 }
 function resetCodeStep() {
     window._inviteCode = null; window._rodzicConsentChecked = false;
+    window._regName = null;
     document.getElementById('reg-welcome').style.display = 'none';
     document.getElementById('form-kod').classList.add('visible');
     document.getElementById('reg-code').value = ''; clearRegError();
+    var fnameEl = document.getElementById('reg-kod-fname');
+    var lnameEl = document.getElementById('reg-kod-lname');
+    if (fnameEl) { fnameEl.value = ''; fnameEl.readOnly = false; fnameEl.style.opacity = ''; }
+    if (lnameEl) { lnameEl.value = ''; lnameEl.readOnly = false; lnameEl.style.opacity = ''; }
+    var cp = document.getElementById('rodzic-consent-player'); if (cp) cp.textContent = '';
+    var rb = document.getElementById('welcome-role-badge'); if (rb) rb.innerHTML = '';
+    var wt = document.getElementById('welcome-team'); if (wt) wt.textContent = '';
 }
 
 /* ══ METODY REJESTRACJI ═══════════════════════════════════════ */
@@ -1828,6 +1847,7 @@ async function checkEmailVerified() {
     if (!user.emailVerified) { alert(t('login.notVerifiedYet')); return; }
     await user.getIdToken(true); // wymuś odświeżenie tokenu — stary ma email_verified:false
     var pendingStr = localStorage.getItem('pendingRegistration');
+    var _wasCodeRegistration = !!pendingStr;
     if (pendingStr) {
         try { var pending = JSON.parse(pendingStr); await _createFirestoreDocsFromPending(pending); localStorage.removeItem('pendingRegistration'); localStorage.setItem('currentUserId', pending.userCode); } catch(e) { alert(t('authErrors.generic')+': '+e.message); return; }
     } else {
@@ -1835,7 +1855,12 @@ async function checkEmailVerified() {
         if (userCode) localStorage.setItem('currentUserId', userCode);
     }
     localStorage.removeItem('selectedMembershipId');
-    window.location.href = 'klub.html';
+    if (_wasCodeRegistration) {
+        sessionStorage.setItem('showSplash','1');
+        window.location.href = 'start.html';
+    } else {
+        window.location.href = 'klub.html';
+    }
 }
 async function resendVerification() {
     var user = auth.currentUser;

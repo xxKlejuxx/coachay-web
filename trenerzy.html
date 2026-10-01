@@ -1206,7 +1206,7 @@ async function saveNewTrainer() {
     try {
         await db.collection('trainers').doc(trainerId).set(trainerData);
         // Generuj kod powiązany z trainerem
-        await _generateCode(trainerId, name, role);
+        await _generateCode(trainerId, firstName + '|' + lastName, role);
         // Dodaj lokalnie i odśwież
         allTrainers.push({ trainerId, ...trainerData });
         closeAddPanel();
@@ -1353,7 +1353,7 @@ async function regenTrainerCode() {
     for (const d of snap.docs) {
         await d.ref.update({ isUsed: true, usedBy: 'DEZAKTYWOWANY_PRZEZ_TRENERA', usedAt: now.toISOString() });
     }
-    await _generateCode(t.trainerId, t.displayName, t.role);
+    await _generateCode(t.trainerId, (t.firstName||'') + '|' + (t.lastName||''), t.role);
     loadTrainerCode(t.trainerId);
 }
 
@@ -1415,7 +1415,7 @@ async function resetTrainerAccess() {
         }
 
         // Wygeneruj nowy kod
-        await _generateCode(t.trainerId, t.displayName, t.role);
+        await _generateCode(t.trainerId, (t.firstName||'') + '|' + (t.lastName||''), t.role);
 
         // Aktualizuj lokalnie i odśwież widok
         const idx = allTrainers.findIndex(x => x.trainerId === t.trainerId);
