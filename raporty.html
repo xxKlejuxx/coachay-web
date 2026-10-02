@@ -710,6 +710,7 @@ async function generujBezRodzica() {
         for (let i = 0; i < playerIds.length; i += chunkSize) {
             const chunk = playerIds.slice(i, i + chunkSize);
             const snap = await db.collection('memberships')
+                .where('clubId', '==', currentClubId)
                 .where('playerId', 'in', chunk)
                 .where('role', '==', 'RODZIC')
                 .get();
