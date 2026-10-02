@@ -143,6 +143,12 @@
                     <select class="rap-select" id="rap-druzyna-select"><option value="">— ładowanie... —</option></select>
                 </div>
 
+                <div class="form-group" id="rap-sekcja-filtr-karteczki" style="display:none;">
+                    <label class="form-lbl" data-i18n="raporty.cardsFilterLabel">Dla kogo generować karteczki</label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-karteczki-filtr" id="rap-karteczki-wszyscy" checked><span data-i18n="raporty.cardsFilterAll">Wszyscy</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-karteczki-filtr" id="rap-karteczki-bez-rodzica"><span data-i18n="raporty.cardsFilterWithoutParent">Tylko bez rodzica</span></label>
+                </div>
+
                 <div class="form-group" id="rap-sekcja-okres">
                     <label class="form-lbl" data-i18n="raporty.periodLabel">Okres</label>
                     <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span data-i18n="raporty.periodSingleDay">📅 Na dzień</span></label>
@@ -370,6 +376,7 @@ function onRaportTypChange() {
     const uzywaTeam     = isKarteczki || isBezRodzica;
     const uzywaOkres    = !uzywaTeam;
     document.getElementById('rap-sekcja-druzyna').style.display  = uzywaTeam  ? '' : 'none';
+    document.getElementById('rap-sekcja-filtr-karteczki').style.display = isKarteczki ? '' : 'none';
     document.getElementById('rap-sekcja-okres').style.display    = uzywaOkres ? '' : 'none';
     document.getElementById('rap-sekcja-zajecia').style.display  = uzywaOkres ? '' : 'none';
     document.getElementById('rap-sekcja-format').style.display   = uzywaOkres ? '' : 'none';
@@ -520,6 +527,32 @@ async function generujKarteczkiRodzicow() {
             const p = d.data();
             if (p.teams && p.teams.some(t => t.teamId === teamId && t.status === 'ACTIVE')) {
                 activePlayers[d.id] = p;
+            }
+        }
+
+        // opcjonalny filtr "tylko bez rodzica" — odrzuć zawodników z już aktywnym rodzicem
+        const tylkoBezRodzica = document.getElementById('rap-karteczki-bez-rodzica')?.checked;
+        if (tylkoBezRodzica) {
+            const playerIds = Object.keys(activePlayers);
+            const rodziczeMap = {};
+            const chunkSize = 30;
+            for (let i = 0; i < playerIds.length; i += chunkSize) {
+                const chunk = playerIds.slice(i, i + chunkSize);
+                const msnap = await db.collection('memberships')
+                    .where('clubId', '==', currentClubId)
+                    .where('playerId', 'in', chunk)
+                    .where('role', '==', 'RODZIC')
+                    .get();
+                for (const d of msnap.docs) {
+                    const m = d.data();
+                    const st = (m.status || '').toLowerCase();
+                    if (st === 'active' || st === 'grace' || st === 'pending') {
+                        rodziczeMap[m.playerId] = true;
+                    }
+                }
+            }
+            for (const pid of playerIds) {
+                if (rodziczeMap[pid]) delete activePlayers[pid];
             }
         }
 
