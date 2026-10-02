@@ -565,7 +565,10 @@ async function generujKarteczkiRodzicow() {
         // filtruj wygasłe i kody bez aktywnego zawodnika
         const kody = snap.docs
             .map(d => d.data())
-            .filter(k => k.expiresAt?.toDate?.() > now && activePlayers[k.playerId])
+            .filter(k => {
+                const exp = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
+                return exp > now && activePlayers[k.playerId];
+            })
             .sort((a, b) => {
                 const na = activePlayers[a.playerId] ? nazwaZawodnika(activePlayers[a.playerId]) : (a.playerName || '');
                 const nb = activePlayers[b.playerId] ? nazwaZawodnika(activePlayers[b.playerId]) : (b.playerName || '');
