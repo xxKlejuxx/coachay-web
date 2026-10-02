@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20260926a'; // 2026-09-26: bump po dodaniu eventDetail.absentLong/absentUntil (nieobecności długoterminowe)
+    const LOCALE_V  = '20261002a'; // 2026-10-02: bump po dodaniu raporty.cardsFilterLabel/cardsFilterAll/cardsFilterWithoutParent
 
     let _lang = localStorage.getItem('coachay_lang') || 'pl';
     if (!SUPPORTED.includes(_lang)) _lang = 'pl';
