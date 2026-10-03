@@ -1,13 +1,13 @@
-Ôªø<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>COACHAY ‚Äî Support</title>
+<title>COACHAY ó Support</title>
 <link rel="stylesheet" href="_global.css?v=20260826e">
 <link rel="stylesheet" href="_desktop.css?v=20260826e">
 <script src="_sidebar.js?v=20260826e"></script>
-<script src="_i18n.js?v=20261003a"></script>
+<script src="_i18n.js?v=20261003c"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -21,7 +21,7 @@
 
 .sup-container { max-width: 1222px; margin: 0 auto; width: 100%; padding: 0 28px 80px; }
 
-/* ‚îÄ‚îÄ Top bar ‚îÄ‚îÄ */
+/* ¶¶ Top bar ¶¶ */
 .sup-topbar {
     height: var(--top-h); background: #000;
     display: flex; align-items: flex-end;
@@ -51,14 +51,14 @@
 }
 .sup-topbar-back:active { background: var(--tlo-karta2); }
 
-/* ‚îÄ‚îÄ Sekcja nag≈Ç√≥wka ‚îÄ‚îÄ */
+/* ¶¶ Sekcja nag≥Ûwka ¶¶ */
 .s-label {
     font-size: 10px; font-weight: 900; letter-spacing: 2px;
     text-transform: uppercase; color: var(--szary);
     padding: 20px 0 8px;
 }
 
-/* ‚îÄ‚îÄ Zu≈ºycie Firebase (2026-09-30) ‚îÄ‚îÄ */
+/* ¶¶ Zuøycie Firebase (2026-09-30) ¶¶ */
 .usage-subhead {
     font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
     color: var(--szary-j); padding: 14px 0 8px;
@@ -78,7 +78,7 @@
 .usage-card-pct.bad  { color: var(--blad); }
 .usage-card-sub { font-size: 10px; color: var(--szary); margin-top: 2px; }
 
-/* ‚îÄ‚îÄ Stats row ‚îÄ‚îÄ */
+/* ¶¶ Stats row ¶¶ */
 .sup-stats {
     display: flex; gap: 8px; padding: 0 0 4px;
 }
@@ -100,7 +100,7 @@
     text-transform: uppercase; color: var(--szary);
 }
 
-/* ‚îÄ‚îÄ Szukaj klubu ‚îÄ‚îÄ */
+/* ¶¶ Szukaj klubu ¶¶ */
 .sup-search-wrap { padding: 4px 0 0; }
 .sup-search {
     width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border);
@@ -111,7 +111,7 @@
 .sup-search::placeholder { color: var(--szary); font-weight: 600; font-size: 13px; }
 .sup-search:focus { border-color: var(--akcent); outline: none; }
 
-/* ‚îÄ‚îÄ Lista klub√≥w ‚îÄ‚îÄ */
+/* ¶¶ Lista klubÛw ¶¶ */
 .sup-clubs { padding: 8px 0 0; display: flex; flex-direction: column; gap: 8px; }
 
 .sup-club-card {
@@ -146,7 +146,7 @@
 .sup-club-status.grace   { background: rgba(251,191,36,0.12); color: var(--warn);   border: 1px solid rgba(251,191,36,0.25); }
 .sup-club-status.expired { background: rgba(239,68,68,0.12);  color: var(--blad);   border: 1px solid rgba(239,68,68,0.25); }
 
-/* ‚îÄ‚îÄ Ekspandowany panel akcji ‚îÄ‚îÄ */
+/* ¶¶ Ekspandowany panel akcji ¶¶ */
 .sup-club-actions {
     margin: 0; padding: 14px 16px;
     background: var(--tlo-karta2); border: 1.5px solid var(--border2);
@@ -179,7 +179,7 @@
     padding: 2px 2px 0; line-height: 1.5;
 }
 
-/* ‚îÄ‚îÄ Impersonacja ‚îÄ‚îÄ */
+/* ¶¶ Impersonacja ¶¶ */
 .sup-imp-row { display: flex; gap: 8px; padding: 0; }
 .sup-imp-input {
     flex: 1; background: var(--tlo-karta); border: 1.5px solid var(--border);
@@ -200,7 +200,7 @@
 .sup-imp-msg.ok  { color: var(--sukces); display: block; }
 .sup-imp-msg.err { color: var(--blad);   display: block; }
 
-/* ‚îÄ‚îÄ Panel aktywacji licencji (wysuwa z prawej) ‚îÄ‚îÄ */
+/* ¶¶ Panel aktywacji licencji (wysuwa z prawej) ¶¶ */
 .sup-sheet-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55);
     z-index: 200; display: none; justify-content: flex-end;
@@ -217,7 +217,7 @@
     from { transform: translateX(100%); }
     to   { transform: translateX(0); }
 }
-/* mobile ‚Äî nadal od do≈Çu */
+/* mobile ó nadal od do≥u */
 @media (max-width: 767px) {
     .sup-sheet-overlay { align-items: flex-end; justify-content: stretch; }
     .sup-sheet {
@@ -299,12 +299,12 @@
 .extend-period-btn:active { background: var(--tlo-karta); }
 .sup-sheet-msg.err { color: var(--blad);   display: block; }
 
-/* ‚îÄ‚îÄ Empty state ‚îÄ‚îÄ */
+/* ¶¶ Empty state ¶¶ */
 .sup-empty { padding: 40px 0; text-align: center; }
 .sup-empty-icon { font-size: 36px; margin-bottom: 10px; }
 .sup-empty-txt { font-size: 13px; font-weight: 600; color: var(--szary); }
 
-/* ‚îÄ‚îÄ Pakiety licencji ‚îÄ‚îÄ */
+/* ¶¶ Pakiety licencji ¶¶ */
 .sup-packages { display: flex; gap: 12px; flex-wrap: wrap; padding: 0 0 8px; }
 .sup-package-card {
     flex: 1; min-width: 180px;
@@ -339,14 +339,14 @@
     <div class="sup-topbar">
         <div class="sup-logo-name">COACHAY</div>
         <span class="sup-topbar-badge">SUPPORT</span>
-        <div class="sup-topbar-back" onclick="window.location.replace('start.html')">‚úï</div>
+        <div class="sup-topbar-back" onclick="window.location.replace('start.html')">?</div>
     </div>
 
-    <!-- Bottom sheet przed≈Çu≈ºenia licencji -->
+    <!-- Bottom sheet przed≥uøenia licencji -->
     <div class="sup-sheet-overlay" id="extend-overlay" onclick="closeExtendSheet(event)">
         <div class="sup-sheet" id="extend-sheet">
             <div class="sup-sheet-handle"></div>
-            <div class="sup-sheet-title" id="extend-title">Przed≈Çu≈º licencjƒô</div>
+            <div class="sup-sheet-title" id="extend-title">Przed≥uø licencjÍ</div>
             <div class="sup-sheet-sub" id="extend-sub"></div>
 
             <!-- Liczba licencji (z poprzedniego zakupu) -->
@@ -356,9 +356,9 @@
                 <div id="extend-total-hint" style="font-size:10px;color:var(--szary);margin-top:4px"></div>
             </div>
 
-            <!-- Okres przed≈Çu≈ºenia -->
+            <!-- Okres przed≥uøenia -->
             <div class="sup-sheet-field">
-                <div class="sup-sheet-label">Przed≈Çu≈º o</div>
+                <div class="sup-sheet-label">Przed≥uø o</div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <button class="extend-period-btn selected" data-days="30"  onclick="selectExtendPeriod(this,30)">30 dni</button>
                     <button class="extend-period-btn"          data-days="90"  onclick="selectExtendPeriod(this,90)">90 dni</button>
@@ -372,7 +372,7 @@
             <!-- Aktualny valid_until -->
             <div id="extend-current-expiry" style="font-size:11px;color:var(--szary);padding:4px 0 12px;font-weight:600"></div>
 
-            <button class="sup-sheet-confirm" id="extend-confirm" onclick="confirmExtend()">Przed≈Çu≈º ‚Üí</button>
+            <button class="sup-sheet-confirm" id="extend-confirm" onclick="confirmExtend()">Przed≥uø õ</button>
             <button class="sup-sheet-cancel"  onclick="closeExtendSheet()">Anuluj</button>
             <div class="sup-sheet-msg" id="extend-msg"></div>
         </div>
@@ -382,8 +382,8 @@
     <div class="sup-sheet-overlay" id="sheet-overlay" onclick="closeSheet(event)">
         <div class="sup-sheet" id="sup-sheet">
             <div class="sup-sheet-handle"></div>
-            <div class="sup-sheet-title" id="sheet-title">Aktywuj licencjƒô</div>
-            <div class="sup-sheet-sub" id="sheet-sub">Rƒôczna aktywacja dostƒôpu dla klubu.</div>
+            <div class="sup-sheet-title" id="sheet-title">Aktywuj licencjÍ</div>
+            <div class="sup-sheet-sub" id="sheet-sub">RÍczna aktywacja dostÍpu dla klubu.</div>
 
             <div class="sup-sheet-field">
                 <div class="sup-sheet-label">Liczba licencji</div>
@@ -393,7 +393,7 @@
                     <button class="extend-period-btn" onclick="selectSheetLic(this,200)">200</button>
                     <button class="extend-period-btn" onclick="selectSheetLic(this,0)">Inne</button>
                 </div>
-                <input type="number" id="sheet-total" class="sup-sheet-input" value="100" min="1" max="9999" placeholder="lub wpisz w≈ÇasnƒÖ liczbƒô">
+                <input type="number" id="sheet-total" class="sup-sheet-input" value="100" min="1" max="9999" placeholder="lub wpisz w≥asnπ liczbÍ">
             </div>
 
             <div class="sup-sheet-field">
@@ -407,33 +407,33 @@
                 <input type="number" id="sheet-days" class="sup-sheet-input" value="365" min="1" max="3650" placeholder="Liczba dni">
             </div>
 
-            <button class="sup-sheet-confirm" id="sheet-confirm" onclick="confirmActivation()">Aktywuj ‚Üí</button>
+            <button class="sup-sheet-confirm" id="sheet-confirm" onclick="confirmActivation()">Aktywuj õ</button>
             <button class="sup-sheet-cancel" onclick="closeSheet()">Anuluj</button>
             <div class="sup-sheet-msg" id="sheet-msg"></div>
         </div>
     </div>
 
-    <!-- G≈Ç√≥wna zawarto≈õƒá -->
+    <!-- G≥Ûwna zawartoúÊ -->
     <div class="screen-body">
     <div class="sup-container">
 
         <!-- Stats -->
-        <div class="s-label">PrzeglƒÖd platformy</div>
+        <div class="s-label">Przeglπd platformy</div>
         <div class="sup-stats">
             <div class="sup-stat">
-                <div class="sup-stat-val green" id="stat-active">‚Äî</div>
+                <div class="sup-stat-val green" id="stat-active">ó</div>
                 <div class="sup-stat-lbl">Aktywne</div>
             </div>
             <div class="sup-stat">
-                <div class="sup-stat-val amber" id="stat-trial">‚Äî</div>
+                <div class="sup-stat-val amber" id="stat-trial">ó</div>
                 <div class="sup-stat-lbl">Trial</div>
             </div>
             <div class="sup-stat">
-                <div class="sup-stat-val red" id="stat-expired">‚Äî</div>
-                <div class="sup-stat-lbl">Wygas≈Çe</div>
+                <div class="sup-stat-val red" id="stat-expired">ó</div>
+                <div class="sup-stat-lbl">Wygas≥e</div>
             </div>
             <div class="sup-stat">
-                <div class="sup-stat-val" id="stat-total">‚Äî</div>
+                <div class="sup-stat-val" id="stat-total">ó</div>
                 <div class="sup-stat-lbl">Razem</div>
             </div>
         </div>
@@ -444,51 +444,51 @@
             <input type="text" id="sup-search" class="sup-search" placeholder="Szukaj klubu..." oninput="filterClubs()">
         </div>
 
-        <!-- Lista klub√≥w -->
+        <!-- Lista klubÛw -->
         <div class="sup-clubs" id="sup-clubs">
             <div class="sup-empty">
-                <div class="sup-empty-icon">‚è≥</div>
-                <div class="sup-empty-txt">≈Åadowanie klub√≥w...</div>
+                <div class="sup-empty-icon">?</div>
+                <div class="sup-empty-txt">£adowanie klubÛw...</div>
             </div>
         </div>
 
 
         <!-- Impersonacja -->
-        <div class="s-label">Impersonacja u≈ºytkownika</div>
+        <div class="s-label">Impersonacja uøytkownika</div>
         <div id="imp-active-banner" style="display:none; margin:0 0 8px; padding:12px 16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:14px; align-items:center; gap:10px;">
-            <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">‚ö† Jeste≈õ w trybie impersonacji</span>
-            <button onclick="exitImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">Wr√≥ƒá ‚Üí</button>
+            <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">? Jesteú w trybie impersonacji</span>
+            <button onclick="exitImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">WrÛÊ õ</button>
         </div>
         <div class="sup-imp-row">
             <input type="text" id="imp-input" class="sup-imp-input" placeholder="userId (np. user_TRENER_...)">
-            <button class="sup-imp-btn" onclick="impersonate()">Zaloguj ‚Üí</button>
+            <button class="sup-imp-btn" onclick="impersonate()">Zaloguj õ</button>
         </div>
         <div class="sup-imp-msg" id="imp-msg"></div>
 
-        <!-- Zu≈ºycie Firebase / limity darmowego tieru (2026-09-30) -->
-        <div class="s-label">Zu≈ºycie Firebase ‚Äî ostatnie 30 dni</div>
-        <div id="usage-loading" style="font-size:12px;color:var(--szary);padding:8px 0;">≈Åadowanie...</div>
+        <!-- Zuøycie Firebase / limity darmowego tieru (2026-09-30) -->
+        <div class="s-label">Zuøycie Firebase ó ostatnie 30 dni</div>
+        <div id="usage-loading" style="font-size:12px;color:var(--szary);padding:8px 0;">£adowanie...</div>
         <div id="usage-empty" style="display:none;font-size:12px;color:var(--szary);padding:8px 0;">
-            Brak jeszcze danych ‚Äî funkcja zbiera je raz dziennie, pierwszy wpis pojawi siƒô po najbli≈ºszym uruchomieniu.
+            Brak jeszcze danych ó funkcja zbiera je raz dziennie, pierwszy wpis pojawi siÍ po najbliøszym uruchomieniu.
         </div>
 
         <div id="usage-charts" style="display:none">
             <div class="usage-subhead">Firestore</div>
             <div class="usage-grid">
                 <div class="usage-card"><div class="usage-card-title">Storage bazy</div><div id="uc-fs-storage"></div></div>
-                <div class="usage-card"><div class="usage-card-title">Odczyty / dzie≈Ñ</div><div id="uc-fs-reads"></div></div>
-                <div class="usage-card"><div class="usage-card-title">Zapisy / dzie≈Ñ</div><div id="uc-fs-writes"></div></div>
-                <div class="usage-card"><div class="usage-card-title">Usuniƒôcia / dzie≈Ñ</div><div id="uc-fs-deletes"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Odczyty / dzieÒ</div><div id="uc-fs-reads"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Zapisy / dzieÒ</div><div id="uc-fs-writes"></div></div>
+                <div class="usage-card"><div class="usage-card-title">UsuniÍcia / dzieÒ</div><div id="uc-fs-deletes"></div></div>
             </div>
             <div class="usage-subhead">Hosting</div>
             <div class="usage-grid">
                 <div class="usage-card"><div class="usage-card-title">Storage (wersje strony)</div><div id="uc-host-storage"></div></div>
-                <div class="usage-card"><div class="usage-card-title">Transfer (miesiƒôcznie)</div><div id="uc-host-transfer"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Transfer (miesiÍcznie)</div><div id="uc-host-transfer"></div></div>
             </div>
             <div class="usage-subhead">Cloud Functions</div>
             <div class="usage-grid">
-                <div class="usage-card"><div class="usage-card-title">Wywo≈Çania / dzie≈Ñ</div><div id="uc-fn-invocations"></div></div>
-                <div class="usage-card"><div class="usage-card-title">Czas oblicze≈Ñ / dzie≈Ñ</div><div id="uc-fn-compute"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Wywo≥ania / dzieÒ</div><div id="uc-fn-invocations"></div></div>
+                <div class="usage-card"><div class="usage-card-title">Czas obliczeÒ / dzieÒ</div><div id="uc-fn-compute"></div></div>
             </div>
         </div>
 
@@ -497,15 +497,15 @@
 
 <script src="coachay-core.js?v=20260826e"></script>
 <script>
-/* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-   SUPPORT ‚Äî panel ADMIN_PLATFORMY
-‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+/* ===================================================
+   SUPPORT ó panel ADMIN_PLATFORMY
+=================================================== */
 
 let allClubs    = [];   // { id, name, color, memberCount, teamCount, licenseStatus, licenseExpiry }
 let sheetClubId = '';
 let sheetPlanSelected = 'club_klub';
 
-// Wybrany pakiet (z kafelk√≥w na g√≥rze)
+// Wybrany pakiet (z kafelkÛw na gÛrze)
 let _pkgId    = 'club_klub';
 let _pkgCount = 100;
 let _pkgDays  = 365;
@@ -532,13 +532,13 @@ function selectPkgDuration(btn, days) {
 }
 
 const SHEET_PLANS = [
-    { id: 'club_starter', name: 'Starter',      sub: '50 licencji ¬∑ floating license',  total: 50  },
-    { id: 'club_klub',    name: 'Klub',          sub: '100 licencji ¬∑ floating license', total: 100 },
-    { id: 'club_pro',     name: 'Pro',           sub: '200 licencji ¬∑ floating license', total: 200 },
-    { id: 'club_custom',  name: 'Indywidualny',  sub: 'W≈Çasna liczba licencji',          total: 0   },
+    { id: 'club_starter', name: 'Starter',      sub: '50 licencji ∑ floating license',  total: 50  },
+    { id: 'club_klub',    name: 'Klub',          sub: '100 licencji ∑ floating license', total: 100 },
+    { id: 'club_pro',     name: 'Pro',           sub: '200 licencji ∑ floating license', total: 200 },
+    { id: 'club_custom',  name: 'Indywidualny',  sub: 'W≥asna liczba licencji',          total: 0   },
 ];
 
-/* ‚îÄ‚îÄ Init ‚îÄ‚îÄ */
+/* ¶¶ Init ¶¶ */
 window.addEventListener('DOMContentLoaded', () => {
     initFirebase();
     let _loaded = false;
@@ -552,7 +552,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             const session = await initSession();
 
-            // Sprawd≈∫ isPlatformAdmin bezpo≈õrednio z session.user (Firestore doc)
+            // Sprawdü isPlatformAdmin bezpoúrednio z session.user (Firestore doc)
             const fbUser = session?.user;
             const isPlatformAdmin = fbUser?.isPlatformAdmin === true
                 || getCurrentUserData()?._raw?.isPlatformAdmin === true;
@@ -570,10 +570,10 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/* ‚îÄ‚îÄ ≈Åaduj kluby ‚îÄ‚îÄ */
+/* ¶¶ £aduj kluby ¶¶ */
 async function loadClubs() {
     try {
-        // R√≥wnoleg≈Çe zapytania: kluby + dru≈ºyny + memberships + access_rights (daty licencji)
+        // RÛwnoleg≥e zapytania: kluby + druøyny + memberships + access_rights (daty licencji)
         const now = new Date();
         const [clubsSnap, teamsSnap, membSnap, arSnap] = await Promise.all([
             db.collection('clubs').get(),
@@ -582,7 +582,7 @@ async function loadClubs() {
             db.collection('access_rights').where('valid_until', '>', firebase.firestore.Timestamp.fromDate(now)).get(),
         ]);
 
-        // Mapa: clubId ‚Üí najdalsza data valid_until z aktywnych access_rights
+        // Mapa: clubId õ najdalsza data valid_until z aktywnych access_rights
         const arExpiryByClub = {};
         arSnap.docs.forEach(d => {
             const { club_id: cid, valid_until } = d.data();
@@ -593,14 +593,14 @@ async function loadClubs() {
             }
         });
 
-        // Policz dru≈ºyny per klub
+        // Policz druøyny per klub
         const teamCountByClub = {};
         teamsSnap.docs.forEach(d => {
             const cid = d.data().clubId;
             if (cid) teamCountByClub[cid] = (teamCountByClub[cid] || 0) + 1;
         });
 
-        // Policz unikalnych u≈ºytkownik√≥w per klub (bez REMOVED)
+        // Policz unikalnych uøytkownikÛw per klub (bez REMOVED)
         const membersByClub = {};
         membSnap.docs.forEach(d => {
             const { clubId: cid, userId, status } = d.data();
@@ -622,8 +622,8 @@ async function loadClubs() {
             let licenseExpiry = null;
             let trialExpiry   = null;
 
-            // Oblicz datƒô ko≈Ñca trialu (createdAt + 90 dni)
-            // createdAt mo≈ºe byƒá Timestamp lub string ISO ‚Äî obs≈Çugujemy oba
+            // Oblicz datÍ koÒca trialu (createdAt + 90 dni)
+            // createdAt moøe byÊ Timestamp lub string ISO ó obs≥ugujemy oba
             const createdAtDate = d.createdAt?.toDate?.()
                 ?? (d.createdAt ? new Date(d.createdAt) : null);
             if (createdAtDate && !isNaN(createdAtDate)) {
@@ -631,7 +631,7 @@ async function loadClubs() {
             }
 
             // Czytaj status wyliczony przez CF (updateClubLicenseStatuses, co 06:00)
-            // Fallback: je≈õli CF nie uruchomi≈Ça jeszcze ‚Äî licz z createdAt
+            // Fallback: jeúli CF nie uruchomi≥a jeszcze ó licz z createdAt
             if (d.licenseStatus) {
                 licenseStatus = d.licenseStatus.toLowerCase();
                 // licenseExpiry: najpierw clubs.license, fallback na access_rights admina
@@ -678,15 +678,15 @@ async function loadClubs() {
     } catch (e) {
         console.error('loadClubs:', e);
         document.getElementById('sup-clubs').innerHTML =
-            `<div class="sup-empty"><div class="sup-empty-icon">‚ö†Ô∏è</div><div class="sup-empty-txt">B≈ÇƒÖd: ${e.message}</div></div>`;
+            `<div class="sup-empty"><div class="sup-empty-icon">??</div><div class="sup-empty-txt">B≥πd: ${e.message}</div></div>`;
     }
 }
 
-/* ‚îÄ‚îÄ Renderuj listƒô ‚îÄ‚îÄ */
+/* ¶¶ Renderuj listÍ ¶¶ */
 function renderClubs(clubs) {
     const container = document.getElementById('sup-clubs');
     if (!clubs.length) {
-        container.innerHTML = '<div class="sup-empty"><div class="sup-empty-icon">üîç</div><div class="sup-empty-txt">Brak wynik√≥w.</div></div>';
+        container.innerHTML = '<div class="sup-empty"><div class="sup-empty-icon">??</div><div class="sup-empty-txt">Brak wynikÛw.</div></div>';
         return;
     }
 
@@ -694,36 +694,36 @@ function renderClubs(clubs) {
     clubs.forEach(club => {
         // Grace = nadal aktywna, badge taki sam jak Active
         const badgeClass = club.licenseStatus === 'grace' ? 'active' : club.licenseStatus;
-        const statusLabel = { active: 'Aktywna', trial: 'Trial', expired: 'Wygas≈Ça' }[badgeClass] || '‚Äî';
+        const statusLabel = { active: 'Aktywna', trial: 'Trial', expired: 'Wygas≥a' }[badgeClass] || 'ó';
 
         const _expiryDate = club.licenseExpiry ?? club.trialExpiry ?? null;
         const expiryStr = _expiryDate
             ? _expiryDate.toISOString().slice(0, 10)
-            : '‚Äî';
+            : 'ó';
 
         // Tekst info-bara licencji
-        let licenseInfo = '‚Äî';
+        let licenseInfo = 'ó';
         if (club.licenseStatus === 'trial') {
             if (club.trialExpiry) {
                 const trialStr = club.trialExpiry.toLocaleDateString('pl-PL', { day:'2-digit', month:'short', year:'numeric' });
                 licenseInfo = `Trial wygasa: <strong>${trialStr}</strong>`;
             } else {
-                licenseInfo = 'Brak licencji ¬∑ brak daty utworzenia';
+                licenseInfo = 'Brak licencji ∑ brak daty utworzenia';
             }
         } else if (club.licenseStatus === 'expired' && !club.licenseExpiry) {
-            // Trial wygas≈Ç (brak licencji)
+            // Trial wygas≥ (brak licencji)
             if (club.trialExpiry) {
                 const trialStr = club.trialExpiry.toLocaleDateString('pl-PL', { day:'2-digit', month:'short', year:'numeric' });
-                licenseInfo = `Trial wygas≈Ç: <strong>${trialStr}</strong> ‚Äî brak licencji`;
+                licenseInfo = `Trial wygas≥: <strong>${trialStr}</strong> ó brak licencji`;
             } else {
-                licenseInfo = 'Brak licencji ¬∑ trial wygas≈Ç';
+                licenseInfo = 'Brak licencji ∑ trial wygas≥';
             }
         } else if (club.licenseStatus === 'grace' && club.licenseExpiry) {
             const daysLeft = Math.ceil((club.licenseExpiry - new Date()) / 86400000);
-            licenseInfo = `‚ö† Grace ‚Äî wygasa za <strong>${daysLeft} dni</strong> (${expiryStr})`;
+            licenseInfo = `? Grace ó wygasa za <strong>${daysLeft} dni</strong> (${expiryStr})`;
         } else if (club.licenseExpiry) {
             const planLabel = { club_monthly: 'Mies.', club_yearly: 'Roczna', club_2year: '2-letnia' }[club.licensePlan] || 'Licencja';
-            licenseInfo = `${planLabel} ¬∑ wa≈ºna do: <strong>${expiryStr}</strong>`;
+            licenseInfo = `${planLabel} ∑ waøna do: <strong>${expiryStr}</strong>`;
         }
 
         const wrapper = document.createElement('div');
@@ -734,12 +734,12 @@ function renderClubs(clubs) {
                 <div class="sup-club-dot" style="background:${club.color}">${club.nameRaw ? club.nameRaw.charAt(0).toUpperCase() : '?'}</div>
                 <div class="sup-club-info">
                     <div class="sup-club-name">${club.name}</div>
-                    <div class="sup-club-meta" id="meta-${club.id}">${club.teamCount} dru≈ºyn ¬∑ ${club.memberCount} cz≈Çonk√≥w</div>
+                    <div class="sup-club-meta" id="meta-${club.id}">${club.teamCount} druøyn ∑ ${club.memberCount} cz≥onkÛw</div>
                     <div style="font-size:10px;font-weight:700;color:var(--szary);margin-top:2px;font-family:monospace;opacity:0.7">${club.id}</div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
                     <span class="sup-club-status ${badgeClass}">${statusLabel}</span>
-                    ${expiryStr !== '‚Äî' ? `<span style="font-size:9px;font-weight:600;color:var(--szary)">${expiryStr}</span>` : ''}
+                    ${expiryStr !== 'ó' ? `<span style="font-size:9px;font-weight:600;color:var(--szary)">${expiryStr}</span>` : ''}
                 </div>
             </div>
             <div class="sup-club-actions" id="actions-${club.id}">
@@ -753,19 +753,19 @@ function renderClubs(clubs) {
                 <div class="sup-action-row">
                     <button class="sup-action-btn green" onclick="openSheet('${club.id}', '${club.name}')"
                         ${club.licenseStatus === 'active' ? 'disabled' : ''}>
-                        ‚úì Aktywuj licencjƒô
+                        ? Aktywuj licencjÍ
                     </button>
                     <button class="sup-action-btn amber" onclick="extendLicense('${club.id}', '${club.name}')"
                         ${club.licenseStatus !== 'active' ? 'disabled' : ''}>
-                        ‚Ü∫ Przed≈Çu≈º
+                        ? Przed≥uø
                     </button>
                 </div>
                 <div class="sup-action-row">
                     <button class="sup-action-btn" onclick="viewClubUsers('${club.id}')">
-                        üë• U≈ºytkownicy
+                        ?? Uøytkownicy
                     </button>
                     <button class="sup-action-btn red" onclick="revokeLicense('${club.id}', '${club.name}')">
-                        ‚õî Zablokuj awaryjnie
+                        ? Zablokuj awaryjnie
                     </button>
                 </div>
                 <div class="sup-action-info" id="action-info-${club.id}"></div>
@@ -775,12 +775,12 @@ function renderClubs(clubs) {
     });
 }
 
-/* ‚îÄ‚îÄ Toggle akcji ‚îÄ‚îÄ */
+/* ¶¶ Toggle akcji ¶¶ */
 function toggleActions(clubId) {
     const actions = document.getElementById(`actions-${clubId}`);
     const card    = document.getElementById(`card-${clubId}`);
     const isOpen  = actions.classList.contains('open');
-    // Zamknij wszystkie ‚Äî wyczy≈õƒá listƒô u≈ºytkownik√≥w
+    // Zamknij wszystkie ó wyczyúÊ listÍ uøytkownikÛw
     document.querySelectorAll('.sup-club-actions.open').forEach(el => {
         el.classList.remove('open');
         const infoEl = el.querySelector('[id^="action-info-"]');
@@ -796,14 +796,14 @@ function toggleActions(clubId) {
     }
 }
 
-/* ‚îÄ‚îÄ Filtrowanie ‚îÄ‚îÄ */
+/* ¶¶ Filtrowanie ¶¶ */
 function filterClubs() {
     const q = document.getElementById('sup-search').value.toLowerCase();
     const filtered = allClubs.filter(c => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
     renderClubs(filtered);
 }
 
-/* ‚îÄ‚îÄ Helpery przycisk√≥w sheetu ‚îÄ‚îÄ */
+/* ¶¶ Helpery przyciskÛw sheetu ¶¶ */
 function selectSheetLic(btn, count) {
     btn.closest('div').querySelectorAll('.extend-period-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
@@ -816,17 +816,17 @@ function selectSheetDays(btn, days) {
     document.getElementById('sheet-days').value = days;
 }
 
-/* ‚ïê‚ïê PANEL ‚Äî Aktywacja licencji ‚ïê‚ïê */
+/* == PANEL ó Aktywacja licencji == */
 function openSheet(clubId, clubName) {
     sheetClubId = clubId;
-    document.getElementById('sheet-title').textContent = `Aktywuj licencjƒô`;
+    document.getElementById('sheet-title').textContent = `Aktywuj licencjÍ`;
     document.getElementById('sheet-sub').innerHTML     = `${clubName}<br><span style="font-family:monospace;font-size:11px;opacity:0.6">${clubId}</span>`;
     document.getElementById('sheet-days').value  = _pkgDays;
     document.getElementById('sheet-total').value = _pkgCount > 0 ? _pkgCount : 100;
     document.getElementById('sheet-msg').className  = 'sup-sheet-msg';
     document.getElementById('sheet-msg').textContent = '';
 
-    // Zaznacz presety pasujƒÖce do _pkgDays
+    // Zaznacz presety pasujπce do _pkgDays
     document.querySelectorAll('#sheet-overlay .sup-sheet-field:last-of-type .extend-period-btn').forEach(b => {
         b.classList.toggle('selected', parseInt(b.dataset.days || 0) === _pkgDays);
     });
@@ -872,7 +872,7 @@ function closeSheet(e) {
 
 async function confirmActivation() {
     const btn    = document.getElementById('sheet-confirm');
-    if (btn.disabled) return; // zabezpieczenie przed podw√≥jnym klikniƒôciem
+    if (btn.disabled) return; // zabezpieczenie przed podwÛjnym klikniÍciem
     if (!sheetClubId) return;
 
     const days   = parseInt(document.getElementById('sheet-days').value) || 365;
@@ -881,7 +881,7 @@ async function confirmActivation() {
     msgEl.className = 'sup-sheet-msg';
     msgEl.textContent = '';
     btn.disabled = true;
-    btn.textContent = 'Aktywujƒô...';
+    btn.textContent = 'AktywujÍ...';
 
     try {
         const now    = new Date();
@@ -912,25 +912,25 @@ async function confirmActivation() {
         }
 
         msgEl.className = 'sup-sheet-msg ok';
-        msgEl.textContent = `‚úì Aktywowano do ${expiry.toLocaleDateString('pl-PL')}.`;
+        msgEl.textContent = `? Aktywowano do ${expiry.toLocaleDateString('pl-PL')}.`;
 
         setTimeout(async () => {
             document.getElementById('sheet-overlay').classList.remove('open');
             renderClubs(allClubs);
-            await loadClubs(); // od≈õwie≈º statystyki
+            await loadClubs(); // odúwieø statystyki
         }, 1500);
 
     } catch (e) {
         console.error('confirmActivation:', e);
         msgEl.className = 'sup-sheet-msg err';
-        msgEl.textContent = 'B≈ÇƒÖd zapisu. Sprawd≈∫ uprawnienia.';
+        msgEl.textContent = 'B≥πd zapisu. Sprawdü uprawnienia.';
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Aktywuj ‚Üí';
+        btn.textContent = 'Aktywuj õ';
     }
 }
 
-/* ‚îÄ‚îÄ Przed≈Çu≈º ‚Äî otw√≥rz sheet ‚îÄ‚îÄ */
+/* ¶¶ Przed≥uø ó otwÛrz sheet ¶¶ */
 let extendClubId = '';
 let extendDays   = 30;
 
@@ -938,7 +938,7 @@ async function extendLicense(clubId, clubName) {
     extendClubId = clubId;
     extendDays   = 30;
 
-    document.getElementById('extend-title').textContent = `Przed≈Çu≈º licencjƒô`;
+    document.getElementById('extend-title').textContent = `Przed≥uø licencjÍ`;
     document.getElementById('extend-sub').innerHTML = `${clubName}<br><span style="font-family:monospace;font-size:11px;opacity:0.6">${clubId}</span>`;
     document.getElementById('extend-msg').className     = 'sup-sheet-msg';
     document.getElementById('extend-msg').textContent   = '';
@@ -948,20 +948,20 @@ async function extendLicense(clubId, clubName) {
         const clubDoc = await db.collection('clubs').doc(clubId).get();
         const license = clubDoc.data()?.license;
 
-        // Aktualna liczba licencji ‚Äî z poprzedniego zakupu (pamiƒôƒá)
+        // Aktualna liczba licencji ó z poprzedniego zakupu (pamiÍÊ)
         const prevTotal = license?.total && license.total < 9999 ? license.total : '';
         const inp = document.getElementById('extend-total');
         inp.value = prevTotal;
         document.getElementById('extend-total-hint').textContent =
             prevTotal ? `Poprzedni zakup: ${prevTotal} licencji` : 'Brak poprzedniego pakietu';
 
-        // Aktualny termin wa≈ºno≈õci
+        // Aktualny termin waønoúci
         const rawExp   = license?.valid_until ?? license?.expiresAt;
         const expiry   = rawExp?.toDate?.() ?? (rawExp ? new Date(rawExp) : null);
         const expiryEl = document.getElementById('extend-current-expiry');
         if (expiry) {
             const isPast = expiry < new Date();
-            expiryEl.textContent = `Obecny termin: ${expiry.toLocaleDateString('pl-PL', { day:'2-digit', month:'short', year:'numeric' })}${isPast ? ' (wygas≈Ça)' : ''}`;
+            expiryEl.textContent = `Obecny termin: ${expiry.toLocaleDateString('pl-PL', { day:'2-digit', month:'short', year:'numeric' })}${isPast ? ' (wygas≥a)' : ''}`;
             expiryEl.style.color = isPast ? 'var(--blad)' : 'var(--szary)';
         } else {
             expiryEl.textContent = 'Brak aktywnej licencji klubowej';
@@ -970,10 +970,10 @@ async function extendLicense(clubId, clubName) {
 
 
     } catch (e) {
-        document.getElementById('extend-total-hint').textContent = 'B≈ÇƒÖd odczytu danych.';
+        document.getElementById('extend-total-hint').textContent = 'B≥πd odczytu danych.';
     }
 
-    // Reset przycisk√≥w okresu
+    // Reset przyciskÛw okresu
     document.querySelectorAll('.extend-period-btn').forEach(b => b.classList.remove('selected'));
     document.querySelector('.extend-period-btn[data-days="30"]').classList.add('selected');
     document.getElementById('extend-days').value = 30;
@@ -1006,14 +1006,14 @@ async function confirmExtend() {
 
     if (!total || total < 1) {
         msgEl.className = 'sup-sheet-msg err';
-        msgEl.textContent = 'Podaj liczbƒô licencji.';
+        msgEl.textContent = 'Podaj liczbÍ licencji.';
         return;
     }
 
     msgEl.className  = 'sup-sheet-msg';
     msgEl.textContent = '';
     btn.disabled     = true;
-    btn.textContent  = 'Zapisujƒô...';
+    btn.textContent  = 'ZapisujÍ...';
 
     try {
         const clubDoc = await db.collection('clubs').doc(extendClubId).get();
@@ -1035,7 +1035,7 @@ async function confirmExtend() {
         }, { merge: true });
 
         msgEl.className  = 'sup-sheet-msg ok';
-        msgEl.textContent = `‚úì Przed≈Çu≈ºono do ${expiry.toLocaleDateString('pl-PL')} ¬∑ ${total} licencji.`;
+        msgEl.textContent = `? Przed≥uøono do ${expiry.toLocaleDateString('pl-PL')} ∑ ${total} licencji.`;
 
         const club = allClubs.find(c => c.id === extendClubId);
         if (club) { club.licenseStatus = 'active'; club.licenseExpiry = expiry; }
@@ -1049,16 +1049,16 @@ async function confirmExtend() {
     } catch (e) {
         console.error('confirmExtend:', e);
         msgEl.className  = 'sup-sheet-msg err';
-        msgEl.textContent = 'B≈ÇƒÖd zapisu.';
+        msgEl.textContent = 'B≥πd zapisu.';
     } finally {
         btn.disabled    = false;
-        btn.textContent = 'Przed≈Çu≈º ‚Üí';
+        btn.textContent = 'Przed≥uø õ';
     }
 }
 
-/* ‚îÄ‚îÄ Cofnij dostƒôp ‚îÄ‚îÄ */
+/* ¶¶ Cofnij dostÍp ¶¶ */
 async function revokeLicense(clubId, clubName) {
-    if (!await showConfirmSheet(`CofnƒÖƒá dostƒôp dla klubu "${clubName}"? U≈ºytkownicy zostanƒÖ zablokowani.`)) return;
+    if (!await showConfirmSheet(`CofnπÊ dostÍp dla klubu "${clubName}"? Uøytkownicy zostanπ zablokowani.`)) return;
 
     const infoEl = document.getElementById(`action-info-${clubId}`);
     infoEl.textContent = 'Cofam...';
@@ -1072,30 +1072,30 @@ async function revokeLicense(clubId, clubName) {
             }
         }, { merge: true });
 
-        infoEl.textContent = '‚úì Dostƒôp cofniƒôty.';
+        infoEl.textContent = '? DostÍp cofniÍty.';
         const club = allClubs.find(c => c.id === clubId);
         if (club) { club.licenseStatus = 'expired'; }
         setTimeout(() => { infoEl.textContent = ''; renderClubs(allClubs); }, 2000);
     } catch (e) {
-        infoEl.textContent = '‚ö† B≈ÇƒÖd zapisu.';
+        infoEl.textContent = '? B≥πd zapisu.';
     }
 }
 
-/* ‚îÄ‚îÄ PodglƒÖd u≈ºytkownik√≥w klubu ‚îÄ‚îÄ */
+/* ¶¶ Podglπd uøytkownikÛw klubu ¶¶ */
 async function viewClubUsers(clubId) {
     const infoEl = document.getElementById(`action-info-${clubId}`);
-    infoEl.innerHTML = '<span style="color:var(--szary);font-size:12px">≈Åadujƒô...</span>';
+    infoEl.innerHTML = '<span style="color:var(--szary);font-size:12px">£adujÍ...</span>';
 
     try {
         const snap = await db.collection('memberships')
             .where('clubId', '==', clubId)
             .get();
 
-        const roleNames  = { TRENER_GLOWNY: 'Trener g≈Ç√≥wny', TRENER_POMOCNICZY: 'Trener pom.', RODZIC: 'Rodzic', ZAWODNIK: 'Zawodnik', KIBIC: 'Kibic' };
+        const roleNames  = { TRENER_GLOWNY: 'Trener g≥Ûwny', TRENER_POMOCNICZY: 'Trener pom.', RODZIC: 'Rodzic', ZAWODNIK: 'Zawodnik', KIBIC: 'Kibic' };
         const roleOrder  = { TRENER_GLOWNY: 0, TRENER_POMOCNICZY: 1, RODZIC: 2, ZAWODNIK: 3, KIBIC: 4 };
         const statusColor = { ACTIVE: 'var(--sukces)', PENDING: 'var(--warn)', BLOCKED: 'var(--blad)', REMOVED: 'var(--szary)' };
 
-        // Deduplikacja po userId ‚Äî bierzemy wszystkich z wyjƒÖtkiem REMOVED
+        // Deduplikacja po userId ó bierzemy wszystkich z wyjπtkiem REMOVED
         const usersMap = {};
         snap.docs.forEach(d => {
             const data = d.data();
@@ -1124,7 +1124,7 @@ async function viewClubUsers(clubId) {
 
         // Pobierz user docs + subscription + access_rights (family)
         const userIds = Object.keys(usersMap);
-        const licMap = {}; // userId ‚Üí { type, expiresAt, arDocId }
+        const licMap = {}; // userId õ { type, expiresAt, arDocId }
         if (userIds.length > 0) {
             const [userDocs, arSnap] = await Promise.all([
                 Promise.all(userIds.map(uid => db.collection('users').doc(uid).get())),
@@ -1136,7 +1136,7 @@ async function viewClubUsers(clubId) {
                 const name = [d.firstName, d.lastName].filter(Boolean).join(' ')
                           || d.displayName
                           || usersMap[doc.id].displayName
-                          || '‚Äî';
+                          || 'ó';
                 usersMap[doc.id].displayName = name;
                 const sub = d.subscription;
                 if (sub?.status && sub?.expiresAt) {
@@ -1154,7 +1154,7 @@ async function viewClubUsers(clubId) {
 
         const members = Object.values(usersMap).map(u => ({
             userId:      u.userId,
-            displayName: u.displayName || '‚Äî',
+            displayName: u.displayName || 'ó',
             status:      u.status,
             roleLabel:   [...u.roles].map(r => roleNames[r] || r).join(' + '),
             sortKey:     Math.min(...[...u.roles].map(r => roleOrder[r] ?? 9)),
@@ -1171,16 +1171,16 @@ async function viewClubUsers(clubId) {
             const club = allClubs.find(c => c.id === clubId);
             if (club) {
                 club.memberCount = activeCount;
-                metaEl.textContent = `${club.teamCount} dru≈ºyn ¬∑ ${activeCount} cz≈Çonk√≥w`;
+                metaEl.textContent = `${club.teamCount} druøyn ∑ ${activeCount} cz≥onkÛw`;
             }
         }
 
         if (members.length === 0) {
-            infoEl.innerHTML = '<span style="color:var(--szary);font-size:12px">Brak cz≈Çonk√≥w w tym klubie.</span>';
+            infoEl.innerHTML = '<span style="color:var(--szary);font-size:12px">Brak cz≥onkÛw w tym klubie.</span>';
             return;
         }
 
-        // Skr√≥ƒá userId do czytelnej formy
+        // SkrÛÊ userId do czytelnej formy
         const shortId = uid => uid;
 
         infoEl.innerHTML = `
@@ -1189,7 +1189,7 @@ async function viewClubUsers(clubId) {
                     <span style="font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--szary)">${activeCount} aktywnych / ${members.length} razem</span>
                     <button id="imp-btn-${clubId}" disabled onclick="impersonateSelected('${clubId}')"
                         style="padding:6px 14px;border-radius:var(--r-pill);background:var(--akcent);border:none;color:#fff;font-size:11px;font-weight:900;cursor:pointer;opacity:0.35;transition:opacity 0.2s">
-                        Zaloguj jako ‚Üí
+                        Zaloguj jako õ
                     </button>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;scrollbar-width:none;">
@@ -1216,14 +1216,14 @@ async function viewClubUsers(clubId) {
                             const tCol = tActive ? 'rgba(251,191,36,0.12)' : 'rgba(100,100,100,0.12)';
                             const tBorder = tActive ? 'rgba(251,191,36,0.25)' : 'rgba(100,100,100,0.25)';
                             const tText = tActive ? 'var(--warn)' : 'var(--szary)';
-                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${tCol};color:${tText};border:1px solid ${tBorder};white-space:nowrap">Okres pr√≥bny ${fmtD(m.trialEndsAt)}</span>`);
+                            badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${tCol};color:${tText};border:1px solid ${tBorder};white-space:nowrap">Okres prÛbny ${fmtD(m.trialEndsAt)}</span>`);
                         }
                         const licBadge = badges.join(' ');
                         const canRemove = m.lic != null;
                         const licBtn = canRemove
                             ? `<button onclick="event.stopPropagation();removeLicense('${m.userId}','${m.lic.type}','${m.lic.arDocId||''}','${clubId}',this)"
                                 style="flex-shrink:0;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:var(--blad);font-size:9px;font-weight:900;cursor:pointer;white-space:nowrap">
-                                Usu≈Ñ licencjƒô
+                                UsuÒ licencjÍ
                                </button>`
                             : '';
                         return `
@@ -1235,7 +1235,7 @@ async function viewClubUsers(clubId) {
                             <div style="font-size:12px;font-weight:800;color:var(--bialy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.displayName}</div>
                             <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap;">
                                 <span style="font-size:10px;color:var(--szary);font-weight:600">${m.roleLabel}</span>
-                                ${m.status !== 'ACTIVE' ? `<span style="font-size:9px;font-weight:900;color:${statusColor[m.status] || 'var(--szary)'}">¬∑ ${m.status}</span>` : ''}
+                                ${m.status !== 'ACTIVE' ? `<span style="font-size:9px;font-weight:900;color:${statusColor[m.status] || 'var(--szary)'}">∑ ${m.status}</span>` : ''}
                                 ${licBadge}
                             </div>
                             <div style="font-size:9px;color:var(--szary-j);font-family:var(--font-d);margin-top:1px;letter-spacing:0.3px">${shortId(m.userId)}</div>
@@ -1247,7 +1247,7 @@ async function viewClubUsers(clubId) {
             </div>`;
     } catch (e) {
         console.error('viewClubUsers:', e);
-        infoEl.innerHTML = `<span style="color:var(--blad);font-size:12px">‚ö† B≈ÇƒÖd: ${e.message}</span>`;
+        infoEl.innerHTML = `<span style="color:var(--blad);font-size:12px">? B≥πd: ${e.message}</span>`;
     }
 }
 
@@ -1258,7 +1258,7 @@ function selectMember(label, userId, clubId) {
     // Aktywuj przycisk
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
 
-    // Pod≈õwietl wybrany wiersz, odznacz pozosta≈Çe
+    // Podúwietl wybrany wiersz, odznacz pozosta≥e
     if (infoEl) {
         infoEl.querySelectorAll('label').forEach(l => l.style.borderColor = 'var(--border)');
         infoEl._selectedUserId = userId;
@@ -1281,16 +1281,16 @@ async function removeLicense(userId, type, arDocId, clubId, btn) {
         } else if (type === 'family' && arDocId) {
             await db.collection('access_rights').doc(arDocId).delete();
         }
-        btn.textContent = '‚úì Usuniƒôto';
+        btn.textContent = '? UsuniÍto';
         btn.style.color = 'var(--sukces)';
         btn.style.borderColor = 'rgba(74,222,128,0.35)';
         if (label) {
-            label.querySelectorAll('[style*="ind ¬∑"],[style*="family ¬∑"]').forEach(el => el.remove());
+            label.querySelectorAll('[style*="ind ∑"],[style*="family ∑"]').forEach(el => el.remove());
         }
     } catch (e) {
         console.error('removeLicense:', e);
         btn.disabled = false;
-        btn.textContent = 'B≈ÇƒÖd';
+        btn.textContent = 'B≥πd';
         btn.style.color = 'var(--blad)';
     }
 }
@@ -1334,7 +1334,7 @@ async function impersonateSelected(clubId) {
     await impersonate();
 }
 
-/* ‚îÄ‚îÄ Impersonacja ‚îÄ‚îÄ */
+/* ¶¶ Impersonacja ¶¶ */
 function checkImpersonationBanner() {
     const original = localStorage.getItem('supportOriginalUserId');
     if (original) {
@@ -1345,12 +1345,12 @@ function checkImpersonationBanner() {
 
 function exitImpersonation() {
     const original = localStorage.getItem('supportOriginalUserId');
-    if (!original) return; // nie jeste≈õmy w trybie impersonacji
+    if (!original) return; // nie jesteúmy w trybie impersonacji
     localStorage.setItem('currentUserId', original);
     localStorage.removeItem('supportOriginalUserId');
     localStorage.removeItem('selectedMembershipId');
     localStorage.removeItem('selectedTeamId');
-    window.location.reload(); // prze≈Çaduj ‚Äî initSession() czyta nowy currentUserId
+    window.location.reload(); // prze≥aduj ó initSession() czyta nowy currentUserId
 }
 
 async function impersonate() {
@@ -1369,21 +1369,21 @@ async function impersonate() {
         const userDoc = await db.collection('users').doc(userId).get();
         if (!userDoc.exists) {
             msgEl.className = 'sup-imp-msg err';
-            msgEl.textContent = 'Nie znaleziono u≈ºytkownika.';
+            msgEl.textContent = 'Nie znaleziono uøytkownika.';
             return;
         }
         const userData = userDoc.data();
 
-        // Zapisz oryginalnego usera ≈ºeby m√≥c wr√≥ciƒá
+        // Zapisz oryginalnego usera øeby mÛc wrÛciÊ
         const originalUserId = localStorage.getItem('currentUserId');
         localStorage.setItem('supportOriginalUserId', originalUserId);
 
-        // Zmie≈Ñ currentUserId ‚Äî to jedyna zmienna kt√≥rƒÖ czyta initSession()
+        // ZmieÒ currentUserId ó to jedyna zmienna ktÛrπ czyta initSession()
         localStorage.setItem('currentUserId', userId);
         localStorage.removeItem('selectedMembershipId');
         localStorage.removeItem('selectedTeamId');
 
-        // Znajd≈∫ pierwsze aktywne membership impersonowanego usera
+        // Znajdü pierwsze aktywne membership impersonowanego usera
         const mSnap = await db.collection('memberships')
             .where('userId', '==', userId)
             .where('status', '==', 'ACTIVE')
@@ -1396,30 +1396,30 @@ async function impersonate() {
         }
 
         msgEl.className = 'sup-imp-msg ok';
-        msgEl.textContent = `‚úì Prze≈ÇƒÖczono na: ${userData.displayName || userId}. Przekierowanie...`;
+        msgEl.textContent = `? Prze≥πczono na: ${userData.displayName || userId}. Przekierowanie...`;
         setTimeout(() => { window.location.href = 'start.html'; }, 1200);
     } catch (e) {
         console.error('impersonate:', e);
         msgEl.className = 'sup-imp-msg err';
-        msgEl.textContent = 'B≈ÇƒÖd po≈ÇƒÖczenia.';
+        msgEl.textContent = 'B≥πd po≥πczenia.';
     }
 }
 
-/* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-   ZU≈ªYCIE FIREBASE ‚Äî wykresy z limitem (2026-09-30, decyzja Rafa≈Ça:
-   "wykresy muszƒÖ pokazywaƒá g√≥rnƒÖ granicƒô, bo ja nie muszƒô pamiƒôtaƒá limit√≥w").
+/* ===================================================
+   ZUØYCIE FIREBASE ó wykresy z limitem (2026-09-30, decyzja Rafa≥a:
+   "wykresy muszπ pokazywaÊ gÛrnπ granicÍ, bo ja nie muszÍ pamiÍtaÊ limitÛw").
    Dane zapisywane raz dziennie przez Cloud Function collectUsageMetrics
    do usage_metrics/{YYYY-MM-DD}.
-   ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+   =================================================== */
 function _fmtBytes(b) {
-    if (b == null) return '‚Äî';
+    if (b == null) return 'ó';
     if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
     if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
     if (b >= 1024) return (b / 1024).toFixed(0) + ' KB';
     return b + ' B';
 }
 function _fmtNum(n) {
-    if (n == null) return '‚Äî';
+    if (n == null) return 'ó';
     return n.toLocaleString('pl-PL');
 }
 function _pctClass(pct) {
@@ -1428,8 +1428,8 @@ function _pctClass(pct) {
     return 'ok';
 }
 
-// Rysuje ma≈Çy wykres liniowy SVG z poziomƒÖ przerywanƒÖ liniƒÖ limitu ‚Äî limit zawsze
-// mie≈õci siƒô w widocznym zakresie osi Y, nawet je≈õli dane sƒÖ du≈ºo poni≈ºej.
+// Rysuje ma≥y wykres liniowy SVG z poziomπ przerywanπ liniπ limitu ó limit zawsze
+// mieúci siÍ w widocznym zakresie osi Y, nawet jeúli dane sπ duøo poniøej.
 function _renderUsageChart(containerId, series, limitSeries, fmtFn) {
     const el = document.getElementById(containerId);
     if (!el) return;
@@ -1455,9 +1455,9 @@ function _renderUsageChart(containerId, series, limitSeries, fmtFn) {
         onlyX = x(i); onlyY = y(p.v);
         path += (path ? 'L' : 'M') + onlyX.toFixed(1) + ',' + onlyY.toFixed(1) + ' ';
     });
-    // Pierwszego dnia zbierania (albo po dziurze w danych) mamy tylko 1 punkt ‚Äî linia
-    // wtedy nie ma czego ≈ÇƒÖczyƒá, wiƒôc rysujemy kropkƒô, ≈ºeby nie wyglƒÖda≈Ço jak b≈ÇƒÖd
-    // (2026-09-30, zg≈Çoszone przez Rafa≈Ça po pierwszym uruchomieniu na ≈ºywo).
+    // Pierwszego dnia zbierania (albo po dziurze w danych) mamy tylko 1 punkt ó linia
+    // wtedy nie ma czego ≥πczyÊ, wiÍc rysujemy kropkÍ, øeby nie wyglπda≥o jak b≥πd
+    // (2026-09-30, zg≥oszone przez Rafa≥a po pierwszym uruchomieniu na øywo).
     const dotOnly = pointCount === 1
         ? `<circle cx="${onlyX.toFixed(1)}" cy="${onlyY.toFixed(1)}" r="2.5" fill="var(--akcent)"/>`
         : '';
@@ -1486,7 +1486,7 @@ function _renderUsageChart(containerId, series, limitSeries, fmtFn) {
 async function loadUsageMetrics() {
     try {
         const snap = await db.collection('usage_metrics').orderBy('date', 'desc').limit(30).get();
-        const docs = snap.docs.map(d => d.data()).reverse(); // rosnƒÖco po dacie
+        const docs = snap.docs.map(d => d.data()).reverse(); // rosnπco po dacie
         document.getElementById('usage-loading').style.display = 'none';
         if (!docs.length) {
             document.getElementById('usage-empty').style.display = 'block';
@@ -1505,15 +1505,15 @@ async function loadUsageMetrics() {
         _renderUsageChart('uc-host-storage',  series('hosting.storageBytes'),      limitSeries('hosting.storageLimitBytes'),      _fmtBytes);
         _renderUsageChart('uc-host-transfer', series('hosting.monthlySentBytes'),  limitSeries('hosting.monthlySentLimitBytes'),  _fmtBytes);
 
-        // Limity Functions sƒÖ miesiƒôczne ‚Äî dzielimy /30 tylko do narysowania linii dziennej,
-        // sam limit miesiƒôczny podany jest jawnie w opisie karty.
+        // Limity Functions sπ miesiÍczne ó dzielimy /30 tylko do narysowania linii dziennej,
+        // sam limit miesiÍczny podany jest jawnie w opisie karty.
         const fnInvLimitDaily = docs.map(d => d.functions?.invocationsLimitPerMonth ? Math.round(d.functions.invocationsLimitPerMonth / 30) : null).filter(v => v != null);
         const fnCompLimitDaily = docs.map(d => d.functions?.computeLimitSecondsPerMonth ? Math.round(d.functions.computeLimitSecondsPerMonth / 30) : null).filter(v => v != null);
         _renderUsageChart('uc-fn-invocations', series('functions.invocationsToday'),    fnInvLimitDaily,  _fmtNum);
         _renderUsageChart('uc-fn-compute',     series('functions.computeSecondsToday'), fnCompLimitDaily, (v) => v.toFixed(0) + ' s');
     } catch (e) {
         console.error('loadUsageMetrics:', e);
-        document.getElementById('usage-loading').textContent = 'B≈ÇƒÖd wczytywania danych zu≈ºycia.';
+        document.getElementById('usage-loading').textContent = 'B≥πd wczytywania danych zuøycia.';
     }
 }
 </script>

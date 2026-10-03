@@ -1724,6 +1724,7 @@
  },
  "addEvent": {
   "title": "Dodaj wydarzenie",
+  "editTitle": "Edytuj wydarzenie",
   "type": "Typ wydarzenia",
   "topicLabel": "Temat treningu",
   "topicPlaceholder": "Wybierz temat...",
@@ -1747,6 +1748,7 @@
   "announce": "Pokaż w ogłoszeniach",
   "confirm": "Wymagaj potwierdzenia obecności",
   "submit": "Zapisz wydarzenie →",
+  "saveChanges": "Zapisz zmiany →",
   "validationError": "Podaj tytuł i datę",
   "reminder": "Przypomnienie (dni przed)",
   "displayPriority": "Priorytet wyświetlania",

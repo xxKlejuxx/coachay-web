@@ -1,16 +1,16 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COACHAY â€” Akceptacja polityki</title>
+<title>COACHAY — Akceptacja polityki</title>
 <link rel="stylesheet" href="_global.css?v=20260826e">
 <link rel="stylesheet" href="_desktop.css?v=20260826e">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="_i18n.js?v=20261003a"></script>
+<script src="_i18n.js?v=20261003c"></script>
 <style>
 .consent-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 48px 16px 80px; background: var(--tlo); }
 .consent-wrap { width: min(560px, 100%); display: flex; flex-direction: column; gap: 14px; }
@@ -44,17 +44,17 @@
         <div class="consent-card">
             <div class="consent-card-title" data-i18n="consent.whatWeProcessTitle">Co przetwarzamy</div>
             <div class="consent-card-text" data-i18n="consent.whatWeProcessBody">
-                Przechowujemy Twoje dane konta (imiÄ™, e-mail) oraz dane zwiÄ…zane
-                z uczestnictwem w druÅ¼ynie (obecnoÅ›ci, wyniki). Dane nie sÄ…
-                sprzedawane ani udostÄ™pniane podmiotom trzecim.
+                Przechowujemy Twoje dane konta (imiê, e-mail) oraz dane zwi¹zane
+                z uczestnictwem w dru¿ynie (obecnoœci, wyniki). Dane nie s¹
+                sprzedawane ani udostêpniane podmiotom trzecim.
             </div>
-            <div class="consent-card-admin" data-i18n="consent.adminText">Administrator: Operator serwisu Coachay Â· support@coachay.com</div>
+            <div class="consent-card-admin" data-i18n="consent.adminText">Administrator: Operator serwisu Coachay · support@coachay.com</div>
         </div>
 
         <div class="consent-check-row" id="row-terms" onclick="toggleCheck('terms')" style="display:none">
             <div class="consent-cb" id="cb-terms"></div>
             <div class="consent-check-label">
-                <span data-i18n="consent.termsLabel">AkceptujÄ™ politykÄ™ prywatnoÅ›ci Coachay i wyraÅ¼am zgodÄ™ na przetwarzanie moich danych osobowych w celu korzystania z aplikacji.</span>
+                <span data-i18n="consent.termsLabel">Akceptujê politykê prywatnoœci Coachay i wyra¿am zgodê na przetwarzanie moich danych osobowych w celu korzystania z aplikacji.</span>
                 <span data-i18n="consent.termsRequired">Wymagane</span>
             </div>
         </div>
@@ -62,17 +62,17 @@
         <div class="consent-check-row" id="row-coach" onclick="toggleCheck('coach')" style="display:none">
             <div class="consent-cb" id="cb-coach"></div>
             <div class="consent-check-label">
-                <span data-i18n="consent.coachLabel">OÅ›wiadczam, Å¼e posiadam zgody rodzicÃ³w lub opiekunÃ³w prawnych na przetwarzanie danych zawodnikÃ³w niepeÅ‚noletnich w celach organizacyjnych klubu.</span>
-                <span data-i18n="consent.coachRequired">Wymagane dla trenerÃ³w</span>
+                <span data-i18n="consent.coachLabel">Oœwiadczam, ¿e posiadam zgody rodziców lub opiekunów prawnych na przetwarzanie danych zawodników niepe³noletnich w celach organizacyjnych klubu.</span>
+                <span data-i18n="consent.coachRequired">Wymagane dla trenerów</span>
             </div>
         </div>
 
         <div id="children-section"></div>
 
-        <div class="consent-policy-link" onclick="window.open('rodo.html','_blank')" data-i18n="consent.fullPolicyLink">PeÅ‚na polityka prywatnoÅ›ci â†’</div>
+        <div class="consent-policy-link" onclick="window.open('rodo.html','_blank')" data-i18n="consent.fullPolicyLink">Pe³na polityka prywatnoœci ›</div>
 
         <button class="consent-btn" id="consent-btn" onclick="zapiszZgode()" disabled data-i18n="consent.acceptButton">
-            Akceptuj i przejdÅº dalej
+            Akceptuj i przejdŸ dalej
         </button>
     </div>
 </div>
@@ -88,7 +88,7 @@ const _checked = { terms: false, coach: false };
 function toggleCheck(key) {
     _checked[key] = !_checked[key];
     document.getElementById('row-' + key).classList.toggle('checked', _checked[key]);
-    document.getElementById('cb-' + key).textContent = _checked[key] ? 'âœ“' : '';
+    document.getElementById('cb-' + key).textContent = _checked[key] ? '?' : '';
     updateBtn();
 }
 
@@ -100,7 +100,7 @@ function toggleChild(membershipId) {
     }
     const checked = _checkedChildren.has(membershipId);
     document.getElementById('row-child-' + membershipId).classList.toggle('checked', checked);
-    document.getElementById('cb-child-' + membershipId).textContent = checked ? 'âœ“' : '';
+    document.getElementById('cb-child-' + membershipId).textContent = checked ? '?' : '';
     updateBtn();
 }
 
@@ -117,7 +117,7 @@ function updateBtn() {
 function renderChildCheckboxes() {
     const section = document.getElementById('children-section');
     section.innerHTML = '';
-    const consentTpl  = t('consent.parentConsentLabel') || 'WyraÅ¼am zgodÄ™ na przetwarzanie danych osobowych zawodnika {{name}} w celach organizacyjnych i sportowych klubu.';
+    const consentTpl  = t('consent.parentConsentLabel') || 'Wyra¿am zgodê na przetwarzanie danych osobowych zawodnika {{name}} w celach organizacyjnych i sportowych klubu.';
     const requiredLbl = t('consent.parentConsentRequired') || 'Wymagane dla rodzica';
     _childMemberships.forEach(m => {
         const label = consentTpl.replace('{{name}}', m.playerName);
@@ -163,7 +163,7 @@ async function zapiszZgode() {
     } catch(e) {
         const btn2 = document.getElementById('consent-btn');
         btn2.disabled = false;
-        btn2.textContent = t('consent.acceptButton') || 'Akceptuj i przejdÅº dalej';
+        btn2.textContent = t('consent.acceptButton') || 'Akceptuj i przejdŸ dalej';
         updateBtn();
         console.error(e);
     }
@@ -212,7 +212,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 d.data().role === 'RODZIC' && !d.data().parentDataConsentAt
             );
 
-            // Wszystko ok â†’ redirect
+            // Wszystko ok › redirect
             if (!_needTerms && !_needCoach && unconsentedDocs.length === 0) {
                 const ret = sessionStorage.getItem('rodoReturnUrl');
                 sessionStorage.removeItem('rodoReturnUrl');
@@ -223,7 +223,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (_needTerms)  document.getElementById('row-terms').style.display = 'flex';
             if (_needCoach)  document.getElementById('row-coach').style.display = 'flex';
 
-            // Pobierz imiona zawodnikÃ³w i wyrenderuj checkboxy
+            // Pobierz imiona zawodników i wyrenderuj checkboxy
             if (unconsentedDocs.length > 0) {
                 _childMemberships = await Promise.all(unconsentedDocs.map(async d => {
                     const pid = d.data().playerId || '';

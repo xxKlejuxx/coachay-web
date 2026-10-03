@@ -1724,6 +1724,7 @@
  },
  "addEvent": {
   "title": "Add event",
+  "editTitle": "Edit event",
   "type": "Event type",
   "topicLabel": "Training topic",
   "topicPlaceholder": "Choose topic...",
@@ -1747,6 +1748,7 @@
   "announce": "Show in announcements",
   "confirm": "Require attendance confirmation",
   "submit": "Save event →",
+  "saveChanges": "Save changes →",
   "validationError": "Enter title and date",
   "reminder": "Reminder (days before)",
   "displayPriority": "Display priority",

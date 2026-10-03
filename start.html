@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20261003a"></script>
+<script src="_i18n.js?v=20261003c"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <style>
 :root { --phone-h: 750px; }
@@ -524,7 +524,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     <div class="slide-panel" id="panel-add-event">
         <div class="slide-panel-hdr">
             <span class="slide-panel-tytul" data-i18n="addEvent.title">Dodaj wydarzenie</span>
-            <div class="slide-panel-close" onclick="closeSlidePanel('panel-add-event')">✕</div>
+            <div class="slide-panel-close" onclick="closeAddEventPanel()">✕</div>
         </div>
         <div class="slide-panel-body">
             <div class="form-group">
@@ -781,7 +781,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     <div class="ev-det-body" id="ev-det-body"></div>
     <div class="ev-det-footer" id="ev-det-footer" style="display:none;">
         <div style="display:flex;gap:8px;">
-            <button class="btn-primary" style="flex:1;padding:13px;" onclick="alert('Edycja — wkrótce')" data-i18n="eventDetail.edit">✏️ Edytuj</button>
+            <button class="btn-primary" style="flex:1;padding:13px;" onclick="editEventFromDetail()" data-i18n="eventDetail.edit">✏️ Edytuj</button>
             <button id="ev-cancel-btn" onclick="calCancelEvent()" style="flex:0;padding:13px 16px;font-weight:700;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:var(--r-pill);color:#EA580C;cursor:pointer;font-size:14px;" data-i18n="eventDetail.cancel">❌ Odwołaj</button>
             <button onclick="calDeleteEvent()" style="flex:0;padding:13px 18px;font-weight:900;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:var(--r-pill);color:var(--blad);cursor:pointer;">🗑️</button>
         </div>
@@ -2743,7 +2743,29 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         return { topicId, title };
     }
 
+    let _editingEventId = null;
+
+    function _setEventPanelMode(editing) {
+        const panel = document.getElementById('panel-add-event');
+        if (!panel) return;
+        const titleEl = panel.querySelector('.slide-panel-tytul');
+        if (titleEl) titleEl.textContent = editing ? (t('addEvent.editTitle') || 'Edytuj wydarzenie') : (t('addEvent.title') || 'Dodaj wydarzenie');
+        const submitBtn = panel.querySelector('.add-panel-footer .btn-primary');
+        if (submitBtn) submitBtn.textContent = editing ? (t('addEvent.saveChanges') || 'Zapisz zmiany →') : (t('addEvent.submit') || 'Zapisz wydarzenie →');
+        // Powtarzanie (cykl) nie ma sensu przy edycji jednego, już istniejącego eventu
+        const cycleGroup = document.getElementById('ev-cycle-toggle')?.closest('.form-group');
+        if (cycleGroup) cycleGroup.style.display = editing ? 'none' : '';
+    }
+
+    function closeAddEventPanel() {
+        _editingEventId = null;
+        _setEventPanelMode(false);
+        closeSlidePanel('panel-add-event');
+    }
+
     function openAddEventPanel() {
+        _editingEventId = null;
+        _setEventPanelMode(false);
         openSlidePanel('panel-add-event');
         const todayVal = calSelectedDate || getLocalDateStr(new Date());
         document.getElementById('ev-date-from').value = todayVal;
@@ -2753,6 +2775,67 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             renderEvPersonList();
         });
         _loadEvTopics();
+    }
+
+    async function editEventFromDetail() {
+        if (!calDetailEvent) return;
+        const evId = calDetailEvent.eventId || calDetailEvent.id;
+        try {
+            const doc = await db.collection('events').doc(evId).get();
+            if (!doc.exists) { alert('Wydarzenie nie istnieje.'); return; }
+            const event = doc.data();
+            _editingEventId = evId;
+
+            closeCalDetailPanel();
+            openSlidePanel('panel-add-event');
+            _setEventPanelMode(true);
+
+            document.querySelectorAll('#ev-type-picker .type-opt').forEach(o => o.classList.toggle('selected', o.dataset.type === event.type));
+            document.getElementById('ev-topic-group').style.display = event.type === 'TRENING' ? '' : 'none';
+
+            document.getElementById('ev-add-title').value = event.title || '';
+            updateEvTitleCount();
+            document.getElementById('ev-add-desc').value = event.description || '';
+            updateEvDescCount();
+            document.getElementById('ev-date-from').value = event.date || '';
+            document.getElementById('ev-date-to').value   = event.date || '';
+            document.getElementById('ev-time-from').value = event.timeFrom || '17:00';
+            document.getElementById('ev-time-to').value   = event.timeTo || '18:30';
+            document.getElementById('ev-venue').value   = event.location?.venueName || '';
+            document.getElementById('ev-address').value = event.location?.address || '';
+            document.getElementById('ev-cycle-toggle').classList.remove('on');
+            document.getElementById('ev-cycle-days').style.display = 'none';
+            document.querySelectorAll('#ev-cycle-days .day-chip').forEach(c => c.classList.remove('selected'));
+
+            document.querySelectorAll('#ev-vis-grid .vis-chip').forEach(c => {
+                c.classList.toggle('selected', (event.visibility || []).includes(c.dataset.vis));
+            });
+            document.getElementById('ev-toggle-announce').classList.toggle('on', !!event.showInAnnouncements);
+            document.getElementById('ev-toggle-confirm').classList.toggle('on', !!event.requireConfirmation);
+            document.getElementById('ev-reminder-days').value = event.reminderDays ?? 7;
+            document.getElementById('ev-display-priority').value = event.displayPriority ?? 2;
+
+            await _loadAddPanelMembers();
+            _evRefreshPersonListWrap();
+            renderEvPersonList();
+            const invitedIds = event.attendance?.invited || [];
+            if (!invitedIds.includes('__TEAM__')) {
+                document.querySelectorAll('#ev-person-list .person-check-row').forEach(row => {
+                    const checked = invitedIds.includes(row.dataset.personId);
+                    row.classList.toggle('checked', checked);
+                    row.querySelector('.person-cb').textContent = checked ? '✓' : '';
+                });
+                updateEvPersonCount();
+            }
+
+            if (event.type === 'TRENING') {
+                await _loadEvTopics();
+                const topicSel = document.getElementById('ev-add-topic');
+                if (topicSel && event.topicId && Array.from(topicSel.options).some(o => o.value === event.topicId)) {
+                    topicSel.value = event.topicId;
+                }
+            }
+        } catch (e) { console.error('❌ editEventFromDetail', e); alert('Błąd wczytywania wydarzenia.'); }
     }
 
     function pickEvType(el) {
@@ -2881,6 +2964,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     function _resetAddEventForm() {
+        _editingEventId = null;
+        _setEventPanelMode(false);
         document.getElementById('ev-add-title').value = '';
         document.getElementById('ev-add-desc').value = '';
         document.getElementById('ev-date-from').value = '';
@@ -2970,6 +3055,33 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         calAllPlayers.forEach(p => { if (visInvPlayerIds.includes(p.playerId) && p.guardianId && !visibleTo.includes(p.guardianId)) visibleTo.push(p.guardianId); });
 
         const createdBy = getCurrentUserData ? getCurrentUserData()?.userId : (currentUserData?.userId || '');
+
+        if (_editingEventId) {
+            const item = dates[0];
+            const updateData = {
+                type, priority, title: title || topicTitle, topicId, description: desc,
+                date:       item.date,
+                timeFrom, timeTo,
+                location:   { venueName: venue, address },
+                scope, visibility: Array.from(document.querySelectorAll('#ev-vis-grid .vis-chip.selected')).map(c => c.dataset.vis),
+                visibleTo,
+                showInAnnouncements:  showAnn,
+                requireConfirmation:  reqConf,
+                reminderDays,
+                displayPriority,
+                'attendance.invited': invited,
+                updatedAt: new Date().toISOString(),
+                updatedBy: createdBy
+            };
+            try {
+                await db.collection('events').doc(_editingEventId).update(updateData);
+                closeSlidePanel('panel-add-event');
+                _resetAddEventForm();
+                if (typeof clearTeamEventsCache === 'function') clearTeamEventsCache(_activeTeamId);
+                await refreshDashboard();
+            } catch (e) { console.error('❌ saveEventFromPanel (edit)', e); alert('Błąd zapisu: ' + e.message); }
+            return;
+        }
 
         try {
             for (const item of dates) {
