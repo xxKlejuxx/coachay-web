@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>COACHAY — Raporty</title>
+<title>COACHAY � Raporty</title>
 <link rel="stylesheet" href="_global.css?v=20260730a">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
 <script src="_i18n.js?v=20261003a"></script>
@@ -96,7 +96,7 @@
                 <span class="ctx-klub" id="ctx-klub"></span>
                 <span class="ctx-team" id="ctx-team"></span>
             </div>
-            <span class="ctx-arrow">▾</span>
+            <span class="ctx-arrow">?</span>
         </div>
         <div class="top-bar-right">
             <div class="menu-btn" id="menu-btn" onclick="toggleMenu()">
@@ -106,7 +106,7 @@
     </div>
 
     <div class="ctx-overlay" id="ctx-ov">
-        <div class="ov-label">Wybierz klub i zespół</div>
+        <div class="ov-label">Wybierz klub i zesp�</div>
         <div class="ctx-klub-row" id="ctx-klub-row">
             <div class="ctx-klub-dot" id="ctx-ov-dot"></div>
             <span class="ctx-klub-name" id="ctx-ov-klub-name"></span>
@@ -118,7 +118,7 @@
     <div class="notif-overlay" id="notif-ov">
         <div class="notif-hdr">
             <span class="notif-tytul">Powiadomienia</span>
-            <span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span>
+            <span class="notif-clear" onclick="clearNotifs()">Wyczy�� przeczytane</span>
         </div>
     </div>
 
@@ -128,30 +128,30 @@
             <div style="font-family:var(--font-d);font-size:27px;font-weight:800;color:var(--bialy);margin-bottom:8px;" data-i18n="raporty.headerTitle">Raporty</div>
 
             <div id="brak-dostepu" style="display:none;padding:60px 0;text-align:center;color:var(--szary);font-size:18px;font-weight:600;" data-i18n="raporty.accessDeniedBody">
-                Raporty są dostępne tylko dla trenerów.
+                Raporty s� dost�pne tylko dla trener�w.
             </div>
 
             <div id="raport-form" style="display:none;">
 
                 <div class="form-group">
-                    <label class="form-lbl" data-i18n="raporty.reportTypeLabel">Lista raportów:</label>
+                    <label class="form-lbl" data-i18n="raporty.reportTypeLabel">Lista raport�w:</label>
                     <select class="rap-select" id="rap-typ-raportu" onchange="onRaportTypChange()"></select>
                 </div>
 
                 <div class="form-group" id="rap-sekcja-druzyna" style="display:none;">
-                    <label class="form-lbl">Drużyna</label>
-                    <select class="rap-select" id="rap-druzyna-select"><option value="">— ładowanie... —</option></select>
+                    <label class="form-lbl">Dru�yna</label>
+                    <select class="rap-select" id="rap-druzyna-select"><option value="">� �adowanie... �</option></select>
                 </div>
 
                 <div class="form-group" id="rap-sekcja-filtr-karteczki" style="display:none;">
-                    <label class="form-lbl" data-i18n="raporty.cardsFilterLabel">Dla kogo generować karteczki</label>
+                    <label class="form-lbl" data-i18n="raporty.cardsFilterLabel">Dla kogo generowa� karteczki</label>
                     <label class="rap-radio-row"><input type="radio" name="rap-karteczki-filtr" id="rap-karteczki-wszyscy" checked><span data-i18n="raporty.cardsFilterAll">Wszyscy</span></label>
                     <label class="rap-radio-row"><input type="radio" name="rap-karteczki-filtr" id="rap-karteczki-bez-rodzica"><span data-i18n="raporty.cardsFilterWithoutParent">Tylko bez rodzica</span></label>
                 </div>
 
                 <div class="form-group" id="rap-sekcja-okres">
                     <label class="form-lbl" data-i18n="raporty.periodLabel">Okres</label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span data-i18n="raporty.periodSingleDay">📅 Na dzień</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span data-i18n="raporty.periodSingleDay">?? Na dzie�</span></label>
                     <div class="rap-row2" id="rap-okres-miesiac">
                         <div>
                             <select class="rap-select" id="rap-miesiac"></select>
@@ -166,24 +166,24 @@
                 </div>
 
                 <div class="form-group" id="rap-sekcja-zajecia">
-                    <label class="form-lbl" data-i18n="raporty.eventTypeLabel">Rodzaj zajęć</label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-trening" checked><span data-i18n="raporty.checkTraining">⚽ Treningi</span></label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-mecz"><span data-i18n="raporty.checkMatch">🏆 Mecze</span></label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-wyjazd"><span data-i18n="raporty.checkTrip">🚌 Wyjazdy</span></label>
+                    <label class="form-lbl" data-i18n="raporty.eventTypeLabel">Rodzaj zaj��</label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-trening" checked><span data-i18n="raporty.checkTraining">? Treningi</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-mecz"><span data-i18n="raporty.checkMatch">?? Mecze</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-wyjazd"><span data-i18n="raporty.checkTrip">?? Wyjazdy</span></label>
                 </div>
 
                 <div class="form-group" id="rap-sekcja-format">
                     <label class="form-lbl" data-i18n="raporty.formatLabel">Format pliku</label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-pdf" checked><span data-i18n="raporty.formatPdf">📄 PDF</span></label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-csv"><span data-i18n="raporty.formatCsv">📋 CSV</span></label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-xlsx"><span data-i18n="raporty.formatXlsx">📊 Excel (XLSX)</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-pdf" checked><span data-i18n="raporty.formatPdf">?? PDF</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-csv"><span data-i18n="raporty.formatCsv">?? CSV</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-xlsx"><span data-i18n="raporty.formatXlsx">?? Excel (XLSX)</span></label>
                 </div>
 
                 <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="generujRaport()" id="rap-btn-generuj" data-i18n="raporty.generateButton">Generuj raport</button>
                 <div class="rap-msg" id="rap-msg"></div>
 
                 <div class="rap-info-box" id="rap-sekcja-legenda" data-i18n="raporty.infoLegend">
-                    Legenda: 1 = obecny, 0 = nieobecny (bez zgłoszenia), 2 = absencja zgłoszona z wyprzedzeniem, puste pole = brak zajęć tego dnia.
+                    Legenda: 1 = obecny, 0 = nieobecny (bez zg�oszenia), 2 = absencja zg�oszona z wyprzedzeniem, puste pole = brak zaj�� tego dnia.
                 </div>
 
             </div>
@@ -201,28 +201,28 @@
             <div class="menu-panel-role" id="menu-role"></div>
         </div>
         <div class="menu-panel-items">
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">M�j profil</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">P�atno�ci</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Dru�yny klubu</span><span class="menu-item-arrow">�</span></div>
         </div>
         <div class="menu-panel-bottom">
             <div class="menu-logout" onclick="logout()">
-                <span class="menu-logout-icon">🚪</span>
-                <span class="menu-logout-txt">Wyloguj się</span>
+                <span class="menu-logout-icon">??</span>
+                <span class="menu-logout-txt">Wyloguj si�</span>
             </div>
         </div>
     </div>
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20261003a"></script>
+<script src="coachay-core.js?v=20261003b"></script>
 <script>
-/* ═══════════════════════════════════════════════════
-   RAPORTY — logika ekranu
-═══════════════════════════════════════════════════ */
+/* ===================================================
+   RAPORTY � logika ekranu
+=================================================== */
 
 function getMiesiace() {
     const lang = typeof getLang === 'function' ? getLang() : 'pl';
@@ -239,31 +239,31 @@ function getTYP_LABELS() {
 let currentUserId = '', currentUserName = '', currentRole = '';
 let currentTeamId = null, currentClubId = null;
 
-/* ══════════════════════════════════════════════════════
-   REJESTR RAPORTÓW — moduł raportowy
-   Każdy wpis: label do przełącznika + generujDane(ctx), która zwraca
-   tablicę generycznych "pakietów" (jeden pakiet = jedna strona PDF /
+/* ======================================================
+   REJESTR RAPORT�W � modu� raportowy
+   Ka�dy wpis: label do prze��cznika + generujDane(ctx), kt�ra zwraca
+   tablic� generycznych "pakiet�w" (jeden pakiet = jedna strona PDF /
    jeden arkusz XLSX / jeden plik CSV):
      { tytul, naglowek:[linie], kolumny:[etykiety], wiersze:[{label,cells,obecny,nieobecny,absencja}], nazwaBazowa }
-   Dodanie nowego raportu = nowy wpis tutaj + własna funkcja budujPakiet...().
-   Eksport (CSV/XLSX/PDF) nie wie nic o konkretnych raportach — działa
-   wyłącznie na tym generycznym kształcie.
-═══════════════════════════════════════════════════════ */
+   Dodanie nowego raportu = nowy wpis tutaj + w�asna funkcja budujPakiet...().
+   Eksport (CSV/XLSX/PDF) nie wie nic o konkretnych raportach � dzia�a
+   wy��cznie na tym generycznym kszta�cie.
+======================================================= */
 const RAPORTY_REJESTR = {
     obecnosc: {
-        get label() { return typeof t === 'function' ? t('raporty.typeAttendance') : 'Lista obecności (dzień po dniu)'; },
+        get label() { return typeof t === 'function' ? t('raporty.typeAttendance') : 'Lista obecno�ci (dzie� po dniu)'; },
         generujDane: (ctx) => ctx.typy.map(typ => budujPakietObecnoscDzien(typ, ctx))
     },
     szczegolowy: {
-        get label() { return typeof t === 'function' ? t('raporty.typeDetailed') : 'Szczegółowy raport zajęć (per trening/mecz)'; },
+        get label() { return typeof t === 'function' ? t('raporty.typeDetailed') : 'Szczeg�owy raport zaj�� (per trening/mecz)'; },
         generujDane: (ctx) => ctx.typy.map(typ => budujPakietSzczegolowy(typ, ctx))
     },
     kody_rodzicow: {
-        get label() { return typeof t === 'function' ? t('raporty.typeInviteCodes') : '🔑 Karteczki z kodami dla rodziców'; },
+        get label() { return typeof t === 'function' ? t('raporty.typeInviteCodes') : '?? Karteczki z kodami dla rodzic�w'; },
         specjalny: 'karteczki'
     },
     bez_rodzica: {
-        get label() { return typeof t === 'function' ? t('raporty.typeWithoutParent') : '👤 Zawodnicy bez rodzica'; },
+        get label() { return typeof t === 'function' ? t('raporty.typeWithoutParent') : '?? Zawodnicy bez rodzica'; },
         specjalny: 'bez_rodzica'
     }
 };
@@ -295,7 +295,7 @@ async function initRaporty() {
     wypelnijZParametrowUrl();
 }
 
-// Wypełnia formularz z parametrów adresu (np. link z kalendarz.html dla konkretnego eventu)
+// Wype�nia formularz z parametr�w adresu (np. link z kalendarz.html dla konkretnego eventu)
 function wypelnijZParametrowUrl() {
     const params = new URLSearchParams(location.search);
     const raport = params.get('raport');
@@ -348,10 +348,10 @@ function pad(n) { return String(n).padStart(2, '0'); }
 
 function nazwaZawodnika(p) {
     if (p.lastName || p.firstName) return `${p.lastName || ''} ${p.firstName || ''}`.trim();
-    return p.name || '—';
+    return p.name || '�';
 }
 
-// Dokłada kolumnę Lp (numer wiersza) na początku — wspólne dla każdego raportu, dodawane raz przed eksportem
+// Dok�ada kolumn� Lp (numer wiersza) na pocz�tku � wsp�lne dla ka�dego raportu, dodawane raz przed eksportem
 function dodajLp(pak) {
     const lpLabel = typeof t === 'function' ? t('raporty.colLp') : 'Lp';
     return {
@@ -362,7 +362,7 @@ function dodajLp(pak) {
     };
 }
 
-// invited może zawierać sentinel '__TEAM__' zamiast wypisanych playerId (cała drużyna zaproszona) — patrz mecz.html
+// invited mo�e zawiera� sentinel '__TEAM__' zamiast wypisanych playerId (ca�a dru�yna zaproszona) � patrz mecz.html
 function jestZaproszony(e, pid) {
     const invited = e.attendance?.invited || [];
     return invited.includes(pid) || invited.includes('__TEAM__');
@@ -383,8 +383,8 @@ function onRaportTypChange() {
     document.getElementById('rap-sekcja-legenda').style.display  = uzywaOkres ? '' : 'none';
     const _tR2 = (key, fb) => typeof t === 'function' ? t(key) : fb;
     let btnLabel = _tR2('raporty.generateButton', 'Generuj raport');
-    if (isKarteczki)  btnLabel = _tR2('raporty.printCardsButton', '🖨️ Drukuj karteczki');
-    if (isBezRodzica) btnLabel = _tR2('raporty.printListButton',  '🖨️ Drukuj listę');
+    if (isKarteczki)  btnLabel = _tR2('raporty.printCardsButton', '??? Drukuj karteczki');
+    if (isBezRodzica) btnLabel = _tR2('raporty.printListButton',  '??? Drukuj list�');
     document.getElementById('rap-btn-generuj').textContent = btnLabel;
     document.getElementById('rap-msg').textContent = '';
     if (uzywaTeam) zaladujDruzyny();
@@ -410,7 +410,7 @@ async function zaladujDruzyny() {
     }
 }
 
-/* ── Generowanie raportu — nie wie nic o konkretnym raporcie, deleguje do rejestru ── */
+/* �� Generowanie raportu � nie wie nic o konkretnym raporcie, deleguje do rejestru �� */
 async function generujRaport() {
     const msgEl = document.getElementById('rap-msg');
     msgEl.textContent = '';
@@ -436,7 +436,7 @@ async function generujRaport() {
     const _tR = (key, fb) => typeof t === 'function' ? t(key) : fb;
 
     if (typy.length === 0) {
-        msgEl.textContent = _tR('raporty.noTypeSelectedBody', 'Wybierz co najmniej jeden rodzaj zajęć.');
+        msgEl.textContent = _tR('raporty.noTypeSelectedBody', 'Wybierz co najmniej jeden rodzaj zaj��.');
         msgEl.className = 'rap-msg err';
         return;
     }
@@ -447,7 +447,7 @@ async function generujRaport() {
     if (naDzien) {
         const dataStr = document.getElementById('rap-data').value;
         if (!dataStr) {
-            msgEl.textContent = _tR('raporty.noDayBody', 'Wybierz datę.');
+            msgEl.textContent = _tR('raporty.noDayBody', 'Wybierz dat�.');
             msgEl.className = 'rap-msg err';
             return;
         }
@@ -480,7 +480,7 @@ async function generujRaport() {
         ]);
 
         if (players.length === 0) {
-            msgEl.textContent = _tR('raporty.noTeamBody', 'Brak aktywnych zawodników w drużynie.');
+            msgEl.textContent = _tR('raporty.noTeamBody', 'Brak aktywnych zawodnik�w w dru�ynie.');
             msgEl.className = 'rap-msg err';
             return;
         }
@@ -493,11 +493,11 @@ async function generujRaport() {
         else if (format === 'xlsx') pobierzXLSX(pakiety, nazwaZbiorcza);
         else pobierzPDF(pakiety, nazwaZbiorcza);
 
-        msgEl.textContent = '✓ ' + _tR('raporty.generateButton', 'Generuj raport');
+        msgEl.textContent = '? ' + _tR('raporty.generateButton', 'Generuj raport');
         msgEl.className = 'rap-msg ok';
     } catch (e) {
-        console.error('Błąd generowania raportu:', e);
-        msgEl.textContent = _tR('raporty.generateErrorBody', 'Nie udało się wygenerować raportu — spróbuj ponownie.');
+        console.error('B��d generowania raportu:', e);
+        msgEl.textContent = _tR('raporty.generateErrorBody', 'Nie uda�o si� wygenerowa� raportu � spr�buj ponownie.');
         msgEl.className = 'rap-msg err';
     } finally {
         btn.disabled = false;
@@ -505,14 +505,14 @@ async function generujRaport() {
     }
 }
 
-/* ══════════════════════════════════════════════════════
-   KARTECZKI Z KODAMI DLA RODZICÓW
-═══════════════════════════════════════════════════════ */
+/* ======================================================
+   KARTECZKI Z KODAMI DLA RODZIC�W
+======================================================= */
 async function generujKarteczkiRodzicow() {
     const msgEl = document.getElementById('rap-msg');
     const btn   = document.getElementById('rap-btn-generuj');
     btn.disabled = true;
-    btn.textContent = 'Ładowanie...';
+    btn.textContent = '�adowanie...';
     msgEl.textContent = '';
     msgEl.className = 'rap-msg';
 
@@ -520,7 +520,7 @@ async function generujKarteczkiRodzicow() {
         const teamId = document.getElementById('rap-druzyna-select').value || currentTeamId;
         const now = new Date();
 
-        // pobierz aktywnych zawodników drużyny
+        // pobierz aktywnych zawodnik�w dru�yny
         const playersSnap = await playersOfTeamQuery(teamId, currentClubId).get();
         const activePlayers = {};
         for (const d of playersSnap.docs) {
@@ -530,7 +530,7 @@ async function generujKarteczkiRodzicow() {
             }
         }
 
-        // opcjonalny filtr "tylko bez rodzica" — odrzuć zawodników z już aktywnym rodzicem
+        // opcjonalny filtr "tylko bez rodzica" � odrzu� zawodnik�w z ju� aktywnym rodzicem
         const tylkoBezRodzica = document.getElementById('rap-karteczki-bez-rodzica')?.checked;
         if (tylkoBezRodzica) {
             const playerIds = Object.keys(activePlayers);
@@ -562,7 +562,7 @@ async function generujKarteczkiRodzicow() {
             .where('isUsed', '==', false)
             .get();
 
-        // filtruj wygasłe i kody bez aktywnego zawodnika
+        // filtruj wygas�e i kody bez aktywnego zawodnika
         const kody = snap.docs
             .map(d => d.data())
             .filter(k => {
@@ -576,12 +576,12 @@ async function generujKarteczkiRodzicow() {
             });
 
         if (kody.length === 0) {
-            msgEl.textContent = 'Brak aktywnych kodów dla rodziców w tej drużynie.';
+            msgEl.textContent = 'Brak aktywnych kod�w dla rodzic�w w tej dru�ynie.';
             msgEl.className = 'rap-msg err';
             return;
         }
 
-        // grupuj po playerId — numeruj Rodzic 1, Rodzic 2...
+        // grupuj po playerId � numeruj Rodzic 1, Rodzic 2...
         const grupy = {};
         for (const k of kody) {
             if (!grupy[k.playerId]) grupy[k.playerId] = [];
@@ -591,26 +591,26 @@ async function generujKarteczkiRodzicow() {
         const karteczki = [];
         for (const pid of Object.keys(grupy)) {
             const lista = grupy[pid];
-            const playerName = activePlayers[pid] ? nazwaZawodnika(activePlayers[pid]) : (lista[0].playerName || '—');
+            const playerName = activePlayers[pid] ? nazwaZawodnika(activePlayers[pid]) : (lista[0].playerName || '�');
             lista.forEach((k, idx) => {
                 karteczki.push({
                     playerName,
                     rodziLabel: lista.length > 1 ? `Rodzic ${idx + 1}` : 'Rodzic',
-                    code: k.code || '—'
+                    code: k.code || '�'
                 });
             });
         }
 
         drukujKarteczki(karteczki);
-        msgEl.textContent = `✓ Otwarto okno druku — ${karteczki.length} karteczek`;
+        msgEl.textContent = `? Otwarto okno druku � ${karteczki.length} karteczek`;
         msgEl.className = 'rap-msg ok';
     } catch (e) {
         console.error(e);
-        msgEl.textContent = 'Błąd podczas pobierania kodów.';
+        msgEl.textContent = 'B��d podczas pobierania kod�w.';
         msgEl.className = 'rap-msg err';
     } finally {
         btn.disabled = false;
-        btn.textContent = typeof t === 'function' ? t('raporty.printCardsButton') : '🖨️ Drukuj karteczki';
+        btn.textContent = typeof t === 'function' ? t('raporty.printCardsButton') : '??? Drukuj karteczki';
     }
 }
 
@@ -711,21 +711,21 @@ function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    ZAWODNICY BEZ RODZICA
-═══════════════════════════════════════════════════════ */
+======================================================= */
 async function generujBezRodzica() {
     const msgEl = document.getElementById('rap-msg');
     const btn   = document.getElementById('rap-btn-generuj');
     btn.disabled = true;
-    btn.textContent = 'Ładowanie...';
+    btn.textContent = '�adowanie...';
     msgEl.textContent = '';
     msgEl.className = 'rap-msg';
 
     try {
         const teamId = document.getElementById('rap-druzyna-select').value || currentTeamId;
 
-        // 1. Pobierz aktywnych zawodników drużyny
+        // 1. Pobierz aktywnych zawodnik�w dru�yny
         const playersSnap = await playersOfTeamQuery(teamId, currentClubId).get();
         const activePlayers = playersSnap.docs
             .map(d => ({ id: d.id, ...d.data() }))
@@ -733,12 +733,12 @@ async function generujBezRodzica() {
             .sort((a, b) => nazwaZawodnika(a).localeCompare(nazwaZawodnika(b), 'pl'));
 
         if (activePlayers.length === 0) {
-            msgEl.textContent = 'Brak aktywnych zawodników w tej drużynie.';
+            msgEl.textContent = 'Brak aktywnych zawodnik�w w tej dru�ynie.';
             msgEl.className = 'rap-msg err';
             return;
         }
 
-        // 2. Pobierz memberships RODZIC dla tych zawodników (porcjami po 30)
+        // 2. Pobierz memberships RODZIC dla tych zawodnik�w (porcjami po 30)
         const playerIds = activePlayers.map(p => p.id);
         const rodziczeMap = {}; // playerId -> czy ma aktywnego rodzica
 
@@ -759,26 +759,26 @@ async function generujBezRodzica() {
             }
         }
 
-        // 3. Filtruj zawodników bez aktywnego rodzica
+        // 3. Filtruj zawodnik�w bez aktywnego rodzica
         const bezRodzica = activePlayers.filter(p => !rodziczeMap[p.id]);
 
         if (bezRodzica.length === 0) {
-            msgEl.textContent = '✓ Wszyscy aktywni zawodnicy mają zarejestrowanego rodzica.';
+            msgEl.textContent = '? Wszyscy aktywni zawodnicy maj� zarejestrowanego rodzica.';
             msgEl.className = 'rap-msg ok';
             return;
         }
 
         const teamName = document.getElementById('rap-druzyna-select').selectedOptions?.[0]?.text || '';
         drukujBezRodzica(bezRodzica, teamName);
-        msgEl.textContent = `✓ Otwarto okno druku — ${bezRodzica.length} zawodników bez rodzica`;
+        msgEl.textContent = `? Otwarto okno druku � ${bezRodzica.length} zawodnik�w bez rodzica`;
         msgEl.className = 'rap-msg ok';
     } catch (e) {
         console.error(e);
-        msgEl.textContent = 'Błąd podczas pobierania danych.';
+        msgEl.textContent = 'B��d podczas pobierania danych.';
         msgEl.className = 'rap-msg err';
     } finally {
         btn.disabled = false;
-        btn.textContent = typeof t === 'function' ? t('raporty.printListButton') : '🖨️ Drukuj listę';
+        btn.textContent = typeof t === 'function' ? t('raporty.printListButton') : '??? Drukuj list�';
     }
 }
 
@@ -809,8 +809,8 @@ function drukujBezRodzica(zawodnicy, teamName) {
 </style>
 </head>
 <body>
-<h1>👤 Zawodnicy bez zarejestrowanego rodzica</h1>
-<div class="sub">${escHtml(teamName)} &nbsp;|&nbsp; ${zawodnicy.length} zawodników</div>
+<h1>?? Zawodnicy bez zarejestrowanego rodzica</h1>
+<div class="sub">${escHtml(teamName)} &nbsp;|&nbsp; ${zawodnicy.length} zawodnik�w</div>
 <table>
   <thead><tr><th>#</th><th>Zawodnik</th></tr></thead>
   <tbody>${rows}</tbody>
@@ -832,7 +832,7 @@ async function pobierzAktywnychZawodnikow() {
 }
 
 async function pobierzEventyOkresu(dataOd, dataDo) {
-    // 2026-09-25: okres filtrowany w zapytaniu (nie cała historia drużyny)
+    // 2026-09-25: okres filtrowany w zapytaniu (nie ca�a historia dru�yny)
     const snap = await db.collection('events').where('teamId', '==', currentTeamId)
         .where('date', '>=', dataOd).where('date', '<=', dataDo).get();
     return snap.docs.map(d => d.data())
@@ -844,7 +844,7 @@ async function pobierzAktywneAbsencje() {
     return snap.docs.map(d => d.data());
 }
 
-// Tematy treningów (lista rozwijalna w kalendarz.html) — mapa topicId -> title
+// Tematy trening�w (lista rozwijalna w kalendarz.html) � mapa topicId -> title
 // UWAGA: dopasowanie po polu topicId w dokumencie (tak jak w kalendarz.html), nie po ID dokumentu Firestore
 async function pobierzTematyTreningow() {
     if (!currentClubId) return {};
@@ -861,7 +861,7 @@ function formatujDatePl(dateStr) {
     return `${dateStr.slice(8, 10)}.${dateStr.slice(5, 7)}.${dateStr.slice(0, 4)}`;
 }
 
-// Lista dat YYYY-MM-DD od dataOd do dataDo włącznie
+// Lista dat YYYY-MM-DD od dataOd do dataDo w��cznie
 function enumerujDni(dataOd, dataDo) {
     const dni = [];
     const d = new Date(dataOd + 'T00:00:00');
@@ -873,7 +873,7 @@ function enumerujDni(dataOd, dataDo) {
     return dni;
 }
 
-/* ── Raport: Lista obecności dzień po dniu — kolumny = dni okresu ── */
+/* �� Raport: Lista obecno�ci dzie� po dniu � kolumny = dni okresu �� */
 function budujPakietObecnoscDzien(typ, ctx) {
     const { dataOd, dataDo, okresLabel, nazwaOkres, players, events, absences } = ctx;
     const dni = enumerujDni(dataOd, dataDo);
@@ -904,31 +904,31 @@ function budujPakietObecnoscDzien(typ, ctx) {
     const _tP = (key, fb) => typeof t === 'function' ? t(key) : fb;
     const typLabels = getTYP_LABELS();
     return {
-        tytul: typeof t === 'function' ? t('raporty.attendanceTitle', {type: typLabels[typ]}) : `Raport obecności — ${typLabels[typ]}`,
+        tytul: typeof t === 'function' ? t('raporty.attendanceTitle', {type: typLabels[typ]}) : `Raport obecno�ci � ${typLabels[typ]}`,
         naglowek: [
             typeof t === 'function' ? t('raporty.headerCoach', {name: currentUserName}) : `Trener: ${currentUserName}`,
             typeof t === 'function' ? t('raporty.headerPeriod', {period: okresLabel}) : `Okres: ${okresLabel}`
         ],
-        kolumny: [_tP('raporty.colPlayer','Zawodnik'), ...dni.map(d => d.slice(8, 10)), _tP('raporty.colPresent','Obecności'), _tP('raporty.colAbsent','Nieobecności'), _tP('raporty.colExcused','Absencje')],
+        kolumny: [_tP('raporty.colPlayer','Zawodnik'), ...dni.map(d => d.slice(8, 10)), _tP('raporty.colPresent','Obecno�ci'), _tP('raporty.colAbsent','Nieobecno�ci'), _tP('raporty.colExcused','Absencje')],
         wiersze,
         wyrownajLewo: [0],
-        legenda: _tP('raporty.exportLegend', 'Legenda: 1 = obecny, 0 = nieobecny (bez zgłoszenia), 2 = absencja zgłoszona z wyprzedzeniem, puste pole = brak zajęć tego dnia.'),
+        legenda: _tP('raporty.exportLegend', 'Legenda: 1 = obecny, 0 = nieobecny (bez zg�oszenia), 2 = absencja zg�oszona z wyprzedzeniem, puste pole = brak zaj�� tego dnia.'),
         orientacja: 'poziomo',
         nazwaBazowa: `obecnosc_${typ}_${nazwaOkres}`
     };
 }
 
-/* ── Raport: Szczegółowy per zajęcia — lista (wiersz = 1 zawodnik na 1 zajęciach), rośnie w dół, nie wszerz ── */
+/* �� Raport: Szczeg�owy per zaj�cia � lista (wiersz = 1 zawodnik na 1 zaj�ciach), ro�nie w d�, nie wszerz �� */
 function budujPakietSzczegolowy(typ, ctx) {
     const { okresLabel, nazwaOkres, players, events, absences, tematy } = ctx;
     const eventyTypu = events.filter(e => e.type === typ).sort((a, b) => a.date.localeCompare(b.date));
 
     const wiersze = [];
     eventyTypu.forEach(e => {
-        // Trening: temat z listy rozwijalnej (topicId) ma pierwszeństwo — tytuł/opis to osobne, niezależne pola
+        // Trening: temat z listy rozwijalnej (topicId) ma pierwsze�stwo � tytu�/opis to osobne, niezale�ne pola
         const tresc = typ === 'MECZ'
-            ? (e.matchData?.opponent ? `vs ${e.matchData.opponent}` : (e.title || '—'))
-            : (tematy[e.topicId] || e.title || e.description || '—');
+            ? (e.matchData?.opponent ? `vs ${e.matchData.opponent}` : (e.title || '�'))
+            : (tematy[e.topicId] || e.title || e.description || '�');
 
         players.forEach(p => {
             const pid = p.playerId || p.id;
@@ -941,7 +941,7 @@ function budujPakietSzczegolowy(typ, ctx) {
             if (potwierdzony) status = _tS('raporty.statusPresent', 'Obecny');
             else {
                 const maAbsencje = absences.some(a => a.playerId === pid && a.dateFrom <= e.date && a.dateTo >= e.date);
-                status = maAbsencje ? _tS('raporty.statusExcused', 'Absencja zgłoszona') : _tS('raporty.statusAbsent', 'Nieobecny');
+                status = maAbsencje ? _tS('raporty.statusExcused', 'Absencja zg�oszona') : _tS('raporty.statusAbsent', 'Nieobecny');
             }
 
             wiersze.push([nazwaZawodnika(p), formatujDatePl(e.date), tresc, status]);
@@ -951,12 +951,12 @@ function budujPakietSzczegolowy(typ, ctx) {
     const _tPk = (key, fb) => typeof t === 'function' ? t(key) : fb;
     const typLabels2 = getTYP_LABELS();
     return {
-        tytul: typeof t === 'function' ? t('raporty.detailedTitle', {type: typLabels2[typ]}) : `Raport szczegółowy — ${typLabels2[typ]}`,
+        tytul: typeof t === 'function' ? t('raporty.detailedTitle', {type: typLabels2[typ]}) : `Raport szczeg�owy � ${typLabels2[typ]}`,
         naglowek: [
             typeof t === 'function' ? t('raporty.headerCoach', {name: currentUserName}) : `Trener: ${currentUserName}`,
             typeof t === 'function' ? t('raporty.headerPeriod', {period: okresLabel}) : `Okres: ${okresLabel}`
         ],
-        kolumny: [_tPk('raporty.colPlayer','Zawodnik'), _tPk('raporty.colDate','Data'), _tPk('raporty.colContent','Treść zajęć'), _tPk('raporty.colStatus','Status')],
+        kolumny: [_tPk('raporty.colPlayer','Zawodnik'), _tPk('raporty.colDate','Data'), _tPk('raporty.colContent','Tre�� zaj��'), _tPk('raporty.colStatus','Status')],
         wiersze,
         wyrownajLewo: [0, 2, 3],
         legenda: null,
@@ -965,11 +965,11 @@ function budujPakietSzczegolowy(typ, ctx) {
     };
 }
 
-/* ── Wspólny pobierz-plik ──
-   content może być stringiem (CSV) albo Blobem (XLSX/PDF).
+/* �� Wsp�lny pobierz-plik ��
+   content mo�e by� stringiem (CSV) albo Blobem (XLSX/PDF).
    Na webie: klasyczne pobieranie przez <a download>.
-   W appce natywnej: <a download> z blob: URL nie działa w Android WebView —
-   plik zapisywany przez Filesystem i otwierany natywnym arkuszem Share (Zapisz/Udostępnij). */
+   W appce natywnej: <a download> z blob: URL nie dzia�a w Android WebView �
+   plik zapisywany przez Filesystem i otwierany natywnym arkuszem Share (Zapisz/Udost�pnij). */
 async function pobierzPlik(content, filename, mime) {
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
         try {
@@ -979,16 +979,16 @@ async function pobierzPlik(content, filename, mime) {
             try {
                 await FileOpener.open({ filePath: zapisany.uri, contentType: mime });
             } catch (openErr) {
-                console.warn('⚠️ FileOpener — brak aplikacji do otwarcia, pokazuję Udostępnij zamiast:', openErr);
+                console.warn('?? FileOpener � brak aplikacji do otwarcia, pokazuj� Udost�pnij zamiast:', openErr);
                 await Share.share({ title: filename, url: zapisany.uri });
             }
         } catch (e) {
-            console.error('❌ Zapis pliku w appce:', e);
-            alert('Błąd zapisu pliku: ' + e.message);
+            console.error('? Zapis pliku w appce:', e);
+            alert('B��d zapisu pliku: ' + e.message);
         }
         return;
     }
-    const blob = content instanceof Blob ? content : new Blob(['﻿' + content], { type: mime });
+    const blob = content instanceof Blob ? content : new Blob(['?' + content], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1012,20 +1012,20 @@ function blobLubTekstDoBase64(content) {
     });
 }
 
-/* ══════════════════════════════════════════════════════
-   WSPÓLNY EKSPORT — generyczny, nie wie nic o konkretnym raporcie.
-   Działa wyłącznie na pakietach w kształcie:
+/* ======================================================
+   WSP�LNY EKSPORT � generyczny, nie wie nic o konkretnym raporcie.
+   Dzia�a wy��cznie na pakietach w kszta�cie:
    {
-     tytul, naglowek:[linie], kolumny:[nagłówki], wiersze:[[komórki...]],
-     legenda: string|null,           // opcjonalna — nie każdy raport jej potrzebuje
-     wyrownajLewo: [indeksy kolumn], // opcjonalne, domyślnie [0] — reszta wyśrodkowana (tylko PDF)
-     orientacja: 'poziomo'|'pionowo', // opcjonalne, domyślnie 'poziomo' (tylko PDF)
+     tytul, naglowek:[linie], kolumny:[nag��wki], wiersze:[[kom�rki...]],
+     legenda: string|null,           // opcjonalna � nie ka�dy raport jej potrzebuje
+     wyrownajLewo: [indeksy kolumn], // opcjonalne, domy�lnie [0] � reszta wy�rodkowana (tylko PDF)
+     orientacja: 'poziomo'|'pionowo', // opcjonalne, domy�lnie 'poziomo' (tylko PDF)
      nazwaBazowa
    }
-   Każda kolumna w `wiersze` musi odpowiadać pozycji w `kolumny`.
-═══════════════════════════════════════════════════════ */
+   Ka�da kolumna w `wiersze` musi odpowiada� pozycji w `kolumny`.
+======================================================= */
 
-/* ── Export CSV — osobny plik per pakiet ── */
+/* �� Export CSV � osobny plik per pakiet �� */
 async function pobierzCSV(pakiety) {
     for (const pak of pakiety) {
         const lines = [];
@@ -1045,7 +1045,7 @@ async function pobierzCSV(pakiety) {
     }
 }
 
-/* ── Export XLSX — jeden plik, jeden arkusz per pakiet ── */
+/* �� Export XLSX � jeden plik, jeden arkusz per pakiet �� */
 function pobierzXLSX(pakiety, nazwaZbiorcza) {
     const wb = XLSX.utils.book_new();
 
@@ -1073,14 +1073,14 @@ function pobierzXLSX(pakiety, nazwaZbiorcza) {
     }
 }
 
-/* ── Export PDF — jeden plik, jedna strona A4 per pakiet (orientacja zależna od raportu) ──
-   Standardowe fonty jsPDF nie obsługują polskich znaków diakrytycznych,
-   dlatego w PDF są usuwane (tylko w PDF — CSV i XLSX mają pełne polskie znaki). */
+/* �� Export PDF � jeden plik, jedna strona A4 per pakiet (orientacja zale�na od raportu) ��
+   Standardowe fonty jsPDF nie obs�uguj� polskich znak�w diakrytycznych,
+   dlatego w PDF s� usuwane (tylko w PDF � CSV i XLSX maj� pe�ne polskie znaki). */
 function usunPolskieZnaki(str) {
-    const mapa = { 'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z',
-                   'Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z' };
+    const mapa = { '�':'a','�':'c','�':'e','�':'l','�':'n','�':'o','�':'s','�':'z','�':'z',
+                   '�':'A','�':'C','�':'E','�':'L','�':'N','�':'O','�':'S','�':'Z','�':'Z' };
     return String(str)
-        .replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, ch => mapa[ch] || ch)
+        .replace(/[����󜟿��ʣ�ӌ��]/g, ch => mapa[ch] || ch)
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{FE00}-\u{FEFF}]/gu, '')
         .replace(/\s{2,}/g, ' ').trim();
 }
@@ -1133,9 +1133,9 @@ function pobierzPDF(pakiety, nazwaZbiorcza) {
     }
 }
 
-/* ── Start ── */
+/* �� Start �� */
 window.addEventListener('DOMContentLoaded', () => {
-    if (typeof firebase === 'undefined') { console.error('❌ Firebase nie załadowany'); return; }
+    if (typeof firebase === 'undefined') { console.error('? Firebase nie za�adowany'); return; }
     initFirebase();
     initRaporty();
 });

@@ -31,6 +31,7 @@ const I18N = {
         types: { TRENING: 'Trening', MECZ: 'Mecz', WYJAZD: 'Wyjazd', INNE: 'Wydarzenie' },
         newTitle:       (type) => ({ TRENING: 'Nowy trening', MECZ: 'Nowy mecz', WYJAZD: 'Nowy wyjazd', INNE: 'Nowe wydarzenie' }[type] || 'Nowe wydarzenie'),
         cancelledTitle: (type) => ({ TRENING: 'Odwołany trening', MECZ: 'Odwołany mecz', WYJAZD: 'Odwołany wyjazd', INNE: 'Odwołane wydarzenie' }[type] || 'Odwołane wydarzenie'),
+        deletedTitle:   (type) => ({ TRENING: 'Usunięty trening', MECZ: 'Usunięty mecz', WYJAZD: 'Usunięty wyjazd', INNE: 'Usunięte wydarzenie' }[type] || 'Usunięte wydarzenie'),
         updatedTitle:   (type) => ({ TRENING: 'Zmiana: trening', MECZ: 'Zmiana: mecz', WYJAZD: 'Zmiana: wyjazd', INNE: 'Zmiana: wydarzenie' }[type] || 'Zmiana: wydarzenie'),
         confirmAction:  'potwierdź obecność',
         dateChange: (d) => `📅 Data: ${d}`,
@@ -44,6 +45,7 @@ const I18N = {
         types: { TRENING: 'Training', MECZ: 'Match', WYJAZD: 'Away game', INNE: 'Event' },
         newTitle:       (type) => ({ TRENING: 'New training', MECZ: 'New match', WYJAZD: 'New trip', INNE: 'New event' }[type] || 'New event'),
         cancelledTitle: (type) => ({ TRENING: 'Cancelled training', MECZ: 'Cancelled match', WYJAZD: 'Cancelled trip', INNE: 'Cancelled event' }[type] || 'Cancelled event'),
+        deletedTitle:   (type) => ({ TRENING: 'Deleted training', MECZ: 'Deleted match', WYJAZD: 'Deleted trip', INNE: 'Deleted event' }[type] || 'Deleted event'),
         updatedTitle:   (type) => ({ TRENING: 'Change: training', MECZ: 'Change: match', WYJAZD: 'Change: trip', INNE: 'Change: event' }[type] || 'Change: event'),
         confirmAction:  'confirm attendance',
         dateChange: (d) => `📅 Date: ${d}`,
@@ -485,6 +487,7 @@ exports.onEventCreated = onDocumentCreated('events/{eventId}', async (event) => 
    TRIGGER 1b: Event zaktualizowany
    Obsługuje:
      A) status → CANCELLED  → EVENT_CANCELLED do wszystkich zaproszonych
+     A2) status → DELETE    → EVENT_DELETED do wszystkich zaproszonych (2026-10-03)
      B) zmiana daty/godziny/miejsca → EVENT_UPDATED do wszystkich zaproszonych
    Omija notifExists() — nie blokuje aktualizacji.
    Guard: pomija zmiany tylko w matchData (live-score, wyniki).
@@ -594,6 +597,38 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
                 sent++;
             }
             console.log(`✅ onEventUpdated [${eventId}] CANCELLED: ${sent} powiadomień`);
+            return;
+        }
+
+        // ── A2: Usunięcie eventu ─────────────────────────────────────────
+        if (before.status !== 'DELETE' && after.status === 'DELETE') {
+            // Dezaktywuj stare notyfikacje ATTENDANCE/CREATED dla tego eventu
+            try {
+                const oldSnap = await db.collection('notifications')
+                    .where('referenceId', '==', eventId)
+                    .where('actionDone', '==', false)
+                    .get();
+                const batch = db.batch();
+                oldSnap.forEach(doc => {
+                    batch.update(doc.ref, { actionDone: true, actionResult: 'expired', isRead: true, readAt: new Date().toISOString() });
+                });
+                if (!oldSnap.empty) await batch.commit();
+            } catch (e) { console.warn('onEventUpdated DELETE — dezaktywacja notif:', e); }
+
+            const recipients = await resolveInvitedUserIds(after, after.deletedBy || after.createdBy);
+            let sent = 0;
+            for (const { userId, forPlayerId, playerName } of recipients) {
+                await createNotification({
+                    userId, teamId: after.teamId,
+                    type: 'EVENT_DELETED',
+                    title: i18n.deletedTitle(after.type),
+                    body: buildNotifBody(after, { childName: playerName || null }),
+                    referenceId: eventId, referenceType: 'event',
+                    forPlayerId: forPlayerId || null, requiresAction: false,
+                });
+                sent++;
+            }
+            console.log(`✅ onEventUpdated [${eventId}] DELETE: ${sent} powiadomień`);
             return;
         }
 

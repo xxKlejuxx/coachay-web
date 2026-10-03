@@ -2294,6 +2294,7 @@ function renderNotifOverlay() {
         // Kolorowy lewy border wg typu powiadomienia
         const notifBorderColors = {
             EVENT_CANCELLED: '#EF4444',
+            EVENT_DELETED:   '#EF4444',
             EVENT_UPDATED:   '#3B82F6',
             EVENT_CREATED:   '#10B981',
             EVENT_ATTENDANCE:'#F59E0B',

@@ -1,9 +1,9 @@
-Ôªø<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>COACHAY ‚Äî Trenerzy</title>
+<title>COACHAY ó Trenerzy</title>
 <link rel="stylesheet" href="_global.css?v=20260730a">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
 <script src="_i18n.js?v=20261003a"></script>
@@ -15,7 +15,7 @@
 <style>
 .screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
 
-/* ‚îÄ‚îÄ Nag≈Ç√≥wek ekranu ‚îÄ‚îÄ */
+/* ¶¶ Nag≥Ûwek ekranu ¶¶ */
 .tr-header { padding: 12px 16px 10px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .tr-header-title { font-family: var(--font-d); font-size:23px; font-weight: 800; color: var(--bialy); }
 .tr-header-right { display: flex; align-items: center; gap: 8px; }
@@ -24,12 +24,12 @@
 .tr-btn-invite:active { opacity: 0.8; }
 body:has(#app-sidebar) .tr-header { display: none; }
 
-/* ‚îÄ‚îÄ FAB ‚îÄ‚îÄ */
+/* ¶¶ FAB ¶¶ */
 .fab { position: absolute; bottom: 72px; right: 16px; width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size:19px; font-weight: 800; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); z-index: 10; }
 body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
 .fab:active { opacity: 0.85; }
 
-/* ‚îÄ‚îÄ Lista trener√≥w ‚îÄ‚îÄ */
+/* ¶¶ Lista trenerÛw ¶¶ */
 .tr-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .tr-scroll::-webkit-scrollbar { display: none; }
 .tr-inner { max-width: 1222px; margin: 0 auto; padding: 20px 28px 80px; display: flex; flex-direction: column; gap: 8px; }
@@ -50,7 +50,7 @@ body:has(#app-sidebar) .tr-inner { padding: 28px 24px 48px; }
 .tr-team-badge { font-size:14px; font-weight: 800; color: var(--akcent); background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2); border-radius: 999px; padding: 2px 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 .tr-arrow { color: var(--border2); font-size:21px; flex-shrink: 0; }
 
-/* ‚îÄ‚îÄ Panel szczeg√≥≈Ç√≥w trenera ‚îÄ‚îÄ */
+/* ¶¶ Panel szczegÛ≥Ûw trenera ¶¶ */
 .detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .detail-panel.open { transform: translateX(0); }
 
@@ -85,17 +85,17 @@ body:has(#app-sidebar) .tr-inner { padding: 28px 24px 48px; }
 .dp-btn-msg { width: 100%; padding: 14px; background: var(--akcent); border-radius: var(--r); font-size:19px; font-weight: 800; color: #fff; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .dp-btn-msg:active { opacity: 0.8; }
 
-/* ‚îÄ‚îÄ Slide panels (mobile base ‚Äî desktop override w _desktop.css) ‚îÄ‚îÄ */
+/* ¶¶ Slide panels (mobile base ó desktop override w _desktop.css) ¶¶ */
 .slide-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .slide-panel.open { transform: translateY(0); }
-/* edytuj trenera ‚Äî ta sama szeroko≈õƒá co detail panel */
+/* edytuj trenera ó ta sama szerokoúÊ co detail panel */
 body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !important; z-index: 310 !important; }
 
-/* ‚îÄ‚îÄ Panel edycji trenera ‚îÄ‚îÄ */
+/* ¶¶ Panel edycji trenera ¶¶ */
 .edit-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
 .edit-panel-body::-webkit-scrollbar { display: none; }
 
-/* ‚îÄ‚îÄ Panel zaproszenia (u≈ºywa .slide-panel z _desktop.css na desktop) ‚îÄ‚îÄ */
+/* ¶¶ Panel zaproszenia (uøywa .slide-panel z _desktop.css na desktop) ¶¶ */
 .invite-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: none; }
 
 .kod-box { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: center; }
@@ -110,7 +110,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 .kod-copy-btn { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size:17px; font-weight: 700; color: var(--bialy); cursor: pointer; }
 .kod-copy-btn:active { opacity: 0.7; }
 
-/* ‚îÄ‚îÄ Toggle widoczno≈õci ‚îÄ‚îÄ */
+/* ¶¶ Toggle widocznoúci ¶¶ */
 .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
 .toggle-label { font-size:18px; font-weight: 700; color: var(--bialy); }
 .toggle-sub { font-size:16px; color: var(--szary); margin-top: 2px; }
@@ -121,7 +121,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 .toggle-switch input:checked + .toggle-slider { background: var(--akcent); }
 .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
 
-/* ‚îÄ‚îÄ Avatar picker ‚îÄ‚îÄ */
+/* ¶¶ Avatar picker ¶¶ */
 .av-gender-row { display: flex; gap: 6px; margin-bottom: 10px; }
 .av-gender-btn { flex: 1; padding: 8px; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 10px; font-size:17px; font-weight: 700; color: var(--szary); cursor: pointer; text-align: center; }
 .av-gender-btn.selected { background: rgba(59,130,246,0.15); border-color: var(--akcent); color: var(--akcent); }
@@ -130,15 +130,15 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 .av-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .av-thumb.selected { border-color: var(--akcent); }
 
-/* ‚îÄ‚îÄ Sticky save ‚îÄ‚îÄ */
+/* ¶¶ Sticky save ¶¶ */
 .sticky-save { position: sticky; bottom: 0; padding: 14px 16px; background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
 
-/* ‚îÄ‚îÄ Badges admin / blocked ‚îÄ‚îÄ */
+/* ¶¶ Badges admin / blocked ¶¶ */
 .tr-admin-badge { font-size:14px; font-weight: 900; color: #FBBF24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); border-radius: 999px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; }
 .tr-blocked-badge { font-size:14px; font-weight: 900; color: #F87171; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); border-radius: 999px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; }
 .dp-admin-badge { display: inline-flex; align-items: center; gap: 4px; font-size:15px; font-weight: 900; color: #FBBF24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); border-radius: 999px; padding: 3px 10px; letter-spacing: 1px; text-transform: uppercase; margin-top: 6px; }
 
-/* ‚îÄ‚îÄ Sekcja akcji admina w panelu ‚îÄ‚îÄ */
+/* ¶¶ Sekcja akcji admina w panelu ¶¶ */
 .dp-actions { display: flex; flex-direction: column; gap: 8px; }
 .dp-action-btn { width: 100%; padding: 13px 16px; border-radius: var(--r); font-size:18px; font-weight: 800; cursor: pointer; border: none; text-align: left; display: flex; align-items: center; gap: 10px; transition: opacity 0.15s; }
 .dp-action-btn:active { opacity: 0.7; }
@@ -147,7 +147,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 .dp-action-btn-neutral { background: var(--tlo-karta2); color: var(--szary-j); border: 1px solid var(--border2); }
 .dp-action-btn-danger  { background: rgba(239,68,68,0.08); color: #F87171; border: 1px solid rgba(239,68,68,0.2); }
 
-/* ‚îÄ‚îÄ Modal blokady ‚îÄ‚îÄ */
+/* ¶¶ Modal blokady ¶¶ */
 .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
 .modal-overlay.open { opacity: 1; visibility: visible; }
 .modal-box { background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: 20px 20px 0 0; padding: 20px 20px 32px; width: 100%; }
@@ -165,7 +165,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 <div class="phone">
     <div class="notch"></div>
 
-    <!-- ‚îÄ‚îÄ Top bar ‚îÄ‚îÄ -->
+    <!-- ¶¶ Top bar ¶¶ -->
     <div class="top-bar">
         <div class="ctx-switcher" onclick="toggleCtxOv()">
             <div class="ctx-dot" id="ctx-dot"></div>
@@ -173,56 +173,56 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
                 <span class="ctx-klub" id="ctx-klub"></span>
                 <span class="ctx-team" id="ctx-team"></span>
             </div>
-            <span class="ctx-arrow">‚ñæ</span>
+            <span class="ctx-arrow">?</span>
         </div>
         <div class="top-bar-right">
             <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
         </div>
     </div>
 
-    <!-- ‚îÄ‚îÄ Overlaye globalne ‚îÄ‚îÄ -->
+    <!-- ¶¶ Overlaye globalne ¶¶ -->
     <div class="ctx-overlay" id="ctx-ov">
-        <div class="ov-label" data-i18n="appShell.switcherTitle">Wybierz klub i zesp√≥≈Ç</div>
+        <div class="ov-label" data-i18n="appShell.switcherTitle">Wybierz klub i zespÛ≥</div>
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
     <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
-        <div class="notif-hdr"><span class="notif-tytul" data-i18n="appShell.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="appShell.clearRead">Wyczy≈õƒá przeczytane</span></div>
+        <div class="notif-hdr"><span class="notif-tytul" data-i18n="appShell.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="appShell.clearRead">WyczyúÊ przeczytane</span></div>
     </div>
 
-    <!-- ‚îÄ‚îÄ Zawarto≈õƒá ekranu ‚îÄ‚îÄ -->
+    <!-- ¶¶ ZawartoúÊ ekranu ¶¶ -->
     <div class="screen-body">
 
         <div class="tr-header">
             <div class="tr-header-title" data-i18n="trenerzy.headerTitle">Trenerzy</div>
             <div class="tr-header-right">
-                <div class="tr-header-count" id="tr-count">‚Äî</div>
+                <div class="tr-header-count" id="tr-count">ó</div>
                 <button class="tr-btn-invite" id="tr-btn-invite" onclick="openAddPanel()" data-i18n="trenerzy.addButton">+ Dodaj</button>
             </div>
         </div>
 
-        <button class="fab" id="fab-add" onclick="openAddPanel()" data-i18n="trenerzy.addFabButton">Ôºã Dodaj trenera</button>
+        <button class="fab" id="fab-add" onclick="openAddPanel()" data-i18n="trenerzy.addFabButton">+ Dodaj trenera</button>
 
         <div class="tr-scroll" id="tr-scroll">
             <div class="tr-inner" id="tr-inner">
-                <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;font-weight:600;" data-i18n="common.loading">≈Åadowanie...</div>
+                <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;font-weight:600;" data-i18n="common.loading">£adowanie...</div>
             </div>
         </div>
 
     </div>
 
-    <!-- ‚îÄ‚îÄ Bottom nav ‚îÄ‚îÄ -->
+    <!-- ¶¶ Bottom nav ¶¶ -->
     <div class="bottom-nav">
-        <a class="nav-item" href="start.html"><span class="nav-icon">üè†</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
-        <a class="nav-item" href="druzyna.html"><span class="nav-icon">üë•</span><span class="nav-label" data-i18n="nav.druzyna">Dru≈ºyna</span></a>
+        <a class="nav-item" href="start.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.druzyna">Druøyna</span></a>
     </div>
 
-    <!-- ‚ïê‚ïê PANEL SZCZEG√ì≈Å√ìW TRENERA ‚ïê‚ïê -->
+    <!-- == PANEL SZCZEG”£”W TRENERA == -->
     <div class="detail-panel" id="detail-panel">
         <div class="dp-topbar">
             <div class="dp-back" onclick="closeDetailPanel()">
-                <div class="dp-back-icon">‚Äπ</div>
+                <div class="dp-back-icon">ã</div>
                 <span data-i18n="trenerzy.headerTitle">Trenerzy</span>
             </div>
             <span class="dp-edit-btn" id="dp-edit-btn" onclick="openEditPanel()" data-i18n="common.edit">Edytuj</span>
@@ -242,18 +242,18 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
         <div class="dp-scroll" id="dp-scroll"></div>
     </div>
 
-    <!-- ‚ïê‚ïê PANEL EDYCJI TRENERA ‚ïê‚ïê -->
+    <!-- == PANEL EDYCJI TRENERA == -->
     <div class="slide-panel" id="edit-panel" style="z-index:310;">
         <div class="sp-hdr">
             <div class="dp-back" onclick="closeEditPanel()">
-                <div class="dp-back-icon">‚Äπ</div>
+                <div class="dp-back-icon">ã</div>
                 <span data-i18n="trenerzy.backToProfile">Profil</span>
             </div>
             <div class="sp-title" data-i18n="trenerzy.editTitle">Edytuj trenera</div>
         </div>
         <div class="edit-panel-body">
 
-            <!-- ‚îÄ‚îÄ Awatar ‚îÄ‚îÄ -->
+            <!-- ¶¶ Awatar ¶¶ -->
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.avatarLabel">Awatar</label>
                 <div style="display:flex;justify-content:center;margin-bottom:12px;">
@@ -262,16 +262,16 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
                     </div>
                 </div>
                 <div class="av-gender-row">
-                    <button class="av-gender-btn selected" id="av-btn-m" onclick="selectGender('mezczyzna', this)">‚ôÇ <span data-i18n="trenerzy.genderMale">Mƒô≈ºczyzna</span></button>
-                    <button class="av-gender-btn" id="av-btn-k" onclick="selectGender('kobieta', this)">‚ôÄ <span data-i18n="trenerzy.genderFemale">Kobieta</span></button>
+                    <button class="av-gender-btn selected" id="av-btn-m" onclick="selectGender('mezczyzna', this)">> <span data-i18n="trenerzy.genderMale">MÍøczyzna</span></button>
+                    <button class="av-gender-btn" id="av-btn-k" onclick="selectGender('kobieta', this)">+ <span data-i18n="trenerzy.genderFemale">Kobieta</span></button>
                 </div>
                 <div class="av-grid" id="ep-av-grid"></div>
-                <button type="button" onclick="regenAvatarGrid()" style="width:100%;padding:9px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:17px;font-weight:700;cursor:pointer;">‚Ü∫ <span data-i18n="trenerzy.otherAvatarsButton">Inne awatary</span></button>
+                <button type="button" onclick="regenAvatarGrid()" style="width:100%;padding:9px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:17px;font-weight:700;cursor:pointer;">? <span data-i18n="trenerzy.otherAvatarsButton">Inne awatary</span></button>
             </div>
 
             <div style="display:flex;gap:10px;">
                 <div class="form-group" style="flex:1">
-                    <label class="form-lbl" data-i18n="common.firstNameLabel">Imiƒô</label>
+                    <label class="form-lbl" data-i18n="common.firstNameLabel">ImiÍ</label>
                     <input class="form-inp" id="ep-fname" type="text" placeholder="Jan" data-i18n-placeholder="trenerzy.firstNamePlaceholder">
                 </div>
                 <div class="form-group" style="flex:1">
@@ -282,13 +282,13 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             <div class="toggle-row" id="ep-admin-row" style="display:none">
                 <div>
                     <div class="toggle-label" data-i18n="trenerzy.clubAdminLabel">Administrator klubu</div>
-                    <div class="toggle-sub" data-i18n="trenerzy.clubAdminSub">pe≈Çny dostƒôp do zarzƒÖdzania</div>
+                    <div class="toggle-sub" data-i18n="trenerzy.clubAdminSub">pe≥ny dostÍp do zarzπdzania</div>
                 </div>
                 <label class="toggle-switch"><input type="checkbox" id="ep-is-admin"><span class="toggle-slider"></span></label>
             </div>
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.bioLabel">O trenerze <span style="color:var(--szary);font-weight:600;">(bio)</span></label>
-                <textarea class="form-inp" id="ep-bio" rows="3" placeholder="Kilka s≈Ç√≥w o trenerze..." data-i18n-placeholder="trenerzy.bioPlaceholder" style="resize:none;line-height:1.5;"></textarea>
+                <textarea class="form-inp" id="ep-bio" rows="3" placeholder="Kilka s≥Ûw o trenerze..." data-i18n-placeholder="trenerzy.bioPlaceholder" style="resize:none;line-height:1.5;"></textarea>
             </div>
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.sinceLabel">Trener od roku</label>
@@ -300,10 +300,10 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             </div>
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.specLabel">Specjalizacja</label>
-                <input class="form-inp" id="ep-spec" type="text" placeholder="np. Pi≈Çka no≈ºna m≈Çodzie≈ºowa" data-i18n-placeholder="trenerzy.specPlaceholder">
+                <input class="form-inp" id="ep-spec" type="text" placeholder="np. Pi≥ka noøna m≥odzieøowa" data-i18n-placeholder="trenerzy.specPlaceholder">
             </div>
             <div class="form-group">
-                <label class="form-lbl" data-i18n="trenerzy.contactEmailLabel">E-mail kontaktowy <span style="color:var(--szary);font-weight:600;">(do wy≈õwietlenia)</span></label>
+                <label class="form-lbl" data-i18n="trenerzy.contactEmailLabel">E-mail kontaktowy <span style="color:var(--szary);font-weight:600;">(do wyúwietlenia)</span></label>
                 <input class="form-inp" id="ep-email" type="email" placeholder="trener@email.pl" data-i18n-placeholder="trenerzy.contactEmailPlaceholder">
             </div>
             <div class="form-group">
@@ -313,14 +313,14 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             <div class="toggle-row">
                 <div>
                     <div class="toggle-label" data-i18n="trenerzy.phoneVisibleLabel">Telefon widoczny</div>
-                    <div class="toggle-sub" data-i18n="trenerzy.visibleSub">dla rodzic√≥w i zawodnik√≥w</div>
+                    <div class="toggle-sub" data-i18n="trenerzy.visibleSub">dla rodzicÛw i zawodnikÛw</div>
                 </div>
                 <label class="toggle-switch"><input type="checkbox" id="ep-tel-visible"><span class="toggle-slider"></span></label>
             </div>
             <div class="toggle-row">
                 <div>
                     <div class="toggle-label" data-i18n="trenerzy.emailVisibleLabel">E-mail widoczny</div>
-                    <div class="toggle-sub" data-i18n="trenerzy.visibleSub">dla rodzic√≥w i zawodnik√≥w</div>
+                    <div class="toggle-sub" data-i18n="trenerzy.visibleSub">dla rodzicÛw i zawodnikÛw</div>
                 </div>
                 <label class="toggle-switch"><input type="checkbox" id="ep-email-visible"><span class="toggle-slider"></span></label>
             </div>
@@ -330,22 +330,22 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
         </div>
     </div>
 
-    <!-- ‚ïê‚ïê PANEL DODAJ TRENERA ‚ïê‚ïê -->
+    <!-- == PANEL DODAJ TRENERA == -->
     <div class="slide-panel" id="add-panel">
         <div class="sp-hdr">
             <div class="dp-back" onclick="closeAddPanel()">
-                <div class="dp-back-icon">‚Äπ</div>
+                <div class="dp-back-icon">ã</div>
                 <span data-i18n="trenerzy.headerTitle">Trenerzy</span>
             </div>
             <div class="sp-title" data-i18n="trenerzy.addTitle">Nowy trener</div>
         </div>
         <div class="invite-panel-body">
             <div style="font-size:18px;color:var(--szary);line-height:1.6;background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:14px;" data-i18n-html="trenerzy.addHint">
-                Trener pojawi siƒô na li≈õcie ze statusem <strong style="color:var(--warn)">Oczekuje</strong>. Kod rejestracyjny bƒôdzie widoczny w jego profilu ‚Äî przeka≈º go trenerowi.
+                Trener pojawi siÍ na liúcie ze statusem <strong style="color:var(--warn)">Oczekuje</strong>. Kod rejestracyjny bÍdzie widoczny w jego profilu ó przekaø go trenerowi.
             </div>
             <div style="display:flex;gap:10px;">
                 <div class="form-group" style="flex:1">
-                    <label class="form-lbl" data-i18n="common.firstNameLabel">Imiƒô</label>
+                    <label class="form-lbl" data-i18n="common.firstNameLabel">ImiÍ</label>
                     <input class="form-inp" id="add-fname" type="text" placeholder="Marek" data-i18n-placeholder="trenerzy.addFirstNamePlaceholder">
                 </div>
                 <div class="form-group" style="flex:1">
@@ -356,7 +356,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.roleLabel">Rola</label>
                 <select class="form-select" id="add-rola">
-                    <option value="TRENER_GLOWNY" data-i18n="trenerzy.roleTrenerGlowny">Trener G≈Ç√≥wny</option>
+                    <option value="TRENER_GLOWNY" data-i18n="trenerzy.roleTrenerGlowny">Trener G≥Ûwny</option>
                     <option value="TRENER_POMOCNICZY" data-i18n="trenerzy.roleTrenerPomocniczy">Trener Pomocniczy</option>
                 </select>
             </div>
@@ -366,32 +366,32 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
         </div>
     </div>
 
-    <!-- ‚îÄ‚îÄ Menu panel ‚îÄ‚îÄ -->
+    <!-- ¶¶ Menu panel ¶¶ -->
     <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
     <div class="menu-panel" id="menu-panel">
         <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
         <div class="menu-panel-items">
 
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">üë§</div><span class="menu-item-label" data-i18n="menu.profile">M√≥j profil</span><span class="menu-item-arrow">‚Ä∫</span></div>
-            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">üéΩ</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">‚Ä∫</span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">‚öôÔ∏è</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">‚Ä∫</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">üí≥</div><span class="menu-item-label" data-i18n="menu.payments">P≈Çatno≈õci</span><span class="menu-item-arrow">‚Ä∫</span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">MÛj profil</span><span class="menu-item-arrow">õ</span></div>
+            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">õ</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">õ</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">P≥atnoúci</span><span class="menu-item-arrow">õ</span></div>
             <div class="menu-sep"></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">üìä</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">‚Ä∫</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">üèüÔ∏è</div><span class="menu-item-label" data-i18n="menu.clubTeams">Dru≈ºyny klubu</span><span class="menu-item-arrow">‚Ä∫</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">õ</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Druøyny klubu</span><span class="menu-item-arrow">õ</span></div>
             <div class="menu-sep"></div>
         </div>
-        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">üö™</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj siƒô</span></div></div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj siÍ</span></div></div>
     </div>
 
-    <!-- ‚îÄ‚îÄ Modal: zakres blokady ‚îÄ‚îÄ -->
+    <!-- ¶¶ Modal: zakres blokady ¶¶ -->
     <div class="modal-overlay" id="modal-block" onclick="closeBlockModal()">
         <div class="modal-box" onclick="event.stopPropagation()">
-            <div class="modal-title" data-i18n="trenerzy.blockModalTitle">Zablokowaƒá trenera?</div>
+            <div class="modal-title" data-i18n="trenerzy.blockModalTitle">ZablokowaÊ trenera?</div>
             <div class="modal-body" id="modal-block-body"></div>
             <div class="modal-btns">
-                <button class="modal-btn modal-btn-team" onclick="blockTrainer('TEAM')" data-i18n="trenerzy.blockScopeTeam">Tylko ta dru≈ºyna</button>
-                <button class="modal-btn modal-btn-club" onclick="blockTrainer('CLUB')" data-i18n="trenerzy.blockScopeClub">Ca≈Çy klub</button>
+                <button class="modal-btn modal-btn-team" onclick="blockTrainer('TEAM')" data-i18n="trenerzy.blockScopeTeam">Tylko ta druøyna</button>
+                <button class="modal-btn modal-btn-club" onclick="blockTrainer('CLUB')" data-i18n="trenerzy.blockScopeClub">Ca≥y klub</button>
                 <button class="modal-btn modal-btn-cancel" onclick="closeBlockModal()" data-i18n="common.cancel">Anuluj</button>
             </div>
         </div>
@@ -401,11 +401,11 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20261003a"></script>
+<script src="coachay-core.js?v=20261003b"></script>
 <script>
-/* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-   TRENERZY ‚Äî logika ekranu
-‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+/* ===================================================
+   TRENERZY ó logika ekranu
+=================================================== */
 
 let currentUserId = '';
 let currentUserRole = '';
@@ -416,7 +416,7 @@ let allClubTeams = [];
 let detailTrainer = null;
 let isGlowny = false;
 let isAdmin = false; // trainers.isClubAdmin aktualnego usera
-let selectedAvatarUrl = null;    // null = inicja≈Çy, string = pe≈Çny URL DiceBear
+let selectedAvatarUrl = null;    // null = inicja≥y, string = pe≥ny URL DiceBear
 let selectedGender    = 'mezczyzna';
 
 const DICEBEAR_BASE  = 'https://api.dicebear.com/9.x';
@@ -443,10 +443,10 @@ function getRoleLabel(role) {
     };
     const key = map[role];
     if (!key) return typeof t === 'function' ? t('trenerzy.defaultRoleLabel') : 'Trener';
-    return typeof t === 'function' ? t(key) : { 'trenerzy.roleTrenerGlowny': 'Trener G≈Ç√≥wny', 'trenerzy.roleTrenerPomocniczy': 'Trener Pomocniczy', 'trenerzy.roleTrenerAsystent': 'Trener Asystent', 'trenerzy.roleOwner': 'W≈Ça≈õciciel' }[key] || role;
+    return typeof t === 'function' ? t(key) : { 'trenerzy.roleTrenerGlowny': 'Trener G≥Ûwny', 'trenerzy.roleTrenerPomocniczy': 'Trener Pomocniczy', 'trenerzy.roleTrenerAsystent': 'Trener Asystent', 'trenerzy.roleOwner': 'W≥aúciciel' }[key] || role;
 }
 
-/* ‚îÄ‚îÄ Avatar helpers ‚îÄ‚îÄ */
+/* ¶¶ Avatar helpers ¶¶ */
 function buildAvatarGrid() {
     const grid = document.getElementById('ep-av-grid');
     if (!grid) return;
@@ -488,7 +488,7 @@ function calcExpYears(coachingSince) {
     return Math.floor((Date.now() - new Date(coachingSince).getTime()) / (365.25 * 24 * 3600 * 1000));
 }
 
-/* ‚îÄ‚îÄ Inicjalizacja ‚îÄ‚îÄ */
+/* ¶¶ Inicjalizacja ¶¶ */
 async function initTrenerzy() {
     if (!requireAuth()) return;
 
@@ -499,10 +499,10 @@ async function initTrenerzy() {
         const _tt = (key, fb) => typeof t === 'function' ? t(key) : fb;
         document.getElementById('tr-inner').innerHTML = `
             <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;text-align:center;">
-                <div style="font-size:2rem">üèüÔ∏è</div>
-                <div style="font-size:.95rem;font-weight:600;color:var(--bialy)">${_tt('trenerzy.noTeamTitle','Brak dru≈ºyny')}</div>
-                <div style="font-size:.82rem;color:var(--szary);line-height:1.5">${_tt('trenerzy.noTeamSub','Najpierw dodaj dru≈ºynƒô w sekcji Klub,\npotem wr√≥ƒá tu i zapro≈õ trenera.').replace(/\n/g,'<br>')}</div>
-                <button onclick="window.location.href='klub.html'" style="margin-top:8px;padding:10px 20px;background:var(--akcent);color:#fff;border:none;border-radius:8px;font-size:.85rem;cursor:pointer;">${_tt('trenerzy.goToClubButton','Przejd≈∫ do Klub ‚Üí')}</button>
+                <div style="font-size:2rem">???</div>
+                <div style="font-size:.95rem;font-weight:600;color:var(--bialy)">${_tt('trenerzy.noTeamTitle','Brak druøyny')}</div>
+                <div style="font-size:.82rem;color:var(--szary);line-height:1.5">${_tt('trenerzy.noTeamSub','Najpierw dodaj druøynÍ w sekcji Klub,\npotem wrÛÊ tu i zaproú trenera.').replace(/\n/g,'<br>')}</div>
+                <button onclick="window.location.href='klub.html'" style="margin-top:8px;padding:10px 20px;background:var(--akcent);color:#fff;border:none;border-radius:8px;font-size:.85rem;cursor:pointer;">${_tt('trenerzy.goToClubButton','Przejdü do Klub õ')}</button>
             </div>`;
         return;
     }
@@ -515,7 +515,7 @@ async function initTrenerzy() {
     currentTeamId   = team.teamId || team.id;
     currentClubId   = membership?.clubId || team?.clubId || '';
 
-    // Za≈Çaduj dru≈ºyny klubu
+    // Za≥aduj druøyny klubu
     try {
         const teamsSnap = await db.collection('teams').where('clubId', '==', currentClubId).get();
         allClubTeams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -523,7 +523,7 @@ async function initTrenerzy() {
 
     isGlowny = currentUserRole === 'TRENER_GLOWNY' || currentUserRole === 'OWNER';
 
-    // Sprawd≈∫ isClubAdmin
+    // Sprawdü isClubAdmin
     try {
         const tSnap = await db.collection('trainers')
             .where('userId', '==', currentUserId)
@@ -532,7 +532,7 @@ async function initTrenerzy() {
         if (!tSnap.empty) isAdmin = tSnap.docs[0].data().isClubAdmin === true;
     } catch (e) {}
 
-    // Przycisk Dodaj ‚Äî admin lub trener g≈Ç√≥wny
+    // Przycisk Dodaj ó admin lub trener g≥Ûwny
     if (isAdmin || isGlowny) {
         const btn = document.getElementById('tr-btn-invite');
         if (btn) btn.style.display = 'block';
@@ -543,7 +543,7 @@ async function initTrenerzy() {
     await loadTrainers();
 }
 
-/* ‚îÄ‚îÄ Pobierz trener√≥w ‚îÄ‚îÄ */
+/* ¶¶ Pobierz trenerÛw ¶¶ */
 async function loadTrainers() {
     try {
         const snap = await db.collection('trainers')
@@ -561,7 +561,7 @@ async function loadTrainers() {
             ]);
             const allMbrs = [...mbrSnap1.docs, ...mbrSnap2.docs].map(d => d.data());
 
-            // Buduj mapƒô teamId ‚Üí teamName z allClubTeams
+            // Buduj mapÍ teamId õ teamName z allClubTeams
             const teamNameMap = {};
             allClubTeams.forEach(t => { teamNameMap[t.teamId || t.id] = t.teamName || t.displayName || t.name || ''; });
 
@@ -578,13 +578,13 @@ async function loadTrainers() {
 
         renderTrainers();
     } catch (e) {
-        console.error('‚ùå loadTrainers:', e);
+        console.error('? loadTrainers:', e);
         document.getElementById('tr-inner').innerHTML =
-            '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;">' + (typeof t === 'function' ? t('trenerzy.loadError') : 'B≈ÇƒÖd ≈Çadowania') + '</div>';
+            '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;">' + (typeof t === 'function' ? t('trenerzy.loadError') : 'B≥πd ≥adowania') + '</div>';
     }
 }
 
-/* ‚îÄ‚îÄ Renderuj listƒô ‚îÄ‚îÄ */
+/* ¶¶ Renderuj listÍ ¶¶ */
 function renderTrainers() {
     const scroll = document.getElementById('tr-inner');
     const countEl = document.getElementById('tr-count');
@@ -593,22 +593,22 @@ function renderTrainers() {
     if (countEl) {
         const wordOne  = typeof t === 'function' ? t('trenerzy.countWordOne')  : 'trener';
         const wordFew  = typeof t === 'function' ? t('trenerzy.countWordFew')  : 'trenerzy';
-        const wordMany = typeof t === 'function' ? t('trenerzy.countWordMany') : 'trener√≥w';
+        const wordMany = typeof t === 'function' ? t('trenerzy.countWordMany') : 'trenerÛw';
         countEl.textContent = `${n} ${n === 1 ? wordOne : n < 5 ? wordFew : wordMany}`;
     }
 
     if (!n) {
-        scroll.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;font-weight:600;">' + (typeof t === 'function' ? t('trenerzy.noTrainersInClub') : 'Brak trener√≥w w klubie') + '</div>';
+        scroll.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;font-weight:600;">' + (typeof t === 'function' ? t('trenerzy.noTrainersInClub') : 'Brak trenerÛw w klubie') + '</div>';
         return;
     }
 
     const sorted = [...allTrainers].sort((a, b) => {
-        // OczekujƒÖcy na ko≈Ñcu
+        // Oczekujπcy na koÒcu
         const aP = a.registrationStatus === 'PENDING';
         const bP = b.registrationStatus === 'PENDING';
         if (aP && !bP) return 1;
         if (!aP && bP) return -1;
-        // W≈õr√≥d aktywnych: g≈Ç√≥wni pierwsi
+        // WúrÛd aktywnych: g≥Ûwni pierwsi
         const aG = a.role === 'TRENER_GLOWNY' || a.role === 'OWNER';
         const bG = b.role === 'TRENER_GLOWNY' || b.role === 'OWNER';
         if (aG && !bG) return -1;
@@ -620,7 +620,7 @@ function renderTrainers() {
     sorted.forEach(t => scroll.appendChild(buildTrainerCard(t)));
 }
 
-/* ‚îÄ‚îÄ Karta trenera ‚îÄ‚îÄ */
+/* ¶¶ Karta trenera ¶¶ */
 function buildTrainerCard(t) {
     const name = t.displayName || t.trainerId;
     const initials = name.split(' ').map(w => w[0].toUpperCase()).join('').slice(0, 2);
@@ -637,9 +637,9 @@ function buildTrainerCard(t) {
     item.onclick = () => openDetailPanel(t);
 
     const _tCard = (key, fb) => typeof window.t === 'function' ? window.t(key) : fb;
-    const adminBadge   = t.isClubAdmin ? `<span class="tr-admin-badge">‚òÖ ${_tCard('trenerzy.adminBadge','Admin')}</span>` : '';
+    const adminBadge   = t.isClubAdmin ? `<span class="tr-admin-badge">? ${_tCard('trenerzy.adminBadge','Admin')}</span>` : '';
     const blockedBadge = isBlocked ? `<span class="tr-blocked-badge">${_tCard('trenerzy.blockedBadge','Zablokowany')}</span>` : '';
-    const pendingBadge = isPending ? `<div class="tr-pending-badge">‚è≥ ${_tCard('trenerzy.pendingBadge','Oczekuje na rejestracjƒô')}</div>` : '';
+    const pendingBadge = isPending ? `<div class="tr-pending-badge">? ${_tCard('trenerzy.pendingBadge','Oczekuje na rejestracjÍ')}</div>` : '';
     const teamsBadges  = (!isPending && !isBlocked && teamNames.length)
         ? `<div class="tr-teams">${teamNames.map(tn => `<div class="tr-team-badge">${tn}</div>`).join('')}</div>` : '';
 
@@ -655,11 +655,11 @@ function buildTrainerCard(t) {
             </div>
             ${blockedBadge}${pendingBadge}${teamsBadges}
         </div>
-        <div class="tr-arrow">‚Ä∫</div>`;
+        <div class="tr-arrow">õ</div>`;
     return item;
 }
 
-/* ‚îÄ‚îÄ Panel szczeg√≥≈Ç√≥w ‚îÄ‚îÄ */
+/* ¶¶ Panel szczegÛ≥Ûw ¶¶ */
 async function openDetailPanel(t) {
     detailTrainer = t;
     const name = t.displayName || t.trainerId;
@@ -675,9 +675,9 @@ async function openDetailPanel(t) {
     document.getElementById('dp-nazwa').textContent = name;
     document.getElementById('dp-sub').textContent = getRoleLabel(t.role);
 
-    // Dru≈ºyny + badge admina
+    // Druøyny + badge admina
     const _tDP = (key, fb) => typeof window.t === 'function' ? window.t(key) : fb;
-    const adminBadgeHtml = t.isClubAdmin ? `<div class="dp-admin-badge">${_tDP('trenerzy.adminDetailBadge','‚òÖ Administrator klubu')}</div>` : '';
+    const adminBadgeHtml = t.isClubAdmin ? `<div class="dp-admin-badge">${_tDP('trenerzy.adminDetailBadge','? Administrator klubu')}</div>` : '';
     document.getElementById('dp-teams').innerHTML =
         (t.teamNames || []).filter(Boolean).map(tn => `<div class="tr-team-badge">${tn}</div>`).join('') +
         adminBadgeHtml;
@@ -686,7 +686,7 @@ async function openDetailPanel(t) {
     const isBlocked = t.status === 'BLOCKED';
     const isSelf    = t.userId === currentUserId;
 
-    // Przycisk Edytuj ‚Äî tylko admin, nie dla siebie (profil ‚Üí profil.html), nie pending
+    // Przycisk Edytuj ó tylko admin, nie dla siebie (profil õ profil.html), nie pending
     const editBtn = document.getElementById('dp-edit-btn');
     console.log('isAdmin:', isAdmin, 'isPending:', isPending, 'isSelf:', isSelf);
     console.log('editBtn.style.display:', (isAdmin && !isPending && !isSelf) ? 'block' : 'none');
@@ -695,30 +695,30 @@ async function openDetailPanel(t) {
     let html = '';
 
     if (isPending) {
-        // ‚îÄ‚îÄ Widok oczekujƒÖcego trenera ‚îÄ‚îÄ
+        // ¶¶ Widok oczekujπcego trenera ¶¶
         html += `<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:14px;padding:16px;text-align:center;">
-            <div style="font-size:24px;margin-bottom:8px;">‚è≥</div>
-            <div style="font-size:18px;font-weight:800;color:var(--warn);">${_tDP('trenerzy.pendingTitle','Oczekuje na rejestracjƒô')}</div>
-            <div style="font-size:17px;color:var(--szary);margin-top:4px;line-height:1.5;">${_tDP('trenerzy.pendingSub','Trener jeszcze nie za≈Ço≈ºy≈Ç konta.\nPrzeka≈º poni≈ºszy kod.').replace(/\n/g,'<br>')}</div>
+            <div style="font-size:24px;margin-bottom:8px;">?</div>
+            <div style="font-size:18px;font-weight:800;color:var(--warn);">${_tDP('trenerzy.pendingTitle','Oczekuje na rejestracjÍ')}</div>
+            <div style="font-size:17px;color:var(--szary);margin-top:4px;line-height:1.5;">${_tDP('trenerzy.pendingSub','Trener jeszcze nie za≥oøy≥ konta.\nPrzekaø poniøszy kod.').replace(/\n/g,'<br>')}</div>
         </div>`;
 
-        // Za≈Çaduj kod z inviteCodes (async ‚Äî placeholder na start)
+        // Za≥aduj kod z inviteCodes (async ó placeholder na start)
         html += `<div class="dp-section">
             <div class="dp-section-label">${_tDP('trenerzy.regCodeLabel','Kod rejestracyjny')}</div>
             <div id="dp-kod-box" style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;">
-                <div style="font-size:16px;color:var(--szary);">${_tDP('trenerzy.loadingCode','≈Åadowanie kodu...')}</div>
+                <div style="font-size:16px;color:var(--szary);">${_tDP('trenerzy.loadingCode','£adowanie kodu...')}</div>
             </div>
             <div style="display:flex;gap:8px;margin-top:8px;">
-                <button onclick="regenTrainerCode()" style="flex:1;padding:10px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:17px;font-weight:700;cursor:pointer;">‚Ü∫ ${_tDP('trenerzy.newCodeButton','Nowy kod')}</button>
-                <button onclick="cancelInvitation()" style="flex:1;padding:10px;background:transparent;border:1px solid rgba(248,113,113,0.3);border-radius:10px;color:var(--blad);font-size:17px;font-weight:700;cursor:pointer;">‚úï ${_tDP('trenerzy.cancelInviteButton','Anuluj')}</button>
+                <button onclick="regenTrainerCode()" style="flex:1;padding:10px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:17px;font-weight:700;cursor:pointer;">? ${_tDP('trenerzy.newCodeButton','Nowy kod')}</button>
+                <button onclick="cancelInvitation()" style="flex:1;padding:10px;background:transparent;border:1px solid rgba(248,113,113,0.3);border-radius:10px;color:var(--blad);font-size:17px;font-weight:700;cursor:pointer;">? ${_tDP('trenerzy.cancelInviteButton','Anuluj')}</button>
             </div>
         </div>`;
 
         document.getElementById('dp-scroll').innerHTML = html;
-        loadTrainerCode(t.trainerId); // async, wype≈Çni dp-kod-box
+        loadTrainerCode(t.trainerId); // async, wype≥ni dp-kod-box
 
     } else {
-        // ‚îÄ‚îÄ Widok aktywnego trenera ‚îÄ‚îÄ
+        // ¶¶ Widok aktywnego trenera ¶¶
         html += `<div class="dp-section">
             <div class="dp-section-label">${_tDP('trenerzy.aboutLabel','O trenerze')}</div>
             ${cp.bio ? `<div class="dp-section-value">${cp.bio}</div>` : `<div class="dp-section-empty">${_tDP('trenerzy.noBio','Brak opisu')}</div>`}
@@ -726,7 +726,7 @@ async function openDetailPanel(t) {
 
         const expYears = calcExpYears(cp.coachingSince);
         if (cp.coachingSince || cp.licenseLevel || cp.specialization) {
-            html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.experienceLabel','Do≈õwiadczenie')}</div>`;
+            html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.experienceLabel','Doúwiadczenie')}</div>`;
             if (cp.coachingSince) {
                 const since = new Date(cp.coachingSince).getFullYear();
                 const suffixKey = expYears === 1 ? 'trenerzy.yearSuffix1' : expYears < 5 ? 'trenerzy.yearSuffix2' : 'trenerzy.yearSuffix5';
@@ -734,23 +734,23 @@ async function openDetailPanel(t) {
                 const coachLine = typeof window.t === 'function'
                     ? window.t('trenerzy.coachSinceExp', {year: since, count: expYears, suffix})
                     : `Trener od ${since} r. (${expYears} ${suffix})`;
-                html += `<div class="dp-section-value">üèüÔ∏è ${coachLine}</div>`;
+                html += `<div class="dp-section-value">??? ${coachLine}</div>`;
             }
             if (cp.licenseLevel) {
                 const licLine = typeof window.t === 'function'
                     ? window.t('trenerzy.licenseLine', {license: cp.licenseLevel})
                     : `Licencja: ${cp.licenseLevel}`;
-                html += `<div class="dp-section-value">üìã ${licLine}</div>`;
+                html += `<div class="dp-section-value">?? ${licLine}</div>`;
             }
-            if (cp.specialization) html += `<div class="dp-section-value">üéØ ${cp.specialization}</div>`;
+            if (cp.specialization) html += `<div class="dp-section-value">?? ${cp.specialization}</div>`;
             html += `</div>`;
         }
 
-        // Dru≈ºyny z membership (read-only)
+        // Druøyny z membership (read-only)
         const teamNames = (t.teamNames || []).filter(Boolean);
         if (teamNames.length) {
             html += `<div class="dp-section">
-                <div class="dp-section-label">${_tDP('trenerzy.teamsLabel','Dru≈ºyny')}</div>
+                <div class="dp-section-label">${_tDP('trenerzy.teamsLabel','Druøyny')}</div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                     ${teamNames.map(tn => `<div class="tr-team-badge">${tn}</div>`).join('')}
                 </div>
@@ -770,8 +770,8 @@ async function openDetailPanel(t) {
         if (phone || email) {
             html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.contactLabel','Kontakt')}</div>
                 <div style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:4px 12px;">`;
-            if (phone) html += `<div class="dp-contact-row"><div class="dp-contact-icon">üìû</div><div class="dp-contact-val">${phone}</div></div>`;
-            if (email) html += `<div class="dp-contact-row"><div class="dp-contact-icon">‚úâÔ∏è</div><div class="dp-contact-val">${email}</div></div>`;
+            if (phone) html += `<div class="dp-contact-row"><div class="dp-contact-icon">??</div><div class="dp-contact-val">${phone}</div></div>`;
+            if (email) html += `<div class="dp-contact-row"><div class="dp-contact-icon">??</div><div class="dp-contact-val">${email}</div></div>`;
             html += `</div></div>`;
         }
 
@@ -779,24 +779,24 @@ async function openDetailPanel(t) {
         // Akcje admina (nie dla siebie)
         if (isAdmin && !isSelf) {
             html += `<div class="dp-section">
-                <div class="dp-section-label">${_tDP('trenerzy.manageLabel','ZarzƒÖdzanie')}</div>
+                <div class="dp-section-label">${_tDP('trenerzy.manageLabel','Zarzπdzanie')}</div>
                 <div class="dp-actions">`;
 
             if (!isBlocked) {
-                html += `<button class="dp-action-btn dp-action-btn-warn" onclick="showBlockModal()">üîí ${_tDP('trenerzy.blockButton','Zablokuj trenera')}</button>`;
-                // Admin ‚Äî tylko dla zarejestrowanych (nie pending, nie zablokowanych)
+                html += `<button class="dp-action-btn dp-action-btn-warn" onclick="showBlockModal()">?? ${_tDP('trenerzy.blockButton','Zablokuj trenera')}</button>`;
+                // Admin ó tylko dla zarejestrowanych (nie pending, nie zablokowanych)
                 if (t.userId && !isBlocked) {
                     if (!t.isClubAdmin) {
-                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="grantAdminRole()">‚òÖ ${_tDP('trenerzy.grantAdminButton','Nadaj prawa admina')}</button>`;
+                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="grantAdminRole()">? ${_tDP('trenerzy.grantAdminButton','Nadaj prawa admina')}</button>`;
                     } else {
-                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="revokeAdminRole()">‚úï ${_tDP('trenerzy.revokeAdminButton','Odbierz prawa admina')}</button>`;
+                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="revokeAdminRole()">? ${_tDP('trenerzy.revokeAdminButton','Odbierz prawa admina')}</button>`;
                     }
                 }
             } else {
-                html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="unblockTrainer()">üîì ${_tDP('trenerzy.unblockButton','Odblokuj trenera')}</button>`;
+                html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="unblockTrainer()">?? ${_tDP('trenerzy.unblockButton','Odblokuj trenera')}</button>`;
             }
 
-            html += `<button class="dp-action-btn dp-action-btn-danger" onclick="removeTrainerFromClub()">üóëÔ∏è ${_tDP('trenerzy.removeButton','Usu≈Ñ z klubu')}</button>
+            html += `<button class="dp-action-btn dp-action-btn-danger" onclick="removeTrainerFromClub()">??? ${_tDP('trenerzy.removeButton','UsuÒ z klubu')}</button>
                 </div>
             </div>`;
         }
@@ -813,13 +813,13 @@ function closeDetailPanel() {
 }
 
 
-/* ‚îÄ‚îÄ Edycja trenera ‚îÄ‚îÄ */
+/* ¶¶ Edycja trenera ¶¶ */
 async function openEditPanel() {
     if (!detailTrainer) return;
     const t = detailTrainer;
     const cp = t.coachProfile || {};
 
-    // Rozdziel imiƒô i nazwisko ‚Äî najpierw z osobnych p√≥l, fallback ze split displayName
+    // Rozdziel imiÍ i nazwisko ó najpierw z osobnych pÛl, fallback ze split displayName
     const existingFirst = t.firstName || (t.displayName || '').split(' ')[0] || '';
     const existingLast  = t.lastName  || (t.displayName || '').split(' ').slice(1).join(' ') || '';
     document.getElementById('ep-fname').value   = existingFirst;
@@ -828,7 +828,7 @@ async function openEditPanel() {
     document.getElementById('ep-since').value   = cp.coachingSince ? new Date(cp.coachingSince).getFullYear() : '';
     document.getElementById('ep-licencja').value= cp.licenseLevel || '';
     document.getElementById('ep-spec').value    = cp.specialization || '';
-    // Email ‚Äî z trainer doc lub users doc
+    // Email ó z trainer doc lub users doc
     let trainerEmail = t.email || '';
     if (!trainerEmail && t.userId) {
         try {
@@ -858,7 +858,7 @@ async function openEditPanel() {
     buildAvatarGrid();
 
 
-    // Admin toggle ‚Äî widoczny tylko dla zalogowanego admina edytujƒÖcego innych
+    // Admin toggle ó widoczny tylko dla zalogowanego admina edytujπcego innych
     const adminRow = document.getElementById('ep-admin-row');
     if (isAdmin) {
         adminRow.style.display = '';
@@ -876,7 +876,7 @@ function closeEditPanel() {
 
 async function saveEditTrainer() {
     if (!detailTrainer || !db) return;
-    // Pobierz ≈õwie≈ºe dane ‚Äî lokalny cache mo≈ºe mieƒá stare userId (null przed rejestracjƒÖ)
+    // Pobierz úwieøe dane ó lokalny cache moøe mieÊ stare userId (null przed rejestracjπ)
     let t = detailTrainer;
     try {
         const fresh = await db.collection('trainers').doc(t.trainerId).get();
@@ -911,19 +911,19 @@ async function saveEditTrainer() {
 
             // Zaktualizuj users doc
             try {
-                console.log('üîç users update ‚Äî userId:', t.userId);
+                console.log('?? users update ó userId:', t.userId);
                 const uDoc = await db.collection('users').doc(t.userId).get();
-                console.log('üîç users doc exists:', uDoc.exists, 'data:', uDoc.exists ? uDoc.data()?.displayName : 'N/A');
+                console.log('?? users doc exists:', uDoc.exists, 'data:', uDoc.exists ? uDoc.data()?.displayName : 'N/A');
                 const uData = uDoc.exists ? uDoc.data() : {};
                 const uUpdates = { firstName: newFirstName, lastName: newLastName, displayName: newDisplayName };
                 const newEmail = document.getElementById('ep-email').value.trim();
                 const newPhone = document.getElementById('ep-tel').value.trim();
                 if (!uData.email && newEmail) uUpdates.email = newEmail;
                 if (!uData.phone && newPhone) uUpdates.phone = newPhone;
-                console.log('üîç users uUpdates:', uUpdates);
+                console.log('?? users uUpdates:', uUpdates);
                 await db.collection('users').doc(t.userId).update(uUpdates);
-                console.log('‚úÖ users updated');
-            } catch(e) { console.error('‚ùå users update failed:', e.code, e.message); }
+                console.log('? users updated');
+            } catch(e) { console.error('? users update failed:', e.code, e.message); }
         }
 
         // Zaktualizuj trainer doc
@@ -956,36 +956,36 @@ async function saveEditTrainer() {
         closeEditPanel();
         openDetailPanel(detailTrainer);
         renderTrainers();
-        console.log('‚úÖ Trener zaktualizowany');
+        console.log('? Trener zaktualizowany');
     } catch (e) {
-        console.error('‚ùå saveEditTrainer:', e);
-        alert('B≈ÇƒÖd zapisu: ' + e.message);
+        console.error('? saveEditTrainer:', e);
+        alert('B≥πd zapisu: ' + e.message);
     }
 }
 
-/* ‚îÄ‚îÄ Modal blokady (zakres) ‚îÄ‚îÄ */
+/* ¶¶ Modal blokady (zakres) ¶¶ */
 function showBlockModal() {
     if (!detailTrainer) return;
     const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'trenera');
     document.getElementById('modal-block-body').textContent =
         typeof window.t === 'function'
             ? window.t('trenerzy.blockModalBody', {name})
-            : `Zablokowaƒá ${name} tylko w tej dru≈ºynie, czy w ca≈Çym klubie?`;
+            : `ZablokowaÊ ${name} tylko w tej druøynie, czy w ca≥ym klubie?`;
     document.getElementById('modal-block').classList.add('open');
 }
 function closeBlockModal() {
     document.getElementById('modal-block').classList.remove('open');
 }
 
-/* ‚îÄ‚îÄ Zablokuj trenera ‚îÄ‚îÄ */
+/* ¶¶ Zablokuj trenera ¶¶ */
 async function blockTrainer(scope) {
     closeBlockModal();
     if (!detailTrainer || !db) return;
     const t = detailTrainer;
-    if (!t.userId) { alert('Trener nie ma jeszcze konta ‚Äî nie mo≈ºna zablokowaƒá.'); return; }
+    if (!t.userId) { alert('Trener nie ma jeszcze konta ó nie moøna zablokowaÊ.'); return; }
     const now = new Date().toISOString();
     try {
-        // Znajd≈∫ memberships TRENER dla tego usera w tym klubie
+        // Znajdü memberships TRENER dla tego usera w tym klubie
         let q = db.collection('memberships')
             .where('userId', '==', t.userId)
             .where('clubId', '==', currentClubId)
@@ -993,13 +993,13 @@ async function blockTrainer(scope) {
         if (scope === 'TEAM') q = q.where('teamId', '==', currentTeamId);
         const snap = await q.get();
 
-        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu ‚Üí BLOCKED
+        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu õ BLOCKED
 
         const batch = db.batch();
         snap.docs.forEach(d => batch.update(d.ref, { status: 'BLOCKED', blockedAt: now, blockedBy: currentUserId }));
         await batch.commit();
 
-        // Aktualizuj trainers doc je≈õli blokada ca≈Çego klubu
+        // Aktualizuj trainers doc jeúli blokada ca≥ego klubu
         if (scope === 'CLUB') {
             await db.collection('trainers').doc(t.trainerId).update({
                 status: 'BLOCKED', blockedAt: now, blockedBy: currentUserId
@@ -1013,20 +1013,20 @@ async function blockTrainer(scope) {
 
         closeDetailPanel();
         renderTrainers();
-        console.log(`‚úÖ Trener zablokowany (${scope})`);
+        console.log(`? Trener zablokowany (${scope})`);
     } catch (e) {
-        console.error('‚ùå blockTrainer:', e);
-        alert('B≈ÇƒÖd: ' + e.message);
+        console.error('? blockTrainer:', e);
+        alert('B≥πd: ' + e.message);
     }
 }
 
-/* ‚îÄ‚îÄ Odblokuj trenera ‚îÄ‚îÄ */
+/* ¶¶ Odblokuj trenera ¶¶ */
 async function unblockTrainer() {
     if (!detailTrainer || !db) return;
     const t = detailTrainer;
     if (!t.userId) return;
     const name = t.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'trenera');
-    const unblockBody = typeof window.t === 'function' ? window.t('trenerzy.unblockConfirmBody', {name}) : `Odblokowaƒá ${name}?`;
+    const unblockBody = typeof window.t === 'function' ? window.t('trenerzy.unblockConfirmBody', {name}) : `OdblokowaÊ ${name}?`;
     if (!await showConfirmSheet(unblockBody)) return;
     try {
         const snap = await db.collection('memberships')
@@ -1042,18 +1042,18 @@ async function unblockTrainer() {
         detailTrainer.status = 'ACTIVE';
         closeDetailPanel();
         renderTrainers();
-        console.log('‚úÖ Trener odblokowany');
+        console.log('? Trener odblokowany');
     } catch (e) {
-        console.error('‚ùå unblockTrainer:', e);
-        alert('B≈ÇƒÖd: ' + e.message);
+        console.error('? unblockTrainer:', e);
+        alert('B≥πd: ' + e.message);
     }
 }
 
-/* ‚îÄ‚îÄ Usu≈Ñ z klubu ‚îÄ‚îÄ */
+/* ¶¶ UsuÒ z klubu ¶¶ */
 async function grantAdminRole() {
     if (!detailTrainer || !db || !isAdmin) return;
     const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
-    const grantBody = typeof window.t === 'function' ? window.t('trenerzy.grantAdminBody', {name}) : `Nadaƒá ${name} prawa Administratora klubu?\n\nOba konta bƒôdƒÖ mia≈Çy uprawnienia admina. Nowy admin mo≈ºe p√≥≈∫niej odebraƒá Ci te prawa.`;
+    const grantBody = typeof window.t === 'function' ? window.t('trenerzy.grantAdminBody', {name}) : `NadaÊ ${name} prawa Administratora klubu?\n\nOba konta bÍdπ mia≥y uprawnienia admina. Nowy admin moøe pÛüniej odebraÊ Ci te prawa.`;
     if (!await showConfirmSheet(grantBody)) return;
     try {
         await db.collection('trainers').doc(detailTrainer.trainerId).update({ isClubAdmin: true });
@@ -1072,14 +1072,14 @@ async function grantAdminRole() {
         openDetailPanel(detailTrainer);
         renderTrainers();
     } catch (e) {
-        alert('B≈ÇƒÖd: ' + e.message);
+        alert('B≥πd: ' + e.message);
     }
 }
 
 async function revokeAdminRole() {
     if (!detailTrainer || !db || !isAdmin) return;
     const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
-    const revokeBody = typeof window.t === 'function' ? window.t('trenerzy.revokeAdminBody', {name}) : `Odebraƒá ${name} prawa Administratora klubu?`;
+    const revokeBody = typeof window.t === 'function' ? window.t('trenerzy.revokeAdminBody', {name}) : `OdebraÊ ${name} prawa Administratora klubu?`;
     if (!await showConfirmSheet(revokeBody)) return;
     try {
         await db.collection('trainers').doc(detailTrainer.trainerId).update({ isClubAdmin: false });
@@ -1098,7 +1098,7 @@ async function revokeAdminRole() {
         openDetailPanel(detailTrainer);
         renderTrainers();
     } catch (e) {
-        alert('B≈ÇƒÖd: ' + e.message);
+        alert('B≥πd: ' + e.message);
     }
 }
 
@@ -1107,7 +1107,7 @@ async function removeTrainerFromClub() {
     const t = detailTrainer;
     const name = t.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
 
-    // Ryzyko osieroconej dru≈ºyny: je≈õli trener ma jakiekolwiek aktywne przypisanie do dru≈ºyny, zablokuj usuniƒôcie
+    // Ryzyko osieroconej druøyny: jeúli trener ma jakiekolwiek aktywne przypisanie do druøyny, zablokuj usuniÍcie
     if (t.userId) {
         try {
             const snap = await db.collection('memberships')
@@ -1120,21 +1120,21 @@ async function removeTrainerFromClub() {
                 return m.teamId && (st === 'active' || st === 'grace');
             });
             if (maAktywneDruzyny) {
-                alert(typeof window.t === 'function' ? window.t('trenerzy.hasActiveTeamsError') : 'Oddaj dru≈ºynƒô innemu trenerowi przed usuniƒôciem konta, lub zg≈Ço≈õ siƒô do zarzƒÖdcy klubu.');
+                alert(typeof window.t === 'function' ? window.t('trenerzy.hasActiveTeamsError') : 'Oddaj druøynÍ innemu trenerowi przed usuniÍciem konta, lub zg≥oú siÍ do zarzπdcy klubu.');
                 return;
             }
         } catch (e) {
-            console.error('‚ùå Sprawdzanie przypisa≈Ñ trenera:', e);
-            alert('B≈ÇƒÖd: ' + e.message);
+            console.error('? Sprawdzanie przypisaÒ trenera:', e);
+            alert('B≥πd: ' + e.message);
             return;
         }
     }
 
-    const removeBody = typeof window.t === 'function' ? window.t('trenerzy.removeConfirmBody', {name}) : `UsunƒÖƒá ${name} z klubu?\n\nWszystkie jego przypisania do dru≈ºyn zostanƒÖ usuniƒôte.`;
+    const removeBody = typeof window.t === 'function' ? window.t('trenerzy.removeConfirmBody', {name}) : `UsunπÊ ${name} z klubu?\n\nWszystkie jego przypisania do druøyn zostanπ usuniÍte.`;
     if (!await showConfirmSheet(removeBody)) return;
     const now = new Date().toISOString();
     try {
-        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu ‚Üí REMOVED
+        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu õ REMOVED
 
         // Ustaw wszystkie memberships TRENER na REMOVED
         if (t.userId) {
@@ -1153,14 +1153,14 @@ async function removeTrainerFromClub() {
         allTrainers = allTrainers.filter(x => x.trainerId !== t.trainerId);
         closeDetailPanel();
         renderTrainers();
-        console.log('‚úÖ Trener usuniƒôty z klubu');
+        console.log('? Trener usuniÍty z klubu');
     } catch (e) {
-        console.error('‚ùå removeTrainerFromClub:', e);
-        alert('B≈ÇƒÖd: ' + e.message);
+        console.error('? removeTrainerFromClub:', e);
+        alert('B≥πd: ' + e.message);
     }
 }
 
-/* ‚îÄ‚îÄ Panel Dodaj trenera ‚îÄ‚îÄ */
+/* ¶¶ Panel Dodaj trenera ¶¶ */
 function openAddPanel() {
     document.getElementById('add-fname').value = '';
     document.getElementById('add-lname').value = '';
@@ -1178,7 +1178,7 @@ async function saveNewTrainer() {
     const lastName  = document.getElementById('add-lname').value.trim();
     const name = (firstName + ' ' + lastName).trim();
     const role = document.getElementById('add-rola').value;
-    if (!firstName) { alert(typeof window.t === 'function' ? window.t('trenerzy.firstNameRequiredTitle') : 'Podaj imiƒô trenera.'); document.getElementById('add-fname').focus(); return; }
+    if (!firstName) { alert(typeof window.t === 'function' ? window.t('trenerzy.firstNameRequiredTitle') : 'Podaj imiÍ trenera.'); document.getElementById('add-fname').focus(); return; }
     if (!lastName)  { alert(typeof window.t === 'function' ? window.t('trenerzy.lastNameRequiredTitle') : 'Podaj nazwisko trenera.'); document.getElementById('add-lname').focus(); return; }
 
     const now = new Date();
@@ -1205,20 +1205,20 @@ async function saveNewTrainer() {
 
     try {
         await db.collection('trainers').doc(trainerId).set(trainerData);
-        // Generuj kod powiƒÖzany z trainerem
+        // Generuj kod powiπzany z trainerem
         await _generateCode(trainerId, firstName + '|' + lastName, role);
-        // Dodaj lokalnie i od≈õwie≈º
+        // Dodaj lokalnie i odúwieø
         allTrainers.push({ trainerId, ...trainerData });
         closeAddPanel();
         renderTrainers();
-        console.log('‚úÖ Trener dodany');
+        console.log('? Trener dodany');
     } catch (e) {
-        console.error('‚ùå saveNewTrainer:', e);
-        alert('B≈ÇƒÖd: ' + e.message);
+        console.error('? saveNewTrainer:', e);
+        alert('B≥πd: ' + e.message);
     }
 }
 
-/* ‚îÄ‚îÄ Generowanie kodu (wsp√≥lna funkcja) ‚îÄ‚îÄ */
+/* ¶¶ Generowanie kodu (wspÛlna funkcja) ¶¶ */
 async function _generateCode(trainerId, forName, role) {
     const now = new Date();
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1245,7 +1245,7 @@ async function _generateCode(trainerId, forName, role) {
     return { code, expiresAt };
 }
 
-/* ‚îÄ‚îÄ Kod w panelu szczeg√≥≈Ç√≥w ‚îÄ‚îÄ */
+/* ¶¶ Kod w panelu szczegÛ≥Ûw ¶¶ */
 async function loadTrainerCode(trainerId) {
     const box = document.getElementById('dp-kod-box');
     if (!box || !db) return;
@@ -1260,11 +1260,11 @@ async function loadTrainerCode(trainerId) {
             .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 
         if (!wszystkie.length) {
-            box.innerHTML = `<div style="font-size:17px;color:var(--szary);text-align:center;">${_tLTC('trenerzy.noCodesYet', {}, 'Brak kod√≥w. Kliknij "Nowy kod" aby wygenerowaƒá.')}</div>`;
+            box.innerHTML = `<div style="font-size:17px;color:var(--szary);text-align:center;">${_tLTC('trenerzy.noCodesYet', {}, 'Brak kodÛw. Kliknij "Nowy kod" aby wygenerowaÊ.')}</div>`;
             return;
         }
 
-        // Znajd≈∫ aktywny (nieu≈ºyty, niewyegas≈Çy)
+        // Znajdü aktywny (nieuøyty, niewyegas≥y)
         const active = wszystkie.find(c => {
             if (c.isUsed) return false;
             const exp = c.expiresAt?.toDate ? c.expiresAt.toDate() : null;
@@ -1274,42 +1274,42 @@ async function loadTrainerCode(trainerId) {
         function kodStatusStr(c) {
             if (c.isUsed && c.usedBy && c.usedBy !== 'DEZAKTYWOWANY_PRZEZ_TRENERA') {
                 const d = c.usedAt ? new Date(c.usedAt).toLocaleDateString('pl-PL') : '';
-                return { icon: '‚úÖ', txt: _tLTC('trenerzy.codeUsedOn', {date: d}, `Wykorzystany ¬∑ ${d}`) };
+                return { icon: '?', txt: _tLTC('trenerzy.codeUsedOn', {date: d}, `Wykorzystany ∑ ${d}`) };
             }
             if (c.isUsed)
-                return { icon: 'üö´', txt: _tLTC('trenerzy.codeDeactivated', {}, 'Dezaktywowany') };
+                return { icon: '??', txt: _tLTC('trenerzy.codeDeactivated', {}, 'Dezaktywowany') };
             const exp = c.expiresAt?.toDate ? c.expiresAt.toDate() : null;
             if (exp && exp < now) {
                 const d = exp.toLocaleDateString('pl-PL');
-                return { icon: '‚è∞', txt: _tLTC('trenerzy.codeExpiredOn', {date: d}, `Wygas≈Ç ¬∑ ${d}`) };
+                return { icon: '?', txt: _tLTC('trenerzy.codeExpiredOn', {date: d}, `Wygas≥ ∑ ${d}`) };
             }
-            const expStr = exp ? exp.toLocaleDateString('pl-PL') : '‚Äî';
-            return { icon: '‚è≥', txt: _tLTC('trenerzy.codeActiveUntil', {date: expStr}, `Aktywny ¬∑ wa≈ºny do ${expStr}`) };
+            const expStr = exp ? exp.toLocaleDateString('pl-PL') : 'ó';
+            return { icon: '?', txt: _tLTC('trenerzy.codeActiveUntil', {date: expStr}, `Aktywny ∑ waøny do ${expStr}`) };
         }
 
         let html = '';
 
-        // Aktywny kod ‚Äî prominentnie
+        // Aktywny kod ó prominentnie
         if (active) {
             const exp = active.expiresAt?.toDate ? active.expiresAt.toDate() : null;
-            const expStr = exp ? exp.toLocaleDateString('pl-PL') : '‚Äî';
-            const validLine = _tLTC('trenerzy.validUntilLine', {date: expStr}, `Wa≈ºny do: ${expStr}`);
+            const expStr = exp ? exp.toLocaleDateString('pl-PL') : 'ó';
+            const validLine = _tLTC('trenerzy.validUntilLine', {date: expStr}, `Waøny do: ${expStr}`);
             const copyBtn  = _tLTC('trenerzy.copyButton', {}, 'Kopiuj kod');
-            const copiedLbl = _tLTC('trenerzy.copiedLabel', {}, 'Skopiowano ‚úì');
+            const copiedLbl = _tLTC('trenerzy.copiedLabel', {}, 'Skopiowano ?');
             html += `
                 <div style="text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">
-                    <div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--szary);">${_tLTC('trenerzy.activeCodeLabel', {}, 'Aktywny kod dostƒôpu')}</div>
+                    <div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--szary);">${_tLTC('trenerzy.activeCodeLabel', {}, 'Aktywny kod dostÍpu')}</div>
                     <div style="font-family:var(--font-d);font-size:32px;font-weight:800;color:var(--akcent);letter-spacing:8px;margin:8px 0;">${active.code}</div>
                     <div style="font-size:16px;color:var(--szary);margin-bottom:10px;">${validLine}</div>
                     <button class="kod-copy-btn" onclick="navigator.clipboard.writeText('${active.code}').then(()=>this.textContent='${copiedLbl}')">${copyBtn}</button>
                 </div>`;
         } else {
-            html += `<div style="font-size:17px;color:var(--szary);text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">${_tLTC('trenerzy.noActiveCode', {}, 'Brak aktywnego kodu ¬∑ wygeneruj nowy')}</div>`;
+            html += `<div style="font-size:17px;color:var(--szary);text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">${_tLTC('trenerzy.noActiveCode', {}, 'Brak aktywnego kodu ∑ wygeneruj nowy')}</div>`;
         }
 
-        // Historia wszystkich kod√≥w
+        // Historia wszystkich kodÛw
         if (wszystkie.length > 0) {
-            html += `<div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--szary);margin-bottom:8px;">${_tLTC('trenerzy.codeHistoryLabel', {}, 'Historia kod√≥w')}</div>`;
+            html += `<div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--szary);margin-bottom:8px;">${_tLTC('trenerzy.codeHistoryLabel', {}, 'Historia kodÛw')}</div>`;
             html += wszystkie.map(c => {
                 const s = kodStatusStr(c);
                 return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
@@ -1323,7 +1323,7 @@ async function loadTrainerCode(trainerId) {
         }
 
         box.innerHTML = html;
-    } catch (e) { console.warn('loadTrainerCode:', e); box.innerHTML = `<div style="color:var(--szary);font-size:17px;">${_tLTC('trenerzy.loadError', {}, 'B≈ÇƒÖd ≈Çadowania')}</div>`; }
+    } catch (e) { console.warn('loadTrainerCode:', e); box.innerHTML = `<div style="color:var(--szary);font-size:17px;">${_tLTC('trenerzy.loadError', {}, 'B≥πd ≥adowania')}</div>`; }
 }
 
 async function regenTrainerCode() {
@@ -1331,7 +1331,7 @@ async function regenTrainerCode() {
     const t = detailTrainer;
     const now = new Date();
 
-    // Sprawd≈∫ czy jest aktywny kod
+    // Sprawdü czy jest aktywny kod
     const snap = await db.collection('inviteCodes')
         .where('trainerId', '==', t.trainerId)
         .where('isUsed', '==', false)
@@ -1345,11 +1345,11 @@ async function regenTrainerCode() {
     if (activeCode) {
         const regenBody = typeof window.t === 'function'
             ? window.t('trenerzy.activeCodeExistsBody', {code: activeCode.code})
-            : `Aktualny kod "${activeCode.code}" jest jeszcze aktywny.\nDezaktywowaƒá i wygenerowaƒá nowy?`;
+            : `Aktualny kod "${activeCode.code}" jest jeszcze aktywny.\nDezaktywowaÊ i wygenerowaÊ nowy?`;
         if (!await showConfirmSheet(regenBody)) return;
     }
 
-    // Dezaktywuj wszystkie nieu≈ºyte kody
+    // Dezaktywuj wszystkie nieuøyte kody
     for (const d of snap.docs) {
         await d.ref.update({ isUsed: true, usedBy: 'DEZAKTYWOWANY_PRZEZ_TRENERA', usedAt: now.toISOString() });
     }
@@ -1362,7 +1362,7 @@ async function cancelInvitation() {
     const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
     const cancelBody = typeof window.t === 'function'
         ? window.t('trenerzy.cancelInviteBody', {name})
-        : `Anulowaƒá zaproszenie dla ${name}?\nTrener zostanie usuniƒôty z listy.`;
+        : `AnulowaÊ zaproszenie dla ${name}?\nTrener zostanie usuniÍty z listy.`;
     if (!await showConfirmSheet(cancelBody)) return;
     try {
         await db.collection('trainers').doc(detailTrainer.trainerId).update({
@@ -1378,25 +1378,25 @@ async function cancelInvitation() {
         allTrainers = allTrainers.filter(t => t.trainerId !== detailTrainer.trainerId);
         closeDetailPanel();
         renderTrainers();
-    } catch (e) { alert('B≈ÇƒÖd: ' + e.message); }
+    } catch (e) { alert('B≥πd: ' + e.message); }
 }
 
-/* ‚îÄ‚îÄ Reset dostƒôpu trenera ‚îÄ‚îÄ */
+/* ¶¶ Reset dostÍpu trenera ¶¶ */
 async function resetTrainerAccess() {
     if (!detailTrainer || !db) return;
     const t = detailTrainer;
     const name = t.displayName || 'tego trenera';
 
     if (!await showConfirmSheet(
-        `Resetowaƒá dostƒôp dla ${name}?\n\n` +
-        `Trener straci mo≈ºliwo≈õƒá logowania siƒô obecnym kontem i bƒôdzie musia≈Ç zarejestrowaƒá siƒô ponownie (mo≈ºe u≈ºyƒá innego e-maila).\n\n` +
-        `Wszystkie dane profilu, historia i przypisania zostanƒÖ zachowane.`
+        `ResetowaÊ dostÍp dla ${name}?\n\n` +
+        `Trener straci moøliwoúÊ logowania siÍ obecnym kontem i bÍdzie musia≥ zarejestrowaÊ siÍ ponownie (moøe uøyÊ innego e-maila).\n\n` +
+        `Wszystkie dane profilu, historia i przypisania zostanπ zachowane.`
     )) return;
 
     try {
         const now = new Date().toISOString();
 
-        // Cofnij do statusu PENDING, wyczy≈õƒá userId i email logowania
+        // Cofnij do statusu PENDING, wyczyúÊ userId i email logowania
         await db.collection('trainers').doc(t.trainerId).update({
             registrationStatus: 'PENDING',
             userId: null,
@@ -1417,7 +1417,7 @@ async function resetTrainerAccess() {
         // Wygeneruj nowy kod
         await _generateCode(t.trainerId, (t.firstName||'') + '|' + (t.lastName||''), t.role);
 
-        // Aktualizuj lokalnie i od≈õwie≈º widok
+        // Aktualizuj lokalnie i odúwieø widok
         const idx = allTrainers.findIndex(x => x.trainerId === t.trainerId);
         if (idx >= 0) {
             allTrainers[idx].registrationStatus = 'PENDING';
@@ -1426,19 +1426,19 @@ async function resetTrainerAccess() {
         detailTrainer.registrationStatus = 'PENDING';
         detailTrainer.userId = null;
 
-        // Otw√≥rz panel jak dla oczekujƒÖcego (poka≈ºe nowy kod)
+        // OtwÛrz panel jak dla oczekujπcego (pokaøe nowy kod)
         openDetailPanel(detailTrainer);
         renderTrainers();
-        console.log('‚úÖ Dostƒôp trenera zresetowany');
+        console.log('? DostÍp trenera zresetowany');
     } catch (e) {
-        console.error('‚ùå resetTrainerAccess:', e);
-        alert('B≈ÇƒÖd: ' + e.message);
+        console.error('? resetTrainerAccess:', e);
+        alert('B≥πd: ' + e.message);
     }
 }
 
-/* ‚îÄ‚îÄ Start ‚îÄ‚îÄ */
+/* ¶¶ Start ¶¶ */
 window.addEventListener('DOMContentLoaded', () => {
-    if (typeof firebase === 'undefined') { console.error('‚ùå Firebase!'); return; }
+    if (typeof firebase === 'undefined') { console.error('? Firebase!'); return; }
     initFirebase();
     let _loaded = false;
     auth.onAuthStateChanged(async user => {
