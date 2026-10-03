@@ -1589,6 +1589,22 @@ async function manageNotifications(action, referenceType, referenceId, payload =
             const snap = await db.collection('notifications').where('referenceId', '==', referenceId).get();
             for (const doc of snap.docs) await doc.ref.delete();
         } catch (e) { console.warn('manageNotifications delete:', e); }
+
+        // Zadania: po usunięciu wyślij NOWE powiadomienie informujące o usunięciu
+        // (inne referenceType na razie tylko czyszczą stare powiadomienia, bez nowego).
+        if (referenceType === 'task') {
+            try {
+                const { teamId, assignees = [], title } = payload;
+                for (const userId of assignees) {
+                    await createNotification({
+                        userId, teamId, type: 'TASK_DELETED',
+                        title: 'Zadanie usunięte',
+                        body: title || '',
+                        referenceId, referenceType: 'task'
+                    });
+                }
+            } catch (e) { console.warn('manageNotifications task delete notify:', e); }
+        }
         return;
     }
 

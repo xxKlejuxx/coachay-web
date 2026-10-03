@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20261002a"></script>
+<script src="_i18n.js?v=20261003a"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <style>
 :root { --phone-h: 750px; }
@@ -354,8 +354,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .drum-highlight { position: absolute; left: 0; right: 0; top: 57px; height: 46px; background: rgba(255,255,255,0.05); pointer-events: none; z-index: 1; }
 .drum-col { overflow: hidden; position: relative; }
 .drum-inner { display: flex; flex-direction: column; align-items: center; transition: transform 0.15s ease-out; padding: 57px 0; }
-.drum-item { height: 46px; display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 800; color: var(--szary); font-family: var(--font-d); cursor: pointer; user-select: none; flex-shrink: 0; transition: color 0.15s, font-size 0.15s; }
-.drum-item.active { color: var(--bialy); font-size: 25px; }
+.drum-item { height: 46px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: var(--szary); font-family: var(--font-d); cursor: pointer; user-select: none; flex-shrink: 0; transition: color 0.15s, font-size 0.15s; }
+.drum-arrow-row { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.drum-arrow { background: none; border: none; color: var(--szary); font-size: 14px; padding: 6px 0; cursor: pointer; width: 100%; }
+.drum-arrow:active { color: var(--bialy); }
+.drum-item.active { color: var(--bialy); font-size: 18px; }
 
 /* ── Calendar widget ── */
 .cal-nav-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
@@ -681,11 +684,21 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                         <div class="drum-col-lbl" data-i18n="zadania.drumMonthLabel">Miesiąc</div>
                         <div class="drum-col-lbl" data-i18n="zadania.drumYearLabel">Rok</div>
                     </div>
+                    <div class="drum-arrow-row">
+                        <button type="button" class="drum-arrow" onclick="drumStep('drum-dzien',-1)">▲</button>
+                        <button type="button" class="drum-arrow" onclick="drumStep('drum-miesiac',-1)">▲</button>
+                        <button type="button" class="drum-arrow" onclick="drumStep('drum-rok',-1)">▲</button>
+                    </div>
                     <div class="drum-cols">
                         <div class="drum-highlight"></div>
                         <div class="drum-col" id="drum-dzien"></div>
                         <div class="drum-col" id="drum-miesiac"></div>
                         <div class="drum-col" id="drum-rok"></div>
+                    </div>
+                    <div class="drum-arrow-row">
+                        <button type="button" class="drum-arrow" onclick="drumStep('drum-dzien',1)">▼</button>
+                        <button type="button" class="drum-arrow" onclick="drumStep('drum-miesiac',1)">▼</button>
+                        <button type="button" class="drum-arrow" onclick="drumStep('drum-rok',1)">▼</button>
                     </div>
                 </div>
                 <div id="drum-err" style="display:none;text-align:center;font-size:12px;font-weight:800;color:#F87171;padding:4px 0" data-i18n="zadania.dueDateInPastError">⚠ Termin nie może być w przeszłości</div>
@@ -787,7 +800,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     <div class="mp-body" id="mp-body"></div>
 </div>
 
-<script src="coachay-core.js?v=20260907d"></script>
+<script src="coachay-core.js?v=20261003a"></script>
 <script>
     /* ─────────────────────────────────────────────────────
        i18n helpers
@@ -2058,7 +2071,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     <div style="font-size:16px;font-weight:700;color:var(--szary);">${lblParts.join(' · ')}</div>
                 </div>`;
             }
-            card.innerHTML = `<div class="task-check done" style="background:var(--akcent);border-color:var(--akcent);color:#fff;font-size:10px;">↑</div><div class="task-body"><div class="task-text${allDone ? ' done-text' : ''}">${task.title}</div><div class="task-meta">${meta}</div>${progressHtml}</div>`;
+            const taskActionsHtml = `<div style="display:flex;gap:8px;margin-top:6px;" onclick="event.stopPropagation()">
+                <button onclick="editTaskFromDashboard('${taskId}')" style="padding:3px 10px;background:var(--tlo-karta2);border:1px solid var(--border2);border-radius:999px;color:var(--szary);font-size:11px;font-weight:700;cursor:pointer;">✏️ Edytuj</button>
+                <button onclick="deleteTaskFromDashboard('${taskId}')" style="padding:3px 10px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:999px;color:var(--blad);font-size:11px;font-weight:700;cursor:pointer;">🗑️ Usuń</button>
+            </div>`;
+            card.innerHTML = `<div class="task-check done" style="background:var(--akcent);border-color:var(--akcent);color:#fff;font-size:10px;">↑</div><div class="task-body"><div class="task-text${allDone ? ' done-text' : ''}">${task.title}</div><div class="task-meta">${meta}</div>${progressHtml}${taskActionsHtml}</div>`;
         } else {
             // Widok odbiorcy (rodzic/zawodnik) — checkbox
             const isDone     = completed.includes(userId);
@@ -2991,10 +3008,70 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     /* ─────────────────────────────────────────────────────
        DODAJ ZADANIE
     ───────────────────────────────────────────────────── */
+    let _editingTaskId = null;
+    function _setTaskPanelMode(editing, titleText, btnText) {
+        const panel = document.getElementById('panel-add-task');
+        if (!panel) return;
+        const titleEl = panel.querySelector('.slide-panel-tytul');
+        if (titleEl) titleEl.textContent = titleText;
+        const submitBtn = panel.querySelector('.add-panel-footer .btn-primary');
+        if (submitBtn) submitBtn.textContent = btnText;
+        document.getElementById('task-vis-grid').style.display = editing ? 'none' : '';
+    }
+
     function openAddTaskPanel() {
+        _editingTaskId = null;
+        _taskPanelEditMode = false;
+        _editingAssignedTo = [];
+        _setTaskPanelMode(false, t('zadania.addTitle') || 'Nowe zadanie', t('addTask.submit') || 'Wyślij zadanie →');
+        document.getElementById('task-person-list-wrap').style.display = 'none';
         openSlidePanel('panel-add-task');
         initTaskDrums();
         _loadAddPanelMembers().then(() => { /* person list shown only when vis chip selected */ });
+    }
+
+    async function editTaskFromDashboard(taskId) {
+        try {
+            const doc = await db.collection('tasks').doc(taskId).get();
+            if (!doc.exists) { alert('Zadanie nie istnieje.'); return; }
+            const task = doc.data();
+            _editingTaskId = taskId;
+            _taskPanelEditMode = true;
+            _editingAssignedTo = task.assignedTo || [];
+
+            document.getElementById('task-add-title').value = task.title || '';
+            document.getElementById('task-add-desc').value = task.description || '';
+
+            if (task.dueDate) {
+                const parts = task.dueDate.split('-').map(n => parseInt(n, 10));
+                if (parts.length === 3 && parts.every(n => !isNaN(n))) {
+                    drumState.rok = parts[0]; drumState.miesiac = parts[1]; drumState.dzien = parts[2];
+                }
+            }
+            document.getElementById('drum-err').style.display = 'none';
+
+            _setTaskPanelMode(true, t('zadania.editTitle') || 'Edytuj zadanie', t('addTask.saveChanges') || 'Zapisz zmiany →');
+            document.getElementById('task-person-list-wrap').style.display = '';
+
+            openSlidePanel('panel-add-task');
+            initTaskDrums();
+            await _loadAddPanelMembers();
+            renderTaskPersonList();
+        } catch (e) { console.error('❌ editTaskFromDashboard', e); alert('Błąd wczytywania zadania.'); }
+    }
+
+    async function deleteTaskFromDashboard(taskId) {
+        try {
+            const doc = await db.collection('tasks').doc(taskId).get();
+            if (!doc.exists) return;
+            const task = doc.data();
+            if (!confirm(`Usunąć zadanie "${task.title || ''}"? Wszyscy przypisani dostaną powiadomienie o usunięciu.`)) return;
+            await db.collection('tasks').doc(taskId).update({
+                status: 'DELETE', deletedAt: new Date().toISOString(), deletedBy: getCurrentUserId()
+            });
+            await manageNotifications('delete', 'task', taskId, { teamId: task.teamId || _activeTeamId, assignees: task.assignedTo || [], title: task.title || '' });
+            await refreshDashboard();
+        } catch (e) { console.error('❌ deleteTaskFromDashboard', e); alert('Błąd: ' + e.message); }
     }
 
     function toggleTaskVis(el) {
@@ -3004,30 +3081,39 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         renderTaskPersonList();
     }
 
+    let _taskPanelEditMode = false;
+    let _editingAssignedTo = [];
     function renderTaskPersonList() {
         const container = document.getElementById('task-person-list');
         if (!container) return;
         const members = _addPanelMembers || [];
-        const sel = Array.from(document.querySelectorAll('#task-vis-grid .vis-chip.selected')).map(c => c.dataset.vis);
-        const persons = [], added = new Set();
         const ROLE_LABEL = { TRENER_GLOWNY: 'Trener główny', TRENER_POMOCNICZY: 'Trener', ZAWODNIK: 'Zawodnik', RODZIC: 'Rodzic', KIBIC: 'Kibic' };
         const ROLE_ORDER = { TRENER_GLOWNY: 0, TRENER_POMOCNICZY: 1, ZAWODNIK: 2, RODZIC: 3, KIBIC: 4 };
-        members.forEach(m => {
-            const r = m.role || '';
-            if (added.has(m.userId)) return;
-            if (sel.includes('TRENERZY') && (r === 'TRENER_GLOWNY' || r === 'TRENER_POMOCNICZY')) { persons.push(m); added.add(m.userId); }
-            if (sel.includes('DRUZYNA') && r === 'ZAWODNIK') { persons.push(m); added.add(m.userId); }
-            if (sel.includes('RODZICE') && r === 'RODZIC') { persons.push(m); added.add(m.userId); }
-            if (sel.includes('KIBICE') && r === 'KIBIC') { persons.push(m); added.add(m.userId); }
-        });
+        let persons;
+        if (_taskPanelEditMode) {
+            // Edycja: pokaż WSZYSTKICH członków drużyny, niezależnie od chipów (ukrytych w tym trybie)
+            persons = members.slice();
+        } else {
+            const sel = Array.from(document.querySelectorAll('#task-vis-grid .vis-chip.selected')).map(c => c.dataset.vis);
+            persons = []; const added = new Set();
+            members.forEach(m => {
+                const r = m.role || '';
+                if (added.has(m.userId)) return;
+                if (sel.includes('TRENERZY') && (r === 'TRENER_GLOWNY' || r === 'TRENER_POMOCNICZY')) { persons.push(m); added.add(m.userId); }
+                if (sel.includes('DRUZYNA') && r === 'ZAWODNIK') { persons.push(m); added.add(m.userId); }
+                if (sel.includes('RODZICE') && r === 'RODZIC') { persons.push(m); added.add(m.userId); }
+                if (sel.includes('KIBICE') && r === 'KIBIC') { persons.push(m); added.add(m.userId); }
+            });
+        }
         persons.sort((a, b) => (ROLE_ORDER[a.role] || 9) - (ROLE_ORDER[b.role] || 9) || (a.displayName || '').localeCompare(b.displayName || ''));
         container.innerHTML = '';
         persons.forEach(p => {
+            const isChecked = _taskPanelEditMode ? _editingAssignedTo.includes(p.userId) : true;
             const row = document.createElement('div');
-            row.className = 'person-check-row checked';
+            row.className = 'person-check-row' + (isChecked ? ' checked' : '');
             row.dataset.personId = p.userId;
             row.onclick = () => { row.classList.toggle('checked'); row.querySelector('.person-cb').textContent = row.classList.contains('checked') ? '✓' : ''; updateTaskPersonCount(); };
-            row.innerHTML = `<div class="person-cb">✓</div><div class="person-check-name">${p.displayName || p.userId}</div><div class="person-check-role">${ROLE_LABEL[p.role] || p.role}</div>`;
+            row.innerHTML = `<div class="person-cb">${isChecked ? '✓' : ''}</div><div class="person-check-name">${p.displayName || p.userId}</div><div class="person-check-role">${ROLE_LABEL[p.role] || p.role}</div>`;
             container.appendChild(row);
         });
         updateTaskPersonCount();
@@ -3057,6 +3143,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         document.getElementById('task-person-list').innerHTML = '';
         document.getElementById('task-person-list-wrap').style.display = 'none';
         document.getElementById('drum-err').style.display = 'none';
+        _editingTaskId = null;
+        _taskPanelEditMode = false;
+        _editingAssignedTo = [];
+        _setTaskPanelMode(false, t('zadania.addTitle') || 'Nowe zadanie', t('addTask.submit') || 'Wyślij zadanie →');
         const today = new Date();
         drumState.dzien = today.getDate();
         drumState.miesiac = today.getMonth() + 1;
@@ -3076,6 +3166,21 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         if (!assignedTo.length) { alert('Wybierz co najmniej jedną osobę'); return; }
 
         if (!_activeTeamId) { alert('Błąd: brak sesji. Odśwież stronę.'); return; }
+
+        if (_editingTaskId) {
+            try {
+                await db.collection('tasks').doc(_editingTaskId).update({
+                    title, description: desc || null, dueDate, assignedTo,
+                    completedBy: [], rejectedBy: [], rejectReasons: {},
+                    status: 'PENDING', completedAt: null
+                });
+                await manageNotifications('edit', 'task', _editingTaskId, { teamId: _activeTeamId, assignees: assignedTo, title, dueDate });
+                closeSlidePanel('panel-add-task');
+                _resetAddTaskForm();
+                await refreshDashboard();
+            } catch (e) { console.error('❌ saveTaskFromPanel (edit)', e); alert('Błąd zapisu. Spróbuj ponownie.'); }
+            return;
+        }
 
         const taskId = 'task_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '_' + Date.now().toString().slice(-5);
         const taskData = {
@@ -3102,7 +3207,15 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     const drumState = { dzien: _drumToday.getDate(), miesiac: _drumToday.getMonth() + 1, rok: _drumToday.getFullYear() };
     function _getDniWMiesiacu(m, r) { return new Date(r, m, 0).getDate(); }
 
+    const _drumColState = {};
+    function drumStep(colId, delta) {
+        const st = _drumColState[colId];
+        if (!st) return;
+        const ni = Math.max(0, Math.min(st.items.length - 1, st.si + delta));
+        if (ni !== st.si) updateDrum(colId, st.items, ni);
+    }
     function buildDrum(colId, items, si) {
+        _drumColState[colId] = { items, si };
         const col = document.getElementById(colId); if (!col) return;
         col.innerHTML = `<div class="drum-inner" id="${colId}-inner">${items.map((item, i) => `<div class="drum-item ${i === si ? 'active' : ''}" data-index="${i}">${item}</div>`).join('')}</div>`;
         document.getElementById(`${colId}-inner`).style.transform = `translateY(${-si * 46}px)`;
@@ -3121,6 +3234,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     function updateDrum(colId, items, si) {
+        _drumColState[colId] = { items, si };
         const inner = document.getElementById(`${colId}-inner`); if (!inner) return;
         inner.style.transform = `translateY(${-si * 46}px)`;
         inner.querySelectorAll('.drum-item').forEach((el, i) => el.classList.toggle('active', i === si));

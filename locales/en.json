@@ -1767,6 +1767,7 @@
   "year": "Year",
   "assignTo": "Assign to",
   "submit": "Send task →",
+  "saveChanges": "Save changes →",
   "validationError": "Enter task title",
   "from": "From",
   "reject": "Reject",

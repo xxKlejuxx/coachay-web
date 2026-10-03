@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261002a'; // 2026-10-02: bump po dodaniu raporty.cardsFilterLabel/cardsFilterAll/cardsFilterWithoutParent
+    const LOCALE_V  = '20261003a'; // 2026-10-03: bump po dodaniu addTask.saveChanges
 
     let _lang = localStorage.getItem('coachay_lang') || 'pl';
     if (!SUPPORTED.includes(_lang)) _lang = 'pl';
