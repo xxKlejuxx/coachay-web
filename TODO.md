@@ -35,6 +35,11 @@ Wersja: 4.7 | Data: 2026-04-17
 
 **Osobny mniejszy problem (niższy priorytet):** `slots_used` nigdy nie jest automatycznie zwalniany gdy Kibic przestaje potrzebować slotu rodzinnego (np. kupuje własną licencję ind — P0.5 wygrywa wcześniej w kaskadzie, ale `familySlotParent.slots_used` zostaje zajęte na zawsze). `releaseFamilySlot()` wywołuje się dziś tylko ręcznie przy blokowaniu Kibica przez rodzica. Nie psuje dostępu, tylko zawyża zajętość puli rodzica.
 
+### Blokada usuwania eventów/zadań "wstecz" (2026-10-03)
+- [ ] Zdecydowano: nie powinna być możliwość usunięcia (`calDeleteEvent()` / `deleteTaskFromDashboard()`) eventu/zadania, którego data już minęła — czyli zablokować usuwanie retroaktywne. Dziś przycisk 🗑️ działa niezależnie od daty.
+- [ ] Do ustalenia przy realizacji: dokładna granica (np. `event.date < today` blokuje usuń, ale Odwołaj zostaje dostępne?), czy dotyczy też edycji, i czy obejmuje też zadania (`start.html` `deleteTaskFromDashboard`) czy tylko eventy (`calDeleteEvent`).
+- Kontekst: wypłynęło przy pracy nad powiadomieniem `EVENT_DELETED` (sync #0086–#0088) — nie zaimplementowane, czeka na osobną dyskusję przed kodowaniem.
+
 ---
 
 ## 🔒 Bezpieczeństwo
