@@ -37,6 +37,8 @@ const I18N = {
         dateChange: (d) => `📅 Data: ${d}`,
         timeChange: (t) => `🕐 Godzina: ${t}`,
         placeChange: (p) => `📍 Miejsce: ${p}`,
+        titleChange: (ti) => `📝 Tytuł: ${ti}`,
+        descChange: () => `📝 Zmieniono opis`,
         reminderTitle:  (typeName, timeStr) => `${typeName} już za ${timeStr}`,
         reminderReady:  'czy jesteś gotowy?',
         locale: 'pl-PL',
@@ -51,6 +53,8 @@ const I18N = {
         dateChange: (d) => `📅 Date: ${d}`,
         timeChange: (t) => `🕐 Time: ${t}`,
         placeChange: (p) => `📍 Location: ${p}`,
+        titleChange: (ti) => `📝 Title: ${ti}`,
+        descChange: () => `📝 Description changed`,
         reminderTitle:  (typeName, timeStr) => `${typeName} in ${timeStr}`,
         reminderReady:  'are you ready?',
         locale: 'en-GB',
@@ -545,13 +549,23 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
         }
     }
 
+    // Nowo zaproszeni (dopisani przy edycji) — liczone PRZED guardem, bo samo
+    // dopisanie kogoś do eventu (bez zmiany daty/godziny/miejsca) ma też
+    // odblokować wysyłkę (branch C niżej), inaczej guard wyciąłby ją wcześniej.
+    const _beforeInvitedEarly = before.attendance?.invited || [];
+    const _afterInvitedEarly  = after.attendance?.invited  || [];
+    const _newlyAddedEarly    = _afterInvitedEarly.filter(id => !_beforeInvitedEarly.includes(id));
+
     // Guard: jeśli żadne istotne pole się nie zmieniło, zakończ od razu
     const significantChange =
-        before.status     !== after.status     ||
-        before.date       !== after.date       ||
-        before.timeFrom   !== after.timeFrom   ||
-        before.timeTo     !== after.timeTo     ||
-        (before.location?.venueName || '') !== (after.location?.venueName || '');
+        before.status      !== after.status      ||
+        before.date        !== after.date        ||
+        before.timeFrom    !== after.timeFrom    ||
+        before.timeTo      !== after.timeTo      ||
+        before.title       !== after.title       ||
+        before.description !== after.description ||
+        (before.location?.venueName || '') !== (after.location?.venueName || '') ||
+        _newlyAddedEarly.length > 0;
     if (!significantChange) return;
 
     // Określ język na podstawie osoby która anulowała / edytowała
@@ -645,24 +659,34 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
             if ((before.location?.venueName || '') !== (after.location?.venueName || '')) {
                 changes.push(i18n.placeChange(after.location?.venueName || '—'));
             }
-            if (changes.length === 0) return;
-
-            const skipBy     = after.updatedBy || after.createdBy;
-
-            const recipients = await resolveInvitedUserIds(after, skipBy);
-            let sent = 0;
-            for (const { userId, forPlayerId, playerName } of recipients) {
-                await createNotification({
-                    userId, teamId: after.teamId,
-                    type: 'EVENT_UPDATED',
-                    title: i18n.updatedTitle(after.type),
-                    body: buildNotifBody(after, { childName: playerName || null, changes }),
-                    referenceId: eventId, referenceType: 'event',
-                    forPlayerId: forPlayerId || null, requiresAction: false,
-                });
-                sent++;
+            if (before.title !== after.title) {
+                changes.push(i18n.titleChange(after.title || '—'));
             }
-            console.log(`✅ onEventUpdated [${eventId}] UPDATED: ${sent} powiadomień (${changes.join(', ')})`);
+            if (before.description !== after.description) {
+                changes.push(i18n.descChange());
+            }
+
+            // Uwaga: NIE robimy tu `return` gdy changes.length===0 — sam dopisany
+            // zawodnik (branch C niżej) nie zmienia tych pól, a i tak ma dostać
+            // powiadomienie. Po prostu pomijamy wysyłkę EVENT_UPDATED, bez wychodzenia z funkcji.
+            if (changes.length > 0) {
+                const skipBy     = after.updatedBy || after.createdBy;
+
+                const recipients = await resolveInvitedUserIds(after, skipBy);
+                let sent = 0;
+                for (const { userId, forPlayerId, playerName } of recipients) {
+                    await createNotification({
+                        userId, teamId: after.teamId,
+                        type: 'EVENT_UPDATED',
+                        title: i18n.updatedTitle(after.type),
+                        body: buildNotifBody(after, { childName: playerName || null, changes }),
+                        referenceId: eventId, referenceType: 'event',
+                        forPlayerId: forPlayerId || null, requiresAction: false,
+                    });
+                    sent++;
+                }
+                console.log(`✅ onEventUpdated [${eventId}] UPDATED: ${sent} powiadomień (${changes.join(', ')})`);
+            }
         }
     } catch (e) {
         console.error('❌ onEventUpdated:', e);
