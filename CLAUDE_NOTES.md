@@ -296,6 +296,11 @@ Weryfikacja: `node --check plik.js` (składnia) + ponowny skan `/[ÃÂÅÄâãÐ
 
 **Najlepsza długoterminowa ochrona:** zamiast liczyć na to że plik zawsze zostanie zapisany jako UTF-8, używać `\uXXXX` escape'ów w stringach z polskimi znakami (jak w `coachay-core.js`) — to jest odporne na encoding pliku, bo JS dekoduje `ź` do właściwego code pointu niezależnie od tego jak zapisany jest sam plik.
 
+**Update 2026-10-06 — ten sam problem wrócił, teraz jest na to automat:** mimo że reguła wyżej była już napisana, uszkodzenie (znak U+FFFD) leżało niezauważone w 14 plikach HTML (3690 wystąpień), prawdopodobnie od samego początku repo (sprzed pracy z Claude). Rafał słusznie zauważył: "sam nie trzymasz się własnych zasad" — pisanie reguły w pliku nie wystarcza, jeśli nikt/nic jej mechanicznie nie wymusza. Dlatego dodano:
+- `_check_encoding.js` w repo — skanuje `.html`/`.js`/`.json` pod kątem U+FFFD (sam skrypt się nie skanuje). `node _check_encoding.js` = całe repo, `node _check_encoding.js --staged` = tylko pliki w commicie.
+- `.git/hooks/pre-commit` — automatycznie odpala `_check_encoding.js --staged` i **blokuje commit**, jeśli znajdzie uszkodzenie. Przetestowane: blokuje poprawnie (patrz test z `_hook_test.html` 2026-10-06), nie blokuje czystych plików. Pomijalny świadomie przez `git commit --no-verify`.
+- Zasada dla Claude: ten check uruchamiać też ręcznie przed każdym deployem (`node _check_encoding.js`), nie tylko polegać na hooku commitu.
+
 ---
 
 ## 🌐 Browser pane (Claude Code) — file:// nie wykonuje JS
