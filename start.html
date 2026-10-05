@@ -1678,7 +1678,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const allEv = await getTeamEvents(teamId, todayStr, maxStr);
         const upEv  = allEv.filter(e => {
             if (e.status === 'CANCELLED') return false;
-            const rh = e.reminderHoursBefore != null ? e.reminderHoursBefore : 48;
+            const rh = e.reminderHoursBefore != null ? e.reminderHoursBefore : (e.reminderDays != null ? e.reminderDays : 7) * 24;
             if (rh > 0) {
                 const evTime = new Date(e.date + 'T' + (e.timeFrom || '00:00')).getTime();
                 if (Date.now() < evTime - rh * 3600000) return false;
@@ -3068,6 +3068,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 showInAnnouncements:  showAnn,
                 requireConfirmation:  reqConf,
                 reminderDays,
+                reminderHoursBefore: reminderDays * 24,
                 displayPriority,
                 'attendance.invited': invited,
                 updatedAt: new Date().toISOString(),
@@ -3098,6 +3099,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     showInAnnouncements:  showAnn,
                     requireConfirmation:  reqConf,
                     reminderDays,
+                    reminderHoursBefore: reminderDays * 24,
                     displayPriority,
                     attendance: { invited, confirmed: [], declined: [], declineReasons: {}, markedAbsent: [], decidedBy: {} },
                     seriesId:   item.seriesId,

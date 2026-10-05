@@ -92,7 +92,7 @@ async function main() {
         let eventsCount = 0;
         for (const teamId of teamIds) {
             for (const ev of (eventsByTeam[teamId] || [])) {
-                const rh = ev.reminderHoursBefore != null ? ev.reminderHoursBefore : 48;
+                const rh = ev.reminderHoursBefore != null ? ev.reminderHoursBefore : (ev.reminderDays != null ? ev.reminderDays : 7) * 24;
                 if (rh <= 0) continue;
                 const evTime = new Date(ev.date + 'T' + (ev.timeFrom || '00:00')).getTime();
                 if (evTime < now) continue;

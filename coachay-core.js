@@ -447,7 +447,7 @@ function isVisible(event) {
 // rh > 0 → widoczny dopiero gdy now >= eventTime - rh*3600000
 // Używane w: loadUpcomingEvents (start.html) + loadAndRenderNotifications (tu)
 function isEventInReminderWindow(event) {
-    const rh = event.reminderHoursBefore || 0;
+    const rh = event.reminderHoursBefore != null ? event.reminderHoursBefore : (event.reminderDays != null ? event.reminderDays : 7) * 24;
     if (rh <= 0) return true;
     const evTime = new Date(event.date + 'T' + (event.timeFrom || '00:00')).getTime();
     const reminderStart = evTime - rh * 3600000;
