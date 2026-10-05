@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>COACHAY — Dru¿yna</title>
+<title>COACHAY ï¿½ Druï¿½yna</title>
 <link rel="stylesheet" href="_global.css?v=20260730a">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
 <script src="_sidebar.js?v=20260821b"></script>
@@ -15,14 +15,14 @@
 <style>
 .screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
 
-/* ¦¦ Sort bar ¦¦ */
+/* ï¿½ï¿½ Sort bar ï¿½ï¿½ */
 .sort-bar { padding: 10px 16px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
 .sort-bar::-webkit-scrollbar { display: none; }
 .sort-lbl { font-size: 15px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; flex-shrink: 0; }
 .sort-btn { border-radius: var(--r-pill); padding: 5px 12px; font-size: 16px; font-weight: 800; background: var(--tlo-karta); border: 1px solid var(--border); color: var(--szary); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
 .sort-btn.active { background: var(--bialy); color: #000; border-color: var(--bialy); }
 
-/* ¦¦ Lista zawodników ¦¦ */
+/* ï¿½ï¿½ Lista zawodnikï¿½w ï¿½ï¿½ */
 .zaw-scroll { flex: 1; overflow-y: auto; padding: 10px 16px 80px; display: flex; flex-direction: column; align-items: center; gap: 8px; scrollbar-width: none; }
 .zaw-scroll::-webkit-scrollbar { display: none; }
 
@@ -45,13 +45,13 @@
 .zaw-liga { font-size: 16px; font-weight: 900; color: var(--warn); white-space: nowrap; }
 .zaw-liga-lbl { font-size: 14px; color: var(--szary); font-weight: 700; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* ¦¦ FAB dodaj zawodnika ¦¦ */
+/* ï¿½ï¿½ FAB dodaj zawodnika ï¿½ï¿½ */
 .add-player-bar { position: absolute; bottom: 72px; right: 16px; z-index: 10; display: none; }
 body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .add-player-btn { width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size: 19px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); transition: opacity 0.15s; }
 .add-player-btn:active { opacity: 0.85; }
 
-/* ¦¦ Panel zawodnika (slide z prawej) ¦¦ */
+/* ï¿½ï¿½ Panel zawodnika (slide z prawej) ï¿½ï¿½ */
 .detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .detail-panel.open { transform: translateX(0); }
 
@@ -79,7 +79,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .dp-scroll { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
 .dp-scroll::-webkit-scrollbar { display: none; }
 
-/* ¦¦ Frekwencja ¦¦ */
+/* ï¿½ï¿½ Frekwencja ï¿½ï¿½ */
 .freq-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .freq-label { font-size: 17px; font-weight: 700; color: var(--szary-j); width: 70px; flex-shrink: 0; }
 .freq-bar-wrap { flex: 1; height: 8px; background: var(--tlo-karta2); border-radius: 999px; overflow: hidden; }
@@ -90,7 +90,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .freq-bar-inne { background: #6B7280; }
 .freq-pct { font-size: 17px; font-weight: 900; color: var(--bialy); width: 36px; text-align: right; flex-shrink: 0; }
 
-/* ¦¦ Absencje ¦¦ */
+/* ï¿½ï¿½ Absencje ï¿½ï¿½ */
 .abs-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .abs-item:last-child { border-bottom: none; }
 .abs-dates { flex: 1; }
@@ -98,34 +98,34 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .abs-dates-comment { font-size: 16px; color: var(--szary); margin-top: 2px; }
 .abs-del { font-size: 21px; color: var(--szary); cursor: pointer; padding: 4px; }
 
-/* ¦¦ Panel absencji (slide-in nad profilem) ¦¦ */
+/* ï¿½ï¿½ Panel absencji (slide-in nad profilem) ï¿½ï¿½ */
 .abs-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .abs-panel.open { transform: translateY(0); }
 .abs-panel-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .abs-panel-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 .abs-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
 
-/* ¦¦ Panel dodaj zawodnika ¦¦ */
+/* ï¿½ï¿½ Panel dodaj zawodnika ï¿½ï¿½ */
 .add-player-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .add-player-panel.open { transform: translateY(0); }
 .add-player-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .add-player-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 .add-player-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; }
 
-/* ¦¦ Statystyki hero — 4 pola z zapisem X/Y ¦¦ */
+/* ï¿½ï¿½ Statystyki hero ï¿½ 4 pola z zapisem X/Y ï¿½ï¿½ */
 .dp-stat-sub { font-size: 14px; font-weight: 700; color: var(--szary); margin-top: 3px; }
 
-/* ¦¦ Sekcja w panelu ¦¦ */
+/* ï¿½ï¿½ Sekcja w panelu ï¿½ï¿½ */
 .dp-section { display: flex; flex-direction: column; gap: 8px; }
 .dp-section-label { font-size: 15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
 
-/* ¦¦ Picker awatara (slide-in z do³u) ¦¦ */
+/* ï¿½ï¿½ Picker awatara (slide-in z doï¿½u) ï¿½ï¿½ */
 .avatar-picker-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 150; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .avatar-picker-panel.open { transform: translateY(0); }
 .avatar-picker-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .avatar-picker-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 
-/* Wybór stylu + przycisk generuj */
+/* Wybï¿½r stylu + przycisk generuj */
 .av-styl-row { display: flex; gap: 8px; padding: 12px 16px; background: #000; border-bottom: 1px solid var(--border); flex-shrink: 0; align-items: center; }
 .av-styl-btn { padding: 7px 16px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1px solid var(--border); font-size: 17px; font-weight: 800; color: var(--szary-j); cursor: pointer; transition: all 0.15s; }
 .av-styl-btn.selected { background: var(--bialy); color: #000; border-color: var(--bialy); }
@@ -153,12 +153,12 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .modal-btn-secondary { background: var(--tlo-karta2); color: var(--szary-j); border: 1px solid var(--border2); }
 .modal-btn-cancel { background: transparent; color: var(--szary); font-size: 17px; }
 
-/* ¦¦ Notatki trenera ¦¦ */
+/* ï¿½ï¿½ Notatki trenera ï¿½ï¿½ */
 .coach-notes { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 12px 14px; color: var(--bialy); font-size: 18px; font-weight: 600; font-family: var(--font); resize: none; min-height: 80px; }
 .coach-notes::placeholder { color: var(--szary); }
 .coach-notes:focus { border-color: var(--akcent); outline: none; }
 
-/* ¦¦ Kody dostêpu — lista ¦¦ */
+/* ï¿½ï¿½ Kody dostï¿½pu ï¿½ lista ï¿½ï¿½ */
 .kod-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
 .kod-item.kod-aktywny { border-color: rgba(59,130,246,0.4); }
 .kod-item.kod-uzyty { border-color: rgba(74,222,128,0.3); }
@@ -175,29 +175,29 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .kod-meta strong { color: var(--szary-j); }
 .kod-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 
-/* ¦¦ Sticky save btn ¦¦ */
+/* ï¿½ï¿½ Sticky save btn ï¿½ï¿½ */
 .sticky-save { position: sticky; bottom: 0; padding: 14px 16px; background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
 
-/* ¦¦ Kod dostêpu ¦¦ */
+/* ï¿½ï¿½ Kod dostï¿½pu ï¿½ï¿½ */
 .kod-box { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; }
 .kod-val { font-family: var(--font-d); font-size: 27px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
 .kod-copy { font-size: 16px; font-weight: 900; color: var(--akcent); cursor: pointer; }
 
-/* ¦¦ Select custom ¦¦ */
+/* ï¿½ï¿½ Select custom ï¿½ï¿½ */
 .form-select { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 20px; font-weight: 600; font-family: var(--font); appearance: none; cursor: pointer; }
 .form-select:focus { border-color: var(--akcent); outline: none; }
 .form-select option { background: #1a1a1a; }
 
-/* ¦¦ Empty state ¦¦ */
+/* ï¿½ï¿½ Empty state ï¿½ï¿½ */
 .zaw-empty { padding: 60px 20px; text-align: center; color: var(--szary); font-size: 18px; font-weight: 600; line-height: 1.6; width: 100%; max-width: 1100px; box-sizing: border-box; }
 
-/* ¦¦ Powi¹zane konta ¦¦ */
+/* ï¿½ï¿½ Powiï¿½zane konta ï¿½ï¿½ */
 .pow-group-label { font-size: 15px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; margin-top: 4px; }
 .pow-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
 .pow-item:last-child { margin-bottom: 0; }
 .pow-item:hover { border-color: var(--akcent); }
 .pow-chevron { color: var(--szary); font-size: 17px; flex-shrink: 0; }
-/* Modal danych powi¹zanego */
+/* Modal danych powiï¿½zanego */
 .pow-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 9000; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 .pow-modal-overlay.open { opacity: 1; pointer-events: all; }
 .pow-modal { background: var(--tlo-karta); border-radius: 20px 20px 0 0; padding: 20px 20px 36px; width: 100%; max-height: 80vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.25s cubic-bezier(.32,.72,0,1); }
@@ -276,7 +276,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
         <div class="ctx-switcher" onclick="toggleCtxOv()">
             <div class="ctx-dot" id="ctx-dot"></div>
             <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
-            <span class="ctx-arrow">?</span>
+            <span class="ctx-arrow">â–¾</span>
         </div>
         <div class="top-bar-right">
             <button class="import-btn" id="import-csv-btn" onclick="otworzImportCSV()" data-i18n="druzyna.importCsvButton">?? Importuj CSV</button>
@@ -286,35 +286,35 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 
     <!-- Overlaye globalne -->
     <div class="ctx-overlay" id="ctx-ov">
-        <div class="ov-label">Wybierz klub i zespó³</div>
+        <div class="ov-label">Wybierz klub i zespï¿½</div>
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
     <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
-        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyœæ przeczytane</span></div>
+        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyï¿½ï¿½ przeczytane</span></div>
     </div>
 
-    <!-- G³ówna zawartoœæ -->
+    <!-- Gï¿½ï¿½wna zawartoï¿½ï¿½ -->
     <div class="screen-body">
 
         <!-- Sort bar -->
         <div class="sort-bar">
             <span class="sort-lbl" data-i18n="druzyna.sortLabel">Sortuj:</span>
             <button class="sort-btn active" data-sort="numer" onclick="sortujZawodnikow(this,'numer')" data-i18n="druzyna.sortNumber">Numer</button>
-            <button class="sort-btn" data-sort="imie" onclick="sortujZawodnikow(this,'imie')" data-i18n="druzyna.sortFirstName">Imiê</button>
+            <button class="sort-btn" data-sort="imie" onclick="sortujZawodnikow(this,'imie')" data-i18n="druzyna.sortFirstName">Imiï¿½</button>
             <button class="sort-btn" data-sort="pozycja" onclick="sortujZawodnikow(this,'pozycja')" data-i18n="druzyna.sortPosition">Pozycja</button>
             <button class="sort-btn" data-sort="grupa" onclick="sortujZawodnikow(this,'grupa')" data-i18n="druzyna.sortGroup">Grupa</button>
         </div>
 
         <div class="pow-filter-row" id="zaw-show-deleted-row" style="display:none;padding:0 16px 8px;">
             <input type="checkbox" id="zaw-show-deleted" onchange="renderujListe()">
-            <label for="zaw-show-deleted" data-i18n="druzyna.showDeleted">Poka¿ usuniêtych</label>
+            <label for="zaw-show-deleted" data-i18n="druzyna.showDeleted">Pokaï¿½ usuniï¿½tych</label>
         </div>
 
-        <!-- Lista zawodników -->
+        <!-- Lista zawodnikï¿½w -->
         <div class="zaw-scroll" id="zaw-lista">
-            <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">£adowanie...</div>
+            <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">ï¿½adowanie...</div>
         </div>
 
     </div><!-- /screen-body -->
@@ -328,8 +328,8 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="detail-panel" id="detail-panel">
         <div class="dp-topbar">
             <div class="dp-back" onclick="zamknijProfil()">
-                <div class="dp-back-icon">‹</div>
-                <span data-i18n="nav.druzyna">Dru¿yna</span>
+                <div class="dp-back-icon">ï¿½</div>
+                <span data-i18n="nav.druzyna">Druï¿½yna</span>
             </div>
             <span class="dp-edit-btn" id="dp-edit-btn" style="display:none" onclick="edytujZawodnika()" data-i18n="edit">Edytuj</span>
         </div>
@@ -349,15 +349,15 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
             </div>
         </div>
 
-        <!-- Statystyki — X/Y z okresu -->
+        <!-- Statystyki ï¿½ X/Y z okresu -->
         <div class="dp-stats">
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-mecze">—</div><div class="dp-stat-sub" id="dp-mecze-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.MECZ">Mecze</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-treningi">—</div><div class="dp-stat-sub" id="dp-treningi-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.TRENING">Treningi</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-wyjazdy">—</div><div class="dp-stat-sub" id="dp-wyjazdy-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.WYJAZD">Wyjazdy</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-inne">—</div><div class="dp-stat-sub" id="dp-inne-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.INNE">Inne</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-mecze">ï¿½</div><div class="dp-stat-sub" id="dp-mecze-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.MECZ">Mecze</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-treningi">ï¿½</div><div class="dp-stat-sub" id="dp-treningi-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.TRENING">Treningi</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-wyjazdy">ï¿½</div><div class="dp-stat-sub" id="dp-wyjazdy-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.WYJAZD">Wyjazdy</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-inne">ï¿½</div><div class="dp-stat-sub" id="dp-inne-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.INNE">Inne</div></div>
         </div>
 
-        <!-- Treœæ profilu -->
+        <!-- Treï¿½ï¿½ profilu -->
         <div class="dp-scroll">
 
             <!-- Frekwencja -->
@@ -365,7 +365,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div class="dp-section-label" data-i18n="druzyna.frequencyLabel">Frekwencja</div>
                 <select id="dp-sezon-select" onchange="zmienSezonFrekwencji()" style="font-size: 16px;font-weight:700;margin-bottom:8px;background:transparent;border:none;color:var(--szary-j);padding:0;cursor:pointer;max-width:100%;"></select>
                 <div id="dp-frekwencja">
-                    <div style="color:var(--szary);font-size: 17px;">£adowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">ï¿½adowanie...</div>
                 </div>
             </div>
 
@@ -373,30 +373,30 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
             <div class="dp-section">
                 <div style="display:flex;align-items:center;justify-content:space-between;">
                     <div class="dp-section-label" data-i18n="druzyna.absencesLabel">Absencje</div>
-                    <button class="btn-ghost" id="dp-btn-abs" style="display:none;font-size: 16px;padding:4px 12px;" onclick="otworzAbsencje()" data-i18n="druzyna.reportAbsenceButton">+ Zg³oœ</button>
+                    <button class="btn-ghost" id="dp-btn-abs" style="display:none;font-size: 16px;padding:4px 12px;" onclick="otworzAbsencje()" data-i18n="druzyna.reportAbsenceButton">+ Zgï¿½oï¿½</button>
                 </div>
                 <div id="dp-absencje">
-                    <div style="color:var(--szary);font-size: 17px;">£adowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">ï¿½adowanie...</div>
                 </div>
             </div>
 
             <!-- Notatki trenera (tylko trener) -->
             <div class="dp-section" id="dp-notatki-section" style="display:none">
                 <div class="dp-section-label" data-i18n="druzyna.coachNotesLabel">Notatki trenera</div>
-                <textarea class="coach-notes" id="dp-notatki" data-i18n-placeholder="druzyna.coachNotesPlaceholder" placeholder="Notatki widoczne tylko dla trenerów..." rows="3"></textarea>
+                <textarea class="coach-notes" id="dp-notatki" data-i18n-placeholder="druzyna.coachNotesPlaceholder" placeholder="Notatki widoczne tylko dla trenerï¿½w..." rows="3"></textarea>
                 <button class="btn-ghost" style="align-self:flex-end;font-size: 16px;" onclick="zapiszNotatki()" data-i18n="druzyna.saveNotesButton">Zapisz notatki</button>
             </div>
 
-            <!-- Kody dostêpu (tylko trener) -->
+            <!-- Kody dostï¿½pu (tylko trener) -->
             <div class="dp-section" id="dp-kod-section" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <div class="dp-section-label" style="margin-bottom:0" data-i18n="druzyna.accessCodesLabel">Kody dostêpu</div>
+                    <div class="dp-section-label" style="margin-bottom:0" data-i18n="druzyna.accessCodesLabel">Kody dostï¿½pu</div>
                     <div class="pow-filter-row" style="margin-bottom:0;">
                         <input type="checkbox" id="kod-show-inactive" onchange="aktualnyZawodnik && zaladujKody(aktualnyZawodnik)">
-                        <label for="kod-show-inactive" data-i18n="druzyna.showInactiveCodes">Poka¿ nieaktywne kody</label>
+                        <label for="kod-show-inactive" data-i18n="druzyna.showInactiveCodes">Pokaï¿½ nieaktywne kody</label>
                     </div>
                 </div>
-                <!-- Wybór typu kodu -->
+                <!-- Wybï¿½r typu kodu -->
                 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="dp-typ-kodu-row">
                     <button class="sort-btn active" data-typ="RODZIC" onclick="wybierzTypKodu(this,'RODZIC')" data-i18n="druzyna.kodTypLabel.RODZIC">????? Rodzic</button>
                     <button class="sort-btn" data-typ="ZAWODNIK" onclick="wybierzTypKodu(this,'ZAWODNIK')" data-i18n="druzyna.kodTypLabel.ZAWODNIK">? Zawodnik</button>
@@ -404,44 +404,44 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div id="dp-typ-kodu-info" style="font-size: 16px;color:var(--szary);margin-bottom:10px;line-height:1.5;"></div>
                 <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size: 17px;" onclick="generujKod()" data-i18n="druzyna.generateCodeButton">?? Wygeneruj nowy kod</button>
                 <div id="dp-kod-content">
-                    <div style="color:var(--szary);font-size: 17px;">£adowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">ï¿½adowanie...</div>
                 </div>
             </div>
 
-            <!-- Powi¹zane konta (tylko trener) -->
+            <!-- Powiï¿½zane konta (tylko trener) -->
             <div class="dp-section" id="dp-powiazane-section" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                    <div class="dp-section-label" style="margin-bottom:0;" data-i18n="druzyna.linkedAccountsLabel">Powi¹zane konta</div>
+                    <div class="dp-section-label" style="margin-bottom:0;" data-i18n="druzyna.linkedAccountsLabel">Powiï¿½zane konta</div>
                     <div class="pow-filter-row" style="margin-bottom:0;">
                         <input type="checkbox" id="pow-show-inactive" onchange="toggleNieaktywnePowiazania()">
-                        <label for="pow-show-inactive" data-i18n="druzyna.showInactive">Poka¿ nieaktywne</label>
+                        <label for="pow-show-inactive" data-i18n="druzyna.showInactive">Pokaï¿½ nieaktywne</label>
                     </div>
                 </div>
                 <div id="dp-powiazane-content">
-                    <div style="color:var(--szary);font-size: 17px;">£adowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">ï¿½adowanie...</div>
                 </div>
             </div>
 
-            <!-- Roz³¹cz profil rodzica (tylko trener, tylko gdy s¹ aktywni rodzice) -->
+            <!-- Rozï¿½ï¿½cz profil rodzica (tylko trener, tylko gdy sï¿½ aktywni rodzice) -->
             <div class="dp-section" id="dp-przejmij-section" style="display:none">
-                <button class="btn-ghost" style="width:100%;padding:11px;font-size:18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">? Roz³¹cz profil rodzica</button>
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size:18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">? Rozï¿½ï¿½cz profil rodzica</button>
             </div>
 
-            <!-- Usuñ zawodnika (tylko TRENER_GLOWNY) -->
+            <!-- Usuï¿½ zawodnika (tylko TRENER_GLOWNY) -->
             <div class="dp-section" id="dp-usun-section" style="display:none">
-                <button class="btn-ghost" style="width:100%;padding:11px;font-size: 18px;font-weight:800;color:#fff;border:1px solid #EF4444;background:#EF4444;border-radius:12px;" onclick="usunZawodnika()" data-i18n="druzyna.deletePlayerButton">??? Usuñ zawodnika</button>
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size: 18px;font-weight:800;color:#fff;border:1px solid #EF4444;background:#EF4444;border-radius:12px;" onclick="usunZawodnika()" data-i18n="druzyna.deletePlayerButton">??? Usuï¿½ zawodnika</button>
             </div>
 
         </div><!-- /dp-scroll -->
 
-        <!-- Modal danych powi¹zanego -->
+        <!-- Modal danych powiï¿½zanego -->
         <div class="pow-modal-overlay" id="pow-modal-overlay" onclick="zamknijPowModal()">
             <div class="pow-modal" onclick="event.stopPropagation()">
                 <div class="pow-modal-header">
                     <div class="pow-modal-avatar" id="pow-modal-avatar">??</div>
                     <div style="flex:1;min-width:0">
-                        <div class="pow-modal-title" id="pow-modal-title">—</div>
-                        <div style="font-size: 16px;color:var(--szary);font-weight:600;margin-top:2px" id="pow-modal-subtitle">—</div>
+                        <div class="pow-modal-title" id="pow-modal-title">ï¿½</div>
+                        <div style="font-size: 16px;color:var(--szary);font-weight:600;margin-top:2px" id="pow-modal-subtitle">ï¿½</div>
                     </div>
                     <div class="pow-modal-close" onclick="zamknijPowModal()">?</div>
                 </div>
@@ -453,14 +453,14 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
         <div class="abs-panel" id="abs-panel">
             <div class="abs-panel-hdr">
                 <div class="dp-back" onclick="zamknijAbsencje()">
-                    <div class="dp-back-icon">‹</div>
+                    <div class="dp-back-icon">ï¿½</div>
                     <span data-i18n="druzyna.backToProfile">Profil</span>
                 </div>
-                <span class="abs-panel-tytul" data-i18n="druzyna.reportAbsenceTitle">Zg³oœ absencjê</span>
+                <span class="abs-panel-tytul" data-i18n="druzyna.reportAbsenceTitle">Zgï¿½oï¿½ absencjï¿½</span>
             </div>
             <div class="abs-panel-body">
                 <div class="dp-section-label" data-i18n="druzyna.playerLabel">Zawodnik</div>
-                <div style="font-size: 19px;font-weight:800;color:var(--bialy);" id="abs-player-name">—</div>
+                <div style="font-size: 19px;font-weight:800;color:var(--bialy);" id="abs-player-name">ï¿½</div>
 
                 <div class="form-group">
                     <label class="form-lbl" data-i18n="druzyna.dateFromLabel">Data od *</label>
@@ -472,11 +472,11 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 </div>
                 <div class="form-group">
                     <label class="form-lbl" data-i18n="druzyna.commentLabel">Komentarz</label>
-                    <input type="text" class="form-inp" id="abs-comment" data-i18n-placeholder="druzyna.commentPlaceholder" placeholder="np. Z³amanie rêki, Choroba...">
+                    <input type="text" class="form-inp" id="abs-comment" data-i18n-placeholder="druzyna.commentPlaceholder" placeholder="np. Zï¿½amanie rï¿½ki, Choroba...">
                 </div>
             </div>
             <div class="sticky-save">
-                <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()" data-i18n="druzyna.saveAbsenceButton">Zapisz absencjê</button>
+                <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()" data-i18n="druzyna.saveAbsenceButton">Zapisz absencjï¿½</button>
             </div>
         </div><!-- /abs-panel -->
 
@@ -486,14 +486,14 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="add-player-panel" id="add-player-panel">
         <div class="add-player-hdr">
             <div class="dp-back" onclick="zamknijDodajZawodnika()">
-                <div class="dp-back-icon">‹</div>
-                <span data-i18n="nav.druzyna">Dru¿yna</span>
+                <div class="dp-back-icon">ï¿½</div>
+                <span data-i18n="nav.druzyna">Druï¿½yna</span>
             </div>
             <span class="add-player-tytul" id="add-player-tytul" data-i18n="druzyna.newPlayerTitle">Nowy zawodnik</span>
         </div>
         <div class="add-player-body">
             <div class="form-group">
-                <label class="form-lbl" data-i18n="druzyna.firstNameRequired">Imiê *</label>
+                <label class="form-lbl" data-i18n="druzyna.firstNameRequired">Imiï¿½ *</label>
                 <input type="text" class="form-inp" id="ap-firstname" data-i18n-placeholder="druzyna.firstNamePlaceholder" placeholder="Jan">
             </div>
             <div class="form-group">
@@ -520,7 +520,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <label class="form-lbl"><span data-i18n="druzyna.jerseyNumberLabel">Numer koszulki</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.optionalMasc">(opcjonalny)</span></label>
                 <input type="number" class="form-inp" id="ap-numer" data-i18n-placeholder="druzyna.jerseyNumberPlaceholder" placeholder="np. 10" min="1" max="99">
             </div>
-            <!-- TODO: Pole "Liga" konfigurowalne w Ustawieniach (nazwa i wartoœci) — do zaimplementowania w Priorytecie 4 (Ustawienia) -->
+            <!-- TODO: Pole "Liga" konfigurowalne w Ustawieniach (nazwa i wartoï¿½ci) ï¿½ do zaimplementowania w Priorytecie 4 (Ustawienia) -->
             <div class="form-group">
                 <label class="form-lbl"><span data-i18n="druzyna.leagueLabel">Liga</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.coachOnlyHint">(widoczna tylko dla trenera)</span></label>
                 <input type="text" class="form-inp" id="ap-liga" data-i18n-placeholder="druzyna.leaguePlaceholder" placeholder="np. Liga A, Liga B...">
@@ -538,7 +538,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                     </select>
                     <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone1" data-i18n-placeholder="druzyna.phonePlaceholder" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
                 </div>
-                <div class="phone-error" id="ap-guardian-phone1-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawid³owy numer (7–12 cyfr)</div>
+                <div class="phone-error" id="ap-guardian-phone1-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawidï¿½owy numer (7ï¿½12 cyfr)</div>
             </div>
             <div class="form-group">
                 <label class="form-lbl"><span data-i18n="druzyna.parentPhone2Label">Tel. rodzica 2</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.optionalMasc">(opcjonalny)</span></label>
@@ -553,7 +553,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                     </select>
                     <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone2" data-i18n-placeholder="druzyna.phonePlaceholder" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
                 </div>
-                <div class="phone-error" id="ap-guardian-phone2-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawid³owy numer (7–12 cyfr)</div>
+                <div class="phone-error" id="ap-guardian-phone2-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawidï¿½owy numer (7ï¿½12 cyfr)</div>
             </div>
         </div>
         <div class="sticky-save">
@@ -565,21 +565,21 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="import-panel" id="import-panel">
         <div class="import-hdr">
             <div class="dp-back" onclick="zamknijImportCSV()">
-                <div class="dp-back-icon">‹</div>
-                <span data-i18n="common.back">‹ Wstecz</span>
+                <div class="dp-back-icon">ï¿½</div>
+                <span data-i18n="common.back">ï¿½ Wstecz</span>
             </div>
-            <span class="import-tytul" data-i18n="druzyna.importCsvTitle">Import zawodników</span>
+            <span class="import-tytul" data-i18n="druzyna.importCsvTitle">Import zawodnikï¿½w</span>
             <div style="width:60px"></div>
         </div>
         <div class="import-body" id="import-body">
         <div class="import-inner">
 
-            <!-- Krok 1: Pobierz przyk³ad -->
+            <!-- Krok 1: Pobierz przykï¿½ad -->
             <div class="import-step">
                 <div class="import-step-num"><span data-i18n="common.step">Krok</span> 1</div>
                 <div class="import-step-title" data-i18n="druzyna.importStep1Title">Pobierz szablon</div>
                 <div class="import-step-body">
-                    <span data-i18n="druzyna.importStep1Body">Przygotowaliœmy gotowy szablon w Excel z instrukcj¹. Wype³nij go danymi zawodników i zapisz jako CSV.</span>
+                    <span data-i18n="druzyna.importStep1Body">Przygotowaliï¿½my gotowy szablon w Excel z instrukcjï¿½. Wypeï¿½nij go danymi zawodnikï¿½w i zapisz jako CSV.</span>
                     <div style="margin-top:10px;">
                         <a id="import-template-link" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--tlo-karta2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:800;color:var(--bialy);text-decoration:none;">
                             ?? <span data-i18n="druzyna.importDownloadTemplate">Pobierz szablon Excel</span>
@@ -594,10 +594,10 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div class="import-step-title" data-i18n="druzyna.importStep2Title">Zapisz jako CSV w Excel</div>
                 <div class="import-step-body">
                     <ol>
-                        <li data-i18n="druzyna.importStep2a">Otwórz wype³niony plik w Excel</li>
-                        <li data-i18n="druzyna.importStep2b">Kliknij <code>Plik</code> › <code>Zapisz jako</code></li>
+                        <li data-i18n="druzyna.importStep2a">Otwï¿½rz wypeï¿½niony plik w Excel</li>
+                        <li data-i18n="druzyna.importStep2b">Kliknij <code>Plik</code> ï¿½ <code>Zapisz jako</code></li>
                         <li data-i18n="druzyna.importStep2c">W polu <strong>Typ pliku</strong> wybierz: <code>CSV UTF-8 (rozdzielany przecinkami)</code></li>
-                        <li data-i18n="druzyna.importStep2d">Kliknij <code>Zapisz</code> i potwierdŸ ewentualne ostrze¿enia</li>
+                        <li data-i18n="druzyna.importStep2d">Kliknij <code>Zapisz</code> i potwierdï¿½ ewentualne ostrzeï¿½enia</li>
                     </ol>
                 </div>
             </div>
@@ -607,9 +607,9 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div class="import-step-num"><span data-i18n="common.step">Krok</span> 3</div>
                 <div class="import-step-title" data-i18n="druzyna.importStep3Title">Wymagane kolumny</div>
                 <div class="import-step-body">
-                    <span data-i18n="druzyna.importStep3Body">Plik musi mieæ nag³ówki w pierwszym wierszu (kolejnoœæ nie ma znaczenia):</span>
+                    <span data-i18n="druzyna.importStep3Body">Plik musi mieï¿½ nagï¿½ï¿½wki w pierwszym wierszu (kolejnoï¿½ï¿½ nie ma znaczenia):</span>
                     <div class="import-cols">
-                        <span class="import-col-tag req" data-i18n="druzyna.firstNameRequired">Imiê *</span>
+                        <span class="import-col-tag req" data-i18n="druzyna.firstNameRequired">Imiï¿½ *</span>
                         <span class="import-col-tag req" data-i18n="druzyna.lastNameRequired">Nazwisko *</span>
                         <span class="import-col-tag" data-i18n="druzyna.birthDateLabel">Data urodzenia</span>
                         <span class="import-col-tag" data-i18n="druzyna.positionLabel">Pozycja</span>
@@ -626,20 +626,20 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div class="import-step-title" data-i18n="druzyna.importStep4Title">Wybierz plik CSV</div>
                 <div class="import-file-zone" onclick="document.getElementById('import-file-input').click()">
                     <div class="import-file-zone-icon">??</div>
-                    <div class="import-file-zone-label" id="import-file-label" data-i18n="druzyna.importFilePlaceholder">Kliknij aby wybraæ plik .csv</div>
-                    <div class="import-file-zone-sub" data-i18n="druzyna.importFileHint">Obs³ugiwane: CSV (UTF-8, separator , lub ;)</div>
+                    <div class="import-file-zone-label" id="import-file-label" data-i18n="druzyna.importFilePlaceholder">Kliknij aby wybraï¿½ plik .csv</div>
+                    <div class="import-file-zone-sub" data-i18n="druzyna.importFileHint">Obsï¿½ugiwane: CSV (UTF-8, separator , lub ;)</div>
                 </div>
                 <input type="file" id="import-file-input" accept=".csv,text/csv" style="display:none" onchange="onImportFileSelected(this)">
             </div>
 
-            <!-- Podgl¹d danych (pojawia siê po wyborze pliku) -->
+            <!-- Podglï¿½d danych (pojawia siï¿½ po wyborze pliku) -->
             <div id="import-preview-wrap" style="display:none">
                 <div class="import-preview">
                     <div class="import-preview-hdr" id="import-preview-hdr"></div>
                     <div class="import-preview-table" id="import-preview-table"></div>
                 </div>
                 <div id="import-errors" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;font-size:14px;color:#F87171;font-weight:700;margin-top:8px;"></div>
-                <button class="btn-primary" id="import-confirm-btn" style="width:100%;padding:14px;margin-top:4px;" onclick="doImportCSV()" data-i18n="druzyna.importConfirmButton">Importuj zawodników</button>
+                <button class="btn-primary" id="import-confirm-btn" style="width:100%;padding:14px;margin-top:4px;" onclick="doImportCSV()" data-i18n="druzyna.importConfirmButton">Importuj zawodnikï¿½w</button>
             </div>
 
         </div><!-- /import-inner -->
@@ -650,7 +650,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="avatar-picker-panel" id="avatar-picker-panel">
         <div class="avatar-picker-hdr">
             <div class="dp-back" onclick="zamknijPickerAwatara()">
-                <div class="dp-back-icon">‹</div>
+                <div class="dp-back-icon">ï¿½</div>
                 <span data-i18n="druzyna.backToProfile">Profil</span>
             </div>
             <span class="avatar-picker-tytul" data-i18n="druzyna.chooseAvatarTitle">Wybierz awatar</span>
@@ -658,7 +658,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 
         <!-- Styl + przycisk generuj -->
         <div class="av-styl-row">
-            <button class="av-styl-btn selected" onclick="wybierzStylGrid(this,'chlopiec')" data-i18n="druzyna.boyLabel">? Ch³opiec</button>
+            <button class="av-styl-btn selected" onclick="wybierzStylGrid(this,'chlopiec')" data-i18n="druzyna.boyLabel">? Chï¿½opiec</button>
             <button class="av-styl-btn" onclick="wybierzStylGrid(this,'dziewczynka')" data-i18n="druzyna.girlLabel">?? Dziewczynka</button>
             <button class="av-generuj-btn" onclick="generujGrid()" data-i18n="druzyna.regenerateButton">?? Generuj ponownie</button>
         </div>
@@ -679,9 +679,9 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="modal-overlay" id="modal-kod">
         <div class="modal-box">
             <div class="modal-title" data-i18n="druzyna.activeCodeExistsTitle">Aktywny kod istnieje</div>
-            <div class="modal-body" id="modal-kod-body">Dla tego zawodnika istnieje ju¿ aktywny kod dostêpu. Co chcesz zrobiæ?</div>
+            <div class="modal-body" id="modal-kod-body">Dla tego zawodnika istnieje juï¿½ aktywny kod dostï¿½pu. Co chcesz zrobiï¿½?</div>
             <div class="modal-btns">
-                <button class="modal-btn modal-btn-primary" onclick="modalKodAkcja('dezaktywuj')" data-i18n="druzyna.deactivateAndGenerate">Dezaktywuj stary · wygeneruj nowy</button>
+                <button class="modal-btn modal-btn-primary" onclick="modalKodAkcja('dezaktywuj')" data-i18n="druzyna.deactivateAndGenerate">Dezaktywuj stary ï¿½ wygeneruj nowy</button>
                 <button class="modal-btn modal-btn-secondary" onclick="modalKodAkcja('zachowaj')" data-i18n="druzyna.keepAndGenerate">Zachowaj i wygeneruj kolejny</button>
                 <button class="modal-btn modal-btn-cancel" onclick="modalKodAkcja('anuluj')" data-i18n="common.cancel">Anuluj</button>
             </div>
@@ -694,22 +694,22 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
         <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
         <button class="login-close" onclick="closeLogin()">?</button>
         <div class="login-body">
-            <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i dru¿yn</div></div>
+            <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerï¿½w i druï¿½yn</div></div>
             <div class="auth-tabs"><button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button><button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button></div>
             <div id="auth-login">
                 <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
-                <div class="form-group"><label class="form-lbl">Has³o</label><input type="password" class="form-inp" placeholder="••••••••"></div>
-                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj siê ›</button>
+                <div class="form-group"><label class="form-lbl">Hasï¿½o</label><input type="password" class="form-inp" placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj siï¿½ ï¿½</button>
                 <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
                 <div class="social-btns"><button class="social-btn"><span style="font-size: 22px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size: 22px">??</span> Apple</button></div>
             </div>
             <div id="auth-register" style="display:none">
-                <div class="form-group"><label class="form-lbl">Kod dostêpu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size: 23px"></div>
-                <div class="form-group"><label class="form-lbl">Imiê i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
+                <div class="form-group"><label class="form-lbl">Kod dostï¿½pu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size: 23px"></div>
+                <div class="form-group"><label class="form-lbl">Imiï¿½ i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
                 <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
-                <div class="form-group"><label class="form-lbl">Has³o</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
-                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj siê ›</button>
-                <div class="kod-info"><div class="kod-info-txt">?? Kod dostêpu otrzymasz od trenera lub opiekuna.<br>Jednorazowy · wa¿ny 7 dni</div></div>
+                <div class="form-group"><label class="form-lbl">Hasï¿½o</label><input type="password" class="form-inp" placeholder="min. 8 znakï¿½w"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj siï¿½ ï¿½</button>
+                <div class="kod-info"><div class="kod-info-txt">?? Kod dostï¿½pu otrzymasz od trenera lub opiekuna.<br>Jednorazowy ï¿½ waï¿½ny 7 dni</div></div>
             </div>
         </div>
     </div>
@@ -720,14 +720,14 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
         <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
         <div class="menu-panel-items">
 
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">P³atnoœci</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label">Dru¿yny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Mï¿½j profil</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Pï¿½atnoï¿½ci</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label">Druï¿½yny klubu</span><span class="menu-item-arrow">ï¿½</span></div>
         </div>
-        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt">Wyloguj siê</span></div></div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt">Wyloguj siï¿½</span></div></div>
     </div>
 
 </div><!-- /phone -->
@@ -735,20 +735,20 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 <script src="coachay-core.js?v=20261003b"></script>
 <script>
 /* ===================================================
-   DRU¯YNA — logika ekranu
+   DRUï¿½YNA ï¿½ logika ekranu
 =================================================== */
 
-// Sta³e
+// Staï¿½e
 function getSquadLabel(sq) { return t('druzyna.squadLabels.' + sq) || sq; }
 function getTypeLabel(typ) { return t('druzyna.typeLabels.' + typ) || typ; }
 const TYPE_COLORS = { TRENING: 'freq-bar-trening', MECZ: 'freq-bar-mecz', WYJAZD: 'freq-bar-wyjazd', INNE: 'freq-bar-inne' };
 const TYPE_IDS = { TRENING: 'treningi', MECZ: 'mecze', WYJAZD: 'wyjazdy', INNE: 'inne' };
-// DiceBear — inicja³y (fallback bez photoURL)
+// DiceBear ï¿½ inicjaï¿½y (fallback bez photoURL)
 const DICEBEAR_INITIALS_URL = 'https://api.dicebear.com/9.x/initials/svg?seed=';
-// DiceBear — adventurer (picker) — kolorowy, kreskówkowy, dla dzieci
+// DiceBear ï¿½ adventurer (picker) ï¿½ kolorowy, kreskï¿½wkowy, dla dzieci
 const DICEBEAR_BASE_URL = 'https://api.dicebear.com/9.x';
 
-// RoboHash - nowa alternatywa dla awatarów sportowych
+// RoboHash - nowa alternatywa dla awatarï¿½w sportowych
 const ROBOHASH_BASE_URL = 'https://robohash.org';
 const ROBOHASH_STYLES = {
     ROBOT: 'set1',      // Roboty
@@ -758,7 +758,7 @@ const ROBOHASH_STYLES = {
     ALIEN: 'set5'       // Obcy
 };
 
-// Style RoboHash dla zawodników (picker)
+// Style RoboHash dla zawodnikï¿½w (picker)
 const ROBOHASH_PLAYER_STYLES = ['ROBOT', 'MONSTER', 'HUMAN', 'CAT', 'ALIEN'];
 
 // FRYZURY przeniesione do HAIR_CHLOPIEC i HAIR_DZIEWCZYNKA (tablice losowania)
@@ -773,9 +773,9 @@ let aktualnyZawodnik = null; // zawodnik otwarty w panelu
 let aktualneAbsencje = []; // absencje pobranego zawodnika
 let sezonStart = null; // string YYYY-MM-DD z teams.settings.season.start
 let sezonEnd   = null; // string YYYY-MM-DD z teams.settings.season.end
-let dostepneSezony = []; // [{start,end,name}] — aktualny sezon + seasonHistory, najnowszy pierwszy
+let dostepneSezony = []; // [{start,end,name}] ï¿½ aktualny sezon + seasonHistory, najnowszy pierwszy
 let aktualnySortKey = 'numer';
-let edycjaTryb = false; // czy edytujemy istniej¹cego vs dodajemy nowego
+let edycjaTryb = false; // czy edytujemy istniejï¿½cego vs dodajemy nowego
 let _teamPositionsSettings = null; // {show, enabled} z settings.positions
 
 const POZYCJE_DEF = [
@@ -788,16 +788,16 @@ const POZYCJE_DEF = [
     { id: 'win' },
 ];
 
-// Mapa stary tekst (PL/EN, z emoji lub bez) › ID — dla danych sprzed prze³¹czenia na select
+// Mapa stary tekst (PL/EN, z emoji lub bez) ï¿½ ID ï¿½ dla danych sprzed przeï¿½ï¿½czenia na select
 const POZYCJE_LEGACY_MAP = {
-    'Ogólna': 'general', 'General': 'general',
-    '? Ogólna': 'general', '? General': 'general',
+    'Ogï¿½lna': 'general', 'General': 'general',
+    '? Ogï¿½lna': 'general', '? General': 'general',
     'Bramkarz': 'gk', 'Goalkeeper': 'gk', '?? Bramkarz': 'gk', '?? Goalkeeper': 'gk',
-    'Obroñca': 'def', 'Defender': 'def', '??? Obroñca': 'def', '??? Defender': 'def',
+    'Obroï¿½ca': 'def', 'Defender': 'def', '??? Obroï¿½ca': 'def', '??? Defender': 'def',
     'Pomocnik': 'mid', 'Midfielder': 'mid', '?? Pomocnik': 'mid', '?? Midfielder': 'mid',
     'Napastnik': 'fwd', 'Forward': 'fwd', '? Napastnik': 'fwd', '? Forward': 'fwd',
-    'Œrodkowy obroñca': 'cb', 'Center back': 'cb', '?? Œrodkowy obroñca': 'cb', '?? Center back': 'cb',
-    'Skrzyd³owy': 'win', 'Winger': 'win', '?? Skrzyd³owy': 'win', '?? Winger': 'win',
+    'ï¿½rodkowy obroï¿½ca': 'cb', 'Center back': 'cb', '?? ï¿½rodkowy obroï¿½ca': 'cb', '?? Center back': 'cb',
+    'Skrzydï¿½owy': 'win', 'Winger': 'win', '?? Skrzydï¿½owy': 'win', '?? Winger': 'win',
 };
 
 function tPozycja(pos) {
@@ -821,25 +821,25 @@ function wypelnijPozycjeSelect(wybranaWartosc) {
     if (resolvedVal && [...sel.options].some(o => o.value === resolvedVal)) {
         sel.value = resolvedVal;
     }
-    // jeœli brak dopasowania (puste lub nieznany tekst) — select zostaje na pierwszej opcji (general)
+    // jeï¿½li brak dopasowania (puste lub nieznany tekst) ï¿½ select zostaje na pierwszej opcji (general)
 }
 
 // Aktualny typ kodu do wygenerowania
 let aktualnyTypKodu = 'RODZIC';
 
-// Licznik zapytañ o kody — chroni przed nadpisaniem widoku przez spóŸnion¹ odpowiedŸ
-// z poprzedniej zak³adki/zawodnika (race condition przy szybkim prze³¹czaniu)
+// Licznik zapytaï¿½ o kody ï¿½ chroni przed nadpisaniem widoku przez spï¿½nionï¿½ odpowiedï¿½
+// z poprzedniej zakï¿½adki/zawodnika (race condition przy szybkim przeï¿½ï¿½czaniu)
 let _kodLoadSeq = 0;
 
 function getKodOpis(typ) { return t('druzyna.kodOpisy.' + typ) || ''; }
 
-// Krótkie etykiety typu do wyœwietlenia na pojedynczym kodzie (niezale¿nie od aktywnej zak³adki)
+// Krï¿½tkie etykiety typu do wyï¿½wietlenia na pojedynczym kodzie (niezaleï¿½nie od aktywnej zakï¿½adki)
 function getKodTypLabel(typ) { return t('druzyna.kodTypLabel.' + typ) || typ; }
 
-// Stan pickera awatara (zachowany dla kompatybilnoœci wstecznej)
+// Stan pickera awatara (zachowany dla kompatybilnoï¿½ci wstecznej)
 let pickerStan = { styl: 'chlopiec' };
 
-/* ¦¦ Pomocnicze ¦¦ */
+/* ï¿½ï¿½ Pomocnicze ï¿½ï¿½ */
 function getLocalDateStr(date) {
     const d = date || new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -861,7 +861,7 @@ function getInitials(name) {
     return name.substring(0, 2).toUpperCase();
 }
 
-// Kolor t³a awatara DiceBear — deterministyczny z nazwy
+// Kolor tï¿½a awatara DiceBear ï¿½ deterministyczny z nazwy
 function getAvatarBgColor(name) {
     const colors = ['3B82F6','10B981','F59E0B','EF4444','8B5CF6','EC4899','14B8A6','F97316'];
     let hash = 0;
@@ -912,7 +912,7 @@ function buildAvatarEl(player, size = 'small') {
     return container;
 }
 
-/* ¦¦ Inicjalizacja ¦¦ */
+/* ï¿½ï¿½ Inicjalizacja ï¿½ï¿½ */
 async function initDruzyna() {
     if (!requireAuth()) return;
 
@@ -926,7 +926,7 @@ async function initDruzyna() {
     aktualnyTeamId = team.teamId || team.id;
     aktualnyClubId = team.clubId || membership?.clubId || null;
 
-    // Pobierz daty sezonu z ustawieñ dru¿yny
+    // Pobierz daty sezonu z ustawieï¿½ druï¿½yny
     try {
         const teamDoc = await db.collection('teams').doc(aktualnyTeamId).get();
         if (teamDoc.exists) {
@@ -948,7 +948,7 @@ async function initDruzyna() {
     loadCtxOverlay(user, membership, team);
     loadMenuPanel(user, membership, team);
 
-    // Poka¿ FAB tylko trenerom
+    // Pokaï¿½ FAB tylko trenerom
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
     const fab = document.getElementById('fab-dodaj');
     if (fab) fab.style.display = isCoach ? 'flex' : 'none';
@@ -965,10 +965,10 @@ async function initDruzyna() {
 }
 
 
-/* ¦¦ £adowanie zawodników ¦¦ */
+/* ï¿½ï¿½ ï¿½adowanie zawodnikï¿½w ï¿½ï¿½ */
 async function zaladujZawodnikow() {
     const lista = document.getElementById('zaw-lista');
-    lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">£adowanie...</div>';
+    lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">ï¿½adowanie...</div>';
 
     try {
         const snap = await playersOfTeamQuery(aktualnyTeamId, aktualnyClubId).get();
@@ -977,23 +977,23 @@ async function zaladujZawodnikow() {
         wszyscyZawodnicy = snap.docs
             .map(d => {
                 const data = d.data();
-                // Normalizuj stare pole guardianId (string) › guardianIds (array) — migracja v2.8
+                // Normalizuj stare pole guardianId (string) ï¿½ guardianIds (array) ï¿½ migracja v2.8
                 if (!data.guardianIds) data.guardianIds = data.guardianId ? [data.guardianId] : [];
                 return { id: d.id, ...data };
             })
             .filter(p => p.teams && p.teams.some(t => t.teamId === aktualnyTeamId && t.status === 'ACTIVE'))
             .filter(p => !isKibic || myPlayerIds.includes(p.playerId || p.id));
     } catch (e) {
-        console.error('B³¹d ³adowania zawodników:', e);
-        lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">B³¹d ³adowania danych.</div>';
+        console.error('Bï¿½ï¿½d ï¿½adowania zawodnikï¿½w:', e);
+        lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">Bï¿½ï¿½d ï¿½adowania danych.</div>';
         return;
     }
 
     renderujListe();
-    console.log(`? Za³adowano ${wszyscyZawodnicy.length} zawodników`);
+    console.log(`? Zaï¿½adowano ${wszyscyZawodnicy.length} zawodnikï¿½w`);
 }
 
-/* ¦¦ Renderowanie listy ¦¦ */
+/* ï¿½ï¿½ Renderowanie listy ï¿½ï¿½ */
 function renderujListe() {
     const lista = document.getElementById('zaw-lista');
     lista.innerHTML = '';
@@ -1050,8 +1050,8 @@ function tworzKarteZawodnika(player) {
     wrap.appendChild(dot);
 
     const wiek = obliczWiek(player.birthDate);
-    const pozycja = tPozycja(player.position) || '—';
-    const sub = `${pozycja} · ${wiek} lat`;
+    const pozycja = tPozycja(player.position) || 'ï¿½';
+    const sub = `${pozycja} ï¿½ ${wiek} lat`;
 
     let metaHtml = '';
     if (isCoach && player.coachOnlyData?.level) {
@@ -1063,7 +1063,7 @@ function tworzKarteZawodnika(player) {
     }
 
     const usunietyBadge = player.isActive === false
-        ? `<div class="badge" style="background:rgba(239,68,68,0.15);color:#F87171;">Usuniêty</div>` : '';
+        ? `<div class="badge" style="background:rgba(239,68,68,0.15);color:#F87171;">Usuniï¿½ty</div>` : '';
 
     card.appendChild(wrap);
     card.innerHTML += `
@@ -1080,9 +1080,9 @@ function tworzKarteZawodnika(player) {
     return card;
 }
 
-/* ¦¦ Profil zawodnika ¦¦ */
+/* ï¿½ï¿½ Profil zawodnika ï¿½ï¿½ */
 async function otworzProfil(player) {
-    // Kontrola dostêpu: trener/owner widzi wszystkich, pozosta³e role tylko swoje
+    // Kontrola dostï¿½pu: trener/owner widzi wszystkich, pozostaï¿½e role tylko swoje
     const _coachRoles = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'OWNER'];
     if (!_coachRoles.includes(aktualnaRola)) {
         const _pid = player.playerId || player.id;
@@ -1108,37 +1108,37 @@ async function otworzProfil(player) {
     // Dane podstawowe
     document.getElementById('dp-nazwa').textContent = player.name;
     const wiek = obliczWiek(player.birthDate);
-    const nr = player.number ? ` · #${player.number}` : '';
+    const nr = player.number ? ` ï¿½ #${player.number}` : '';
     const poz = tPozycja(player.position) || '';
-    document.getElementById('dp-sub').textContent = `${poz}${poz && wiek ? ' · ' : ''}${wiek} lat${nr}`;
+    document.getElementById('dp-sub').textContent = `${poz}${poz && wiek ? ' ï¿½ ' : ''}${wiek} lat${nr}`;
 
     // Badges
     const badgesEl = document.getElementById('dp-badges');
     badgesEl.innerHTML = '';
     const squad = player.squad || 'FIRST';
     if (isCoach) {
-        // Trener widzi grupê + ligê
+        // Trener widzi grupï¿½ + ligï¿½
         badgesEl.innerHTML = `<span class="badge badge-dark">${getSquadLabel(squad)}</span>`;
         if (player.coachOnlyData?.level) {
             badgesEl.innerHTML += `<span class="badge badge-warn" style="background:rgba(251,191,36,0.12);color:var(--warn);">${player.coachOnlyData.level}</span>`;
         }
     }
-    // Pozosta³e role nie widz¹ grupy ani ligi
+    // Pozostaï¿½e role nie widzï¿½ grupy ani ligi
 
-    // Statystyki — zostan¹ uzupe³nione po za³adowaniu frekwencji (X/Y z okresu)
+    // Statystyki ï¿½ zostanï¿½ uzupeï¿½nione po zaï¿½adowaniu frekwencji (X/Y z okresu)
     ['mecze','treningi','wyjazdy','inne'].forEach(id => {
-        document.getElementById(`dp-${id}`).textContent = '—';
+        document.getElementById(`dp-${id}`).textContent = 'ï¿½';
         document.getElementById(`dp-${id}-sub`).textContent = '';
     });
 
-    // Przycisk edycji awatara — trener lub w³aœciciel (zawodnik)
+    // Przycisk edycji awatara ï¿½ trener lub wï¿½aï¿½ciciel (zawodnik)
     const avEditBtn = document.getElementById('dp-av-edit-btn');
     if (avEditBtn) {
         const isOwner = aktualnaRola === 'ZAWODNIK' && currentUserData?.playerId === (player.playerId || player.id);
         avEditBtn.style.display = (isCoach || isOwner) ? 'flex' : 'none';
     }
 
-    // Przycisk edycji danych — tylko trener
+    // Przycisk edycji danych ï¿½ tylko trener
     const editBtn = document.getElementById('dp-edit-btn');
     if (editBtn) editBtn.style.display = isCoach ? '' : 'none';
 
@@ -1159,12 +1159,12 @@ async function otworzProfil(player) {
         if (kodShowInactiveCb) kodShowInactiveCb.checked = false;
     }
 
-    // Selector sezonu — wype³nij list¹, domyœlnie aktualny (pierwszy po sortowaniu)
+    // Selector sezonu ï¿½ wypeï¿½nij listï¿½, domyï¿½lnie aktualny (pierwszy po sortowaniu)
     const sezonSelectEl = document.getElementById('dp-sezon-select');
     if (sezonSelectEl) {
         if (dostepneSezony.length > 0) {
             sezonSelectEl.innerHTML = dostepneSezony.map((s, i) =>
-                `<option value="${i}">${s.name || s.start.slice(0,7)}: ${s.start} — ${s.end}</option>`
+                `<option value="${i}">${s.name || s.start.slice(0,7)}: ${s.start} ï¿½ ${s.end}</option>`
             ).join('');
             sezonSelectEl.selectedIndex = 0;
         } else {
@@ -1172,11 +1172,11 @@ async function otworzProfil(player) {
         }
     }
 
-    // Przycisk absencji — trener lub rodzic swojego dziecka (nie kibic)
+    // Przycisk absencji ï¿½ trener lub rodzic swojego dziecka (nie kibic)
     const btnAbs = document.getElementById('dp-btn-abs');
     if (btnAbs) btnAbs.style.display = (isCoach || (isLinkedPlayer && !isKibic)) ? '' : 'none';
 
-    // £aduj frekwencjê, absencje i kody asynchronicznie
+    // ï¿½aduj frekwencjï¿½, absencje i kody asynchronicznie
     const promises = [
         zaladujFrekwencje(player, dostepneSezony[0]),
         zaladujAbsencje(player)
@@ -1193,8 +1193,8 @@ function zamknijProfil() {
     aktualnyZawodnik = null;
 }
 
-/* ¦¦ Frekwencja — ³aduje dane, aktualizuje hero stats I paski ¦¦ */
-// sezon: opcjonalnie {start,end,name} wybrany z selectora; domyœlnie aktualny sezon dru¿yny
+/* ï¿½ï¿½ Frekwencja ï¿½ ï¿½aduje dane, aktualizuje hero stats I paski ï¿½ï¿½ */
+// sezon: opcjonalnie {start,end,name} wybrany z selectora; domyï¿½lnie aktualny sezon druï¿½yny
 async function zaladujFrekwencje(player, sezon) {
     const el = document.getElementById('dp-frekwencja');
     el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Liczenie...</div>';
@@ -1212,10 +1212,10 @@ async function zaladujFrekwencje(player, sezon) {
     const fromStr = sStart;
     const toStr = sEnd && sEnd < todayStr ? sEnd : todayStr;
 
-    // Pobierz eventy dru¿yny z okresu (tylko przesz³e — do dziœ lub koñca sezonu)
+    // Pobierz eventy druï¿½yny z okresu (tylko przeszï¿½e ï¿½ do dziï¿½ lub koï¿½ca sezonu)
     let events = [];
     try {
-        // 2026-09-25: tylko eventy tego zawodnika z okresu sezonu (zamiast wszystkich eventów dru¿yny)
+        // 2026-09-25: tylko eventy tego zawodnika z okresu sezonu (zamiast wszystkich eventï¿½w druï¿½yny)
         const snap = await db.collection('events')
             .where('teamId', '==', aktualnyTeamId)
             .where('attendance.invited', 'array-contains', pid)
@@ -1229,7 +1229,7 @@ async function zaladujFrekwencje(player, sezon) {
         return;
     }
 
-    // Grupuj per typ i licz frekwencjê
+    // Grupuj per typ i licz frekwencjï¿½
     const typy = ['TRENING', 'MECZ', 'WYJAZD', 'INNE'];
     const stats = {};
     for (const typ of typy) {
@@ -1241,7 +1241,7 @@ async function zaladujFrekwencje(player, sezon) {
         }
     }
 
-    // ¦¦ Aktualizuj hero statystyki (X/Y) ¦¦
+    // ï¿½ï¿½ Aktualizuj hero statystyki (X/Y) ï¿½ï¿½
     const typToId = { TRENING: 'treningi', MECZ: 'mecze', WYJAZD: 'wyjazdy', INNE: 'inne' };
     for (const typ of typy) {
         const elN = document.getElementById(`dp-${typToId[typ]}`);
@@ -1254,15 +1254,15 @@ async function zaladujFrekwencje(player, sezon) {
             elN.style.color = col;
             elSub.textContent = `${pct}%`;
         } else {
-            elN.textContent = '—';
+            elN.textContent = 'ï¿½';
             elN.style.color = '';
             elSub.textContent = '';
         }
     }
 
-    // ¦¦ Paski frekwencji ¦¦
+    // ï¿½ï¿½ Paski frekwencji ï¿½ï¿½
     if (Object.keys(stats).length === 0) {
-        el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Brak eventów z udzia³em zawodnika w tym okresie.</div>';
+        el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Brak eventï¿½w z udziaï¿½em zawodnika w tym okresie.</div>';
         return;
     }
 
@@ -1277,7 +1277,7 @@ async function zaladujFrekwencje(player, sezon) {
                 <div class="freq-bar-wrap"><div class="freq-bar ${colorClass}" style="width:${pct}%"></div></div>
                 <span class="freq-pct" style="color:${pctColor}">${pct}%</span>
             </div>
-            <div style="font-size: 15px;color:var(--szary);padding-left:80px;margin-top:-4px;margin-bottom:8px;">${s.confirmed}/${s.invited} eventów</div>
+            <div style="font-size: 15px;color:var(--szary);padding-left:80px;margin-top:-4px;margin-bottom:8px;">${s.confirmed}/${s.invited} eventï¿½w</div>
         `;
     }
     el.innerHTML = html;
@@ -1291,10 +1291,10 @@ function zmienSezonFrekwencji() {
     if (sezon) zaladujFrekwencje(aktualnyZawodnik, sezon);
 }
 
-/* ¦¦ Absencje ¦¦ */
+/* ï¿½ï¿½ Absencje ï¿½ï¿½ */
 async function zaladujAbsencje(player) {
     const el = document.getElementById('dp-absencje');
-    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">£adowanie...</div>';
+    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">ï¿½adowanie...</div>';
 
     const pid = player.playerId || player.id;
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
@@ -1306,7 +1306,7 @@ async function zaladujAbsencje(player) {
             .get();
         aktualneAbsencje = snap.docs.map(d => ({ absenceId: d.id, ...d.data() }));
 
-        // Poka¿ tylko absencje nachodz¹ce na bie¿¹cy miesi¹c
+        // Pokaï¿½ tylko absencje nachodzï¿½ce na bieï¿½ï¿½cy miesiï¿½c
         const now = new Date();
         const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -1327,29 +1327,29 @@ async function zaladujAbsencje(player) {
         div.className = 'abs-item';
         div.innerHTML = `
             <div class="abs-dates">
-                <div class="abs-dates-main">?? ${od} — ${do_}</div>
+                <div class="abs-dates-main">?? ${od} ï¿½ ${do_}</div>
                 ${abs.reason ? `<div class="abs-dates-comment">${abs.reason}</div>` : ''}
             </div>
-            ${isCoach ? `<span class="abs-del" onclick="usunAbsencje('${abs.absenceId}')" title="Usuñ">?</span>` : ''}
+            ${isCoach ? `<span class="abs-del" onclick="usunAbsencje('${abs.absenceId}')" title="Usuï¿½">?</span>` : ''}
         `;
         el.appendChild(div);
     });
 }
 
 async function usunAbsencje(absenceId) {
-    if (!await showConfirmSheet('Usun¹æ tê absencjê?')) return;
+    if (!await showConfirmSheet('Usunï¿½ï¿½ tï¿½ absencjï¿½?')) return;
     try {
         await db.collection('absences').doc(absenceId).update({ isActive: false });
         await zaladujAbsencje(aktualnyZawodnik);
-        console.log('? Absencja usuniêta:', absenceId);
-    } catch (e) { alert('B³¹d usuwania absencji.'); }
+        console.log('? Absencja usuniï¿½ta:', absenceId);
+    } catch (e) { alert('Bï¿½ï¿½d usuwania absencji.'); }
 }
 
-/* ¦¦ Panel absencji ¦¦ */
+/* ï¿½ï¿½ Panel absencji ï¿½ï¿½ */
 function otworzAbsencje() {
     if (!aktualnyZawodnik) return;
     document.getElementById('abs-player-name').textContent = aktualnyZawodnik.name;
-    // Domyœlnie: od dziœ do +7 dni
+    // Domyï¿½lnie: od dziï¿½ do +7 dni
     const todayStr = getLocalDateStr();
     const plusTydzien = getLocalDateStr(new Date(Date.now() + 7 * 86400000));
     document.getElementById('abs-date-from').value = todayStr;
@@ -1367,8 +1367,8 @@ async function zapiszAbsencje() {
     const dateTo = document.getElementById('abs-date-to').value;
     const reason = document.getElementById('abs-comment').value.trim();
 
-    if (!dateFrom || !dateTo) { alert('Podaj datê od i datê do.'); return; }
-    if (dateTo < dateFrom) { alert('Data do musi byæ póŸniejsza ni¿ data od.'); return; }
+    if (!dateFrom || !dateTo) { alert('Podaj datï¿½ od i datï¿½ do.'); return; }
+    if (dateTo < dateFrom) { alert('Data do musi byï¿½ pï¿½niejsza niï¿½ data od.'); return; }
     if (!aktualnyZawodnik) return;
 
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
@@ -1380,7 +1380,7 @@ async function zapiszAbsencje() {
         absenceId: `absence_${dateStr}_${rand}`,
         playerId: pid,
         teamId: aktualnyTeamId,
-        clubId: aktualnyClubId || '', // 2026-09-26: `aktualnyZawodnik.teams?.[0]?.clubId` mia³ z³y kszta³t danych i zawsze dawa³ '' — brak clubId psu³ raporty per-klub
+        clubId: aktualnyClubId || '', // 2026-09-26: `aktualnyZawodnik.teams?.[0]?.clubId` miaï¿½ zï¿½y ksztaï¿½t danych i zawsze dawaï¿½ '' ï¿½ brak clubId psuï¿½ raporty per-klub
         dateFrom: dateFrom,
         dateTo: dateTo,
         reason: reason || '',
@@ -1399,10 +1399,10 @@ async function zapiszAbsencje() {
         zamknijAbsencje();
         await zaladujAbsencje(aktualnyZawodnik);
         console.log('? Absencja zapisana:', absDoc.absenceId);
-    } catch (e) { alert('B³¹d zapisu absencji.'); console.error(e); }
+    } catch (e) { alert('Bï¿½ï¿½d zapisu absencji.'); console.error(e); }
 }
 
-/* ¦¦ Notatki trenera ¦¦ */
+/* ï¿½ï¿½ Notatki trenera ï¿½ï¿½ */
 async function zapiszNotatki() {
     if (!aktualnyZawodnik) return;
     const notes = document.getElementById('dp-notatki').value.trim();
@@ -1411,16 +1411,16 @@ async function zapiszNotatki() {
         await db.collection('players').doc(pid).update({ 'coachOnlyData.coachNotes': notes });
         aktualnyZawodnik.coachOnlyData = { ...(aktualnyZawodnik.coachOnlyData || {}), coachNotes: notes };
         console.log('? Notatki zapisane');
-        // Krótki feedback
+        // Krï¿½tki feedback
         const btn = event.target;
         const prev = btn.textContent;
         btn.textContent = '? Zapisano';
         setTimeout(() => { btn.textContent = prev; }, 1500);
-    } catch (e) { alert('B³¹d zapisu notatek.'); }
+    } catch (e) { alert('Bï¿½ï¿½d zapisu notatek.'); }
 }
 
-/* ¦¦ Kod dostêpu dla rodzica ¦¦ */
-/* ¦¦ Kody dostêpu ¦¦ */
+/* ï¿½ï¿½ Kod dostï¿½pu dla rodzica ï¿½ï¿½ */
+/* ï¿½ï¿½ Kody dostï¿½pu ï¿½ï¿½ */
 
 function wybierzTypKodu(btn, typ) {
     document.querySelectorAll('#dp-typ-kodu-row .sort-btn').forEach(b => b.classList.remove('active'));
@@ -1428,18 +1428,18 @@ function wybierzTypKodu(btn, typ) {
     aktualnyTypKodu = typ;
     const info = document.getElementById('dp-typ-kodu-info');
     if (info) info.textContent = getKodOpis(typ);
-    // Prze³aduj listê kodów dla nowego typu
+    // Przeï¿½aduj listï¿½ kodï¿½w dla nowego typu
     if (aktualnyZawodnik) zaladujKody(aktualnyZawodnik);
 }
 
-// Za³aduj i wyrenderuj listê kodów dla zawodnika
+// Zaï¿½aduj i wyrenderuj listï¿½ kodï¿½w dla zawodnika
 async function zaladujKody(player) {
     const el = document.getElementById('dp-kod-content');
     if (!el) return;
     const seq = ++_kodLoadSeq;
     const typRequest = aktualnyTypKodu;
     const pokazNieaktywne = document.getElementById('kod-show-inactive')?.checked || false;
-    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">£adowanie...</div>';
+    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">ï¿½adowanie...</div>';
 
     const pid = player.playerId || player.id;
     let kody = [];
@@ -1449,7 +1449,7 @@ async function zaladujKody(player) {
             .where('type', '==', typRequest)
             .get();
         kody = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
-        // Sortuj: aktywne na górze, potem po dacie utworzenia
+        // Sortuj: aktywne na gï¿½rze, potem po dacie utworzenia
         kody.sort((a, b) => {
             if (!a.isUsed && b.isUsed) return -1;
             if (a.isUsed && !b.isUsed) return 1;
@@ -1458,16 +1458,16 @@ async function zaladujKody(player) {
             return tb - ta;
         });
     } catch (e) {
-        if (seq === _kodLoadSeq) el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">B³¹d ³adowania.</div>';
+        if (seq === _kodLoadSeq) el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Bï¿½ï¿½d ï¿½adowania.</div>';
         return;
     }
 
-    // OdpowiedŸ spóŸniona wzglêdem nowszego zapytania (zmieniona zak³adka/zawodnik) — porzuæ wynik
+    // Odpowiedï¿½ spï¿½niona wzglï¿½dem nowszego zapytania (zmieniona zakï¿½adka/zawodnik) ï¿½ porzuï¿½ wynik
     if (seq !== _kodLoadSeq) return;
 
     const now = new Date();
 
-    // Domyœlnie ukryj u¿yte i wygas³e kody, chyba ¿e zaznaczono "Poka¿ nieaktywne"
+    // Domyï¿½lnie ukryj uï¿½yte i wygasï¿½e kody, chyba ï¿½e zaznaczono "Pokaï¿½ nieaktywne"
     if (!pokazNieaktywne) {
         kody = kody.filter(k => {
             const exp = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
@@ -1483,7 +1483,7 @@ async function zaladujKody(player) {
     el.innerHTML = '';
 
     for (const k of kody) {
-        if (seq !== _kodLoadSeq) return; // prze³¹czono zak³adkê w trakcie renderowania
+        if (seq !== _kodLoadSeq) return; // przeï¿½ï¿½czono zakï¿½adkï¿½ w trakcie renderowania
         const expiresDate = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
         const createdDate = k.createdAt?.toDate?.() || new Date(k.createdAt || 0);
         const createdDateStr = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}-${String(createdDate.getDate()).padStart(2, '0')}`;
@@ -1495,7 +1495,7 @@ async function zaladujKody(player) {
             ? Math.ceil((expiresDate - now) / 86400000)
             : null;
 
-        // Dane rodzica jeœli u¿yty (pomijamy dezaktywowane — usedBy to tylko znacznik, nie realny user)
+        // Dane rodzica jeï¿½li uï¿½yty (pomijamy dezaktywowane ï¿½ usedBy to tylko znacznik, nie realny user)
         let rodziData = '';
         if (k.isUsed && k.usedBy && k.usedBy !== 'DEZAKTYWOWANY_PRZEZ_TRENERA') {
             try {
@@ -1541,18 +1541,18 @@ async function zaladujKody(player) {
     }
 }
 
-// Wspólna treœæ wiadomoœci z kodem — u¿ywana i przy Kopiuj, i przy WhatsApp
+// Wspï¿½lna treï¿½ï¿½ wiadomoï¿½ci z kodem ï¿½ uï¿½ywana i przy Kopiuj, i przy WhatsApp
 function budujTrescKodu(kod) {
-    return `Twój kod dostêpu do Coachay: *${kod}*\n\nWejdŸ na https://coachay.com i kliknij "Mam kod".`;
+    return `Twï¿½j kod dostï¿½pu do Coachay: *${kod}*\n\nWejdï¿½ na https://coachay.com i kliknij "Mam kod".`;
 }
 
 async function generujKod() {
     if (!aktualnyZawodnik) return;
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
-    // Deklarowane na poziomie funkcji — u¿ywane te¿ w drugim bloku try (dialog WhatsApp)
+    // Deklarowane na poziomie funkcji ï¿½ uï¿½ywane teï¿½ w drugim bloku try (dialog WhatsApp)
     let dlaRodzica2 = false;
 
-    // SprawdŸ czy istnieje aktywny nieu¿yty kod — jeœli tak, poka¿ modal
+    // Sprawdï¿½ czy istnieje aktywny nieuï¿½yty kod ï¿½ jeï¿½li tak, pokaï¿½ modal
     try {
         const snap = await db.collection('inviteCodes')
             .where('playerId', '==', pid)
@@ -1567,7 +1567,7 @@ async function generujKod() {
         });
 
         if (aktywne.length > 0) {
-            // Poka¿ modal z 3 opcjami
+            // Pokaï¿½ modal z 3 opcjami
             const akcja = await pokazModalKodu(aktywne.length);
             if (akcja === 'anuluj') return;
             if (akcja === 'dezaktywuj') {
@@ -1581,7 +1581,7 @@ async function generujKod() {
             }
             if (akcja === 'zachowaj') dlaRodzica2 = true; // nowy kod = drugi rodzic
         }
-    } catch (e) { console.error('B³¹d sprawdzania kodów:', e); }
+    } catch (e) { console.error('Bï¿½ï¿½d sprawdzania kodï¿½w:', e); }
 
     // Generuj nowy kod
     const znaki = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1623,16 +1623,16 @@ async function generujKod() {
         await zaladujKody(aktualnyZawodnik);
         console.log('? Kod wygenerowany:', kod);
 
-        // Wiadomoœæ z kodem od razu w schowku — zamiast dialogu WhatsApp
+        // Wiadomoï¿½ï¿½ z kodem od razu w schowku ï¿½ zamiast dialogu WhatsApp
         try { await navigator.clipboard?.writeText(budujTrescKodu(kod)); } catch (e) {}
         if (typeof pokazKomunikat === 'function') {
             pokazKomunikat(`Kod ${kod} skopiowany do schowka`, 'sukces');
         }
-    } catch (e) { alert('B³¹d generowania kodu.'); console.error(e); }
+    } catch (e) { alert('Bï¿½ï¿½d generowania kodu.'); console.error(e); }
 }
 
 function wyslijWhatsAppBtn(kod, player) {
-    // Bez numeru — WhatsApp sam pozwala wybraæ kontakt/czat, nie zgadujemy który rodzic
+    // Bez numeru ï¿½ WhatsApp sam pozwala wybraï¿½ kontakt/czat, nie zgadujemy ktï¿½ry rodzic
     const msg = encodeURIComponent(budujTrescKodu(kod));
     return `<a href="https://wa.me/?text=${msg}" target="_blank" class="btn-ghost" style="font-size: 15px;padding:4px 10px;color:#25D366;text-decoration:none;">?? WhatsApp</a>`;
 }
@@ -1640,23 +1640,23 @@ function wyslijWhatsAppBtn(kod, player) {
 function kopiujKod(kod) {
     const tresc = budujTrescKodu(kod);
     navigator.clipboard?.writeText(tresc).then(() => {
-        // Krótki feedback zamiast alert
+        // Krï¿½tki feedback zamiast alert
         const btn = event.target;
         const prev = btn.textContent;
         btn.textContent = '? Skopiowano';
         setTimeout(() => { btn.textContent = prev; }, 1500);
     }).catch(() => {
-        prompt('Skopiuj wiadomoœæ:', tresc);
+        prompt('Skopiuj wiadomoï¿½ï¿½:', tresc);
     });
 }
 
-/* ¦¦ Edycja zawodnika ¦¦ */
+/* ï¿½ï¿½ Edycja zawodnika ï¿½ï¿½ */
 function edytujZawodnika() {
     if (!aktualnyZawodnik) return;
     edycjaTryb = true;
     document.getElementById('add-player-tytul').textContent = typeof t === 'function' ? t('druzyna.editPlayerTitle') : 'Edytuj zawodnika';
 
-    // Wype³nij formularz aktualnymi danymi
+    // Wypeï¿½nij formularz aktualnymi danymi
     document.getElementById('ap-firstname').value = aktualnyZawodnik.firstName || (aktualnyZawodnik.name || '').split(' ')[0] || '';
     document.getElementById('ap-lastname').value  = aktualnyZawodnik.lastName  || (aktualnyZawodnik.name || '').split(' ').slice(1).join(' ') || '';
     document.getElementById('ap-urodziny').value = aktualnyZawodnik.birthDate || '';
@@ -1671,7 +1671,7 @@ function edytujZawodnika() {
     document.getElementById('add-player-panel').classList.add('open');
 }
 
-/* ¦¦ Dodaj zawodnika ¦¦ */
+/* ï¿½ï¿½ Dodaj zawodnika ï¿½ï¿½ */
 function otworzDodajZawodnika() {
     edycjaTryb = false;
     document.getElementById('add-player-tytul').textContent = typeof t === 'function' ? t('druzyna.newPlayerTitle') : 'Nowy zawodnik';
@@ -1729,12 +1729,12 @@ async function zapiszZawodnika() {
     }
     if (phoneError) return;
 
-    if (!firstName) { alert('Podaj imiê zawodnika.'); return; }
+    if (!firstName) { alert('Podaj imiï¿½ zawodnika.'); return; }
     if (!lastName)  { alert('Podaj nazwisko zawodnika.'); return; }
-    if (!urodziny)  { alert('Podaj datê urodzenia.'); return; }
+    if (!urodziny)  { alert('Podaj datï¿½ urodzenia.'); return; }
 
     if (edycjaTryb && aktualnyZawodnik) {
-        // Edycja istniej¹cego
+        // Edycja istniejï¿½cego
         const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
         const updates = {
             firstName, lastName, name: fullName,
@@ -1749,7 +1749,7 @@ async function zapiszZawodnika() {
             await db.collection('players').doc(pid).update(updates);
             zamknijDodajZawodnika();
             await zaladujZawodnikow();
-            // Odœwie¿ z bazy — ¿eby guardianPhones i inne pola by³y aktualne
+            // Odï¿½wieï¿½ z bazy ï¿½ ï¿½eby guardianPhones i inne pola byï¿½y aktualne
             const fresh = await db.collection('players').doc(pid).get();
             if (fresh.exists) {
                 aktualnyZawodnik = { id: pid, ...fresh.data() };
@@ -1757,7 +1757,7 @@ async function zapiszZawodnika() {
             }
             otworzProfil(aktualnyZawodnik);
             console.log('? Zawodnik zaktualizowany:', pid);
-        } catch (e) { alert('B³¹d zapisu.'); console.error(e); }
+        } catch (e) { alert('Bï¿½ï¿½d zapisu.'); console.error(e); }
     } else {
         // Nowy zawodnik
         const now = new Date().toISOString();
@@ -1798,7 +1798,7 @@ async function zapiszZawodnika() {
             await zaladujZawodnikow();
         } catch (e) {
             console.error('B3ad dodawania zawodnika:', e);
-            alert('B3ad podczas dodawania zawodnika. Spróbuj ponownie.');
+            alert('B3ad podczas dodawania zawodnika. Sprï¿½buj ponownie.');
         }
     }
 }
@@ -1883,7 +1883,7 @@ function zamknijPickerAwatara() {
 async function zapiszAwatar() {
     if (!aktualnyZawodnik) return;
     if (!wybranyAvatarUrl) {
-        alert('Wybierz jeden z awatarów klikaj¹c na niego.');
+        alert('Wybierz jeden z awatarï¿½w klikajï¿½c na niego.');
         return;
     }
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
@@ -1899,17 +1899,17 @@ async function zapiszAwatar() {
         renderujListe();
         zamknijPickerAwatara();
         console.log('? Awatar zapisany');
-    } catch (e) { alert('B³¹d zapisu awatara.'); console.error(e); }
+    } catch (e) { alert('Bï¿½ï¿½d zapisu awatara.'); console.error(e); }
 }
 
-/* ¦¦ Modal potwierdzenia kodu ¦¦ */
+/* ï¿½ï¿½ Modal potwierdzenia kodu ï¿½ï¿½ */
 let _modalKodResolve = null;
 
 function pokazModalKodu(liczbaKodow) {
     return new Promise(resolve => {
         _modalKodResolve = resolve;
         const body = document.getElementById('modal-kod-body');
-        if (body) body.textContent = `Dla tego zawodnika istnieje ju¿ ${liczbaKodow} aktywny kod (typ: ${aktualnyTypKodu}). Co chcesz zrobiæ?`;
+        if (body) body.textContent = `Dla tego zawodnika istnieje juï¿½ ${liczbaKodow} aktywny kod (typ: ${aktualnyTypKodu}). Co chcesz zrobiï¿½?`;
         document.getElementById('modal-kod').classList.add('open');
     });
 }
@@ -1922,7 +1922,7 @@ function modalKodAkcja(akcja) {
     }
 }
 
-/* ¦¦ Powi¹zane konta ¦¦ */
+/* ï¿½ï¿½ Powiï¿½zane konta ï¿½ï¿½ */
 let _allRodzice = [], _allKibice = [], _powPlayer = null;
 
 function toggleNieaktywnePowiazania() {
@@ -1960,9 +1960,9 @@ function renderujPowiazane() {
 async function zaladujPowiazaneKonta(player) {
     const container = document.getElementById('dp-powiazane-content');
     if (!container) return;
-    container.innerHTML = '<div style="color:var(--szary);font-size: 17px;">£adowanie...</div>';
+    container.innerHTML = '<div style="color:var(--szary);font-size: 17px;">ï¿½adowanie...</div>';
 
-    // Reset checkboxa przy ka¿dym otwarciu profilu
+    // Reset checkboxa przy kaï¿½dym otwarciu profilu
     const cb = document.getElementById('pow-show-inactive');
     if (cb) cb.checked = false;
 
@@ -1975,7 +1975,7 @@ async function zaladujPowiazaneKonta(player) {
 
     renderujPowiazane();
 
-    // Przycisk "Roz³¹cz profil rodzica" — aktywny tylko gdy jest choæ jeden aktywny rodzic/kibic
+    // Przycisk "Rozï¿½ï¿½cz profil rodzica" ï¿½ aktywny tylko gdy jest choï¿½ jeden aktywny rodzic/kibic
     const przejmijSection = document.getElementById('dp-przejmij-section');
     if (przejmijSection && przejmijSection.style.display !== 'none') {
         const maAktywnych = _allRodzice.some(isAktywne) || _allKibice.some(isAktywne);
@@ -1987,7 +1987,7 @@ async function zaladujPowiazaneKonta(player) {
         }
     }
 
-    console.log(`? Powi¹zane konta: ${rodzice.length} rodziców, ${kibice.length} kibiców`);
+    console.log(`? Powiï¿½zane konta: ${rodzice.length} rodzicï¿½w, ${kibice.length} kibicï¿½w`);
 }
 
 function renderPowiazanyItem(m, userMap, typ) {
@@ -2006,20 +2006,20 @@ function renderPowiazanyItem(m, userMap, typ) {
         ? `<span class="pow-status pow-status-pending">${t('druzyna.linkedStatusPending')}</span>`
         : `<span class="pow-status pow-status-expired">${t('druzyna.linkedStatusExpired')}</span>`;
 
-    // Kod dla oczekuj¹cych
+    // Kod dla oczekujï¿½cych
     let kodRow = '';
     if (isPending && m.code) {
         const exp = m.codeExpiresAt
             ? (m.codeExpiresAt.toDate ? m.codeExpiresAt.toDate() : new Date(m.codeExpiresAt))
             : null;
-        const expStr = exp ? exp.toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+        const expStr = exp ? exp.toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : 'ï¿½';
         kodRow = `<div class="pow-code-row">
             <span class="pow-code">${m.code}</span>
             <span class="pow-exp">${t('druzyna.validUntilPrefix')}${expStr}</span>
         </div>`;
     }
 
-    // Akcje — tylko dla oczekuj¹cych kodów (aktywne maj¹ akcje w modalu)
+    // Akcje ï¿½ tylko dla oczekujï¿½cych kodï¿½w (aktywne majï¿½ akcje w modalu)
     let akcje = '';
     if (isPending) {
         akcje = `<button class="pow-action-btn" onclick="dezaktywujKodPow('${m.id}')">??? Dezaktywuj kod</button>`;
@@ -2034,7 +2034,7 @@ function renderPowiazanyItem(m, userMap, typ) {
             <div class="pow-avatar">${ikona}</div>
             <div class="pow-name">${nazwa}</div>
             ${statusChip}
-            ${isActive && m.userId ? '<span class="pow-chevron">›</span>' : ''}
+            ${isActive && m.userId ? '<span class="pow-chevron">ï¿½</span>' : ''}
         </div>
         ${kodRow}
         ${akcje ? `<div class="pow-actions" onclick="event.stopPropagation()">${akcje}</div>` : ''}
@@ -2045,8 +2045,8 @@ function dezaktywujKodPow(membershipId) {
     pokazKomunikat('W trakcie budowy ??', 'info');
 }
 
-/* ¦¦ Modal danych powi¹zanego ¦¦ */
-let _powUserMap = {};  // przechowuje userMap z ostatniego ³adowania
+/* ï¿½ï¿½ Modal danych powiï¿½zanego ï¿½ï¿½ */
+let _powUserMap = {};  // przechowuje userMap z ostatniego ï¿½adowania
 let _powActiveMembershipId = null;
 let _powActiveUserId = null;
 let _powActiveTyp = null;
@@ -2060,9 +2060,9 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
     const ikona = typ === 'RODZIC' ? '??' : '???';
     const typLabel = typ === 'RODZIC' ? t('druzyna.linkedTypeParent') : t('druzyna.linkedTypeSupporter');
 
-    // Dane kontaktowe — dla RODZIC z guardianData zawodnika, dla KIBIC z usera
+    // Dane kontaktowe ï¿½ dla RODZIC z guardianData zawodnika, dla KIBIC z usera
     const gd = (typ === 'RODZIC' && player?.guardianData) ? player.guardianData : null;
-    const nazwa = user?.displayName || gd?.guardianName || '—';
+    const nazwa = user?.displayName || gd?.guardianName || 'ï¿½';
     const email = gd?.guardianEmail || user?.email || null;
     const tel   = gd?.guardianPhone || user?.phone  || null;
     const adr   = gd?.address || null;
@@ -2092,7 +2092,7 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
 
     if (!rows) rows = `<div style="color:var(--szary);font-size: 17px;padding:10px 0">${t('druzyna.linkedNoContact')}</div>`;
 
-    // Przyciski akcji — tylko dla trenera
+    // Przyciski akcji ï¿½ tylko dla trenera
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
     let btnAkcje = '';
     if (isCoach && membershipId) {
@@ -2109,9 +2109,9 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
     document.getElementById('pow-modal-overlay').classList.add('open');
 }
 
-// Od³¹cza rodzica/kibica od zawodnika: dezaktywuje membership (soft), czyœci guardianId/guardianPhones
-// jeœli to rodzic, i powiadamia od³¹czan¹ osobê. Wywo³ywane z przycisku "Od³¹cz rodzica"/"Od³¹cz kibica"
-// w sekcji Powi¹zane konta — jedyne miejsce w oknie zawodnika do zarz¹dzania dostêpem opiekunów.
+// Odï¿½ï¿½cza rodzica/kibica od zawodnika: dezaktywuje membership (soft), czyï¿½ci guardianId/guardianPhones
+// jeï¿½li to rodzic, i powiadamia odï¿½ï¿½czanï¿½ osobï¿½. Wywoï¿½ywane z przycisku "Odï¿½ï¿½cz rodzica"/"Odï¿½ï¿½cz kibica"
+// w sekcji Powiï¿½zane konta ï¿½ jedyne miejsce w oknie zawodnika do zarzï¿½dzania dostï¿½pem opiekunï¿½w.
 async function odlaczOpiekunaOdZawodnika(userId, typ, membershipIdZnany) {
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
     const now = new Date().toISOString();
@@ -2153,11 +2153,11 @@ async function odlaczOpiekunaOdZawodnika(userId, typ, membershipIdZnany) {
             userId,
             teamId: aktualnyTeamId,
             type: 'INFO',
-            title: 'Utracono dostêp do profilu zawodnika',
-            body: `Trener od³¹czy³ Ciê od profilu zawodnika ${aktualnyZawodnik.name || ''}. Skontaktuj siê z trenerem, jeœli to pomy³ka.`,
+            title: 'Utracono dostï¿½p do profilu zawodnika',
+            body: `Trener odï¿½ï¿½czyï¿½ Ciï¿½ od profilu zawodnika ${aktualnyZawodnik.name || ''}. Skontaktuj siï¿½ z trenerem, jeï¿½li to pomyï¿½ka.`,
             forPlayerId: pid
         });
-    } catch (e) { console.error('Powiadomienie o od³¹czeniu:', e); }
+    } catch (e) { console.error('Powiadomienie o odï¿½ï¿½czeniu:', e); }
 }
 
 async function odlaczPowiazanego() {
@@ -2170,7 +2170,7 @@ async function odlaczPowiazanego() {
         pokazKomunikat(t('druzyna.detachSuccess'), 'sukces');
         await zaladujPowiazaneKonta(aktualnyZawodnik);
     } catch (e) {
-        pokazKomunikat('B³¹d: ' + e.message, 'blad');
+        pokazKomunikat('Bï¿½ï¿½d: ' + e.message, 'blad');
     }
 }
 
@@ -2178,8 +2178,8 @@ function zamknijPowModal() {
     document.getElementById('pow-modal-overlay').classList.remove('open');
 }
 
-// Roz³¹cza WSZYSTKICH aktywnych rodziców i kibiców od zawodnika — trener "przejmuje" zawodnika.
-// Przycisk widoczny tylko gdy s¹ aktywni rodzice/kibice (dp-przejmij-section).
+// Rozï¿½ï¿½cza WSZYSTKICH aktywnych rodzicï¿½w i kibicï¿½w od zawodnika ï¿½ trener "przejmuje" zawodnika.
+// Przycisk widoczny tylko gdy sï¿½ aktywni rodzice/kibice (dp-przejmij-section).
 async function przejmijZawodnikaZPowrotem() {
     if (!aktualnyZawodnik) return;
     const aktywni = [
@@ -2205,22 +2205,22 @@ async function przejmijZawodnikaZPowrotem() {
         pokazKomunikat(t('druzyna.reclaimSuccess'), 'sukces');
         await zaladujPowiazaneKonta(aktualnyZawodnik);
     } catch (e) {
-        pokazKomunikat('B³¹d: ' + e.message, 'blad');
+        pokazKomunikat('Bï¿½ï¿½d: ' + e.message, 'blad');
     }
 }
 
-// Usuwa zawodnika (RODO — anonimizacja, nie hard-delete): od³¹cza wszystkich opiekunów, czyœci dane
-// osobowe, zachowuje historiê/statystyki. birthDate zostaje — bez nazwiska nie identyfikuje osoby.
-// Tylko TRENER_GLOWNY (patrz ARCHITEKTURA.md — tabela uprawnieñ).
+// Usuwa zawodnika (RODO ï¿½ anonimizacja, nie hard-delete): odï¿½ï¿½cza wszystkich opiekunï¿½w, czyï¿½ci dane
+// osobowe, zachowuje historiï¿½/statystyki. birthDate zostaje ï¿½ bez nazwiska nie identyfikuje osoby.
+// Tylko TRENER_GLOWNY (patrz ARCHITEKTURA.md ï¿½ tabela uprawnieï¿½).
 async function usunZawodnika() {
     if (!aktualnyZawodnik) return;
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
     const imie = aktualnyZawodnik.name || 'tego zawodnika';
 
-    if (!await showConfirmSheet(`Usun¹æ zawodnika ${imie}? Dane osobowe zostan¹ trwale usuniête, historia (mecze, statystyki) zostanie zachowana. Tej operacji nie mo¿na cofn¹æ.`)) return;
+    if (!await showConfirmSheet(`Usunï¿½ï¿½ zawodnika ${imie}? Dane osobowe zostanï¿½ trwale usuniï¿½te, historia (mecze, statystyki) zostanie zachowana. Tej operacji nie moï¿½na cofnï¿½ï¿½.`)) return;
 
     try {
-        // 1. Od³¹cz wszystkich aktywnych opiekunów (rodzice + kibice)
+        // 1. Odï¿½ï¿½cz wszystkich aktywnych opiekunï¿½w (rodzice + kibice)
         const { rodzice, kibice } = await getMembershipsForPlayer(pid);
         const aktywni = [
             ...rodzice.filter(isAktywne).map(m => ({ ...m, typ: 'RODZIC' })),
@@ -2230,9 +2230,9 @@ async function usunZawodnika() {
             await odlaczOpiekunaOdZawodnika(m.userId, m.typ, m.id);
         }
 
-        // 2. Anonimizuj dane osobowe, zachowaj birthDate/statystyki/historiê
+        // 2. Anonimizuj dane osobowe, zachowaj birthDate/statystyki/historiï¿½
         await db.collection('players').doc(pid).update({
-            firstName: '', lastName: '', name: 'Usuniêty zawodnik',
+            firstName: '', lastName: '', name: 'Usuniï¿½ty zawodnik',
             photoURL: '', guardianPhones: [], guardianData: null,
             'coachOnlyData.coachNotes': '',
             isActive: false,
@@ -2240,16 +2240,16 @@ async function usunZawodnika() {
             deletedBy: aktualnyUserId
         });
 
-        pokazKomunikat('Zawodnik usuniêty', 'sukces');
+        pokazKomunikat('Zawodnik usuniï¿½ty', 'sukces');
         zamknijProfil();
         await zaladujZawodnikow();
     } catch (e) {
-        pokazKomunikat('B³¹d: ' + e.message, 'blad');
+        pokazKomunikat('Bï¿½ï¿½d: ' + e.message, 'blad');
     }
 }
 
 
-/* ¦¦ Start ¦¦ */
+/* ï¿½ï¿½ Start ï¿½ï¿½ */
 window.addEventListener('DOMContentLoaded', () => {
     if (typeof firebase === 'undefined') { console.error('? Firebase!'); return; }
     initFirebase();
@@ -2278,13 +2278,13 @@ window.addEventListener('DOMContentLoaded', () => {
    IMPORT CSV
 =================================================== */
 let _importRows = [];      // sparsowane wiersze gotowe do zapisu
-const IMPORT_TEMPLATE_URL = ''; // uzupe³nij po przygotowaniu pliku
+const IMPORT_TEMPLATE_URL = ''; // uzupeï¿½nij po przygotowaniu pliku
 
 function otworzImportCSV() {
     _importRows = [];
     document.getElementById('import-file-input').value = '';
     document.getElementById('import-file-label').textContent =
-        typeof t === 'function' ? t('druzyna.importFilePlaceholder') : 'Kliknij aby wybraæ plik .csv';
+        typeof t === 'function' ? t('druzyna.importFilePlaceholder') : 'Kliknij aby wybraï¿½ plik .csv';
     document.getElementById('import-preview-wrap').style.display = 'none';
     document.getElementById('import-panel').classList.add('open');
     // Ustaw URL szablonu
@@ -2307,7 +2307,7 @@ function onImportFileSelected(input) {
             const text = e.target.result;
             parseAndPreviewCSV(text);
         } catch (err) {
-            alert('B³¹d odczytu pliku: ' + err.message);
+            alert('Bï¿½ï¿½d odczytu pliku: ' + err.message);
         }
     };
     reader.readAsText(file, 'UTF-8');
@@ -2325,10 +2325,10 @@ function parseAndPreviewCSV(text) {
         return;
     }
 
-    // Nag³ówki
+    // Nagï¿½ï¿½wki
     const rawHeaders = splitCSVLine(nonEmpty[0], sep).map(h => h.trim().toLowerCase());
     const COL_MAP = {
-        imie:            ['imiê', 'imie', 'first name', 'firstname', 'name'],
+        imie:            ['imiï¿½', 'imie', 'first name', 'firstname', 'name'],
         nazwisko:        ['nazwisko', 'last name', 'lastname', 'surname'],
         data_urodzenia:  ['data urodzenia', 'urodziny', 'data_urodzenia', 'birthdate', 'birth date', 'dob'],
         pozycja:         ['pozycja', 'position'],
@@ -2343,7 +2343,7 @@ function parseAndPreviewCSV(text) {
     }
 
     if (colIdx.imie === -1 || colIdx.nazwisko === -1) {
-        showImportError('Brak wymaganych kolumn: "Imiê" i/lub "Nazwisko". SprawdŸ nag³ówki w pliku.');
+        showImportError('Brak wymaganych kolumn: "Imiï¿½" i/lub "Nazwisko". Sprawdï¿½ nagï¿½ï¿½wki w pliku.');
         document.getElementById('import-preview-wrap').style.display = 'none';
         return;
     }
@@ -2405,14 +2405,14 @@ function renderImportPreview(rows) {
     const okCount  = rows.filter(r => r._ok).length;
 
     const hdr = document.getElementById('import-preview-hdr');
-    hdr.innerHTML = `Podgl¹d: <strong>${okCount} zawodników</strong> gotowych do importu` +
-        (errCount ? `<span class="import-err-badge">? ${errCount} b³êdów</span>` : '');
+    hdr.innerHTML = `Podglï¿½d: <strong>${okCount} zawodnikï¿½w</strong> gotowych do importu` +
+        (errCount ? `<span class="import-err-badge">? ${errCount} bï¿½ï¿½dï¿½w</span>` : '');
 
     const preview = rows.slice(0, 8);
     const _th = (key, fb) => typeof t === 'function' ? (t(key) || fb) : fb;
     const tableHtml = `<table>
         <tr>
-            <th>${_th('druzyna.firstNameRequired','Imiê')}</th>
+            <th>${_th('druzyna.firstNameRequired','Imiï¿½')}</th>
             <th>${_th('druzyna.lastNameRequired','Nazwisko')}</th>
             <th>${_th('druzyna.birthDateLabel','Data ur.')}</th>
             <th>${_th('druzyna.positionLabel','Pozycja')}</th>
@@ -2421,11 +2421,11 @@ function renderImportPreview(rows) {
         ${preview.map(r => `<tr class="${r._ok ? '' : 'err'}">
             <td>${r.imie || '<em>brak</em>'}</td>
             <td>${r.nazwisko || '<em>brak</em>'}</td>
-            <td>${r.birthDate || '—'}</td>
-            <td>${r.pozycja || '—'}</td>
-            <td>${r.numer || '—'}</td>
+            <td>${r.birthDate || 'ï¿½'}</td>
+            <td>${r.pozycja || 'ï¿½'}</td>
+            <td>${r.numer || 'ï¿½'}</td>
         </tr>`).join('')}
-        ${rows.length > 8 ? `<tr><td colspan="5" style="color:var(--szary);text-align:center;padding:8px;">… i ${rows.length - 8} wiêcej</td></tr>` : ''}
+        ${rows.length > 8 ? `<tr><td colspan="5" style="color:var(--szary);text-align:center;padding:8px;">ï¿½ i ${rows.length - 8} wiï¿½cej</td></tr>` : ''}
     </table>`;
 
     document.getElementById('import-preview-table').innerHTML = tableHtml;
@@ -2445,7 +2445,7 @@ async function doImportCSV() {
     const teamName = document.getElementById('ctx-team')?.textContent || aktualnyTeamId;
     const confirmMsg = typeof t === 'function'
         ? t('druzyna.importConfirmMsg', { count: _importRows.length, team: teamName })
-        : `Importujesz ${_importRows.length} zawodników do dru¿yny "${teamName}".\n\nPotwierdŸ import.`;
+        : `Importujesz ${_importRows.length} zawodnikï¿½w do druï¿½yny "${teamName}".\n\nPotwierdï¿½ import.`;
 
     if (!await showConfirmSheet(confirmMsg)) return;
 
@@ -2454,7 +2454,7 @@ async function doImportCSV() {
     btn.textContent = 'Importowanie...';
 
     try {
-        // Pobierz istniej¹cych zawodników do wykrycia duplikatów
+        // Pobierz istniejï¿½cych zawodnikï¿½w do wykrycia duplikatï¿½w
         const existingSnap = await playersOfTeamQuery(aktualnyTeamId, aktualnyClubId).get();
         const existingPlayers = existingSnap.docs
             .map(d => d.data())
@@ -2464,10 +2464,10 @@ async function doImportCSV() {
         if (existingPlayers.length > 0) {
             const warnMsg = typeof t === 'function'
                 ? t('druzyna.importAlreadyHasPlayers', { team: teamName, existing: existingPlayers.length, count: _importRows.length })
-                : `W dru¿ynie "${teamName}" jest ju¿ ${existingPlayers.length} zawodników.\n\nImport dopisze kolejnych ${_importRows.length}. Kontynuowaæ?`;
+                : `W druï¿½ynie "${teamName}" jest juï¿½ ${existingPlayers.length} zawodnikï¿½w.\n\nImport dopisze kolejnych ${_importRows.length}. Kontynuowaï¿½?`;
             if (!await showConfirmSheet(warnMsg)) {
                 btn.disabled = false;
-                btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodników';
+                btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodnikï¿½w';
                 return;
             }
         }
@@ -2519,17 +2519,17 @@ async function doImportCSV() {
 
         let resultMsg = typeof t === 'function'
             ? t('druzyna.importSuccessMsg', { count: added })
-            : `? Zaimportowano ${added} zawodników.`;
+            : `? Zaimportowano ${added} zawodnikï¿½w.`;
         if (dupNames.length) {
-            resultMsg += '\n\n? Mo¿liwe duplikaty (to samo imiê i nazwisko):\n' + dupNames.join(', ');
+            resultMsg += '\n\n? Moï¿½liwe duplikaty (to samo imiï¿½ i nazwisko):\n' + dupNames.join(', ');
         }
         await showConfirmSheet(resultMsg, { okOnly: true });
 
     } catch (err) {
         console.error('? Import CSV:', err);
         btn.disabled = false;
-        btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodników';
-        alert('B³¹d importu: ' + err.message);
+        btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodnikï¿½w';
+        alert('Bï¿½ï¿½d importu: ' + err.message);
     }
 }
 </script>

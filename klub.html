@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>COACHAY — Klub</title>
+<title>COACHAY ï¿½ Klub</title>
 <link rel="stylesheet" href="_global.css?v=20260730a">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
 <script src="_i18n.js?v=20261003c"></script>
@@ -15,7 +15,7 @@
 <style>
 .screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
 
-/* ¦¦ Nag³ówek ¦¦ */
+/* ï¿½ï¿½ Nagï¿½ï¿½wek ï¿½ï¿½ */
 .kb-header { padding: 12px 16px 10px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .kb-header-title { font-family: var(--font-d); font-size:23px; font-weight: 800; color: var(--bialy); }
 body:has(#app-sidebar) .kb-header { display: none; }
@@ -23,14 +23,14 @@ body:has(#app-sidebar) .kb-header { display: none; }
 .kb-page-title { display: none; font-family: var(--font-d); font-size:27px; font-weight: 800; color: var(--bialy); width: 100%; box-sizing: border-box; }
 body:has(#app-sidebar) .kb-page-title { display: block; }
 
-/* ¦¦ Scroll g³ówny ¦¦ */
+/* ï¿½ï¿½ Scroll gï¿½ï¿½wny ï¿½ï¿½ */
 .kb-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .kb-scroll::-webkit-scrollbar { display: none; }
 .kb-inner { max-width: 1222px; margin: 0 auto; padding: 20px 28px 80px; display: flex; flex-direction: column; gap: 8px; }
 .kb-empty { padding: 30px 20px; text-align: center; color: var(--szary); font-size:18px; font-weight: 600; width: 100%; box-sizing: border-box; }
 .kb-section-label { font-size:15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin: 8px 0 4px; width: 100%; box-sizing: border-box; }
 
-/* ¦¦ Karta klubu ¦¦ */
+/* ï¿½ï¿½ Karta klubu ï¿½ï¿½ */
 .club-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 14px; width: 100%; box-sizing: border-box; }
 .club-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .club-card-name { font-family: var(--font-d); font-size:22px; font-weight: 800; color: var(--bialy); flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -42,7 +42,7 @@ body:has(#app-sidebar) .kb-page-title { display: block; }
 .club-card-row-val { font-size:17px; font-weight: 600; color: var(--szary-j); line-height: 1.4; }
 .club-card-row-val.empty { color: var(--szary); font-style: italic; }
 
-/* ¦¦ Karta dru¿yny ¦¦ */
+/* ï¿½ï¿½ Karta druï¿½yny ï¿½ï¿½ */
 .team-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.15s; width: 100%; box-sizing: border-box; }
 .team-card:active { background: var(--tlo-karta2); }
 .team-card-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2); display: flex; align-items: center; justify-content: center; font-size:23px; flex-shrink: 0; }
@@ -55,12 +55,12 @@ body:has(#app-sidebar) .kb-page-title { display: block; }
 .tag-league { background: rgba(251,191,36,0.1); color: #D97706; border: 1px solid rgba(251,191,36,0.2); }
 .team-card-arrow { color: var(--border2); font-size:21px; flex-shrink: 0; }
 
-/* ¦¦ FAB ¦¦ */
+/* ï¿½ï¿½ FAB ï¿½ï¿½ */
 .fab { position: absolute; bottom: 72px; right: 16px; width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size:19px; font-weight: 800; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); z-index: 10; }
 body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
 .fab:active { opacity: 0.85; }
 
-/* ¦¦ Detail panel (dru¿yna, slide right) ¦¦ */
+/* ï¿½ï¿½ Detail panel (druï¿½yna, slide right) ï¿½ï¿½ */
 .detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .detail-panel.open { transform: translateX(0); }
 .dp-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -74,7 +74,7 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
 .dp-scroll::-webkit-scrollbar { display: none; }
 .dp-section-label { font-size:15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin: 4px 0 2px; }
 
-/* ¦¦ Wiersz zawodnika ¦¦ */
+/* ï¿½ï¿½ Wiersz zawodnika ï¿½ï¿½ */
 .player-row { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
 .player-row-av { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; border: 1px solid var(--border2); flex-shrink: 0; background: var(--tlo-karta2); }
 .player-row-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -90,7 +90,7 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
 .player-action-blocked { color: #34D399; background: rgba(52,211,153,0.08); border-color: rgba(52,211,153,0.25); }
 .player-action-delete { color: #EF4444; background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
 
-/* ¦¦ Panele slide-bottom (wspólne) ¦¦ */
+/* ï¿½ï¿½ Panele slide-bottom (wspï¿½lne) ï¿½ï¿½ */
 .slide-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .slide-panel.open { transform: translateY(0); }
 .sp-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -100,7 +100,7 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
 .sp-body::-webkit-scrollbar { display: none; }
 .sp-section { font-size:15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin: 4px 0 -4px; }
 
-/* ¦¦ Formularz ¦¦ */
+/* ï¿½ï¿½ Formularz ï¿½ï¿½ */
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-lbl { font-size:16px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--szary); }
 .form-inp { width: 100%; background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px 14px; font-size:19px; font-weight: 600; color: var(--bialy); box-sizing: border-box; }
@@ -114,7 +114,7 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
 .btn-danger { width: 100%; padding: 12px; background: transparent; border: 1px solid rgba(248,113,113,0.3); border-radius: var(--r); font-size:18px; font-weight: 800; color: var(--blad); cursor: pointer; }
 .btn-danger:active { background: rgba(248,113,113,0.08); }
 
-/* ¦¦ Panel transfer ¦¦ */
+/* ï¿½ï¿½ Panel transfer ï¿½ï¿½ */
 .tp-player-info { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
 .tp-player-name { font-size:20px; font-weight: 800; color: var(--bialy); }
 .tp-player-from { font-size:17px; color: var(--szary); margin-top: 4px; font-weight: 600; }
@@ -137,7 +137,7 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
         <div class="ctx-switcher" onclick="toggleCtxOv()">
             <div class="ctx-dot" id="ctx-dot"></div>
             <div class="ctx-text"><span class="ctx-klub" id="ctx-klub"></span><span class="ctx-team" id="ctx-team"></span></div>
-            <span class="ctx-arrow">?</span>
+            <span class="ctx-arrow">â–¾</span>
         </div>
         <div class="top-bar-right">
             <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
@@ -145,13 +145,13 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
     </div>
 
     <div class="ctx-overlay" id="ctx-ov">
-        <div class="ov-label" data-i18n="appShell.switcherTitle">Wybierz klub i zespó³</div>
+        <div class="ov-label" data-i18n="appShell.switcherTitle">Wybierz klub i zespï¿½</div>
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
     <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
-        <div class="notif-hdr"><span class="notif-tytul" data-i18n="appShell.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="appShell.clearRead">Wyczyœæ przeczytane</span></div>
+        <div class="notif-hdr"><span class="notif-tytul" data-i18n="appShell.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="appShell.clearRead">Wyczyï¿½ï¿½ przeczytane</span></div>
     </div>
 
     <div class="screen-body">
@@ -161,27 +161,27 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
         <div class="kb-scroll" id="kb-scroll">
             <div class="kb-inner" id="kb-inner">
                 <div class="kb-page-title" data-i18n="klub.headerTitle">Klub</div>
-                <div class="kb-empty" data-i18n="common.loading">£adowanie...</div>
+                <div class="kb-empty" data-i18n="common.loading">ï¿½adowanie...</div>
             </div>
         </div>
     </div>
 
-    <button class="fab" id="fab-add" onclick="openAddTeam()" data-i18n="klub.addTeamButton">+ Dodaj dru¿ynê</button>
+    <button class="fab" id="fab-add" onclick="openAddTeam()" data-i18n="klub.addTeamButton">+ Dodaj druï¿½ynï¿½</button>
 
-    <!-- ¦¦ Detail panel: dru¿yna ¦¦ -->
+    <!-- ï¿½ï¿½ Detail panel: druï¿½yna ï¿½ï¿½ -->
     <div class="detail-panel" id="detail-panel">
         <div class="dp-topbar">
-            <div class="dp-back" onclick="closeDetailPanel()"><div class="dp-back-icon">‹</div><span data-i18n="klub.headerTitle">Klub</span></div>
+            <div class="dp-back" onclick="closeDetailPanel()"><div class="dp-back-icon">ï¿½</div><span data-i18n="klub.headerTitle">Klub</span></div>
             <div class="dp-edit-btn" id="dp-edit-btn" onclick="openEditTeam()" data-i18n="common.edit">Edytuj</div>
         </div>
         <div class="dp-hero">
             <div class="dp-team-name" id="dp-team-name"></div>
             <div class="dp-coach-row" id="dp-coach-row"></div>
         </div>
-        <div class="dp-scroll" id="dp-scroll"><div class="kb-empty">£adowanie...</div></div>
+        <div class="dp-scroll" id="dp-scroll"><div class="kb-empty">ï¿½adowanie...</div></div>
     </div>
 
-    <!-- ¦¦ Slide panel: dane klubu ¦¦ -->
+    <!-- ï¿½ï¿½ Slide panel: dane klubu ï¿½ï¿½ -->
     <div class="slide-panel" id="club-edit-panel" style="z-index:150;">
         <div class="sp-hdr">
             <div class="sp-title" id="club-edit-title" data-i18n="klub.editClubTitle">Dane klubu</div>
@@ -189,30 +189,30 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
         </div>
         <div class="sp-body">
             <div class="sp-section" data-i18n="klub.basicSection">Podstawowe</div>
-            <div class="form-group"><div class="form-lbl" data-i18n="klub.clubNameLabel">Nazwa klubu</div><input type="text" class="form-inp" id="ce-clubName" placeholder="np. Or³y Praga FC" data-i18n-placeholder="klub.legalNamePlaceholder"></div>
-            <div class="form-group"><div class="form-lbl" data-i18n="klub.legalNameLabel">Nazwa prawna</div><input type="text" class="form-inp" id="ce-legalName" placeholder="np. Klub Sportowy Or³y Praga" data-i18n-placeholder="klub.legalNamePlaceholder"></div>
+            <div class="form-group"><div class="form-lbl" data-i18n="klub.clubNameLabel">Nazwa klubu</div><input type="text" class="form-inp" id="ce-clubName" placeholder="np. Orï¿½y Praga FC" data-i18n-placeholder="klub.legalNamePlaceholder"></div>
+            <div class="form-group"><div class="form-lbl" data-i18n="klub.legalNameLabel">Nazwa prawna</div><input type="text" class="form-inp" id="ce-legalName" placeholder="np. Klub Sportowy Orï¿½y Praga" data-i18n-placeholder="klub.legalNamePlaceholder"></div>
             <div class="form-row2">
                 <div class="form-group"><div class="form-lbl" data-i18n="klub.nipLabel">NIP</div><input type="text" class="form-inp" id="ce-nip" placeholder="0000000000" maxlength="10"></div>
                 <div class="form-group"><div class="form-lbl" data-i18n="klub.regonLabel">REGON</div><input type="text" class="form-inp" id="ce-regon" placeholder="000000000" maxlength="9"></div>
             </div>
             <div class="form-row2">
-                <div class="form-group"><div class="form-lbl" data-i18n="klub.foundedLabel">Data za³o¿enia</div><input type="date" class="form-inp" id="ce-founded"></div>
-                <div class="form-group"><div class="form-lbl" data-i18n="klub.presidentLabel">Prezes</div><input type="text" class="form-inp" id="ce-president" placeholder="Imiê i nazwisko" data-i18n-placeholder="klub.presidentPlaceholder"></div>
+                <div class="form-group"><div class="form-lbl" data-i18n="klub.foundedLabel">Data zaï¿½oï¿½enia</div><input type="date" class="form-inp" id="ce-founded"></div>
+                <div class="form-group"><div class="form-lbl" data-i18n="klub.presidentLabel">Prezes</div><input type="text" class="form-inp" id="ce-president" placeholder="Imiï¿½ i nazwisko" data-i18n-placeholder="klub.presidentPlaceholder"></div>
             </div>
 
             <div class="sp-section" data-i18n="klub.addressSection">Adres</div>
             <div class="form-row3">
                 <div class="form-group"><div class="form-lbl" data-i18n="klub.streetLabel">Ulica</div><input type="text" class="form-inp" id="ce-street" placeholder="ul. Targowa" data-i18n-placeholder="klub.streetPlaceholder"></div>
                 <div class="form-group"><div class="form-lbl" data-i18n="klub.houseNumberLabel">Nr domu</div><input type="text" class="form-inp" id="ce-houseNumber" placeholder="12"></div>
-                <div class="form-group"><div class="form-lbl" data-i18n="klub.apartmentNumberLabel">Nr lokalu</div><input type="text" class="form-inp" id="ce-apartmentNumber" placeholder="—"></div>
+                <div class="form-group"><div class="form-lbl" data-i18n="klub.apartmentNumberLabel">Nr lokalu</div><input type="text" class="form-inp" id="ce-apartmentNumber" placeholder="ï¿½"></div>
             </div>
             <div class="form-row2">
                 <div class="form-group"><div class="form-lbl" data-i18n="klub.postalCodeLabel">Kod pocztowy</div><input type="text" class="form-inp" id="ce-postalCode" placeholder="00-000" data-i18n-placeholder="klub.postalCodePlaceholder" maxlength="6"></div>
                 <div class="form-group"><div class="form-lbl" data-i18n="klub.cityLabel">Miasto</div><input type="text" class="form-inp" id="ce-city" placeholder="Warszawa" data-i18n-placeholder="klub.cityPlaceholder"></div>
             </div>
             <div class="form-row2">
-                <div class="form-group"><div class="form-lbl" data-i18n="klub.districtLabel">Dzielnica</div><input type="text" class="form-inp" id="ce-district" placeholder="np. Praga Pó³noc" data-i18n-placeholder="klub.districtPlaceholder"></div>
-                <div class="form-group"><div class="form-lbl" data-i18n="klub.voivodeshipLabel">Województwo</div><input type="text" class="form-inp" id="ce-voivodeship" placeholder="Mazowieckie" data-i18n-placeholder="klub.voivodeshipPlaceholder"></div>
+                <div class="form-group"><div class="form-lbl" data-i18n="klub.districtLabel">Dzielnica</div><input type="text" class="form-inp" id="ce-district" placeholder="np. Praga Pï¿½noc" data-i18n-placeholder="klub.districtPlaceholder"></div>
+                <div class="form-group"><div class="form-lbl" data-i18n="klub.voivodeshipLabel">Wojewï¿½dztwo</div><input type="text" class="form-inp" id="ce-voivodeship" placeholder="Mazowieckie" data-i18n-placeholder="klub.voivodeshipPlaceholder"></div>
             </div>
 
             <div class="sp-section" data-i18n="klub.contactSection">Kontakt</div>
@@ -228,32 +228,32 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
         </div>
     </div>
 
-    <!-- ¦¦ Slide panel: dodaj/edytuj dru¿ynê ¦¦ -->
+    <!-- ï¿½ï¿½ Slide panel: dodaj/edytuj druï¿½ynï¿½ ï¿½ï¿½ -->
     <div class="slide-panel" id="team-edit-panel" style="z-index:150;">
         <div class="sp-hdr">
-            <div class="sp-title" id="team-edit-title">Nowa dru¿yna</div>
+            <div class="sp-title" id="team-edit-title">Nowa druï¿½yna</div>
             <div class="sp-cancel" onclick="closeTeamEdit()" data-i18n="common.cancel">Anuluj</div>
         </div>
         <div class="sp-body">
-            <div class="form-group"><div class="form-lbl" data-i18n="klub.teamNameLabel">Nazwa dru¿yny</div><input type="text" class="form-inp" id="te-name" placeholder="np. Juniorzy U12" data-i18n-placeholder="klub.teamNamePlaceholder"></div>
+            <div class="form-group"><div class="form-lbl" data-i18n="klub.teamNameLabel">Nazwa druï¿½yny</div><input type="text" class="form-inp" id="te-name" placeholder="np. Juniorzy U12" data-i18n-placeholder="klub.teamNamePlaceholder"></div>
             <div class="form-group">
                 <div class="form-lbl" data-i18n="klub.trainersLabel">Trenerzy</div>
                 <div id="te-trainers-list" style="display:flex;flex-direction:column;gap:6px;">
-                    <div style="color:var(--szary);font-size:17px;font-weight:600;padding:8px 0;" data-i18n="common.loading">£adowanie...</div>
+                    <div style="color:var(--szary);font-size:17px;font-weight:600;padding:8px 0;" data-i18n="common.loading">ï¿½adowanie...</div>
                 </div>
             </div>
-            <button class="btn-save" onclick="saveTeam()" data-i18n="klub.saveTeamButton">Zapisz dru¿ynê</button>
-            <button class="btn-danger" id="te-delete-btn" onclick="deleteTeam()" style="display:none" data-i18n="klub.deleteTeamTitle">Usuñ dru¿ynê</button>
+            <button class="btn-save" onclick="saveTeam()" data-i18n="klub.saveTeamButton">Zapisz druï¿½ynï¿½</button>
+            <button class="btn-danger" id="te-delete-btn" onclick="deleteTeam()" style="display:none" data-i18n="klub.deleteTeamTitle">Usuï¿½ druï¿½ynï¿½</button>
         </div>
     </div>
 
     <!-- == PANEL DODAJ/EDYTUJ ZAWODNIKA == -->
     <div class="slide-panel" id="player-edit-panel" style="z-index:160;">
         <div class="sp-hdr">
-            <div class="dp-back" onclick="closePlayerEdit()"><div class="dp-back-icon">‹</div><span id="player-edit-title">Nowy zawodnik</span></div>
+            <div class="dp-back" onclick="closePlayerEdit()"><div class="dp-back-icon">ï¿½</div><span id="player-edit-title">Nowy zawodnik</span></div>
         </div>
         <div style="padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1;">
-            <div class="form-group"><div class="form-lbl" data-i18n="klub.firstNameLabel">Imiê *</div><input type="text" class="form-inp" id="ppe-firstname" placeholder="Jan"></div>
+            <div class="form-group"><div class="form-lbl" data-i18n="klub.firstNameLabel">Imiï¿½ *</div><input type="text" class="form-inp" id="ppe-firstname" placeholder="Jan"></div>
             <div class="form-group"><div class="form-lbl" data-i18n="klub.lastNameLabel">Nazwisko *</div><input type="text" class="form-inp" id="ppe-lastname" placeholder="Kowalski"></div>
             <div class="form-group"><div class="form-lbl" data-i18n="klub.birthDateLabel">Data urodzenia *</div><input type="date" class="form-inp" id="ppe-birth"></div>
             <div class="form-group"><div class="form-lbl" data-i18n="klub.positionLabel">Pozycja</div><input type="text" class="form-inp" id="ppe-position" placeholder="np. Napastnik"></div>
@@ -262,10 +262,10 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
         </div>
     </div>
 
-    <!-- ¦¦ Slide panel: transfer zawodnika ¦¦ -->
+    <!-- ï¿½ï¿½ Slide panel: transfer zawodnika ï¿½ï¿½ -->
     <div class="slide-panel" id="transfer-panel" style="z-index:160;">
         <div class="sp-hdr">
-            <div class="sp-title" data-i18n="klub.transferPanelTitle">Zmiana dru¿yny</div>
+            <div class="sp-title" data-i18n="klub.transferPanelTitle">Zmiana druï¿½yny</div>
             <div class="sp-cancel" onclick="closeTransferPanel()" data-i18n="common.cancel">Anuluj</div>
         </div>
         <div class="sp-body">
@@ -273,30 +273,30 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
                 <div class="tp-player-name" id="tp-player-name"></div>
                 <div class="tp-player-from" id="tp-player-from"></div>
             </div>
-            <div class="tp-arrow">¡</div>
-            <div class="form-lbl" data-i18n="klub.selectTargetTeam">Wybierz docelow¹ dru¿ynê</div>
+            <div class="tp-arrow">ï¿½</div>
+            <div class="form-lbl" data-i18n="klub.selectTargetTeam">Wybierz docelowï¿½ druï¿½ynï¿½</div>
             <div id="tp-teams-list"></div>
-            <button class="tp-confirm-btn" id="tp-confirm-btn" onclick="confirmTransfer()" disabled data-i18n="klub.confirmTransferButton">PotwierdŸ przeniesienie</button>
+            <button class="tp-confirm-btn" id="tp-confirm-btn" onclick="confirmTransfer()" disabled data-i18n="klub.confirmTransferButton">Potwierdï¿½ przeniesienie</button>
         </div>
     </div>
 
     <div class="bottom-nav">
         <a class="nav-item" href="start.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
-        <a class="nav-item" href="druzyna.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.druzyna">Dru¿yna</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.druzyna">Druï¿½yna</span></a>
     </div>
 
     <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
     <div class="menu-panel" id="menu-panel">
         <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
         <div class="menu-panel-items">
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">P³atnoœci</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">›</span></div>
-            <div class="menu-item menu-item-active" id="menu-klub" onclick="closeMenu()"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Dru¿yny klubu</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">Mï¿½j profil</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">Pï¿½atnoï¿½ci</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">ï¿½</span></div>
+            <div class="menu-item menu-item-active" id="menu-klub" onclick="closeMenu()"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Druï¿½yny klubu</span><span class="menu-item-arrow">ï¿½</span></div>
         </div>
-        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj siê</span></div></div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj siï¿½</span></div></div>
     </div>
 
 </div><!-- /phone -->
@@ -304,7 +304,7 @@ body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
 <script src="coachay-core.js?v=20261003b"></script>
 <script>
 /* ===================================================
-   KLUB.HTML — Zarz¹dzanie klubem i dru¿ynami
+   KLUB.HTML ï¿½ Zarzï¿½dzanie klubem i druï¿½ynami
 =================================================== */
 
 let currentUserId = '';
@@ -318,11 +318,11 @@ let canManage     = false;
 let isAdmin       = false;
 
 let clubData          = null;  // dane klubu z Firestore
-let allTeams          = [];    // dru¿yny klubu
+let allTeams          = [];    // druï¿½yny klubu
 let allTrainers       = [];    // trenerzy [{userId, displayName, ...}]
-let mainTrainerByTeam = {};    // teamId › userId TRENER_GLOWNY (z aktywnych memberships)
+let mainTrainerByTeam = {};    // teamId ï¿½ userId TRENER_GLOWNY (z aktywnych memberships)
 let teamStats         = {};
-let selectedTeam      = null;  // dru¿yna otwarta w detail panel
+let selectedTeam      = null;  // druï¿½yna otwarta w detail panel
 let editMode          = null;  // 'add' | 'edit'
 
 // Transfer
@@ -330,7 +330,7 @@ let transferPlayer   = null;
 let transferFromTeam = null;
 let transferToTeamId = null;
 
-/* ¦¦ Auth + init ¦¦ */
+/* ï¿½ï¿½ Auth + init ï¿½ï¿½ */
 window.addEventListener('DOMContentLoaded', () => {
     initFirebase();
     let _loaded = false;
@@ -350,19 +350,19 @@ window.addEventListener('DOMContentLoaded', () => {
 async function initKlub() {
     currentUserId = getCurrentUserId();
 
-    // Baner gdy przekierowano z innego ekranu (brak dru¿yny)
+    // Baner gdy przekierowano z innego ekranu (brak druï¿½yny)
     if (sessionStorage.getItem('noTeamRedirect')) {
         sessionStorage.removeItem('noTeamRedirect');
         const banner = document.createElement('div');
         banner.style.cssText = 'background:#f59e0b22;border:1px solid #f59e0b66;border-radius:10px;padding:12px 16px;margin:0 0 12px;font-size:.83rem;color:#f59e0b;line-height:1.5;';
-        banner.textContent = typeof t === 'function' ? t('klub.noTeamBanner') : '?? Dodaj dru¿ynê ¿eby korzystaæ z aplikacji.';
+        banner.textContent = typeof t === 'function' ? t('klub.noTeamBanner') : '?? Dodaj druï¿½ynï¿½ ï¿½eby korzystaï¿½ z aplikacji.';
         const _kbInner = document.getElementById('kb-inner');
         _kbInner.insertBefore(banner, _kbInner.firstChild);
     }
 
     const session = await initSession();
     if (!session) {
-        document.getElementById('kb-inner').innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('klub.sessionError') : 'B³¹d ³adowania sesji.') + '</div>';
+        document.getElementById('kb-inner').innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('klub.sessionError') : 'Bï¿½ï¿½d ï¿½adowania sesji.') + '</div>';
         return;
     }
     const { user, membership, team } = session;
@@ -375,11 +375,11 @@ async function initKlub() {
     currentTeamId = membership?.teamId || '';
     currentClubId = membership?.clubId || team?.clubId || '';
 
-    // Trener (role TRENER lub TRENER_GLOWNY) i ADMIN maj¹ uprawnienia do edycji
+    // Trener (role TRENER lub TRENER_GLOWNY) i ADMIN majï¿½ uprawnienia do edycji
     const rawRole = membership?.role || '';
     isAdmin   = membership?.isClubAdmin === true || currentRole === 'ADMIN_PLATFORMY';
 
-    // SprawdŸ trainer doc (fallback — membership mog³o nie mieæ flagi isClubAdmin)
+    // Sprawdï¿½ trainer doc (fallback ï¿½ membership mogï¿½o nie mieï¿½ flagi isClubAdmin)
     if (!isAdmin && currentClubId) {
         try {
             const tSnap = await db.collection('trainers')
@@ -404,14 +404,14 @@ async function initKlub() {
     await loadAll();
 }
 
-/* ¦¦ £adowanie wszystkiego ¦¦ */
+/* ï¿½ï¿½ ï¿½adowanie wszystkiego ï¿½ï¿½ */
 async function loadAll() {
     if (!currentClubId) {
         document.getElementById('kb-inner').innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('klub.noClubAssigned') : 'Brak przypisanego klubu.') + '</div>';
         return;
     }
     try {
-        // Równolegle: dane klubu + dru¿yny
+        // Rï¿½wnolegle: dane klubu + druï¿½yny
         const [clubSnap, teamsSnap] = await Promise.all([
             db.collection('clubs').doc(currentClubId).get(),
             db.collection('teams').where('clubId', '==', currentClubId).get()
@@ -420,13 +420,13 @@ async function loadAll() {
         clubData = clubSnap.exists ? { id: clubSnap.id, ...clubSnap.data() } : null;
         allTeams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // Sekwencyjnie: najpierw stats (buduje mainTrainerByTeam), potem trainers (u¿ywa mainTrainerByTeam)
+        // Sekwencyjnie: najpierw stats (buduje mainTrainerByTeam), potem trainers (uï¿½ywa mainTrainerByTeam)
         await loadTeamStats();
         await loadTrainers();
         renderAll();
     } catch (e) {
         console.error('? loadAll:', e);
-        document.getElementById('kb-inner').innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('klub.loadError') : 'B³¹d ³adowania danych.') + '</div>';
+        document.getElementById('kb-inner').innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('klub.loadError') : 'Bï¿½ï¿½d ï¿½adowania danych.') + '</div>';
     }
 }
 
@@ -436,10 +436,10 @@ async function loadTeamStats() {
     try {
         const playersSnap = await db.collection('players').where('clubId', '==', currentClubId).get(); // 2026-09-25: tylko klub
 
-        // Licz trenerów z memberships (obie wersje statusu: 'ACTIVE' i 'active')
-        const trainerCount = {};  // teamId › liczba trenerów
-        mainTrainerByTeam = {};   // teamId › userId TRENER_GLOWNY
-        window.trainersByTeam = {}; // teamId › [{userId, isGlowny}]
+        // Licz trenerï¿½w z memberships (obie wersje statusu: 'ACTIVE' i 'active')
+        const trainerCount = {};  // teamId ï¿½ liczba trenerï¿½w
+        mainTrainerByTeam = {};   // teamId ï¿½ userId TRENER_GLOWNY
+        window.trainersByTeam = {}; // teamId ï¿½ [{userId, isGlowny}]
         for (let i = 0; i < teamIds.length; i += 10) {
             const chunk = teamIds.slice(i, i + 10);
             const [snapA, snapB] = await Promise.all([
@@ -460,7 +460,7 @@ async function loadTeamStats() {
             });
         }
 
-        // Licz zawodników i trenerów per dru¿yna
+        // Licz zawodnikï¿½w i trenerï¿½w per druï¿½yna
         teamStats = {};
         allTeams.forEach(t => {
             const tid = t.id || t.teamId;
@@ -478,7 +478,7 @@ async function loadTeamStats() {
 
 async function loadTrainers() {
     try {
-        // Wszyscy aktywni trenerzy klubu — z memberships (clubId match, rola trenerska, ACTIVE)
+        // Wszyscy aktywni trenerzy klubu ï¿½ z memberships (clubId match, rola trenerska, ACTIVE)
         const trainerRoles = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER'];
         const [snapA, snapB] = await Promise.all([
             db.collection('memberships').where('clubId','==',currentClubId).where('status','==','ACTIVE').get(),
@@ -500,7 +500,7 @@ async function loadTrainers() {
     }
 }
 
-/* ¦¦ Render g³ówny ¦¦ */
+/* ï¿½ï¿½ Render gï¿½ï¿½wny ï¿½ï¿½ */
 function renderAll() {
     const scroll = document.getElementById('kb-inner');
     scroll.innerHTML = '';
@@ -508,18 +508,18 @@ function renderAll() {
     // Karta klubu
     scroll.appendChild(buildClubCard());
 
-    // Sekcja dru¿yn
+    // Sekcja druï¿½yn
     const lbl = document.createElement('div');
     lbl.className = 'kb-section-label';
-    lbl.textContent = typeof t === 'function' ? t('klub.teamsSectionLabel', {count: allTeams.length}) : `Dru¿yny (${allTeams.length})`;
+    lbl.textContent = typeof t === 'function' ? t('klub.teamsSectionLabel', {count: allTeams.length}) : `Druï¿½yny (${allTeams.length})`;
     scroll.appendChild(lbl);
 
     if (!allTeams.length) {
         const empty = document.createElement('div');
         empty.className = 'kb-empty';
         empty.style.cssText = 'padding:24px 0;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;';
-        const noTeamsTitle = typeof t === 'function' ? t('klub.noTeamsTitle') : 'Brak dru¿yn';
-        const noTeamsSub   = typeof t === 'function' ? t('klub.noTeamsSub')   : 'Dodaj pierwsz¹ dru¿ynê przyciskiem + poni¿ej';
+        const noTeamsTitle = typeof t === 'function' ? t('klub.noTeamsTitle') : 'Brak druï¿½yn';
+        const noTeamsSub   = typeof t === 'function' ? t('klub.noTeamsSub')   : 'Dodaj pierwszï¿½ druï¿½ynï¿½ przyciskiem + poniï¿½ej';
         empty.innerHTML = `
             <div style="font-size:2rem">???</div>
             <div style="font-size:.95rem;font-weight:600;color:var(--bialy)">${noTeamsTitle}</div>
@@ -549,12 +549,12 @@ function buildClubCard() {
         <div class="club-card-rows">
             ${c.legalName ? `<div class="club-card-row"><div class="club-card-row-icon">???</div><div class="club-card-row-val">${c.legalName}</div></div>` : ''}
             ${addrLine   ? `<div class="club-card-row"><div class="club-card-row-icon">??</div><div class="club-card-row-val">${addrLine}</div></div>` : ''}
-            ${c.nip      ? `<div class="club-card-row"><div class="club-card-row-icon">??</div><div class="club-card-row-val">NIP: ${c.nip}${c.regon ? '  ·  REGON: '+c.regon : ''}</div></div>` : ''}
+            ${c.nip      ? `<div class="club-card-row"><div class="club-card-row-icon">??</div><div class="club-card-row-val">NIP: ${c.nip}${c.regon ? '  ï¿½  REGON: '+c.regon : ''}</div></div>` : ''}
             ${contact.email  ? `<div class="club-card-row"><div class="club-card-row-icon">??</div><div class="club-card-row-val">${contact.email}</div></div>` : ''}
             ${contact.phone  ? `<div class="club-card-row"><div class="club-card-row-icon">??</div><div class="club-card-row-val">${contact.phone}</div></div>` : ''}
             ${c.website  ? `<div class="club-card-row"><div class="club-card-row-icon">??</div><div class="club-card-row-val">${c.website}</div></div>` : ''}
             ${c.president ? `<div class="club-card-row"><div class="club-card-row-icon">??</div><div class="club-card-row-val">${_tt('klub.presidentLabel','Prezes')}: ${c.president}</div></div>` : ''}
-            ${!c.legalName && !addrLine && !c.nip && !contact.email && !contact.phone && canManage ? `<div class="club-card-row"><div class="club-card-row-val empty">${_tt('klub.fillDataHint','Uzupe³nij dane klubu ›')}</div></div>` : ''}
+            ${!c.legalName && !addrLine && !c.nip && !contact.email && !contact.phone && canManage ? `<div class="club-card-row"><div class="club-card-row-val empty">${_tt('klub.fillDataHint','Uzupeï¿½nij dane klubu ï¿½')}</div></div>` : ''}
             <div class="club-card-row"><div class="club-card-row-icon" style="opacity:0.4">??</div><div class="club-card-row-val" style="font-family:monospace;font-size:11px;opacity:0.5;user-select:all">${currentClubId}</div></div>
         </div>
     `;
@@ -583,12 +583,12 @@ function buildTeamCard(team) {
                 }
             </div>
             <div style="display:flex;gap:10px;margin-top:4px;">
-                <span style="font-size:16px;color:var(--szary);font-weight:600;">?? ${typeof t === 'function' ? t('klub.playersCountLabel', {count: stats.players}) : stats.players + ' zawodników'}</span>
+                <span style="font-size:16px;color:var(--szary);font-weight:600;">?? ${typeof t === 'function' ? t('klub.playersCountLabel', {count: stats.players}) : stats.players + ' zawodnikï¿½w'}</span>
             </div>
         </div>
         ${canManage
             ? `<div class="club-edit-btn" style="display:block" data-teamidx="${tid}" onclick="event.stopPropagation();openEditTeamById(this.dataset.teamidx)">${_tt('common.edit','Edytuj')}</div>`
-            : `<div class="team-card-arrow">›</div>`}
+            : `<div class="team-card-arrow">ï¿½</div>`}
     `;
     return card;
 }
@@ -600,7 +600,7 @@ function getTrainerName(userId) {
     return tr.firstName ? `${tr.firstName} ${tr.lastName || ''}`.trim() : (tr.displayName || userId);
 }
 
-/* ¦¦ Edycja danych klubu ¦¦ */
+/* ï¿½ï¿½ Edycja danych klubu ï¿½ï¿½ */
 function openClubEdit() {
     const c = clubData || {};
     const addr = c.address || {};
@@ -673,11 +673,11 @@ async function saveClub() {
         pokazKomunikat(typeof t === 'function' ? t('klub.savedOk') : '? Dane klubu zapisane');
     } catch (e) {
         console.error('? saveClub:', e);
-        alert('B³¹d zapisu: ' + e.message);
+        alert('Bï¿½ï¿½d zapisu: ' + e.message);
     }
 }
 
-/* ¦¦ Detail panel: dru¿yna ¦¦ */
+/* ï¿½ï¿½ Detail panel: druï¿½yna ï¿½ï¿½ */
 async function openTeamDetail(team) {
     selectedTeam = team;
     document.getElementById('dp-team-name').textContent = team.teamName || team.displayName || team.name || team.id;
@@ -704,9 +704,9 @@ function closeDetailPanel() {
 
 async function loadTeamPlayers(teamId) {
     const scroll = document.getElementById('dp-scroll');
-    scroll.innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('common.loading') : '£adowanie...') + '</div>';
+    scroll.innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('common.loading') : 'ï¿½adowanie...') + '</div>';
     try {
-        // Pobierz WSZYSTKICH zawodników (aktywni + zablokowani + usuniêci)
+        // Pobierz WSZYSTKICH zawodnikï¿½w (aktywni + zablokowani + usuniï¿½ci)
         const snap = await playersOfTeamQuery(teamId, currentClubId).get();
         const players = snap.docs
             .map(d => ({ id: d.id, ...d.data() }))
@@ -718,7 +718,7 @@ async function loadTeamPlayers(teamId) {
             });
         renderTeamPlayers(players);
     } catch (e) {
-        scroll.innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('klub.loadError') : 'B³¹d ³adowania zawodników.') + '</div>';
+        scroll.innerHTML = '<div class="kb-empty">' + (typeof t === 'function' ? t('klub.loadError') : 'Bï¿½ï¿½d ï¿½adowania zawodnikï¿½w.') + '</div>';
     }
 }
 
@@ -754,7 +754,7 @@ function renderTeamPlayers(players) {
     if (!players.length) {
         const empty = document.createElement('div');
         empty.className = 'kb-empty'; empty.style.padding = '16px 0';
-        empty.textContent = _tRTP('klub.noPlayersHint', 'Brak zawodników — dodaj pierwszego.');
+        empty.textContent = _tRTP('klub.noPlayersHint', 'Brak zawodnikï¿½w ï¿½ dodaj pierwszego.');
         scroll.appendChild(empty);
         return;
     }
@@ -769,7 +769,7 @@ function renderTeamPlayers(players) {
         const isBlocked  = playerStatus === 'BLOCKED';
         const isDeleted  = playerStatus === 'DELETE';
         const statusBadge = isBlocked ? ` <span style="font-size:15px;color:#FBBF24;font-weight:700;">${_tRTP('klub.blockedBadge','(zablokowany)')}</span>`
-                          : isDeleted ? ` <span style="font-size:15px;color:var(--szary);font-weight:700;">${_tRTP('klub.deletedBadge','(usuniêty)')}</span>`
+                          : isDeleted ? ` <span style="font-size:15px;color:var(--szary);font-weight:700;">${_tRTP('klub.deletedBadge','(usuniï¿½ty)')}</span>`
                           : '';
         const row  = document.createElement('div');
         row.className = 'player-row';
@@ -778,11 +778,11 @@ function renderTeamPlayers(players) {
             <div class="player-row-av"><img src="${av}" alt="${name}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=\'font-size:17px;font-weight:800;color:var(--bialy);\'>${initials}</span>'"></div>
             <div class="player-row-info">
                 <div class="player-row-name">${name}${statusBadge}</div>
-                ${p.position ? `<div class="player-row-sub">${p.position}${p.number ? ' · #'+p.number : ''}</div>` : (p.number ? `<div class="player-row-sub">#${p.number}</div>` : '')}
+                ${p.position ? `<div class="player-row-sub">${p.position}${p.number ? ' ï¿½ #'+p.number : ''}</div>` : (p.number ? `<div class="player-row-sub">#${p.number}</div>` : '')}
             </div>
             ${canManage ? `
             <div class="player-actions">
-                ${otherTeams.length > 0 && !isDeleted ? `<div class="player-action-btn player-action-edit" onclick="openTransfer(event,'${p.playerId||p.id}','${encodeURIComponent(name)}')">${_tRTP('klub.transferButton','Przenieœ')}</div>` : ''}
+                ${otherTeams.length > 0 && !isDeleted ? `<div class="player-action-btn player-action-edit" onclick="openTransfer(event,'${p.playerId||p.id}','${encodeURIComponent(name)}')">${_tRTP('klub.transferButton','Przenieï¿½')}</div>` : ''}
                 ${!isDeleted ? `<div class="player-action-btn player-action-edit" onclick="openEditPlayer(${JSON.stringify(p).replace(/"/g,'&quot;')})">??</div>` : ''}
                 ${isDeleted ? `<div class="player-action-btn player-action-edit" onclick="restorePlayer('${p.playerId||p.id}','${encodeURIComponent(name)}')" style="font-weight:900;font-size:18px;">?</div>` : ''}
             </div>` : ''}
@@ -791,10 +791,10 @@ function renderTeamPlayers(players) {
     });
 }
 
-/* ¦¦ Dodaj/edytuj dru¿ynê ¦¦ */
+/* ï¿½ï¿½ Dodaj/edytuj druï¿½ynï¿½ ï¿½ï¿½ */
 async function openAddTeam() {
     editMode = 'add';
-    document.getElementById('team-edit-title').textContent = typeof t === 'function' ? t('klub.newTeamTitle') : 'Nowa dru¿yna';
+    document.getElementById('team-edit-title').textContent = typeof t === 'function' ? t('klub.newTeamTitle') : 'Nowa druï¿½yna';
     document.getElementById('te-name').value = '';
     document.getElementById('te-delete-btn').style.display = 'none';
     await fillTrainersList(null, currentUserId);
@@ -812,7 +812,7 @@ async function openEditTeam() {
     if (!selectedTeam) return;
     editMode = 'edit';
     const teamId = selectedTeam.id || selectedTeam.teamId;
-    document.getElementById('team-edit-title').textContent = typeof t === 'function' ? t('klub.editTeamTitle') : 'Edytuj dru¿ynê';
+    document.getElementById('team-edit-title').textContent = typeof t === 'function' ? t('klub.editTeamTitle') : 'Edytuj druï¿½ynï¿½';
     document.getElementById('te-name').value = selectedTeam.teamName || selectedTeam.displayName || selectedTeam.name || '';
     document.getElementById('te-delete-btn').style.display = isAdmin ? 'block' : 'none';
     await fillTrainersList(teamId, null);
@@ -825,7 +825,7 @@ function closeTeamEdit() {
 
 async function fillTrainersList(teamId, preselectedUserId) {
     const list = document.getElementById('te-trainers-list');
-    list.innerHTML = `<div style="color:var(--szary);font-size:17px;font-weight:600;padding:8px 0;">${typeof t === 'function' ? t('common.loading') : '£adowanie...'}</div>`;
+    list.innerHTML = `<div style="color:var(--szary);font-size:17px;font-weight:600;padding:8px 0;">${typeof t === 'function' ? t('common.loading') : 'ï¿½adowanie...'}</div>`;
 
     // Per-team role z memberships (obie wersje statusu)
     let teamRoleMap = {};
@@ -840,7 +840,7 @@ async function fillTrainersList(teamId, preselectedUserId) {
                 if (seen.has(d.id)) return; seen.add(d.id);
                 const data = d.data();
                 if (['TRENER_GLOWNY','TRENER_POMOCNICZY','TRENER'].includes(data.role) && data.userId) {
-                    // Nie nadpisuj TRENER_GLOWNY jeœli ju¿ ustawiony
+                    // Nie nadpisuj TRENER_GLOWNY jeï¿½li juï¿½ ustawiony
                     if (!teamRoleMap[data.userId] || data.role === 'TRENER_GLOWNY')
                         teamRoleMap[data.userId] = data.role;
                 }
@@ -851,10 +851,10 @@ async function fillTrainersList(teamId, preselectedUserId) {
     list.innerHTML = '';
     const trainers = allTrainers.filter(t => t.userId && t.registrationStatus !== 'PENDING');
     if (!trainers.length) {
-        list.innerHTML = `<div style="color:var(--szary);font-size:17px;font-weight:600;padding:8px 0;">${typeof t === 'function' ? t('klub.noTrainersInClub') : 'Brak trenerów w klubie'}</div>`;
+        list.innerHTML = `<div style="color:var(--szary);font-size:17px;font-weight:600;padding:8px 0;">${typeof t === 'function' ? t('klub.noTrainersInClub') : 'Brak trenerï¿½w w klubie'}</div>`;
         return;
     }
-    const _mainLabel = typeof t === 'function' ? t('klub.mainTrainerLabel') : '? G³ówny';
+    const _mainLabel = typeof t === 'function' ? t('klub.mainTrainerLabel') : '? Gï¿½ï¿½wny';
     trainers.forEach(trainer => {
         const uid = trainer.userId;
         const name = trainer.displayName || trainer.firstName || uid;
@@ -878,7 +878,7 @@ async function fillTrainersList(teamId, preselectedUserId) {
         const cb = row.querySelector('.te-trainer-check');
         const gc = row.querySelector('.te-glowny-check');
         const gt = row.querySelector(`.te-glowny-txt-${uid}`);
-        // suppress "t is not defined" shadowing — trainer variable is `trainer`, not `t`
+        // suppress "t is not defined" shadowing ï¿½ trainer variable is `trainer`, not `t`
         cb.addEventListener('change', () => {
             gc.disabled = !cb.checked;
             if (gt) gt.style.color = cb.checked ? '#FBBF24' : 'var(--szary)';
@@ -892,9 +892,9 @@ async function fillTrainersList(teamId, preselectedUserId) {
 async function saveTeam() {
     if (!requireWriteAccess()) return;
     const name = document.getElementById('te-name').value.trim();
-    if (!name) { alert('Podaj nazwê dru¿yny'); return; }
+    if (!name) { alert('Podaj nazwï¿½ druï¿½yny'); return; }
 
-    // Zbierz zaznaczonych trenerów z checkboxów
+    // Zbierz zaznaczonych trenerï¿½w z checkboxï¿½w
     const selectedTrainers = [];
     document.querySelectorAll('.te-trainer-check').forEach(cb => {
         if (cb.checked) {
@@ -905,14 +905,14 @@ async function saveTeam() {
     });
 
     if (!selectedTrainers.length) { alert('Wybierz co najmniej jednego trenera'); return; }
-    if (!selectedTrainers.some(t => t.isGlowny)) { alert('Zaznacz gwiazdkê (? G³ówny) przy jednym z trenerów'); return; }
+    if (!selectedTrainers.some(t => t.isGlowny)) { alert('Zaznacz gwiazdkï¿½ (? Gï¿½ï¿½wny) przy jednym z trenerï¿½w'); return; }
 
     try {
         const now     = new Date().toISOString();
         const dateStr = now.slice(0,10).replace(/-/g,'');
 
         if (editMode === 'add') {
-            // ¦¦ Nowa dru¿yna ¦¦
+            // ï¿½ï¿½ Nowa druï¿½yna ï¿½ï¿½
             const teamId = 'team_' + dateStr + '_' + Math.floor(Math.random() * 9000000 + 1000000);
             await db.collection('teams').doc(teamId).set({
                 teamId, clubId: currentClubId, clubName: clubData?.clubName || '',
@@ -920,7 +920,7 @@ async function saveTeam() {
                 createdBy: currentUserId, createdAt: now
             });
 
-            // Membership dla twórcy (jeœli nie na liœcie)
+            // Membership dla twï¿½rcy (jeï¿½li nie na liï¿½cie)
             const creatorInList = selectedTrainers.some(t => t.userId === currentUserId);
             if (!creatorInList) {
                 const existingMbrId = currentMembership?.membershipId;
@@ -940,10 +940,10 @@ async function saveTeam() {
                 }
             }
 
-            // Memberships dla wybranych trenerów
+            // Memberships dla wybranych trenerï¿½w
             for (const { userId, isGlowny } of selectedTrainers) {
                 const role = isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY';
-                // Jeœli to twórca i mia³ stary membership bez teamId — ju¿ zaktualizowany
+                // Jeï¿½li to twï¿½rca i miaï¿½ stary membership bez teamId ï¿½ juï¿½ zaktualizowany
                 const isCreatorUpdated = userId === currentUserId && !creatorInList && currentMembership?.teamId === teamId;
                 if (!isCreatorUpdated) {
                     const mbrId = makeMbrId(role);
@@ -956,10 +956,10 @@ async function saveTeam() {
             }
 
         } else {
-            // ¦¦ Edycja istniej¹cej dru¿yny ¦¦
+            // ï¿½ï¿½ Edycja istniejï¿½cej druï¿½yny ï¿½ï¿½
             const teamId = selectedTeam.id || selectedTeam.teamId;
 
-            // Oblicz zmiany trenerów — obie wersje statusu (ACTIVE i active)
+            // Oblicz zmiany trenerï¿½w ï¿½ obie wersje statusu (ACTIVE i active)
             const [_prevA, _prevB] = await Promise.all([
                 db.collection('memberships').where('teamId','==',teamId).where('clubId','==',currentClubId).where('status','==','ACTIVE').get(),
                 db.collection('memberships').where('teamId','==',teamId).where('clubId','==',currentClubId).where('status','==','active').get()
@@ -985,7 +985,7 @@ async function saveTeam() {
                 return [...a.docs,...b.docs].filter(d => { if(seen.has(d.id))return false; seen.add(d.id); return true; });
             }
 
-            // Dodaj/reaktywuj — upsert (nie tworzy duplikatu)
+            // Dodaj/reaktywuj ï¿½ upsert (nie tworzy duplikatu)
             for (const { userId, isGlowny } of toAdd) {
                 const role = isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY';
                 const existing = await getActiveMbrs(userId);
@@ -993,7 +993,7 @@ async function saveTeam() {
                     await existing[0].ref.update({ role, trainerRole: role, status: 'ACTIVE' });
                     for (const dup of existing.slice(1)) await dup.ref.delete();
                 } else {
-                    // SprawdŸ te¿ REMOVED — reaktywuj zamiast tworzyæ nowe
+                    // Sprawdï¿½ teï¿½ REMOVED ï¿½ reaktywuj zamiast tworzyï¿½ nowe
                     const removedSnap = await db.collection('memberships')
                         .where('userId','==',userId).where('teamId','==',teamId).where('status','==','REMOVED').limit(1).get();
                     if (!removedSnap.empty) {
@@ -1009,7 +1009,7 @@ async function saveTeam() {
                 }
             }
 
-            // Usuñ przypisania — wszystkie aktywne memberships danego usera
+            // Usuï¿½ przypisania ï¿½ wszystkie aktywne memberships danego usera
             for (const userId of toRemove) {
                 const existing = await getActiveMbrs(userId);
                 for (const doc of existing) await doc.ref.update({ status: 'REMOVED', removedAt: now, removedBy: currentUserId });
@@ -1021,7 +1021,7 @@ async function saveTeam() {
                 ]);
                 const hasOther = [...otherA.docs, ...otherB.docs].some(d => d.data().teamId && d.data().teamId !== teamId);
                 if (!hasOther) {
-                    // Brak innych dru¿yn — utwórz club-level membership (teamId: null)
+                    // Brak innych druï¿½yn ï¿½ utwï¿½rz club-level membership (teamId: null)
                     const clubMbrId = makeMbrId('TRENER_POMOCNICZY');
                     await db.collection('memberships').doc(clubMbrId).set(buildMembership({
                         membershipId: clubMbrId, userId, teamId: null,
@@ -1031,7 +1031,7 @@ async function saveTeam() {
                 }
             }
 
-            // Zaktualizuj rolê — pierwsze aktywne, usuñ duplikaty
+            // Zaktualizuj rolï¿½ ï¿½ pierwsze aktywne, usuï¿½ duplikaty
             for (const { userId, isGlowny } of toUpdate) {
                 const role = isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY';
                 const existing = await getActiveMbrs(userId);
@@ -1050,7 +1050,7 @@ async function saveTeam() {
         loadCtxOverlay(currentUser, currentMembership, currentTeam);
     } catch (e) {
         console.error('? saveTeam:', e);
-        alert('B³¹d zapisu: ' + e.message);
+        alert('Bï¿½ï¿½d zapisu: ' + e.message);
     }
 }
 
@@ -1059,18 +1059,18 @@ async function deleteTeam() {
     const teamId = selectedTeam.id || selectedTeam.teamId;
     const name   = selectedTeam.teamName || selectedTeam.name || '';
 
-    // SprawdŸ czy to nie jest ostatnia dru¿yna w klubie
+    // Sprawdï¿½ czy to nie jest ostatnia druï¿½yna w klubie
     let clubTeams = [];
     try {
         const clubTeamsSnap = await db.collection('teams').where('clubId', '==', currentClubId).get();
         clubTeams = clubTeamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (e) {}
     if (clubTeams.length <= 1) {
-        await showConfirmSheet(typeof t === 'function' ? t('klub.deleteLastTeamError') : 'Nie mo¿esz usun¹æ jedynej dru¿yny w klubie. Najpierw dodaj now¹ dru¿ynê.', { okOnly: true });
+        await showConfirmSheet(typeof t === 'function' ? t('klub.deleteLastTeamError') : 'Nie moï¿½esz usunï¿½ï¿½ jedynej druï¿½yny w klubie. Najpierw dodaj nowï¿½ druï¿½ynï¿½.', { okOnly: true });
         return;
     }
 
-    // Policz zawodników w dru¿ynie
+    // Policz zawodnikï¿½w w druï¿½ynie
     let teamPlayers = [];
     try {
         const playersSnap = await playersOfTeamQuery(teamId, currentClubId).get();
@@ -1081,8 +1081,8 @@ async function deleteTeam() {
 
     const _tt = (key, fb) => typeof t === 'function' ? t(key, { name, count: teamPlayers.length }) : fb;
     const msg = teamPlayers.length > 0
-        ? _tt('klub.deleteTeamWithPlayersConfirm', `W dru¿ynie "${name}" s¹ zawodnicy (${teamPlayers.length}).\n\nUsuniêcie spowoduje utratê danych — wszyscy zawodnicy, rodzice i kibice tej dru¿yny utrac¹ dostêp do aplikacji.\n\nCzy na pewno usun¹æ?`)
-        : _tt('klub.deleteTeamConfirm', `Usun¹æ dru¿ynê "${name}"?`);
+        ? _tt('klub.deleteTeamWithPlayersConfirm', `W druï¿½ynie "${name}" sï¿½ zawodnicy (${teamPlayers.length}).\n\nUsuniï¿½cie spowoduje utratï¿½ danych ï¿½ wszyscy zawodnicy, rodzice i kibice tej druï¿½yny utracï¿½ dostï¿½p do aplikacji.\n\nCzy na pewno usunï¿½ï¿½?`)
+        : _tt('klub.deleteTeamConfirm', `Usunï¿½ï¿½ druï¿½ynï¿½ "${name}"?`);
 
     if (!await showConfirmSheet(msg)) return;
 
@@ -1090,13 +1090,13 @@ async function deleteTeam() {
         const now = new Date().toISOString();
         const batch = db.batch();
 
-        // 1. Memberships › status DELETE
+        // 1. Memberships ï¿½ status DELETE
         const mbrSnap = await db.collection('memberships').where('teamId', '==', teamId).get();
         mbrSnap.docs.forEach(d => batch.update(d.ref, {
             status: 'DELETE', deletedAt: now, deletedBy: currentUserId
         }));
 
-        // 2. Zawodnicy — oznacz status DELETE na wpisie dru¿yny
+        // 2. Zawodnicy ï¿½ oznacz status DELETE na wpisie druï¿½yny
         for (const player of teamPlayers) {
             const newTeams = (player.teams || []).map(t =>
                 t.teamId === teamId ? { ...t, status: 'DELETE' } : t
@@ -1106,13 +1106,13 @@ async function deleteTeam() {
 
         await batch.commit();
 
-        // 3. Usuñ dokument dru¿yny
+        // 3. Usuï¿½ dokument druï¿½yny
         await db.collection('teams').doc(teamId).delete();
 
         closeTeamEdit();
         closeDetailPanel();
 
-        // Prze³¹cz na inn¹ dru¿ynê klubu i prze³aduj
+        // Przeï¿½ï¿½cz na innï¿½ druï¿½ynï¿½ klubu i przeï¿½aduj
         const nextTeam = clubTeams.find(t => (t.id || t.teamId) !== teamId);
         if (nextTeam) {
             const nextTeamId = nextTeam.id || nextTeam.teamId;
@@ -1122,17 +1122,17 @@ async function deleteTeam() {
             if (nextMbr) {
                 await switchTeam(nextMbr.membershipId || nextMbr.id, nextName);
             } else {
-                // Admin bez membership dla tej dru¿yny — ustaw teamId w localStorage i prze³aduj
+                // Admin bez membership dla tej druï¿½yny ï¿½ ustaw teamId w localStorage i przeï¿½aduj
                 localStorage.setItem('selectedTeamId', nextTeamId);
                 window.location.reload();
             }
         } else {
             await loadAll();
         }
-    } catch (e) { alert('B³¹d: ' + e.message); }
+    } catch (e) { alert('Bï¿½ï¿½d: ' + e.message); }
 }
 
-/* ¦¦ Transfer zawodnika ¦¦ */
+/* ï¿½ï¿½ Transfer zawodnika ï¿½ï¿½ */
 function openTransfer(evt, playerId, encodedName) {
     evt.stopPropagation();
     const name = decodeURIComponent(encodedName);
@@ -1141,7 +1141,7 @@ function openTransfer(evt, playerId, encodedName) {
     transferToTeamId = null;
 
     document.getElementById('tp-player-name').textContent = name;
-    document.getElementById('tp-player-from').textContent = typeof t === 'function' ? t('klub.currentTeamLabel', {name: selectedTeam?.teamName || selectedTeam?.name || ''}) : `Aktualna dru¿yna: ${selectedTeam?.teamName || selectedTeam?.name || ''}`;
+    document.getElementById('tp-player-from').textContent = typeof t === 'function' ? t('klub.currentTeamLabel', {name: selectedTeam?.teamName || selectedTeam?.name || ''}) : `Aktualna druï¿½yna: ${selectedTeam?.teamName || selectedTeam?.name || ''}`;
 
     const list = document.getElementById('tp-teams-list');
     list.innerHTML = '';
@@ -1173,7 +1173,7 @@ async function confirmTransfer() {
     if (!requireWriteAccess()) return;
 
     const btn = document.getElementById('tp-confirm-btn');
-    btn.disabled = true; btn.textContent = typeof t === 'function' ? t('klub.transferring') : 'Przenoszê...';
+    btn.disabled = true; btn.textContent = typeof t === 'function' ? t('klub.transferring') : 'Przenoszï¿½...';
 
     try {
         const now        = new Date().toISOString();
@@ -1207,7 +1207,7 @@ async function confirmTransfer() {
             }
         }
 
-        // 2. Utwórz nowe membership ZAWODNIKA
+        // 2. Utwï¿½rz nowe membership ZAWODNIKA
         const newMbrId = makeMbrId('ZAWODNIK');
         await db.collection('memberships').doc(newMbrId).set(buildMembership({
             membershipId: newMbrId, userId: oldUserId, teamId: transferToTeamId,
@@ -1216,7 +1216,7 @@ async function confirmTransfer() {
             ...(oldTrialEndsAt ? { trialEndsAt: oldTrialEndsAt } : {})
         }));
 
-        // 3. Przenieœ RODZIC i KIBIC
+        // 3. Przenieï¿½ RODZIC i KIBIC
         // Dwa osobne queries zamiast 'in' (unikamy composite index)
         const [famSnapA, famSnapB] = await Promise.all([
             db.collection('memberships').where('teamId','==',fromTeamId).where('playerId','==',playerId).where('status','==','active').get(),
@@ -1233,7 +1233,7 @@ async function confirmTransfer() {
             const parentUserId = data.userId;
             console.log(`?? przetwarzam: ${doc.id} | role: ${data.role} | userId: ${parentUserId}`);
 
-            // SprawdŸ czy ten rodzic/kibic ma INNE dzieci nadal w fromTeamId
+            // Sprawdï¿½ czy ten rodzic/kibic ma INNE dzieci nadal w fromTeamId
             const otherChildrenSnap = await db.collection('memberships')
                 .where('userId','==',parentUserId).where('teamId','==',fromTeamId).get();
             const hasOtherChildren = otherChildrenSnap.docs.some(d =>
@@ -1254,17 +1254,17 @@ async function confirmTransfer() {
                 } else {
                     await doc.ref.update({ status: 'INACTIVE', leftAt: now });
                 }
-                console.log(`   ? stare membership › INACTIVE`);
+                console.log(`   ? stare membership ï¿½ INACTIVE`);
             } else {
-                console.log(`   ? stare membership zostawione ACTIVE (inne dzieci w dru¿ynie)`);
+                console.log(`   ? stare membership zostawione ACTIVE (inne dzieci w druï¿½ynie)`);
             }
 
-            // Nie twórz duplikatu jeœli ju¿ ma membership dla nowej dru¿yny
+            // Nie twï¿½rz duplikatu jeï¿½li juï¿½ ma membership dla nowej druï¿½yny
             const existingNewSnap = await db.collection('memberships')
                 .where('userId','==',parentUserId).where('teamId','==',transferToTeamId)
                 .where('role','==',data.role).get();
             if (!existingNewSnap.empty) {
-                console.log(`   ?? ju¿ ma membership dla nowej dru¿yny — pomijam`);
+                console.log(`   ?? juï¿½ ma membership dla nowej druï¿½yny ï¿½ pomijam`);
                 if (parentUserId) familyUserIds.add(parentUserId);
                 continue;
             }
@@ -1288,7 +1288,7 @@ async function confirmTransfer() {
             if (data.role === 'RODZIC' && parentUserId && typeof tryAssignClubSlot === 'function') {
                 try { const newFamDoc = await famMbrRef.get(); await tryAssignClubSlot(newFamDoc, currentClubId); } catch(e) { /* slot przydzieli CF */ }
             }
-            console.log(`   ? nowe membership › ${famMbrId} (${data.role} w ${transferToTeamId})`);
+            console.log(`   ? nowe membership ï¿½ ${famMbrId} (${data.role} w ${transferToTeamId})`);
             if (parentUserId) familyUserIds.add(parentUserId);
         }
 
@@ -1310,11 +1310,11 @@ async function confirmTransfer() {
         // 4. Powiadomienia
         const fromName = transferFromTeam.teamName || transferFromTeam.name || fromTeamId;
         const toName   = toTeam?.teamName || toTeam?.name || transferToTeamId;
-        // Zawodnik (w³asne konto) — tylko jeœli to nie jest userId rodzica/kibica
+        // Zawodnik (wï¿½asne konto) ï¿½ tylko jeï¿½li to nie jest userId rodzica/kibica
         if (oldUserId && !familyUserIds.has(oldUserId)) {
             await createNotification({ userId: oldUserId, teamId: transferToTeamId, type: 'INFO', priority: 'HIGH', title: 'Zmiana dru\u017Cyny', body: `Zosta\u0142e\u015B przeniesiony z "${fromName}" do "${toName}".` });
         }
-        // Rodzic / kibic — osobna treœæ
+        // Rodzic / kibic ï¿½ osobna treï¿½ï¿½
         for (const famUserId of familyUserIds) {
             await createNotification({ userId: famUserId, teamId: transferToTeamId, type: 'INFO', priority: 'NORMAL', title: 'Zmiana dru\u017Cyny', body: `${name} zosta\u0142 przeniesiony do "${toName}".` });
         }
@@ -1328,13 +1328,13 @@ async function confirmTransfer() {
         pokazKomunikat(`? ${name} przeniesiony do "${toName}"`);
     } catch (e) {
         console.error('? confirmTransfer:', e);
-        alert('B³¹d transferu: ' + e.message);
+        alert('Bï¿½ï¿½d transferu: ' + e.message);
         btn.disabled = false;
-        btn.textContent = typeof t === 'function' ? t('klub.confirmTransferButton') : 'PotwierdŸ przeniesienie';
+        btn.textContent = typeof t === 'function' ? t('klub.confirmTransferButton') : 'Potwierdï¿½ przeniesienie';
     }
 }
 
-/* ¦¦ Zarz¹dzanie zawodnikami ¦¦ */
+/* ï¿½ï¿½ Zarzï¿½dzanie zawodnikami ï¿½ï¿½ */
 let playerEditMode = 'add';
 let selectedPlayer = null;
 
@@ -1373,9 +1373,9 @@ async function savePlayer() {
     const position = document.getElementById('ppe-position').value.trim();
     const number = parseInt(document.getElementById('ppe-number').value) || null;
     const fullName = `${firstName} ${lastName}`.trim();
-    if (!firstName) { alert('Podaj imiê zawodnika'); return; }
+    if (!firstName) { alert('Podaj imiï¿½ zawodnika'); return; }
     if (!lastName)  { alert('Podaj nazwisko zawodnika'); return; }
-    if (!birth)     { alert('Podaj datê urodzenia'); return; }
+    if (!birth)     { alert('Podaj datï¿½ urodzenia'); return; }
 
     const teamId = selectedTeam?.id || selectedTeam?.teamId;
     const now = new Date().toISOString();
@@ -1400,12 +1400,12 @@ async function savePlayer() {
         }
         closePlayerEdit();
         await loadTeamPlayers(teamId);
-    } catch (e) { alert('B³¹d zapisu: ' + e.message); console.error(e); }
+    } catch (e) { alert('Bï¿½ï¿½d zapisu: ' + e.message); console.error(e); }
 }
 
 async function toggleBlockPlayer(playerId, encodedName, isBlocked) {
     const name = decodeURIComponent(encodedName);
-    const action = isBlocked ? 'odblokowaæ' : 'zablokowaæ';
+    const action = isBlocked ? 'odblokowaï¿½' : 'zablokowaï¿½';
     if (!await showConfirmSheet(`Czy na pewno chcesz ${action} zawodnika ${name}?`)) return;
     const teamId = selectedTeam?.id || selectedTeam?.teamId;
     try {
@@ -1416,12 +1416,12 @@ async function toggleBlockPlayer(playerId, encodedName, isBlocked) {
         );
         await db.collection('players').doc(playerId).update({ teams });
         await loadTeamPlayers(teamId);
-    } catch (e) { alert('B³¹d: ' + e.message); }
+    } catch (e) { alert('Bï¿½ï¿½d: ' + e.message); }
 }
 
 async function deletePlayer(playerId, encodedName) {
     const name = decodeURIComponent(encodedName);
-    if (!await showConfirmSheet(`Usun¹æ ${name} z dru¿yny?\n\nZawodnik straci dostêp. Dane historyczne pozostan¹.`)) return;
+    if (!await showConfirmSheet(`Usunï¿½ï¿½ ${name} z druï¿½yny?\n\nZawodnik straci dostï¿½p. Dane historyczne pozostanï¿½.`)) return;
     const teamId = selectedTeam?.id || selectedTeam?.teamId;
     const now = new Date().toISOString();
     try {
@@ -1437,12 +1437,12 @@ async function deletePlayer(playerId, encodedName) {
         ]);
         for (const d of [...snapA.docs, ...snapB.docs]) await d.ref.update({ status: 'DELETE', deletedAt: now });
         await loadTeamPlayers(teamId);
-    } catch (e) { alert('B³¹d: ' + e.message); }
+    } catch (e) { alert('Bï¿½ï¿½d: ' + e.message); }
 }
 
 async function restorePlayer(playerId, encodedName) {
     const name = decodeURIComponent(encodedName);
-    if (!await showConfirmSheet(`Przywróciæ ${name} do dru¿yny?`)) return;
+    if (!await showConfirmSheet(`Przywrï¿½ciï¿½ ${name} do druï¿½yny?`)) return;
     const teamId = selectedTeam?.id || selectedTeam?.teamId;
     const now = new Date().toISOString();
     try {
@@ -1458,7 +1458,7 @@ async function restorePlayer(playerId, encodedName) {
         ]);
         for (const d of [...snapA.docs, ...snapB.docs]) await d.ref.update({ status: 'ACTIVE', restoredAt: now });
         await loadTeamPlayers(teamId);
-    } catch (e) { alert('B³¹d: ' + e.message); }
+    } catch (e) { alert('Bï¿½ï¿½d: ' + e.message); }
 }
 </script>
 </body>
