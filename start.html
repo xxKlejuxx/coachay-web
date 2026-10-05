@@ -2624,8 +2624,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             let deletedIds = [evId];
 
             if (scope === 'future' && ev.seriesId) {
-                // date >= ev.date, włącznie z klikniętym — wzorzec 1:1 z mobile (sync #0097)
-                const future = await getFutureSeriesEvents(ev.seriesId, ev.date);
+                // date >= ev.date, włącznie z klikniętym — wzorzec 1:1 z mobile (sync #0097/#0099)
+                const future = await getFutureSeriesEvents(ev.seriesId, ev.date, ev.teamId);
                 deletedIds = future.map(e => e.eventId || e.id);
                 if (!deletedIds.length) deletedIds = [evId];
                 for (const id of deletedIds) {
@@ -3119,8 +3119,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 await db.collection('events').doc(_editingEventId).update(updateDataThis);
 
                 if (editScope === 'future' && _editingEventSeriesId) {
-                    // Ścisłe > — kliknięty event już zapisany wyżej osobno (wzorzec 1:1 z mobile, sync #0097)
-                    const future = await getFutureSeriesEvents(_editingEventSeriesId, _editingEventOrigDate);
+                    // Ścisłe > — kliknięty event już zapisany wyżej osobno (wzorzec 1:1 z mobile, sync #0097/#0099)
+                    const future = await getFutureSeriesEvents(_editingEventSeriesId, _editingEventOrigDate, _activeTeamId);
                     for (const fe of future) {
                         if (fe.date <= _editingEventOrigDate) continue;
                         const feId = fe.eventId || fe.id;

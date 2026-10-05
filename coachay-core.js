@@ -365,18 +365,22 @@ function showConfirmSheet(message, opts = {}) {
 }
 
 // Pobierz przyszłe eventy serii cyklicznej (date >= fromDate, włącznie), bez względu na to,
-// czy są w aktualnie wczytanym zakresie kalendarza. Wymaga indeksu Firestore (seriesId ASC, date ASC).
-// Wzorzec 1:1 z mobile (sync #0097) — używane przy "Ten i następne" (usuń/edytuj serię).
-async function getFutureSeriesEvents(seriesId, fromDate) {
-    if (!db || !seriesId) return [];
+// czy są w aktualnie wczytanym zakresie kalendarza.
+// Filtr po teamId+seriesId (dwie równości — nie wymaga indeksu złożonego); data odcinana w JS,
+// bo reguła firestore.rules dla events wymaga teamId w zapytaniu (inaczej permission-denied
+// na całym query). Poprawka z mobile (sync #0099) po buggu z #0097/#0098.
+async function getFutureSeriesEvents(seriesId, fromDate, teamId) {
+    if (!db || !seriesId || !teamId) return [];
     try {
         const snap = await db.collection('events')
+            .where('teamId', '==', teamId)
             .where('seriesId', '==', seriesId)
-            .where('date', '>=', fromDate)
             .get();
-        return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(e => e.status !== 'DELETE');
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .filter(e => e.status !== 'DELETE' && String(e.date || '') >= fromDate);
     } catch (e) {
         console.error('❌ getFutureSeriesEvents:', e);
+        alert('Błąd pobierania serii wydarzeń: ' + e.message);
         return [];
     }
 }
