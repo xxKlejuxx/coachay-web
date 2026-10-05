@@ -2605,20 +2605,43 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
     async function calDeleteEvent() {
         if (!calDetailEvent) return;
-        if (!confirm(t('eventDetail.deleteConfirm') || 'Usunąć to wydarzenie?')) return;
         const ev = calDetailEvent;
         const evId = ev.eventId || ev.id;
+
+        // sync #0097: event z serii cyklicznej — zapytaj "tylko ten" / "ten i następne", analogicznie do mobile
+        let scope = 'single';
+        if (ev.seriesId) {
+            const choice = await showSeriesScopeSheet('To wydarzenie jest częścią cyklu. Co usunąć?');
+            if (!choice) return;
+            scope = choice;
+        } else {
+            if (!confirm(t('eventDetail.deleteConfirm') || 'Usunąć to wydarzenie?')) return;
+        }
+
         try {
-            await db.collection('events').doc(evId).update({
-                status: 'DELETE',
-                deletedAt: new Date().toISOString(),
-                deletedBy: getCurrentUserId(),
-            });
-            calAllEvents = calAllEvents.filter(e => (e.eventId||e.id) !== evId);
+            const deletedAt = new Date().toISOString();
+            const deletedBy = getCurrentUserId();
+            let deletedIds = [evId];
+
+            if (scope === 'future' && ev.seriesId) {
+                // date >= ev.date, włącznie z klikniętym — wzorzec 1:1 z mobile (sync #0097)
+                const future = await getFutureSeriesEvents(ev.seriesId, ev.date);
+                deletedIds = future.map(e => e.eventId || e.id);
+                if (!deletedIds.length) deletedIds = [evId];
+                for (const id of deletedIds) {
+                    await db.collection('events').doc(id).update({ status: 'DELETE', deletedAt, deletedBy });
+                }
+            } else {
+                await db.collection('events').doc(evId).update({ status: 'DELETE', deletedAt, deletedBy });
+            }
+
+            calAllEvents = calAllEvents.filter(e => !deletedIds.includes(e.eventId || e.id));
             closeCalDetailPanel();
             renderCalGrid();
             const d = calSelectedDate;
             if (d) renderDayInspector(d);
+            if (typeof clearTeamEventsCache === 'function') clearTeamEventsCache(_activeTeamId);
+            await refreshDashboard();
         } catch(e) { console.error('❌ calDeleteEvent', e); alert('Błąd: ' + e.message); }
     }
 
@@ -2744,6 +2767,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     let _editingEventId = null;
+    let _editingEventSeriesId = null; // sync #0097: seriesId edytowanego eventu (null = event pojedynczy)
+    let _editingEventOrigDate = null; // sync #0097: oryginalna data edytowanego eventu — próg dla "ten i następne"
 
     function _setEventPanelMode(editing) {
         const panel = document.getElementById('panel-add-event');
@@ -2759,12 +2784,16 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
     function closeAddEventPanel() {
         _editingEventId = null;
+        _editingEventSeriesId = null;
+        _editingEventOrigDate = null;
         _setEventPanelMode(false);
         closeSlidePanel('panel-add-event');
     }
 
     function openAddEventPanel() {
         _editingEventId = null;
+        _editingEventSeriesId = null;
+        _editingEventOrigDate = null;
         _setEventPanelMode(false);
         openSlidePanel('panel-add-event');
         const todayVal = calSelectedDate || getLocalDateStr(new Date());
@@ -2785,6 +2814,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             if (!doc.exists) { alert('Wydarzenie nie istnieje.'); return; }
             const event = doc.data();
             _editingEventId = evId;
+            _editingEventSeriesId = event.seriesId || null;
+            _editingEventOrigDate = event.date || null;
 
             closeCalDetailPanel();
             openSlidePanel('panel-add-event');
@@ -3058,9 +3089,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         if (_editingEventId) {
             const item = dates[0];
-            const updateData = {
+            // Pola bez 'date' — przy "ten i następne" (sync #0097) stosujemy je też do przyszłych
+            // eventów serii, ale każdy zachowuje swoją własną datę (nie przesuwamy dat w serii).
+            const baseUpdate = {
                 type, priority, title: title || topicTitle, topicId, description: desc,
-                date:       item.date,
                 timeFrom, timeTo,
                 location:   { venueName: venue, address },
                 scope, visibility: Array.from(document.querySelectorAll('#ev-vis-grid .vis-chip.selected')).map(c => c.dataset.vis),
@@ -3074,8 +3106,28 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 updatedAt: new Date().toISOString(),
                 updatedBy: createdBy
             };
+            const updateDataThis = { ...baseUpdate, date: item.date };
+
+            let editScope = 'single';
+            if (_editingEventSeriesId) {
+                const choice = await showSeriesScopeSheet('To wydarzenie jest częścią cyklu. Zapisać zmiany dla...?');
+                if (!choice) return;
+                editScope = choice;
+            }
+
             try {
-                await db.collection('events').doc(_editingEventId).update(updateData);
+                await db.collection('events').doc(_editingEventId).update(updateDataThis);
+
+                if (editScope === 'future' && _editingEventSeriesId) {
+                    // Ścisłe > — kliknięty event już zapisany wyżej osobno (wzorzec 1:1 z mobile, sync #0097)
+                    const future = await getFutureSeriesEvents(_editingEventSeriesId, _editingEventOrigDate);
+                    for (const fe of future) {
+                        if (fe.date <= _editingEventOrigDate) continue;
+                        const feId = fe.eventId || fe.id;
+                        await db.collection('events').doc(feId).update(baseUpdate);
+                    }
+                }
+
                 closeSlidePanel('panel-add-event');
                 _resetAddEventForm();
                 if (typeof clearTeamEventsCache === 'function') clearTeamEventsCache(_activeTeamId);

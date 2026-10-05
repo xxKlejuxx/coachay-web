@@ -364,6 +364,81 @@ function showConfirmSheet(message, opts = {}) {
     });
 }
 
+// Pobierz przyszłe eventy serii cyklicznej (date >= fromDate, włącznie), bez względu na to,
+// czy są w aktualnie wczytanym zakresie kalendarza. Wymaga indeksu Firestore (seriesId ASC, date ASC).
+// Wzorzec 1:1 z mobile (sync #0097) — używane przy "Ten i następne" (usuń/edytuj serię).
+async function getFutureSeriesEvents(seriesId, fromDate) {
+    if (!db || !seriesId) return [];
+    try {
+        const snap = await db.collection('events')
+            .where('seriesId', '==', seriesId)
+            .where('date', '>=', fromDate)
+            .get();
+        return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(e => e.status !== 'DELETE');
+    } catch (e) {
+        console.error('❌ getFutureSeriesEvents:', e);
+        return [];
+    }
+}
+
+// Sheet wyboru zakresu operacji na evencie z serii: "Tylko ten" / "Ten i następne" / Anuluj.
+// Zwraca Promise<'single'|'future'|null> (null = Anuluj). Styl współdzielony z showConfirmSheet.
+function showSeriesScopeSheet(message) {
+    return new Promise((resolve) => {
+        if (!document.getElementById('_csStyle')) {
+            const style = document.createElement('style');
+            style.id = '_csStyle';
+            style.textContent = `
+                .cs-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:flex; align-items:flex-end; justify-content:center; }
+                .cs-sheet { background:var(--tlo-karta,#161616); border:1px solid var(--border,#272727); border-radius:20px 20px 0 0; padding:24px 20px calc(20px + env(safe-area-inset-bottom)); width:100%; max-width:480px; box-shadow:0 -10px 40px rgba(0,0,0,0.5); }
+                .cs-msg { color:var(--bialy,#fff); font-size:15px; font-weight:600; line-height:1.5; white-space:pre-line; margin-bottom:20px; }
+                .cs-btns { display:flex; gap:10px; }
+                .cs-btn { flex:1; padding:14px; border-radius:12px; font-weight:700; font-size:14px; border:none; cursor:pointer; font-family:inherit; }
+                .cs-btn-cancel { background:var(--tlo-karta2,#1E1E1E); color:var(--szary-j,#AAAAAA); }
+                .cs-btn-ok { background:var(--akcent,#3B82F6); color:#fff; }
+                .cs-btn-danger { background:#EF4444; color:#fff; }
+            `;
+            document.head.appendChild(style);
+        }
+        const overlay = document.createElement('div');
+        overlay.className = 'cs-overlay';
+        const sheet = document.createElement('div');
+        sheet.className = 'cs-sheet';
+        const msgEl = document.createElement('div');
+        msgEl.className = 'cs-msg';
+        msgEl.textContent = message;
+        const btns = document.createElement('div');
+        btns.className = 'cs-btns';
+        btns.style.flexDirection = 'column'; // 3 przyciski pod sobą (nadpisuje row z cs-btns dla 2-przyciskowego showConfirmSheet)
+
+        const singleBtn = document.createElement('button');
+        singleBtn.className = 'cs-btn cs-btn-ok';
+        singleBtn.textContent = 'Tylko ten';
+        singleBtn.onclick = () => close('single');
+
+        const futureBtn = document.createElement('button');
+        futureBtn.className = 'cs-btn cs-btn-danger';
+        futureBtn.textContent = 'Ten i następne';
+        futureBtn.onclick = () => close('future');
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'cs-btn cs-btn-cancel';
+        cancelBtn.textContent = 'Anuluj';
+        cancelBtn.onclick = () => close(null);
+
+        btns.appendChild(singleBtn);
+        btns.appendChild(futureBtn);
+        btns.appendChild(cancelBtn);
+        sheet.appendChild(msgEl);
+        sheet.appendChild(btns);
+        overlay.appendChild(sheet);
+        document.body.appendChild(overlay);
+
+        function close(result) { overlay.remove(); resolve(result); }
+        overlay.onclick = (e) => { if (e.target === overlay) close(null); };
+    });
+}
+
 // Wyloguj (wyczyść tryb demo i wróć do index.html)
 async function logout() {
     localStorage.removeItem('demoMode');
