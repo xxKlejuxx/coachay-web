@@ -555,7 +555,7 @@ function buildClubCard() {
             ${c.website  ? `<div class="club-card-row"><div class="club-card-row-icon">🌐</div><div class="club-card-row-val">${c.website}</div></div>` : ''}
             ${c.president ? `<div class="club-card-row"><div class="club-card-row-icon">👔</div><div class="club-card-row-val">${_tt('klub.presidentLabel','Prezes')}: ${c.president}</div></div>` : ''}
             ${!c.legalName && !addrLine && !c.nip && !contact.email && !contact.phone && canManage ? `<div class="club-card-row"><div class="club-card-row-val empty">${_tt('klub.fillDataHint','Uzupełnij dane klubu →')}</div></div>` : ''}
-            <div class="club-card-row"><div class="club-card-row-icon" style="opacity:0.4">ℹ️</div><div class="club-card-row-val" style="font-family:monospace;font-size:11px;opacity:0.5;user-select:all">${currentClubId}</div></div>
+            <div class="club-card-row"><div class="club-card-row-icon" style="opacity:0.4">ℹ️</div><div class="club-card-row-val" style="font-family:monospace;font-size:22px;opacity:0.5;user-select:all">${currentClubId}</div></div>
         </div>
     `;
     return div;

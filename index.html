@@ -1143,7 +1143,7 @@ function esc(s) {
 
   <div class="auth-drawer-top">
     <div class="auth-drawer-logo">COACHAY</div>
-    <button class="auth-drawer-close" onclick="closeAuthPanel()">?</button>
+    <button class="auth-drawer-close" onclick="closeAuthPanel()">✕</button>
   </div>
 
   <div class="auth-drawer-scroll" id="auth-drawer-scroll">
@@ -1672,7 +1672,7 @@ function toggleRodzicConsent() {
     var cb  = document.getElementById('rodzic-cb');
     var row = document.getElementById('rodzic-consent-row');
     var btn = document.getElementById('reg-join-btn');
-    if (cb) { cb.textContent = window._rodzicConsentChecked ? '?' : ''; cb.style.background = window._rodzicConsentChecked ? 'var(--akcent)' : ''; cb.style.borderColor = window._rodzicConsentChecked ? 'var(--akcent)' : ''; }
+    if (cb) { cb.textContent = window._rodzicConsentChecked ? '✓' : ''; cb.style.background = window._rodzicConsentChecked ? 'var(--akcent)' : ''; cb.style.borderColor = window._rodzicConsentChecked ? 'var(--akcent)' : ''; }
     if (row) row.style.borderColor = window._rodzicConsentChecked ? 'var(--akcent)' : '';
     if (btn) btn.disabled = !window._rodzicConsentChecked;
 }
