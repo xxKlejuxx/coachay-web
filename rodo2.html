@@ -4,185 +4,237 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Usunięcie konta — Coachay</title>
-<link rel="stylesheet" href="_global.css?v=20260826e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=block">
+<style>body{visibility:hidden}</style>
+<script>document.fonts.ready.then(function(){document.body.style.visibility='visible'});</script>
 <script src="_i18n.js?v=20261003c"></script>
 <style>
-:root { --phone-h: unset; }
-body { min-height: 100vh; background: var(--tlo); overflow-y: auto; }
-.phone { max-width: 680px; min-height: unset; height: auto; border-radius: 0; border: none; box-shadow: none; }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
 
-.r2-topbar { background: #000; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; padding: 14px 20px; }
-.r2-back { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1px solid var(--border2); color: var(--szary-j); font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; }
-.r2-back:active { opacity: 0.7; }
-.r2-logo { font-family: var(--font-d); font-size: 18px; font-weight: 900; color: var(--bialy); letter-spacing: 3px; margin-left: auto; }
+:root {
+  --tlo:       #080808;
+  --tlo-karta: #111111;
+  --tlo-karta2:#181818;
+  --border:    #1f1f1f;
+  --border2:   #2a2a2a;
+  --bialy:     #FFFFFF;
+  --szary:     #666;
+  --szary-j:   #999;
+  --akcent:    #3B82F6;
+  --akcent-d:  #2563EB;
+  --sukces:    #22C55E;
+  --font:      'Nunito', sans-serif;
+  --font-d:    'Syne', sans-serif;
+  --max-w:     1120px;
+}
 
-.r2-wrap { padding: 24px 20px 80px; display: flex; flex-direction: column; gap: 20px; }
+body { font-family: var(--font); background: var(--tlo); color: var(--bialy); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 40px; }
 
-.r2-hero { padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-.r2-eyebrow { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 10px; }
-.r2-title { font-family: var(--font-d); font-size: 26px; font-weight: 800; color: var(--bialy); margin: 0 0 10px; line-height: 1.2; }
-.r2-lead { font-size: 13px; color: var(--szary-j); font-weight: 600; line-height: 1.75; }
+header { position: sticky; top: 0; z-index: 100; background: rgba(8,8,8,0.85); backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--border); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 82px; }
+.logo { display: flex; flex-direction: column; gap: 4px; }
+.logo-name { font-family: var(--font-d); font-size: 40px; font-weight: 800; letter-spacing: 3px; color: var(--bialy); line-height: 1; }
+.logo-sub { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--szary); line-height: 1; }
+.btn-back { padding: 8px 20px; background: transparent; border: 1px solid var(--border2); border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--szary-j); transition: all 0.12s; }
+.btn-back:hover { border-color: rgba(255,255,255,0.2); color: var(--bialy); }
 
-.r2-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 8px; }
+.legal-hero { padding: 56px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 32px; padding-bottom: 32px; }
+.r2-eyebrow { font-size: 14px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--szary); margin-bottom: 14px; }
+.legal-hero h1 { font-family: var(--font-d); font-size: clamp(32px,4vw,48px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px; }
+.legal-hero p { font-size: 16px; color: var(--szary-j); line-height: 1.65; max-width: 640px; }
+
+.r2-wrap { max-width: 760px; margin: 0 auto; padding: 0 0 96px; display: flex; flex-direction: column; gap: 24px; }
+
+.r2-label { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--szary); margin-bottom: 10px; }
 
 .r2-card { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-.r2-method-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
-.r2-method-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.r2-method-name { font-size: 14px; font-weight: 800; color: var(--bialy); }
-.r2-method-sub  { font-size: 11px; color: var(--szary); font-weight: 600; margin-top: 2px; }
+.r2-method-head { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.r2-method-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.r2-method-name { font-size: 16px; font-weight: 800; color: var(--bialy); }
+.r2-method-sub  { font-size: 13px; color: var(--szary); font-weight: 600; margin-top: 3px; }
 
-.r2-body { padding: 14px 16px; }
-.r2-body p { margin: 0 0 10px; font-size: 13px; color: var(--szary-j); font-weight: 600; line-height: 1.65; }
+.r2-body { padding: 18px 20px; }
+.r2-body p { margin: 0 0 12px; font-size: 15px; color: var(--szary-j); font-weight: 500; line-height: 1.65; }
 .r2-body p:last-child { margin-bottom: 0; }
 
-.r2-step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.r2-step { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .r2-step:last-child { border-bottom: none; }
-.r2-step-n { width: 22px; height: 22px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: var(--szary); flex-shrink: 0; margin-top: 1px; }
-.r2-step-t { font-size: 13px; color: var(--szary-j); font-weight: 600; line-height: 1.6; }
+.r2-step-n { width: 24px; height: 24px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--szary); flex-shrink: 0; margin-top: 1px; }
+.r2-step-t { font-size: 15px; color: var(--szary-j); font-weight: 500; line-height: 1.6; }
 .r2-step-t strong { color: var(--bialy); font-weight: 800; }
 
-.r2-verify { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.r2-verify { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .r2-verify:last-child { border-bottom: none; }
-.r2-verify-icon { width: 22px; height: 22px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: var(--szary); flex-shrink: 0; margin-top: 1px; }
-.r2-verify-type { font-size: 13px; font-weight: 800; color: var(--bialy); margin-bottom: 2px; }
-.r2-verify-req  { font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.55; }
+.r2-verify-icon { width: 24px; height: 24px; border-radius: 50%; background: var(--tlo-karta2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--szary); flex-shrink: 0; margin-top: 1px; }
+.r2-verify-type { font-size: 15px; font-weight: 800; color: var(--bialy); margin-bottom: 3px; }
+.r2-verify-req  { font-size: 13px; color: var(--szary); font-weight: 600; line-height: 1.55; }
 
-.r2-alert { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; }
+.r2-alert { display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 12px; }
 .r2-alert-warn { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); }
 .r2-alert-ok   { background: rgba(52,211,153,0.07); border: 1px solid rgba(52,211,153,0.2); }
-.r2-alert-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
-.r2-alert-text { font-size: 13px; font-weight: 700; line-height: 1.6; }
+.r2-alert-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.r2-alert-text { font-size: 14px; font-weight: 600; line-height: 1.6; }
 .r2-alert-warn .r2-alert-text { color: #fca5a5; }
 .r2-alert-ok   .r2-alert-text { color: #6ee7b7; }
 
-.r2-link { color: var(--akcent, #3b82f6); font-weight: 800; text-decoration: none; }
+.r2-link { color: var(--akcent); font-weight: 800; text-decoration: none; }
 .r2-link:hover { text-decoration: underline; }
 
-.r2-footer { padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.8; }
-.r2-footer a { color: var(--szary); text-decoration: none; }
-.r2-footer a:hover { color: var(--szary-j); }
+footer { border-top: 1px solid var(--border); padding: 28px 0; }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.footer-logo { font-family: var(--font-d); font-size: 14px; font-weight: 800; color: var(--szary); letter-spacing: 0.08em; }
+.footer-links { display: flex; gap: 20px; }
+.footer-links a { font-size: 14px; color: var(--szary); transition: color 0.12s; }
+.footer-links a:hover { color: var(--bialy); }
+.footer-copy { font-size: 14px; color: var(--szary); }
+
+@media (max-width: 640px) {
+  .logo-name { font-size: 24px; letter-spacing: 1px; }
+  .logo-sub { display: none; }
+}
 </style>
 </head>
+
 <body>
-<div class="phone">
 
-    <div class="r2-topbar">
-        <a class="r2-back" id="r2-back-btn" href="https://coachay.com">� Wr��</a>
-        <span class="r2-logo">COACHAY</span>
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <a href="https://coachay.com" class="logo">
+        <span class="logo-name">COACHAY</span>
+        <span class="logo-sub" data-i18n="splash.tagline">Platforma dla trenerów i drużyn</span>
+      </a>
+      <a href="https://coachay.com" class="btn-back" id="r2-back-btn" data-i18n="rodo2.back">← Wróć</a>
+    </div>
+  </div>
+</header>
+
+<section class="legal-hero">
+  <div class="container">
+    <div class="r2-eyebrow" id="r2-eyebrow">Prawo do bycia zapomnianym – art. 17 RODO</div>
+    <h1 id="r2-title">Usunięcie konta i danych</h1>
+    <p id="r2-lead">Masz prawo do usunięcia swojego konta oraz wszystkich powiązanych danych z aplikacji Coachay w dowolnym momencie. Poniżej znajdziesz dwa sposoby – wybierz ten, który jest dla Ciebie wygodniejszy.</p>
+  </div>
+</section>
+
+<div class="container">
+<div class="r2-wrap">
+
+    <!-- Metoda 1 -->
+    <div>
+        <div class="r2-label" id="r2-m1-label">Metoda 1 – przez aplikację</div>
+        <div class="r2-card">
+            <div class="r2-method-head">
+                <div class="r2-method-icon">📱</div>
+                <div>
+                    <div class="r2-method-name" id="r2-m1-name">Przycisk w ustawieniach</div>
+                    <div class="r2-method-sub" id="r2-m1-sub">Najszybszy sposób – dane wypełniają się automatycznie</div>
+                </div>
+            </div>
+            <div class="r2-body">
+                <div class="r2-step"><div class="r2-step-n">1</div><div class="r2-step-t" id="r2-m1-s1">Zaloguj się do aplikacji Coachay</div></div>
+                <div class="r2-step"><div class="r2-step-n">2</div><div class="r2-step-t" id="r2-m1-s2">Przejdź do <strong>Ustawienia – Polityka i RODO</strong></div></div>
+                <div class="r2-step"><div class="r2-step-n">3</div><div class="r2-step-t" id="r2-m1-s3">Kliknij <strong>„Usuń moje konto i dane"</strong> na dole strony</div></div>
+                <div class="r2-step"><div class="r2-step-n">4</div><div class="r2-step-t" id="r2-m1-s4">Aplikacja otworzy gotowego maila z Twoimi danymi. Wyślij go – i gotowe.</div></div>
+            </div>
+        </div>
+        <div class="r2-alert r2-alert-ok" style="margin-top:10px;">
+            <span class="r2-alert-icon">✅</span>
+            <span class="r2-alert-text" id="r2-m1-alert">Jeśli Twoje konto jest zablokowane, przycisk usunięcia znajdziesz też na ekranie blokady – bez potrzeby wchodzenia do pełnej aplikacji.</span>
+        </div>
     </div>
 
-    <div class="r2-wrap">
+    <!-- Metoda 2 -->
+    <div>
+        <div class="r2-label" id="r2-m2-label">Metoda 2 – przez e-mail</div>
+        <div class="r2-card">
+            <div class="r2-method-head">
+                <div class="r2-method-icon">✉️</div>
+                <div>
+                    <div class="r2-method-name" id="r2-m2-name">Zgłoszenie e-mail</div>
+                    <div class="r2-method-sub" id="r2-m2-sub">Jeśli nie możesz zalogować się do aplikacji</div>
+                </div>
+            </div>
+            <div class="r2-body">
+                <p id="r2-m2-intro">Wyślij wiadomość na <a class="r2-link" href="mailto:support@coachay.com">support@coachay.com</a> z tytułem <strong style="color:var(--bialy)">„Prośba o usunięcie konta i danych"</strong>.</p>
+                <p id="r2-m2-intro2">W treści podaj dane weryfikacyjne zgodne z metodą logowania:</p>
 
-        <!-- Hero -->
-        <div class="r2-hero">
-            <div class="r2-eyebrow" id="r2-eyebrow">Prawo do bycia zapomnianym � art. 17 RODO</div>
-            <h1 class="r2-title" id="r2-title">Usuni�cie konta i danych</h1>
-            <p class="r2-lead" id="r2-lead">Masz prawo do usuni�cia swojego konta oraz wszystkich powi�zanych danych z aplikacji Coachay w dowolnym momencie. Poni�ej znajdziesz dwa sposoby � wybierz ten, kt�ry jest dla Ciebie wygodniejszy.</p>
-        </div>
-
-        <!-- Metoda 1 -->
-        <div>
-            <div class="r2-label" id="r2-m1-label">Metoda 1 � przez aplikacj�</div>
-            <div class="r2-card">
-                <div class="r2-method-head">
-                    <div class="r2-method-icon">??</div>
+                <div class="r2-verify">
+                    <div class="r2-verify-icon">🔑</div>
                     <div>
-                        <div class="r2-method-name" id="r2-m1-name">Przycisk w ustawieniach</div>
-                        <div class="r2-method-sub" id="r2-m1-sub">Najszybszy spos�b � dane wype�niaj� si� automatycznie</div>
+                        <div class="r2-verify-type" id="r2-v-email-t">E-mail &amp; hasło</div>
+                        <div class="r2-verify-req"  id="r2-v-email-r">Adres e-mail zarejestrowany w aplikacji</div>
                     </div>
                 </div>
-                <div class="r2-body">
-                    <div class="r2-step"><div class="r2-step-n">1</div><div class="r2-step-t" id="r2-m1-s1">Zaloguj si� do aplikacji Coachay</div></div>
-                    <div class="r2-step"><div class="r2-step-n">2</div><div class="r2-step-t" id="r2-m1-s2">Przejd� do <strong>Ustawienia � Polityka i RODO</strong></div></div>
-                    <div class="r2-step"><div class="r2-step-n">3</div><div class="r2-step-t" id="r2-m1-s3">Kliknij <strong>�Usu� moje konto i dane"</strong> na dole strony</div></div>
-                    <div class="r2-step"><div class="r2-step-n">4</div><div class="r2-step-t" id="r2-m1-s4">Aplikacja otworzy gotowego maila z Twoimi danymi. Wy�lij go � i gotowe.</div></div>
-                </div>
-            </div>
-            <div class="r2-alert r2-alert-ok" style="margin-top:8px;">
-                <span class="r2-alert-icon">?</span>
-                <span class="r2-alert-text" id="r2-m1-alert">Je�li Twoje konto jest zablokowane, przycisk usuni�cia znajdziesz te� na ekranie blokady � bez potrzeby wchodzenia do pe�nej aplikacji.</span>
-            </div>
-        </div>
-
-        <!-- Metoda 2 -->
-        <div>
-            <div class="r2-label" id="r2-m2-label">Metoda 2 � przez e-mail</div>
-            <div class="r2-card">
-                <div class="r2-method-head">
-                    <div class="r2-method-icon">??</div>
+                <div class="r2-verify">
+                    <div class="r2-verify-icon" style="font-size:12px;font-weight:900;">G</div>
                     <div>
-                        <div class="r2-method-name" id="r2-m2-name">Zg�oszenie e-mail</div>
-                        <div class="r2-method-sub" id="r2-m2-sub">Je�li nie mo�esz zalogowa� si� do aplikacji</div>
+                        <div class="r2-verify-type" id="r2-v-google-t">Google</div>
+                        <div class="r2-verify-req"  id="r2-v-google-r">Adres e-mail konta Google powiązanego z Coachay</div>
                     </div>
                 </div>
-                <div class="r2-body">
-                    <p id="r2-m2-intro">Wy�lij wiadomo�� na <a class="r2-link" href="mailto:support@coachay.com">support@coachay.com</a> z tytu�em <strong style="color:var(--bialy)">�Pro�ba o usuni�cie konta i danych"</strong>.</p>
-                    <p id="r2-m2-intro2">W tre�ci podaj dane weryfikacyjne zgodne z metod� logowania:</p>
-
-                    <div class="r2-verify">
-                        <div class="r2-verify-icon">??</div>
-                        <div>
-                            <div class="r2-verify-type" id="r2-v-email-t">E-mail &amp; has�o</div>
-                            <div class="r2-verify-req"  id="r2-v-email-r">Adres e-mail zarejestrowany w aplikacji</div>
-                        </div>
+                <div class="r2-verify">
+                    <div class="r2-verify-icon">🍎</div>
+                    <div>
+                        <div class="r2-verify-type" id="r2-v-apple-t">Apple</div>
+                        <div class="r2-verify-req"  id="r2-v-apple-r">Adres e-mail Apple ID lub adres przekierowania @privaterelay.appleid.com (widoczny w ustawieniach iPhone – Apple ID – Coachay)</div>
                     </div>
-                    <div class="r2-verify">
-                        <div class="r2-verify-icon" style="font-size:12px;font-weight:900;">G</div>
-                        <div>
-                            <div class="r2-verify-type" id="r2-v-google-t">Google</div>
-                            <div class="r2-verify-req"  id="r2-v-google-r">Adres e-mail konta Google powi�zanego z Coachay</div>
-                        </div>
-                    </div>
-                    <div class="r2-verify">
-                        <div class="r2-verify-icon">??</div>
-                        <div>
-                            <div class="r2-verify-type" id="r2-v-apple-t">Apple</div>
-                            <div class="r2-verify-req"  id="r2-v-apple-r">Adres e-mail Apple ID lub adres przekierowania @privaterelay.appleid.com (widoczny w ustawieniach iPhone � Apple ID � Coachay)</div>
-                        </div>
-                    </div>
-                    <div class="r2-verify">
-                        <div class="r2-verify-icon">??</div>
-                        <div>
-                            <div class="r2-verify-type" id="r2-v-phone-t">Numer telefonu</div>
-                            <div class="r2-verify-req"  id="r2-v-phone-r">Numer u�yty do rejestracji w formacie +48�</div>
-                        </div>
+                </div>
+                <div class="r2-verify">
+                    <div class="r2-verify-icon">📱</div>
+                    <div>
+                        <div class="r2-verify-type" id="r2-v-phone-t">Numer telefonu</div>
+                        <div class="r2-verify-req"  id="r2-v-phone-r">Numer użyty do rejestracji w formacie +48…</div>
                     </div>
                 </div>
             </div>
-            <div class="r2-alert r2-alert-warn" style="margin-top:8px;">
-                <span class="r2-alert-icon">??</span>
-                <span class="r2-alert-text" id="r2-m2-alert">Ze wzgl�d�w bezpiecze�stwa rozpatrzymy wy��cznie zg�oszenia z poprawnymi danymi weryfikacyjnymi. Nie mo�emy usun�� konta na podstawie samego adresu e-mail � musi on zgadza� si� z metod� logowania.</span>
-            </div>
         </div>
-
-        <!-- Co usuwamy -->
-        <div>
-            <div class="r2-label" id="r2-del-label">Co zostaje usuni�te</div>
-            <div class="r2-card">
-                <div class="r2-body">
-                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">?</div><div class="r2-step-t" id="r2-d1">Konto u�ytkownika � profil, zdj�cie, dane kontaktowe</div></div>
-                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">?</div><div class="r2-step-t" id="r2-d2">Historia obecno�ci, zada� i aktywno�ci w dru�ynach</div></div>
-                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">?</div><div class="r2-step-t" id="r2-d3">Przynale�no�� do wszystkich dru�yn i klub�w</div></div>
-                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">?</div><div class="r2-step-t" id="r2-d4">Wiadomo�ci i powiadomienia powi�zane z kontem</div></div>
-                    <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">?</div><div class="r2-step-t" id="r2-d5">Dane dost�pu i licencja przypisana do konta</div></div>
-                </div>
-            </div>
+        <div class="r2-alert r2-alert-warn" style="margin-top:10px;">
+            <span class="r2-alert-icon">⚠️</span>
+            <span class="r2-alert-text" id="r2-m2-alert">Ze względów bezpieczeństwa rozpatrzymy wyłącznie zgłoszenia z poprawnymi danymi weryfikacyjnymi. Nie możemy usunąć konta na podstawie samego adresu e-mail – musi on zgadzać się z metodą logowania.</span>
         </div>
-
-        <!-- Czas realizacji -->
-        <div class="r2-alert r2-alert-ok">
-            <span class="r2-alert-icon">??</span>
-            <span class="r2-alert-text" id="r2-time-alert"><strong>Czas realizacji:</strong> do 30 dni roboczych od potwierdzenia zg�oszenia, zgodnie z art. 12 RODO.</span>
-        </div>
-
-        <!-- Stopka -->
-        <div class="r2-footer">
-            Coachay � NIP 771-222-88-03 � <a href="mailto:support@coachay.com">support@coachay.com</a><br>
-            <a href="polityka-prywatnosci.html" id="r2-f-privacy">Polityka prywatno�ci</a> &nbsp;�&nbsp; <a href="rodo.html" id="r2-f-rodo">RODO (po zalogowaniu)</a>
-        </div>
-
     </div>
+
+    <!-- Co usuwamy -->
+    <div>
+        <div class="r2-label" id="r2-del-label">Co zostaje usunięte</div>
+        <div class="r2-card">
+            <div class="r2-body">
+                <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">•</div><div class="r2-step-t" id="r2-d1">Konto użytkownika – profil, zdjęcie, dane kontaktowe</div></div>
+                <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">•</div><div class="r2-step-t" id="r2-d2">Historia obecności, zadań i aktywności w drużynach</div></div>
+                <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">•</div><div class="r2-step-t" id="r2-d3">Przynależność do wszystkich drużyn i klubów</div></div>
+                <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">•</div><div class="r2-step-t" id="r2-d4">Wiadomości i powiadomienia powiązane z kontem</div></div>
+                <div class="r2-step"><div class="r2-step-n" style="font-size:12px;">•</div><div class="r2-step-t" id="r2-d5">Dane dostępu i licencja przypisana do konta</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Czas realizacji -->
+    <div class="r2-alert r2-alert-ok">
+        <span class="r2-alert-icon">⏱️</span>
+        <span class="r2-alert-text" id="r2-time-alert"><strong>Czas realizacji:</strong> do 30 dni roboczych od potwierdzenia zgłoszenia, zgodnie z art. 12 RODO.</span>
+    </div>
+
 </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-logo">COACHAY</div>
+      <div class="footer-links">
+        <a href="polityka-prywatnosci.html" id="r2-f-privacy">Polityka prywatności</a>
+        <a href="rodo.html" id="r2-f-rodo">RODO (po zalogowaniu)</a>
+      </div>
+      <div class="footer-copy">Coachay — NIP 771-222-88-03 — <a href="mailto:support@coachay.com">support@coachay.com</a></div>
+    </div>
+  </div>
+</footer>
 
 <script>
 function renderRodo2() {
@@ -203,10 +255,10 @@ function renderRodo2() {
     document.title = _t('pageTitle', document.title);
 
     const back = document.getElementById('r2-back-btn');
-    if (back) back.textContent = _t('back', '� Wr��');
+    if (back) back.textContent = _t('back', '← Wróć');
 
-    txt('r2-eyebrow',  'eyebrow',  'Prawo do bycia zapomnianym � art. 17 RODO');
-    txt('r2-title',    'title',    'Usuni�cie konta i danych');
+    txt('r2-eyebrow',  'eyebrow',  'Prawo do bycia zapomnianym – art. 17 RODO');
+    txt('r2-title',    'title',    'Usunięcie konta i danych');
     txt('r2-lead',     'lead',     null);
 
     txt('r2-m1-label', 'method1Label', null);
@@ -255,7 +307,3 @@ if (typeof onI18nReady === 'function') {
 </script>
 </body>
 </html>
-
-
-
-

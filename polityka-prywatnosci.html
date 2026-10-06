@@ -4,62 +4,110 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Polityka Prywatności — Coachay</title>
-<link rel="stylesheet" href="_global.css?v=20260802d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=block">
+<style>body{visibility:hidden}</style>
+<script>document.fonts.ready.then(function(){document.body.style.visibility='visible'});</script>
 <script src="_i18n.js?v=20261003c"></script>
 <style>
-:root { --phone-h: unset; }
-body { min-height: 100vh; background: var(--tlo); overflow-y: auto; }
-.phone { max-width: 680px; min-height: unset; height: auto; border-radius: 0; border: none; box-shadow: none; }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
 
-.pp-topbar { background: #000; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; padding: 14px 20px; }
-.pp-back { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1px solid var(--border2); color: var(--szary-j); font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; }
-.pp-back:active { opacity: 0.7; }
-.pp-logo { font-family: var(--font-d); font-size: 18px; font-weight: 900; color: var(--bialy); letter-spacing: 3px; margin-left: auto; }
+:root {
+  --tlo:       #080808;
+  --tlo-karta: #111111;
+  --tlo-karta2:#181818;
+  --border:    #1f1f1f;
+  --border2:   #2a2a2a;
+  --bialy:     #FFFFFF;
+  --szary:     #666;
+  --szary-j:   #999;
+  --akcent:    #3B82F6;
+  --akcent-d:  #2563EB;
+  --sukces:    #22C55E;
+  --font:      'Nunito', sans-serif;
+  --font-d:    'Syne', sans-serif;
+  --max-w:     1120px;
+}
 
-.pp-wrap { padding: 24px 20px 80px; display: flex; flex-direction: column; gap: 20px; }
+body { font-family: var(--font); background: var(--tlo); color: var(--bialy); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 40px; }
 
-.pp-hero { padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-.pp-eyebrow { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 10px; }
-.pp-title { font-family: var(--font-d); font-size: 26px; font-weight: 800; color: var(--bialy); margin: 0 0 10px; line-height: 1.2; }
-.pp-intro { font-size: 13px; color: var(--szary-j); font-weight: 600; line-height: 1.75; }
+header { position: sticky; top: 0; z-index: 100; background: rgba(8,8,8,0.85); backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--border); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 82px; }
+.logo { display: flex; flex-direction: column; gap: 4px; }
+.logo-name { font-family: var(--font-d); font-size: 40px; font-weight: 800; letter-spacing: 3px; color: var(--bialy); line-height: 1; }
+.logo-sub { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--szary); line-height: 1; }
+.btn-back { padding: 8px 20px; background: transparent; border: 1px solid var(--border2); border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--szary-j); transition: all 0.12s; }
+.btn-back:hover { border-color: rgba(255,255,255,0.2); color: var(--bialy); }
 
-.pp-section { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
-.pp-section-title { font-family: var(--font-d); font-size: 13px; font-weight: 900; color: var(--bialy); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-.pp-section-text { font-size: 13px; font-weight: 600; color: var(--szary-j); line-height: 1.7; margin-bottom: 8px; white-space: pre-line; }
-.pp-section-text:last-child { margin-bottom: 0; }
-.pp-section-text strong { color: var(--bialy); }
+.legal-hero { padding: 56px 0 8px; }
+.legal-hero h1 { font-family: var(--font-d); font-size: clamp(32px,4vw,48px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px; }
+.legal-hero p { font-size: 16px; color: var(--szary-j); line-height: 1.65; max-width: 640px; }
 
-.pp-footer { padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--szary); font-weight: 600; line-height: 1.8; }
-.pp-footer a { color: var(--szary); text-decoration: none; }
-.pp-footer a:hover { color: var(--szary-j); }
+.legal-wrap { max-width: 760px; margin: 0 auto; padding: 32px 0 96px; display: flex; flex-direction: column; gap: 16px; }
+.legal-section { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; }
+.legal-section-title { font-family: var(--font-d); font-size: 14px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bialy); margin-bottom: 12px; }
+.legal-section-text { font-size: 16px; font-weight: 500; color: var(--szary-j); line-height: 1.75; margin-bottom: 10px; white-space: pre-line; }
+.legal-section-text:last-child { margin-bottom: 0; }
+.legal-section-text strong { color: var(--bialy); }
+
+footer { border-top: 1px solid var(--border); padding: 28px 0; }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.footer-logo { font-family: var(--font-d); font-size: 14px; font-weight: 800; color: var(--szary); letter-spacing: 0.08em; }
+.footer-links { display: flex; gap: 20px; }
+.footer-links a { font-size: 14px; color: var(--szary); transition: color 0.12s; }
+.footer-links a:hover { color: var(--bialy); }
+.footer-copy { font-size: 14px; color: var(--szary); }
+
+@media (max-width: 640px) {
+  .logo-name { font-size: 24px; letter-spacing: 1px; }
+  .logo-sub { display: none; }
+  .legal-section { padding: 20px; }
+}
 </style>
 </head>
+
 <body>
-<div class="phone">
 
-    <div class="pp-topbar">
-        <a class="pp-back" id="pp-back-btn" href="https://coachay.com">← Wróć</a>
-        <span class="pp-logo">COACHAY</span>
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <a href="https://coachay.com" class="logo">
+        <span class="logo-name">COACHAY</span>
+        <span class="logo-sub" data-i18n="splash.tagline">Platforma dla trenerów i drużyn</span>
+      </a>
+      <a href="https://coachay.com" class="btn-back" data-i18n="polityka.back">← Wróć</a>
     </div>
+  </div>
+</header>
 
-    <div class="pp-wrap">
+<section class="legal-hero">
+  <div class="container">
+    <h1 data-i18n="polityka.headerTitle">Polityka Prywatności</h1>
+    <p data-i18n="polityka.intro">Serwisu i aplikacji COACHAY (coachay.com) oraz zasady ochrony danych osobowych.</p>
+  </div>
+</section>
 
-        <div class="pp-hero">
-            <div class="pp-eyebrow" data-i18n="polityka.eyebrow">Ochrona danych osobowych</div>
-            <h1 class="pp-title" data-i18n="polityka.headerTitle">Polityka Prywatności</h1>
-            <p class="pp-intro" data-i18n="polityka.intro">Serwisu i aplikacji COACHAY (coachay.com) oraz zasady ochrony danych osobowych.</p>
-        </div>
-
-        <div id="pp-sections"></div>
-
-        <div class="pp-footer">
-            <span data-i18n="polityka.footer">© 2026 Coachay. Wszelkie prawa zastrzeżone.</span><br>
-            Coachay — NIP 771-222-88-03 — <a href="mailto:support@coachay.com">support@coachay.com</a><br>
-            <a href="rodo2.html" id="pp-f-rodo2" data-i18n="polityka.footerRodo2">Usunięcie konta i danych (RODO)</a>
-        </div>
-
-    </div>
+<div class="container">
+  <div class="legal-wrap" id="pp-sections"></div>
 </div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-logo">COACHAY</div>
+      <div class="footer-links">
+        <a href="polityka-prywatnosci.html" data-i18n="landing.footerPrivacy">Polityka prywatności</a>
+        <a href="rodo2.html">RODO</a>
+      </div>
+      <div class="footer-copy" data-i18n="polityka.footer">© 2026 Coachay. Wszelkie prawa zastrzeżone.</div>
+    </div>
+  </div>
+</footer>
+
 
 <script>
 function renderPolitykaSections() {
@@ -71,14 +119,14 @@ function renderPolitykaSections() {
         return;
     }
     container.innerHTML = sections.map(s => `
-        <div class="pp-section">
-            <div class="pp-section-title">${s.title || ''}</div>
-            <div class="pp-section-text">${(s.body || '').replace(/\n/g, '<br>')}</div>
+        <div class="legal-section">
+            <div class="legal-section-title">${s.title || ''}</div>
+            <div class="legal-section-text">${(s.body || '').replace(/\n/g, '<br>')}</div>
         </div>`).join('');
 }
 
 function renderPolityka() {
-    const back = document.getElementById('pp-back-btn');
+    const back = document.querySelector('.btn-back');
     if (back && typeof t === 'function') {
         const v = t('polityka.back');
         if (v && v !== 'polityka.back') back.textContent = v;
