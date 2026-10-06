@@ -16,14 +16,14 @@
 .screen-body::-webkit-scrollbar { display: none; }
 .screen-body > * { flex-shrink: 0; }
 
-/* Ukryj sidebar � blocked to full-screen */
+/* Ukryj sidebar — blocked to full-screen */
 #app-sidebar, .sidebar { display: none !important; }
 
-/* �� Top bar (uproszczony � tylko ctx-switcher) �� */
+/* ── Top bar (uproszczony — tylko ctx-switcher) ── */
 .blocked-topbar { height: var(--top-h); background: #000; display: flex; align-items: flex-end; padding: 0 16px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 body:has(#app-sidebar) .blocked-topbar { display: none; }
 
-/* �� Ctx overlay (aktywne memberships) �� */
+/* ── Ctx overlay (aktywne memberships) ── */
 .blocked-ctx-ov { position: absolute; top: var(--top-h); left: 0; right: 0; background: var(--tlo-karta); border-bottom: 1px solid var(--border2); z-index: 100; padding: 12px 16px; display: none; }
 .blocked-ctx-ov.open { display: block; }
 body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
@@ -37,7 +37,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .blocked-ctx-arrow { font-size: 16px; color: var(--szary); }
 .blocked-ctx-empty { text-align: center; padding: 12px; font-size: 12px; color: var(--szary); font-weight: 600; }
 
-/* �� Karta blokady �� */
+/* ── Karta blokady ── */
 .blocked-card { margin: 24px 16px 0; background: var(--tlo-karta); border: 1px solid rgba(239,68,68,0.35); border-radius: 20px; padding: 28px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .blocked-icon { font-size: 44px; line-height: 1; }
 .blocked-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
@@ -45,7 +45,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .blocked-logout-btn { margin-top: 8px; padding: 12px 32px; border-radius: var(--r-pill); background: var(--tlo-karta2); border: 1px solid var(--border2); color: var(--szary-j); font-size: 12px; font-weight: 900; cursor: pointer; }
 .blocked-logout-btn:active { opacity: 0.7; }
 
-/* �� Karta wyga�ni�cia p�atno�ci � trener (mo�e zap�aci�) �� */
+/* ── Karta wygaśnięcia płatności — trener (może zapłacić) ── */
 .payment-card { margin: 24px 16px 0; border-radius: 20px; padding: 28px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: linear-gradient(160deg, rgba(245,158,11,0.08), rgba(239,68,68,0.06)); border: 1px solid rgba(245,158,11,0.3); }
 .payment-icon { font-size: 44px; line-height: 1; }
 .payment-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
@@ -58,7 +58,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .payment-btn-recheck:active { background: var(--tlo-karta2); }
 .payment-btn-recheck:disabled { opacity: 0.6; cursor: default; }
 
-/* �� Karta kodu zaproszenia �� */
+/* ── Karta kodu zaproszenia ── */
 .invite-card { margin: 16px 16px 0; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 .invite-label { font-size: 10px; font-weight: 800; color: var(--szary); text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
 .invite-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
@@ -71,7 +71,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 .invite-msg.ok  { color: #34d399; display: block; }
 .invite-msg.err { color: #ef4444; display: block; }
 
-/* �� Karta testowego zakupu (tylko isPlatformAdmin) �� */
+/* ── Karta testowego zakupu (tylko isPlatformAdmin) ── */
 .dev-card { margin: 16px 16px 0; background: var(--tlo-karta); border: 1px solid rgba(99,102,241,0.4); border-radius: 16px; overflow: hidden; }
 .dev-card-title { font-size: 10px; font-weight: 900; color: #818cf8; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 14px 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
 .dev-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
@@ -88,7 +88,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 <div class="phone">
     <div class="notch"></div>
 
-    <!-- Top bar � tylko ctx-switcher -->
+    <!-- Top bar — tylko ctx-switcher -->
     <div class="blocked-topbar">
         <div class="ctx-switcher" onclick="toggleBlockedCtx()">
             <div class="ctx-dot" id="ctx-dot">?</div>
@@ -102,45 +102,45 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 
     <!-- Ctx overlay -->
     <div class="blocked-ctx-ov" id="blocked-ctx-ov">
-        <div class="blocked-ctx-title" data-i18n="blocked.ctxSwitchTitle">Prze��cz konto</div>
+        <div class="blocked-ctx-title" data-i18n="blocked.ctxSwitchTitle">Przełącz konto</div>
         <div id="blocked-ctx-list"></div>
     </div>
 
     <!-- Baner impersonacji support -->
     <div id="imp-support-banner" style="display:none; margin:8px 18px; padding:12px 16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:14px; align-items:center; gap:10px;">
-        <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">? Tryb impersonacji � widok tego usera</span>
-        <button onclick="exitSupportImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">� Wr��</button>
+        <span style="font-size:13px; font-weight:700; color:var(--warn); flex:1">⚠ Tryb impersonacji — widok tego usera</span>
+        <button onclick="exitSupportImpersonation()" style="padding:7px 14px; border-radius:var(--r-pill); background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); color:var(--warn); font-size:11px; font-weight:900; cursor:pointer;">← Wróć</button>
     </div>
 
-    <!-- G��wna zawarto�� -->
+    <!-- Główna zawartość -->
     <div class="screen-body">
 
-        <!-- Karta blokady (domy�lna) -->
+        <!-- Karta blokady (domyślna) -->
         <div class="blocked-card" id="card-suspended">
-            <div class="blocked-icon">??</div>
-            <div class="blocked-title" data-i18n="blocked.noAccessTitle">Brak dost�pu do klubu</div>
-            <div class="blocked-text" data-i18n="blocked.noAccessBody">Nie masz aktywnego dost�pu do �adnego klubu. Skontaktuj si� z administratorem lub wpisz kod zaproszenia.</div>
-            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj si�</button>
+            <div class="blocked-icon">🔒</div>
+            <div class="blocked-title" data-i18n="blocked.noAccessTitle">Brak dostępu do klubu</div>
+            <div class="blocked-text" data-i18n="blocked.noAccessBody">Nie masz aktywnego dostępu do żadnego klubu. Skontaktuj się z administratorem lub wpisz kod zaproszenia.</div>
+            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
         </div>
 
-        <!-- Karta wyga�ni�cia p�atno�ci � trener (mo�e zap�aci�) -->
+        <!-- Karta wygaśnięcia płatności — trener (może zapłacić) -->
         <div class="payment-card" id="card-payment" style="display:none">
-            <div class="payment-icon">??</div>
-            <div class="payment-title" data-i18n="blocked.expiredTitle">Dost�p wygas�</div>
-            <div class="payment-text" data-i18n="blocked.expiredBody">Okres pr�bny lub subskrypcja dobieg�y ko�ca. Wybierz plan, aby dalej korzysta� z Coachay.</div>
-            <button class="payment-btn-primary" id="btn-pay" onclick="goToPayment()" data-i18n="blocked.choosePlanButton">Wybierz plan �</button>
-            <!-- Sprawd� ponownie (2026-09-24): ponowne sprawdzenie dost�pu bez wychodzenia z ekranu -->
-            <button class="payment-btn-recheck" id="btn-recheck" onclick="recheckAccess()" data-i18n="blocked.recheckButton">Sprawd� ponownie</button>
+            <div class="payment-icon">⏰</div>
+            <div class="payment-title" data-i18n="blocked.expiredTitle">Dostęp wygasł</div>
+            <div class="payment-text" data-i18n="blocked.expiredBody">Okres próbny lub subskrypcja dobiegły końca. Wybierz plan, aby dalej korzystać z Coachay.</div>
+            <button class="payment-btn-primary" id="btn-pay" onclick="goToPayment()" data-i18n="blocked.choosePlanButton">Wybierz plan …</button>
+            <!-- Sprawdź ponownie (2026-09-24): ponowne sprawdzenie dostępu bez wychodzenia z ekranu -->
+            <button class="payment-btn-recheck" id="btn-recheck" onclick="recheckAccess()" data-i18n="blocked.recheckButton">Sprawdź ponownie</button>
             <div id="recheck-msg" style="font-size:12px; color:var(--szary); text-align:center; min-height:14px;"></div>
-            <button class="payment-btn-secondary" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj si�</button>
+            <button class="payment-btn-secondary" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
         </div>
 
-        <!-- Karta wyga�ni�cia � rodzic / zawodnik / kibic (nie p�aci) -->
+        <!-- Karta wygaśnięcia — rodzic / zawodnik / kibic (nie płaci) -->
         <div class="blocked-card" id="card-payment-member" style="display:none">
-            <div class="blocked-icon">?</div>
+            <div class="blocked-icon">⛔</div>
             <div class="blocked-title" data-i18n="blocked.noLicenseTitle">Klub nie ma licencji</div>
-            <div class="blocked-text" data-i18n="blocked.noLicenseBody">Dost�p do aplikacji wygas�. Skontaktuj si� z trenerem � to on odnawia dost�p dla ca�ego klubu.</div>
-            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj si�</button>
+            <div class="blocked-text" data-i18n="blocked.noLicenseBody">Dostęp do aplikacji wygasł. Skontaktuj się z trenerem — to on odnawia dostęp dla całego klubu.</div>
+            <button class="blocked-logout-btn" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
         </div>
 
         <!-- Kod zaproszenia -->
@@ -155,7 +155,7 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
 
         <!-- Testowy zakup licencji (tylko isPlatformAdmin) -->
         <div class="dev-card" id="dev-purchase-card" style="display:none">
-            <div class="dev-card-title">?? Aktywuj dost�p (test)</div>
+            <div class="dev-card-title">🧪 Aktywuj dostęp (test)</div>
             <div class="dev-card-body" id="dev-purchase-body">
                 <div class="dev-msg" id="dev-msg"></div>
             </div>
@@ -173,7 +173,7 @@ const _params  = new URLSearchParams(location.search);
 const _reason  = _params.get('reason') || '';
 const _clubId  = _params.get('clubId') || '';
 
-/* �� Init �� */
+/* ── Init ── */
 window.addEventListener('DOMContentLoaded', () => {
     initFirebase();
     applyReason();
@@ -210,17 +210,17 @@ function applyReason() {
     } else if (_reason === 'club_pool_full') {
         document.getElementById('card-suspended').style.display = 'none';
         document.getElementById('ctx-team').textContent = t('blocked.expiredTitle');
-        // Karta 1 � kup w�asn� licencj�
+        // Karta 1 — kup własną licencję
         const cp = document.getElementById('card-payment');
         cp.style.display = 'flex';
         cp.querySelector('.payment-title').textContent = t('blocked.poolFullTitle');
         cp.querySelector('.payment-text').textContent  = t('blocked.poolFullBody');
-        // Jeden przycisk "Wyloguj si�" wystarczy � zostaje ten w karcie 2 (kontakt z trenerem)
+        // Jeden przycisk "Wyloguj się" wystarczy — zostaje ten w karcie 2 (kontakt z trenerem)
         cp.querySelector('.payment-btn-secondary').style.display = 'none';
-        // Karta 2 � skontaktuj si� z trenerem
+        // Karta 2 — skontaktuj się z trenerem
         const cm = document.getElementById('card-payment-member');
         cm.style.display = 'flex';
-        cm.querySelector('.blocked-icon').textContent  = '??';
+        cm.querySelector('.blocked-icon').textContent  = '📞';
         cm.querySelector('.blocked-title').textContent = t('blocked.poolFullContactTitle');
         cm.querySelector('.blocked-text').textContent  = t('blocked.poolFullContactBody');
     }
@@ -228,14 +228,14 @@ function applyReason() {
 
 function _trb(k, fb) { const v = (typeof t === 'function') ? t(k) : k; return (!v || v === k) ? fb : v; }
 
-// Sprawd� ponownie: liczy dost�p od nowa (ta sama kaskada co start.html).
-// Dost�p OK -> start.html; nadal brak -> komunikat, zostajemy na ekranie.
+// Sprawdź ponownie: liczy dostęp od nowa (ta sama kaskada co start.html).
+// Dostęp OK -> start.html; nadal brak -> komunikat, zostajemy na ekranie.
 async function recheckAccess() {
     const btn = document.getElementById('btn-recheck');
     const msg = document.getElementById('recheck-msg');
     btn.disabled = true;
     msg.style.color = 'var(--szary)';
-    msg.textContent = _trb('blocked.recheckChecking', 'Sprawdzam�');
+    msg.textContent = _trb('blocked.recheckChecking', 'Sprawdzam…');
     try {
         if (!blockedUserId) blockedUserId = getCurrentUserId();
         if (!_clubId || !blockedUserId) { window.location.href = 'start.html'; return; }
@@ -245,19 +245,19 @@ async function recheckAccess() {
         msg.style.color = 'var(--szary-j)';
     } catch (e) {
         msg.style.color = 'var(--warn)';
-        msg.textContent = _trb('blocked.recheckError', 'B��d sprawdzania dost�pu') + ': ' + e.message;
+        msg.textContent = _trb('blocked.recheckError', 'Błąd sprawdzania dostępu') + ': ' + e.message;
     }
     btn.disabled = false;
 }
 
-// 2026-09-24 (Rafa�): po �Sprawd� ponownie� poka� jak� licencj� user ma/mia�,
+// 2026-09-24 (Rafał): po „Sprawdź ponownie” pokaż jaką licencję user ma/miał,
 // koniec (data + godzina PL) i czy odnawiana automatycznie. APP robi to samo.
-const _fmtPL = (d) => d ? new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(d) : '�';
+const _fmtPL = (d) => d ? new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(d) : '—';
 const _toDate = (x) => x ? (x.toDate ? x.toDate() : new Date(x)) : null;
 const _esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-// 2026-09-24 (decyzja Rafa�a, jak APP 1.0.53): pokazujemy JEDN� licencj� - t�, kt�ra ko�czy si� / sko�czy�a NAJPӏNIEJ
-// (individual / family / club). Brak jakiejkolwiek -> okres pr�bny (tylko gdy ju� min��).
+// 2026-09-24 (decyzja Rafała, jak APP 1.0.53): pokazujemy JEDNĄ licencję - tę, która kończy się / skończyła NAJPÓŹNIEJ
+// (individual / family / club). Brak jakiejkolwiek -> okres próbny (tylko gdy już minął).
 async function _licenseInfoHtml(access, ok) {
     const now = new Date();
     const yes = _trb('blocked.licYes', 'tak'), no = _trb('blocked.licNo', 'nie');
@@ -266,14 +266,14 @@ async function _licenseInfoHtml(access, ok) {
         individual: _trb('blocked.licIndividual', 'Licencja indywidualna'),
         family: _trb('blocked.licFamily', 'Licencja rodzinna'), family_license: _trb('blocked.licFamily', 'Licencja rodzinna'),
         club: _trb('blocked.licClub', 'Licencja klubu'), club_license: _trb('blocked.licClub', 'Licencja klubu'), club_pool: _trb('blocked.licClub', 'Licencja klubu'),
-        trial: _trb('blocked.licTrial', 'Okres pr�bny'),
+        trial: _trb('blocked.licTrial', 'Okres próbny'),
     };
     const rows = [];
     rows.push(ok
-        ? '? <b>' + _trb('blocked.recheckAccessActive', 'Dost�p aktywny') + '</b>' + (SRC[access?.source] ? ' � ' + _esc(SRC[access.source]) : '') + (access?.expiryDate ? ' (' + until + ' ' + _fmtPL(_toDate(access.expiryDate)) + ')' : '')
-        : '? <b>' + _trb('blocked.recheckAccessNone', 'Brak dost�pu') + '</b>');
+        ? '? <b>' + _trb('blocked.recheckAccessActive', 'Dostęp aktywny') + '</b>' + (SRC[access?.source] ? ' — ' + _esc(SRC[access.source]) : '') + (access?.expiryDate ? ' (' + until + ' ' + _fmtPL(_toDate(access.expiryDate)) + ')' : '')
+        : '❌ <b>' + _trb('blocked.recheckAccessNone', 'Brak dostępu') + '</b>');
 
-    // 1. �r�d�a r�wnolegle
+    // 1. źródła równolegle
     const [uDoc, cDoc, arSnap, mSnap] = await Promise.all([
         db.collection('users').doc(blockedUserId).get().catch(() => null),
         db.collection('clubs').doc(_clubId).get().catch(() => null),
@@ -283,7 +283,7 @@ async function _licenseInfoHtml(access, ok) {
     const mems = mSnap ? mSnap.docs.map(d => d.data()) : [];
     const cd = cDoc?.exists ? cDoc.data() : {};
 
-    // 2. Kandydaci: tylko licencje, kt�re user kiedykolwiek mia� (maj� dat� ko�ca)
+    // 2. Kandydaci: tylko licencje, które user kiedykolwiek miał (mają datę końca)
     const cand = [];
     const sub = uDoc?.exists ? uDoc.data().subscription : null;
     if (sub?.expiresAt) cand.push({ type: 'individual', exp: _toDate(sub.expiresAt), willRenew: sub.willRenew });
@@ -296,10 +296,10 @@ async function _licenseInfoHtml(access, ok) {
 
     let lic = null;
     if (cand.length) {
-        // 3. Najp�niejsza data ko�ca
+        // 3. Najpóźniejsza data końca
         lic = cand.sort((a, b) => (b.exp?.getTime() || 0) - (a.exp?.getTime() || 0))[0];
     } else {
-        // 4. Brak licencji -> trial = najwcze�niejszy membership w klubie (+90 dni), fallback clubs.createdAt; tylko gdy ju� min��
+        // 4. Brak licencji -> trial = najwcześniejszy membership w klubie (+90 dni), fallback clubs.createdAt; tylko gdy już minął
         const firsts = mems.map(m => _toDate(m.createdAt)).filter(d => d && !isNaN(d));
         const start = firsts.length ? new Date(Math.min(...firsts.map(d => d.getTime()))) : _toDate(cd.createdAt);
         if (start) {
@@ -313,19 +313,19 @@ async function _licenseInfoHtml(access, ok) {
         let state;
         if (lic.exp && lic.exp > now) state = '<span style="color:var(--ok, #22c55e)">' + _trb('blocked.licActive', 'aktywna') + '</span>';
         else if ((lic.type === 'individual' || lic.type === 'family') && lic.willRenew === true) state = '<span style="color:var(--warn)">' + _trb('blocked.licAwaitingRenewal', 'czeka na odnowienie') + '</span>';
-        else state = '<span style="color:var(--warn)">' + _trb('blocked.licExpired', 'wygas�a') + '</span>';
-        let line = '<b>' + SRC[lic.type] + '</b>: ' + state + ' � ' + until + ' ' + _fmtPL(lic.exp);
+        else state = '<span style="color:var(--warn)">' + _trb('blocked.licExpired', 'wygasła') + '</span>';
+        let line = '<b>' + SRC[lic.type] + '</b>: ' + state + ' — ' + until + ' ' + _fmtPL(lic.exp);
         if (lic.type === 'individual' || lic.type === 'family')
-            line += ' � ' + _trb('blocked.licAutoRenew', 'odnawiana automatycznie') + ': <b>' + (lic.willRenew === true ? yes : no) + '</b>';
+            line += ' — ' + _trb('blocked.licAutoRenew', 'odnawiana automatycznie') + ': <b>' + (lic.willRenew === true ? yes : no) + '</b>';
         if (lic.type === 'club')
-            line += ' � ' + _trb('blocked.licSlots', 'miejsca') + ' ' + (lic.used ?? '?') + '/' + (lic.total ?? '?')
-                  + ' � ' + _trb('blocked.licYourSlot', 'Tw�j slot') + ': <b>' + (lic.yourSlot ? yes : no) + '</b>';
+            line += ' — ' + _trb('blocked.licSlots', 'miejsca') + ' ' + (lic.used ?? '?') + '/' + (lic.total ?? '?')
+                  + ' — ' + _trb('blocked.licYourSlot', 'Twój slot') + ': <b>' + (lic.yourSlot ? yes : no) + '</b>';
         rows.push(line);
     }
 
     rows.push('<span style="opacity:.7">' + _trb('blocked.licCheckedAt', 'Sprawdzono') + ': ' + _fmtPL(now) + '</span>');
     let html = '<div style="text-align:left; line-height:1.6; font-size:12px; margin-top:6px;">' + rows.join('<br>') + '</div>';
-    if (ok) html += '<button class="payment-btn-primary" style="margin-top:8px" onclick="window.location.href=\'start.html\'">' + _trb('blocked.recheckGoToApp', 'Przejd� do aplikacji') + '</button>';
+    if (ok) html += '<button class="payment-btn-primary" style="margin-top:8px" onclick="window.location.href=\'start.html\'">' + _trb('blocked.recheckGoToApp', 'Przejdź do aplikacji') + '</button>';
     return html;
 }
 
@@ -337,7 +337,7 @@ async function initBlocked(authUser) {
     blockedUserId = getCurrentUserId();
     if (!blockedUserId || !db) return;
 
-    // Sprawd� isPlatformAdmin � tylko wtedy dev-purchase widoczne
+    // Sprawdź isPlatformAdmin — tylko wtedy dev-purchase widoczne
     try {
         const uDoc = await db.collection('users').doc(blockedUserId).get();
         if (uDoc.exists && uDoc.data().isPlatformAdmin === true) {
@@ -370,7 +370,7 @@ async function initBlocked(authUser) {
                 if (hasActiveLicense) {
                     document.getElementById('card-payment').style.display = 'none';
                     document.getElementById('card-payment-member').style.display = 'flex';
-                    document.querySelector('#card-payment-member .blocked-icon').textContent = '??';
+                    document.querySelector('#card-payment-member .blocked-icon').textContent = '👍';
                     document.querySelector('#card-payment-member .blocked-title').textContent = t('blocked.trainerHasLicenseTitle');
                     document.querySelector('#card-payment-member .blocked-text').textContent = t('blocked.trainerHasLicenseBody');
                 } else {
@@ -385,7 +385,7 @@ async function initBlocked(authUser) {
         }
     }
 
-    // Dev purchase � inicjalizacja po sprawdzeniu roli
+    // Dev purchase — inicjalizacja po sprawdzeniu roli
     if (_reason === 'payment_expired' && _clubId) {
         try {
             const mSnap = await db.collection('memberships')
@@ -403,7 +403,7 @@ async function initBlocked(authUser) {
     renderBlockedCtx(activeMemberships);
 }
 
-/* �� Ctx switcher �� */
+/* ── Ctx switcher ── */
 function toggleBlockedCtx() {
     document.getElementById('blocked-ctx-ov').classList.toggle('open');
 }
@@ -418,7 +418,7 @@ async function renderBlockedCtx(memberships) {
     }
 
     listEl.innerHTML = '';
-    const roleNames = { TRENER_GLOWNY: 'Trener g��wny', TRENER_POMOCNICZY: 'Trener pomocniczy', RODZIC: 'Rodzic', ZAWODNIK: 'Zawodnik', KIBIC: 'Kibic' };
+    const roleNames = { TRENER_GLOWNY: 'Trener główny', TRENER_POMOCNICZY: 'Trener pomocniczy', RODZIC: 'Rodzic', ZAWODNIK: 'Zawodnik', KIBIC: 'Kibic' };
 
     for (const m of memberships) {
         let teamName = '', clubName = m.clubId || '', color = 'var(--akcent)';
@@ -453,7 +453,7 @@ async function renderBlockedCtx(memberships) {
     }
 }
 
-/* �� Testowy zakup licencji (tylko isPlatformAdmin) �� */
+/* ── Testowy zakup licencji (tylko isPlatformAdmin) ── */
 async function initDevPurchase(role, clubId) {
     if (!clubId) return;
     const card = document.getElementById('dev-purchase-card');
@@ -468,15 +468,15 @@ async function initDevPurchase(role, clubId) {
     const buttons = [];
 
     if (isTrainer) {
-        buttons.push({ label: '?? Kup licencj� indywidualn� (1 rok)', sub: 'Ustawia users.subscription (ACTIVE, 1 rok)', fn: () => devBuyIndividual(blockedUserId, clubId) });
-        buttons.push({ label: '?? Kup licencj� klubow� B2B (10 slot�w, 1 rok)', sub: 'Aktualizuje clubs.license � obejmuje wszystkich trener�w i rodzic�w', fn: () => devBuyClub(clubId, 10) });
+        buttons.push({ label: '💳 Kup licencję indywidualną (1 rok)', sub: 'Ustawia users.subscription (ACTIVE, 1 rok)', fn: () => devBuyIndividual(blockedUserId, clubId) });
+        buttons.push({ label: '🏢 Kup licencję klubową B2B (10 slotów, 1 rok)', sub: 'Aktualizuje clubs.license — obejmuje wszystkich trenerów i rodziców', fn: () => devBuyClub(clubId, 10) });
     }
     if (isRodzic) {
-        buttons.push({ label: '?? Kup licencj� indywidualn� (1 rok)', sub: 'Ustawia users.subscription (ACTIVE, 1 rok)', fn: () => devBuyIndividual(blockedUserId, clubId) });
-        buttons.push({ label: '??????????? Kup licencj� Family (5 kibic�w, 1 rok)', sub: 'Tworzy access_rights z slots_total=6', fn: () => devBuyFamily(blockedUserId, clubId, 6) });
+        buttons.push({ label: '💳 Kup licencję indywidualną (1 rok)', sub: 'Ustawia users.subscription (ACTIVE, 1 rok)', fn: () => devBuyIndividual(blockedUserId, clubId) });
+        buttons.push({ label: '👨‍👩‍👧‍👦 Kup licencję Family (5 kibiców, 1 rok)', sub: 'Tworzy access_rights z slots_total=6', fn: () => devBuyFamily(blockedUserId, clubId, 6) });
     }
     if (isKibic) {
-        buttons.push({ label: '?? Kibic nie kupuje licencji', sub: 'Dost�p pochodzi z licencji Family rodzica. Popro� rodzica o zakup.', fn: null });
+        buttons.push({ label: '🚫 Kibic nie kupuje licencji', sub: 'Dostęp pochodzi z licencji Family rodzica. Poproś rodzica o zakup.', fn: null });
     }
 
     body.innerHTML = '<div class="dev-msg" id="dev-msg"></div>';
@@ -489,22 +489,22 @@ async function initDevPurchase(role, clubId) {
         else btn.onclick = async () => {
             btn.disabled = true;
             const msg = document.getElementById('dev-msg');
-            msg.textContent = 'Tworz� rekord...';
+            msg.textContent = 'Tworzę rekord...';
             msg.className = 'dev-msg ok';
             try {
                 await b.fn();
-                msg.textContent = 'Weryfikuj� dost�p...';
+                msg.textContent = 'Weryfikuję dostęp...';
                 const access = await getAccessStatus(blockedUserId, clubId, { claimSlot: true });
                 if (access.status === 'ACTIVE' || access.status === 'TRIAL') {
-                    msg.textContent = `? Dost�p aktywny (${access.source}) � przekierowanie...`;
+                    msg.textContent = `✅ Dostęp aktywny (${access.source}) — przekierowanie...`;
                     setTimeout(() => window.location.href = 'start.html', 1500);
                 } else {
-                    msg.textContent = `? getAccessStatus zwr�ci�: ${access.status} (${access.source})`;
+                    msg.textContent = `❌ getAccessStatus zwrócił: ${access.status} (${access.source})`;
                     msg.className = 'dev-msg err';
                     btn.disabled = false;
                 }
             } catch(e) {
-                msg.textContent = 'B��d: ' + e.message;
+                msg.textContent = 'Błąd: ' + e.message;
                 msg.className = 'dev-msg err';
                 btn.disabled = false;
             }
@@ -549,7 +549,7 @@ async function devBuyClub(clubId, total) {
     });
 }
 
-/* �� Kod zaproszenia �� */
+/* ── Kod zaproszenia ── */
 async function redeemCode() {
     const code  = document.getElementById('invite-input').value.trim().toUpperCase();
     const msgEl = document.getElementById('invite-msg');
