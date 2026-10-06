@@ -17,7 +17,7 @@
 .screen-body::-webkit-scrollbar { display: none; }
 .ust-wrap { align-self: center; width: min(1222px, 100%); padding: 20px 28px 80px; display: flex; flex-direction: column; gap: 20px; }
 
-/* �� Grupy ustawie� �� */
+/* ── Grupy ustawień ── */
 .sg-label { font-size: 15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); padding: 0 2px; margin-bottom: 6px; }
 .settings-group { display: flex; flex-direction: column; gap: 2px; }
 
@@ -31,11 +31,11 @@
 .si-val { font-size: 17px; color: var(--szary); font-weight: 600; }
 .si-arr { color: var(--border2); font-size: 19px; }
 
-/* �� Wyloguj �� */
+/* ── Wyloguj ── */
 .logout-btn { width: 100%; background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.2); border-radius: 14px; padding: 15px; color: var(--blad); font-size: 19px; font-weight: 900; transition: background 0.15s; }
 .logout-btn:active { background: rgba(248,113,113,0.14); }
 
-/* �� Panel szczeg�owy (slide z prawej) �� */
+/* ── Panel szczegółowy (slide z prawej) ── */
 .detail-panel { position: absolute; top: var(--top-h); left: 0; right: 0; bottom: var(--nav-h); background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .detail-panel.open { transform: translateX(0); }
 .dp-header { background: #000; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
@@ -95,37 +95,37 @@
     </div>
 
     <div class="ctx-overlay" id="ctx-ov">
-        <div class="ov-label" data-i18n="appShell.switcherTitle">Wybierz klub i zesp�</div>
+        <div class="ov-label" data-i18n="appShell.switcherTitle">Wybierz klub i zespół</div>
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
     <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
-        <div class="notif-hdr"><span class="notif-tytul" data-i18n="appShell.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="appShell.clearRead">Wyczy�� przeczytane</span></div>
+        <div class="notif-hdr"><span class="notif-tytul" data-i18n="appShell.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="appShell.clearRead">Wyczyść przeczytane</span></div>
     </div>
 
     <div class="screen-body">
     <div class="ust-wrap">
         <div style="font-family:var(--font-d);font-size:27px;font-weight:800;color:var(--bialy);" data-i18n="settings.headerTitle">Ustawienia</div>
 
-        <!-- Dru�yna � tylko TRENER admin -->
+        <!-- Drużyna — tylko TRENER admin -->
         <div class="settings-group" id="sg-druzyna" style="display:none;">
-            <div class="sg-label" data-i18n="settings.groupTeam">Dru�yna</div>
+            <div class="sg-label" data-i18n="settings.groupTeam">Drużyna</div>
             <div class="si" onclick="openPanel('sezon')">
                 <span class="si-icon">??</span>
                 <div class="si-body">
                     <div class="si-text" data-i18n="settings.seasonRowTitle">Daty sezonu</div>
                     <div class="si-desc" id="si-sezon-desc" data-i18n="settings.seasonRowDescDefault">Okres liczenia statystyk</div>
                 </div>
-                <div class="si-right"><span class="si-arr">�</span></div>
+                <div class="si-right"><span class="si-arr">></span></div>
             </div>
             <div class="si" onclick="openPanel('pozycje')">
                 <span class="si-icon">??</span>
                 <div class="si-body">
-                    <div class="si-text" data-i18n="settings.positionsRowTitle">Pozycje zawodnik�w</div>
-                    <div class="si-desc" data-i18n="settings.positionsRowDesc">Widoczno�� na profilach i w meczu</div>
+                    <div class="si-text" data-i18n="settings.positionsRowTitle">Pozycje zawodników</div>
+                    <div class="si-desc" data-i18n="settings.positionsRowDesc">Widoczność na profilach i w meczu</div>
                 </div>
-                <div class="si-right"><span class="si-arr">�</span></div>
+                <div class="si-right"><span class="si-arr">></span></div>
             </div>
             <div class="si" id="si-reminder" onclick="openPanel('reminder')">
                 <span class="si-icon">??</span>
@@ -133,7 +133,7 @@
                     <div class="si-text" data-i18n="settings.reminderRowTitle">Powiadomienie przed eventem</div>
                     <div class="si-desc" id="si-reminder-desc"></div>
                 </div>
-                <div class="si-right"><span class="si-arr">�</span></div>
+                <div class="si-right"><span class="si-arr">></span></div>
             </div>
             <div class="si" id="si-licencja" style="display:none" onclick="openPanel('licencja')">
                 <span class="si-icon">??</span>
@@ -141,31 +141,31 @@
                     <div class="si-text" data-i18n="settings.licenseRowTitle">Licencja klubowa</div>
                     <div class="si-desc" id="si-licencja-desc" data-i18n="settings.licenseRowDesc">Kto korzysta z puli</div>
                 </div>
-                <div class="si-right"><span class="si-arr">�</span></div>
+                <div class="si-right"><span class="si-arr">></span></div>
             </div>
         </div>
 
-        <!-- Aplikacja � wszyscy -->
+        <!-- Aplikacja — wszyscy -->
         <div class="settings-group">
             <div class="sg-label" data-i18n="settings.groupApp">Aplikacja</div>
             <div class="si" onclick="openPanel('jezyk')">
                 <span class="si-icon">??</span>
-                <div class="si-body"><div class="si-text" data-i18n="settings.languageRowTitle">J�zyk aplikacji</div></div>
-                <div class="si-right"><span class="si-val" id="si-lang-val">Polski</span><span class="si-arr">�</span></div>
+                <div class="si-body"><div class="si-text" data-i18n="settings.languageRowTitle">Język aplikacji</div></div>
+                <div class="si-right"><span class="si-val" id="si-lang-val">Polski</span><span class="si-arr">></span></div>
             </div>
         </div>
 
-        <!-- Prawne � wszyscy -->
+        <!-- Prawne — wszyscy -->
         <div class="settings-group">
             <div class="sg-label" data-i18n="settings.groupLegal">Prawne</div>
             <div class="si" onclick="window.location.href='rodo.html'">
                 <span class="si-icon">??</span>
-                <div class="si-body"><div class="si-text" data-i18n="settings.legalRowTitle">Polityka prywatno�ci i RODO</div></div>
-                <div class="si-right"><span class="si-arr">�</span></div>
+                <div class="si-body"><div class="si-text" data-i18n="settings.legalRowTitle">Polityka prywatności i RODO</div></div>
+                <div class="si-right"><span class="si-arr">></span></div>
             </div>
         </div>
 
-        <button class="logout-btn" onclick="confirmLogout()" data-i18n="settings.logoutButton">?? Wyloguj si�</button>
+        <button class="logout-btn" onclick="confirmLogout()" data-i18n="settings.logoutButton">?? Wyloguj się</button>
 
     </div><!-- /ust-wrap -->
     </div><!-- /screen-body -->
@@ -173,18 +173,18 @@
     <!-- Panel: Daty sezonu -->
     <div class="detail-panel" id="panel-sezon">
         <div class="dp-header">
-            <button class="dp-back" onclick="closePanel('sezon')">�</button>
+            <button class="dp-back" onclick="closePanel('sezon')">←</button>
             <div class="dp-title" data-i18n="settings.seasonPanelTitle">Daty sezonu</div>
         </div>
         <div class="dp-scroll">
             <div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:14px;">
                 <p style="font-size:17px;font-weight:700;color:rgba(251,191,36,0.9);line-height:1.6;" data-i18n="settings.seasonWarning">
-                    ?? Daty sezonu wp�ywaj� na liczenie statystyk i raport�w obecno�ci.
+                    ?? Daty sezonu wpływają na liczenie statystyk i raportów obecności.
                 </p>
             </div>
             <div class="sezon-row">
                 <div class="dp-form-group">
-                    <label class="dp-form-lbl" data-i18n="settings.seasonStartLabel">Pocz�tek sezonu</label>
+                    <label class="dp-form-lbl" data-i18n="settings.seasonStartLabel">Początek sezonu</label>
                     <input type="date" class="dp-form-inp" id="inp-sezon-start">
                 </div>
                 <div class="dp-form-group">
@@ -201,21 +201,21 @@
         </div>
     </div>
 
-    <!-- Panel: Pozycje zawodnik�w -->
+    <!-- Panel: Pozycje zawodników -->
     <div class="detail-panel" id="panel-pozycje">
         <div class="dp-header">
-            <button class="dp-back" onclick="closePanel('pozycje')">�</button>
-            <div class="dp-title" data-i18n="settings.positionsPanelTitle">Pozycje zawodnik�w</div>
+            <button class="dp-back" onclick="closePanel('pozycje')">←</button>
+            <div class="dp-title" data-i18n="settings.positionsPanelTitle">Pozycje zawodników</div>
         </div>
         <div class="dp-scroll">
             <div class="dp-form-group" style="flex-direction:row;justify-content:space-between;align-items:center;background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">
                 <div>
                     <div style="font-size:19px;font-weight:800;color:var(--bialy);" data-i18n="settings.showPositionsLabel">Pokazuj pozycje</div>
-                    <div style="font-size:16px;color:var(--szary);font-weight:600;margin-top:2px;" data-i18n="settings.showPositionsSub">Widoczne na li�cie dru�yny i w meczu</div>
+                    <div style="font-size:16px;color:var(--szary);font-weight:600;margin-top:2px;" data-i18n="settings.showPositionsSub">Widoczne na liście drużyny i w meczu</div>
                 </div>
                 <div class="si-toggle" id="tog-show-positions" onclick="toggleSwitch(this)"></div>
             </div>
-            <div class="dp-form-lbl" style="margin-top:4px;" data-i18n="settings.availablePositionsLabel">Dost�pne pozycje</div>
+            <div class="dp-form-lbl" style="margin-top:4px;" data-i18n="settings.availablePositionsLabel">Dostępne pozycje</div>
             <div class="pozycje-list" id="pozycje-list"></div>
             <button class="btn-primary" style="width:100%;padding:14px;" onclick="savePozycje()" data-i18n="settings.positionsSaveButton">Zapisz</button>
             <div id="pozycje-msg" style="font-size:17px;font-weight:700;text-align:center;min-height:18px;"></div>
@@ -225,7 +225,7 @@
     <!-- Panel: Powiadomienie przed eventem -->
     <div class="detail-panel" id="panel-reminder">
         <div class="dp-header">
-            <button class="dp-back" onclick="closePanel('reminder')">�</button>
+            <button class="dp-back" onclick="closePanel('reminder')">←</button>
             <div class="dp-title" data-i18n="settings.reminderPanelTitle">Powiadomienie przed eventem</div>
         </div>
         <div class="dp-scroll">
@@ -241,43 +241,43 @@
     <!-- Panel: Licencja klubowa -->
     <div class="detail-panel" id="panel-licencja">
         <div class="dp-header">
-            <button class="dp-back" onclick="closePanel('licencja')">�</button>
+            <button class="dp-back" onclick="closePanel('licencja')">←</button>
             <div class="dp-title" data-i18n="settings.licensePanelTitle">Licencja klubowa</div>
         </div>
         <div class="dp-scroll">
             <div id="licencja-brak" style="display:none;background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:16px;font-size:18px;color:var(--szary);line-height:1.6;" data-i18n="settings.licenseNoneBody">
-                Klub nie ma jeszcze aktywnej licencji klubowej (puli B2B). Skontaktuj si� z supportem, �eby j� aktywowa�.
+                Klub nie ma jeszcze aktywnej licencji klubowej (puli B2B). Skontaktuj się z supportem, żeby ją aktywować.
             </div>
             <div id="licencja-form">
                 <div style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <div style="font-size:18px;font-weight:700;color:var(--szary);" data-i18n="settings.licenseUsageLabel">Wykorzystanie puli</div>
-                        <div style="font-size:20px;font-weight:900;color:var(--bialy);" id="lic-uzycie">� / �</div>
+                        <div style="font-size:20px;font-weight:900;color:var(--bialy);" id="lic-uzycie">- / -</div>
                     </div>
                     <div style="height:6px;background:var(--border);border-radius:3px;margin-top:8px;overflow:hidden;">
                         <div id="lic-uzycie-bar" style="height:100%;background:var(--akcent);border-radius:3px;width:0%;"></div>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
-                        <div style="font-size:18px;font-weight:700;color:var(--szary);" data-i18n="settings.licenseValidUntilLabel">Wa�na do</div>
-                        <div style="font-size:19px;font-weight:800;color:var(--bialy);" id="lic-wazna-do">�</div>
+                        <div style="font-size:18px;font-weight:700;color:var(--szary);" data-i18n="settings.licenseValidUntilLabel">Ważna do</div>
+                        <div style="font-size:19px;font-weight:800;color:var(--bialy);" id="lic-wazna-do">-</div>
                     </div>
                 </div>
 
                 <div class="dp-form-lbl" data-i18n="settings.licenseScopeLabel">Kto korzysta z puli klubowej</div>
                 <div class="pozycje-list" id="licencja-scope-list">
-                    <div class="poz-item" style="cursor:pointer;" onclick="pickScope('trainers_only')"><span class="poz-name" data-i18n="settings.licenseScopeTrainersOnly">Trenerzy</span><span id="scope-check-trainers_only" style="color:transparent;font-size:16px;">?</span></div>
-                    <div class="poz-item" style="cursor:pointer;" onclick="pickScope('all')"><span class="poz-name" data-i18n="settings.licenseScopeAll">Trenerzy i rodzice</span><span id="scope-check-all" style="color:var(--sukces);font-size:16px;">?</span></div>
+                    <div class="poz-item" style="cursor:pointer;" onclick="pickScope('trainers_only')"><span class="poz-name" data-i18n="settings.licenseScopeTrainersOnly">Trenerzy</span><span id="scope-check-trainers_only" style="color:transparent;font-size:16px;">✓</span></div>
+                    <div class="poz-item" style="cursor:pointer;" onclick="pickScope('all')"><span class="poz-name" data-i18n="settings.licenseScopeAll">Trenerzy i rodzice</span><span id="scope-check-all" style="color:var(--sukces);font-size:16px;">✓</span></div>
                 </div>
 
-                <!-- "Wymu� licencj� klubow� dla rodzic�w" (force_club_pool) usuni�te 2026-07-28 �
-                     pomija�o WA�N� w�asn� licencj� rodzica, uznane za niedopuszczalne. Naturalna
-                     kolejno�� P1�grace�P3 w getAccessStatus() ju� sama przenosi rodzica na pul�
-                     klubow� dopiero gdy jego w�asna licencja faktycznie wyga�nie. -->
+                <!-- "Wymuś licencję klubową dla rodziców" (force_club_pool) usunięte 2026-07-28 —
+                     pomijało WAŻNĄ własną licencję rodzica, uznane za niedopuszczalne. Naturalna
+                     kolejność P1→grace→P3 w getAccessStatus() już sama przenosi rodzica na pulę
+                     klubową dopiero gdy jego własna licencja faktycznie wygaśnie. -->
                 <div id="licencja-rodzic-opcje" style="display:none;">
                     <div class="dp-form-group" style="flex-direction:row;justify-content:space-between;align-items:center;background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:12px;">
                         <div>
                             <div style="font-size:19px;font-weight:800;color:var(--bialy);" data-i18n="settings.licenseMaxOneParentLabel">Max 1 rodzic na dziecko</div>
-                            <div style="font-size:16px;color:var(--szary);font-weight:600;margin-top:2px;" data-i18n="settings.licenseMaxOneParentSub">Ogranicz zu�ycie puli � tylko jeden rodzic na zawodnika mo�e zaj�� slot klubowy</div>
+                            <div style="font-size:16px;color:var(--szary);font-weight:600;margin-top:2px;" data-i18n="settings.licenseMaxOneParentSub">Ogranicz zużycie puli — tylko jeden rodzic na zawodnika może zająć slot klubowy</div>
                         </div>
                         <div class="si-toggle" id="tog-max-one-parent" onclick="toggleSwitch(this)"></div>
                     </div>
@@ -300,9 +300,9 @@
                     </label>
                 </div>
 
-                <!-- Lista (sta�a wysoko��, max 25 wierszy) -->
+                <!-- Lista (stała wysokość, max 25 wierszy) -->
                 <div id="licencja-uzytkownicy" class="pozycje-list" style="max-height:calc(25 * 52px);overflow-y:auto;">
-                    <div style="padding:14px;color:var(--szary);font-size:16px;">�adowanie�</div>
+                    <div style="padding:14px;color:var(--szary);font-size:16px;">Ładowanie…</div>
                 </div>
 
                 <!-- Paginacja -->
@@ -311,26 +311,26 @@
         </div>
     </div>
 
-    <!-- Panel: J�zyk -->
+    <!-- Panel: Język -->
     <div class="detail-panel" id="panel-jezyk">
         <div class="dp-header">
-            <button class="dp-back" onclick="closePanel('jezyk')">�</button>
-            <div class="dp-title" data-i18n="settings.languagePanelTitle">J�zyk aplikacji</div>
+            <button class="dp-back" onclick="closePanel('jezyk')">←</button>
+            <div class="dp-title" data-i18n="settings.languagePanelTitle">Język aplikacji</div>
         </div>
         <div class="dp-scroll">
             <div class="pozycje-list" id="lang-list">
-                <div class="poz-item" style="cursor:pointer;" onclick="pickLang('pl')"><span class="poz-name">Polski ????</span><span id="lang-check-pl" style="font-size:16px;">?</span></div>
-                <div class="poz-item" style="cursor:pointer;" onclick="pickLang('en')"><span class="poz-name">English ????</span><span id="lang-check-en" style="font-size:16px;">?</span></div>
+                <div class="poz-item" style="cursor:pointer;" onclick="pickLang('pl')"><span class="poz-name">Polski 🇵🇱</span><span id="lang-check-pl" style="font-size:16px;">✓</span></div>
+                <div class="poz-item" style="cursor:pointer;" onclick="pickLang('en')"><span class="poz-name">English 🇬🇧</span><span id="lang-check-en" style="font-size:16px;">✓</span></div>
             </div>
         </div>
     </div>
 
-    <!-- Sheet: Wyb�r trybu sezonu -->
+    <!-- Sheet: Wybór trybu sezonu -->
     <div class="sezon-sheet-overlay" id="sezon-sheet-overlay" onclick="closeSezonSheet()"></div>
     <div class="sezon-sheet" id="sezon-sheet">
         <div class="sezon-sheet-handle"></div>
         <div class="sezon-sheet-title" id="sezon-sheet-title"></div>
-        <button class="sezon-sheet-btn primary" onclick="confirmSezon('update')" data-i18n="settings.seasonSheetUpdate">Zmie� aktualny sezon</button>
+        <button class="sezon-sheet-btn primary" onclick="confirmSezon('update')" data-i18n="settings.seasonSheetUpdate">Zmień aktualny sezon</button>
         <button class="sezon-sheet-btn secondary" onclick="confirmSezon('new')" data-i18n="settings.seasonSheetNew">Dodaj nowy sezon</button>
         <button class="sezon-sheet-btn cancel" onclick="closeSezonSheet()" data-i18n="common.cancel">Anuluj</button>
     </div>
@@ -341,15 +341,15 @@
     <div class="menu-panel" id="menu-panel">
         <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
         <div class="menu-panel-items">
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">M�j profil</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">P�atno�ci</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Dru�yny klubu</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">></span></div>
         </div>
         <div class="menu-panel-bottom">
-            <div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj si�</span></div>
+            <div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj się</span></div>
         </div>
     </div>
 
@@ -358,7 +358,7 @@
 <script src="coachay-core.js?v=20261003b"></script>
 <script>
 /* ===================================================
-   USTAWIENIA.HTML v2.1 | 2026-08-19 � i18n
+   USTAWIENIA.HTML v2.1 | 2026-08-19 — i18n
 =================================================== */
 
 let _teamId  = '';
@@ -376,7 +376,7 @@ const POZYCJE_DEF = [
     { id: 'win' },
 ];
 
-/* �� Lang init �� */
+/* ── Lang init ── */
 onI18nReady(function () {
     const lang = getLang();
     document.getElementById('si-lang-val').textContent = lang === 'en' ? t('settings.languageEn') : t('settings.languagePl');
@@ -384,7 +384,7 @@ onI18nReady(function () {
     document.getElementById('lang-check-en').style.color = lang === 'en' ? 'var(--sukces)' : 'transparent';
 });
 
-/* �� Init �� */
+/* ── Init ── */
 window.addEventListener('DOMContentLoaded', () => {
     if (typeof firebase === 'undefined') { console.error('? Firebase!'); return; }
     initFirebase();
@@ -412,7 +412,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/* �� Panel open/close �� */
+/* ── Panel open/close ── */
 function openPanel(id)  {
     document.getElementById('panel-' + id).classList.add('open');
     if (id === 'licencja' && !_licUsersLoaded) { _licUsersLoaded = true; loadLicencjaUsers(); } // 2026-09-25: lista dopiero po otwarciu panelu
@@ -423,7 +423,7 @@ function closePanel(id) { document.getElementById('panel-' + id).classList.remov
 function toggleSwitch(el) { el.classList.toggle('on'); }
 
 function confirmLogout() {
-    // confirm() natywny nie dzia�a w WebView appki Android
+    // confirm() natywny nie działa w WebView appki Android
     logout();
 }
 
@@ -440,7 +440,7 @@ function loadSezon(team) {
     document.getElementById('inp-sezon-name').value  = name;
     if (start && end) {
         const fmt = d => d.slice(0,7).replace('-', '/');
-        document.getElementById('si-sezon-desc').textContent = `${fmt(start)} � ${fmt(end)}`;
+        document.getElementById('si-sezon-desc').textContent = `${fmt(start)} – ${fmt(end)}`;
     }
 }
 
@@ -492,7 +492,7 @@ async function confirmSezon(mode) {
         if (!_teamDoc.settings) _teamDoc.settings = {};
         _teamDoc.settings.season = { start, end, name: seasonName };
         const fmt = d => d.slice(0,7).replace('-', '/');
-        document.getElementById('si-sezon-desc').textContent = `${fmt(start)} � ${fmt(end)}`;
+        document.getElementById('si-sezon-desc').textContent = `${fmt(start)} – ${fmt(end)}`;
         showMsg(msg, t('settings.savedLabel'), true);
         setTimeout(() => closePanel('sezon'), 900);
     } catch(e) {
@@ -502,7 +502,7 @@ async function confirmSezon(mode) {
 }
 
 /* ==================================================
-   POZYCJE ZAWODNIK�W
+   POZYCJE ZAWODNIKÓW
 ================================================== */
 function loadPozycje(team) {
     const s = team?.settings?.positions || {};
@@ -545,8 +545,8 @@ async function loadReminder() {
     if (!_clubId) return;
     const sel = document.getElementById('inp-reminder-hours');
     if (!sel) return;
-    // Wype�nij select opcjami 1-24h
-    // 2026-09-24: 0 = wy��czone (brak pola / null w bazie = 0). Nowe kluby dostaj� 1h przy zak�adaniu.
+    // Wypełnij select opcjami 1-24h
+    // 2026-09-24: 0 = wyłączone (brak pola / null w bazie = 0). Nowe kluby dostają 1h przy zakładaniu.
     sel.innerHTML = `<option value="0">${_reminderOffLabel()}</option>` + Array.from({ length: 24 }, (_, i) => {
         const h = i + 1;
         return `<option value="${h}">${h}h</option>`;
@@ -565,7 +565,7 @@ async function loadReminder() {
 function _reminderOffLabel() {
     const k = 'settings.reminderOffLabel';
     const v = typeof t === 'function' ? t(k) : null;
-    return (v && v !== k) ? v : 'Wy��czone';
+    return (v && v !== k) ? v : 'Wyłączone';
 }
 
 function _updateReminderDesc(h) {
@@ -597,7 +597,7 @@ async function saveReminder() {
 }
 
 /* ==================================================
-   J�ZYK
+   JĘZYK
 ================================================== */
 function pickLang(code) {
     const uid = getCurrentUserId();
@@ -607,7 +607,7 @@ function pickLang(code) {
     setLang(code);
 }
 
-/* �� Helper �� */
+/* ── Helper ── */
 function showMsg(el, txt, ok) {
     el.textContent = txt;
     el.style.color = ok ? 'var(--sukces)' : 'var(--blad)';
@@ -636,9 +636,9 @@ function _licBuildQuery() {
         .where('usedSlot', '==', 1);
     if (showTrainers && !showParents) q = q.where('role', 'in', _TRAINER_ROLES_ARR);
     else if (showParents && !showTrainers) q = q.where('role', '==', 'RODZIC');
-    // 2026-09-26: orderBy('createdAt') po cichu wycina� z wyniku membershipy bez tego pola
-    // (starsze dokumenty maj� tylko joinedAt) � np. Jan Kowalski znika� z listy �kto korzysta
-    // z puli", mimo �e realnie zajmuje slot. documentId() ma ka�dy dokument, wi�c nic nie ginie.
+    // 2026-09-26: orderBy('createdAt') po cichu wycinał z wyniku membershipy bez tego pola
+    // (starsze dokumenty mają tylko joinedAt) — np. Jan Kowalski znikał z listy "kto korzysta
+    // z puli", mimo że realnie zajmuje slot. documentId() ma każdy dokument, więc nic nie ginie.
     return q.orderBy(firebase.firestore.FieldPath.documentId()).limit(_LIC_PAGE_SIZE);
 }
 
@@ -681,7 +681,7 @@ async function _licLoadPage(pageIdx) {
 
         const memberships = snap.docs.map(doc => doc.data());
 
-        // Dla starych memberships bez displayName � fetch users doc (tylko brakuj�ce)
+        // Dla starych memberships bez displayName — fetch users doc (tylko brakujące)
         const missing = memberships.filter(m => !m.displayName && m.userId);
         if (missing.length > 0) {
             const userDocs = await Promise.all(
@@ -699,8 +699,8 @@ async function _licLoadPage(pageIdx) {
         }
 
         const rows = memberships.map(m => ({
-            name:  m.displayName || m.userId || '�',
-            label: t('settings.roleLabel_' + m.role) || m.role || '�',
+            name:  m.displayName || m.userId || '-',
+            label: t('settings.roleLabel_' + m.role) || m.role || '-',
         })).sort((a, b) => a.name.localeCompare(b.name, 'pl'));
 
         el.innerHTML = rows.map(r =>
@@ -715,9 +715,9 @@ async function _licLoadPage(pageIdx) {
         const hasNext = _licState.hasMore;
         if (!hasPrev && !hasNext) return;
         pgEl.innerHTML =
-            (hasPrev ? `<button onclick="_licLoadPage(${pageIdx - 1})" style="${_licBtnStyle(false)}">� Poprzednia</button>` : '') +
+            (hasPrev ? `<button onclick="_licLoadPage(${pageIdx - 1})" style="${_licBtnStyle(false)}">‹ Poprzednia</button>` : '') +
             `<span style="font-size:15px;font-weight:600;color:var(--szary);align-self:center;padding:0 4px;">Strona ${pageIdx + 1}</span>` +
-            (hasNext ? `<button onclick="_licLoadPage(${pageIdx + 1})" style="${_licBtnStyle(false)}">Nast�pna �</button>` : '');
+            (hasNext ? `<button onclick="_licLoadPage(${pageIdx + 1})" style="${_licBtnStyle(false)}">Następna ›</button>` : '');
     } catch (e) {
         el.innerHTML = `<div style="padding:14px;color:var(--blad);font-size:16px;">${t('settings.licenseUsersError')}</div>`;
         console.error('_licLoadPage:', e);
@@ -756,7 +756,7 @@ async function loadLicencja() {
         const validUntil = lic.valid_until?.toDate ? lic.valid_until.toDate() : (lic.valid_until ? new Date(lic.valid_until) : null);
         document.getElementById('lic-wazna-do').textContent = validUntil
             ? validUntil.toLocaleString(getLang() === 'en' ? 'en-GB' : 'pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Warsaw' })
-            : '�';
+            : '-';
 
         _licScope = lic.scope || 'all';
         _licScopeOriginal = _licScope;
@@ -767,7 +767,7 @@ async function loadLicencja() {
         const descMap = { all: t('settings.licenseScopeAll'), trainers_only: t('settings.licenseScopeTrainersOnly') };
         document.getElementById('si-licencja-desc').textContent = descMap[_licScope] || _licScope;
 
-        // 2026-09-25: lista u�ytkownik�w licencji tylko gdy panel otwarty (inaczej przy otwarciu panelu)
+        // 2026-09-25: lista użytkowników licencji tylko gdy panel otwarty (inaczej przy otwarciu panelu)
         if (document.getElementById('panel-licencja')?.classList.contains('open')) loadLicencjaUsers(); else _licUsersLoaded = false;
     } catch (e) {
         console.error('loadLicencja:', e);
@@ -792,7 +792,7 @@ function pickScope(scope) {
 
 async function znajdzTraconyDostepKlubowy(newScope) {
     if (newScope === 'all') return [];
-    // usedSlot=1 i role=RODZIC � strac� dost�p po zaw�eniu scope do trainers_only
+    // usedSlot=1 i role=RODZIC — straci dostęp po zawężeniu scope do trainers_only
     const slotSnap = await db.collection('memberships')
         .where('clubId', '==', _clubId)
         .where('role', '==', 'RODZIC')
@@ -848,18 +848,18 @@ async function saveLicencja() {
                 if (!ok) return;
             }
 
-            // releaseClubLicenseSlot usuni�te � CF onClubLicenseUpdated obs�uguje zwolnienie slot�w
-            // automatycznie przez trigger na zmian� license.scope
+            // releaseClubLicenseSlot usunięte — CF onClubLicenseUpdated obsługuje zwolnienie slotów
+            // automatycznie przez trigger na zmianę license.scope
             for (const u of zagrozeni) {
                 try {
                     await createNotification({
                         userId: u.userId,
                         teamId: null,
                         type: 'INFO',
-                        title: 'Coachay � licencja klubowa',
-                        body: 'Klub zmieni� ustawienia licencji � nie masz ju� dost�pu przez pul� klubow�. Skontaktuj si� z trenerem lub kup w�asn� licencj� w P�atno�ciach.'
+                        title: 'Coachay — licencja klubowa',
+                        body: 'Klub zmienił ustawienia licencji — nie masz już dostępu przez pulę klubową. Skontaktuj się z trenerem lub kup własną licencję w Płatnościach.'
                     });
-                } catch (e) { console.error('Powiadomienie o utracie dost�pu:', e); }
+                } catch (e) { console.error('Powiadomienie o utracie dostępu:', e); }
             }
         }
 
