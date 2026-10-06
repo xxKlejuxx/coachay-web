@@ -15,14 +15,14 @@
 <style>
 .screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
 
-/* �� Sort bar �� */
+/* === Sort bar === */
 .sort-bar { padding: 10px 16px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
 .sort-bar::-webkit-scrollbar { display: none; }
 .sort-lbl { font-size: 15px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; flex-shrink: 0; }
 .sort-btn { border-radius: var(--r-pill); padding: 5px 12px; font-size: 16px; font-weight: 800; background: var(--tlo-karta); border: 1px solid var(--border); color: var(--szary); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
 .sort-btn.active { background: var(--bialy); color: #000; border-color: var(--bialy); }
 
-/* �� Lista zawodnik�w �� */
+/* === Lista zawodników === */
 .zaw-scroll { flex: 1; overflow-y: auto; padding: 10px 16px 80px; display: flex; flex-direction: column; align-items: center; gap: 8px; scrollbar-width: none; }
 .zaw-scroll::-webkit-scrollbar { display: none; }
 
@@ -45,13 +45,13 @@
 .zaw-liga { font-size: 16px; font-weight: 900; color: var(--warn); white-space: nowrap; }
 .zaw-liga-lbl { font-size: 14px; color: var(--szary); font-weight: 700; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* �� FAB dodaj zawodnika �� */
+/* === FAB dodaj zawodnika === */
 .add-player-bar { position: absolute; bottom: 72px; right: 16px; z-index: 10; display: none; }
 body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .add-player-btn { width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size: 19px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); transition: opacity 0.15s; }
 .add-player-btn:active { opacity: 0.85; }
 
-/* �� Panel zawodnika (slide z prawej) �� */
+/* === Panel zawodnika (slide z prawej) === */
 .detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .detail-panel.open { transform: translateX(0); }
 
@@ -79,7 +79,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .dp-scroll { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
 .dp-scroll::-webkit-scrollbar { display: none; }
 
-/* �� Frekwencja �� */
+/* === Frekwencja === */
 .freq-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .freq-label { font-size: 17px; font-weight: 700; color: var(--szary-j); width: 70px; flex-shrink: 0; }
 .freq-bar-wrap { flex: 1; height: 8px; background: var(--tlo-karta2); border-radius: 999px; overflow: hidden; }
@@ -90,7 +90,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .freq-bar-inne { background: #6B7280; }
 .freq-pct { font-size: 17px; font-weight: 900; color: var(--bialy); width: 36px; text-align: right; flex-shrink: 0; }
 
-/* �� Absencje �� */
+/* === Absencje === */
 .abs-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .abs-item:last-child { border-bottom: none; }
 .abs-dates { flex: 1; }
@@ -98,34 +98,34 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .abs-dates-comment { font-size: 16px; color: var(--szary); margin-top: 2px; }
 .abs-del { font-size: 21px; color: var(--szary); cursor: pointer; padding: 4px; }
 
-/* �� Panel absencji (slide-in nad profilem) �� */
+/* === Panel absencji (slide-in nad profilem) === */
 .abs-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .abs-panel.open { transform: translateY(0); }
 .abs-panel-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .abs-panel-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 .abs-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
 
-/* �� Panel dodaj zawodnika �� */
+/* === Panel dodaj zawodnika === */
 .add-player-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 140; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .add-player-panel.open { transform: translateY(0); }
 .add-player-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .add-player-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 .add-player-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; }
 
-/* �� Statystyki hero � 4 pola z zapisem X/Y �� */
+/* === Statystyki hero – 4 pola z zapisem X/Y === */
 .dp-stat-sub { font-size: 14px; font-weight: 700; color: var(--szary); margin-top: 3px; }
 
-/* �� Sekcja w panelu �� */
+/* === Sekcja w panelu === */
 .dp-section { display: flex; flex-direction: column; gap: 8px; }
 .dp-section-label { font-size: 15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--szary); margin-bottom: 4px; }
 
-/* �� Picker awatara (slide-in z do�u) �� */
+/* === Picker awatara (slide-in z dołu) === */
 .avatar-picker-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 150; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .avatar-picker-panel.open { transform: translateY(0); }
 .avatar-picker-hdr { height: var(--top-h); background: #000; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .avatar-picker-tytul { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--bialy); }
 
-/* Wyb�r stylu + przycisk generuj */
+/* Wybór stylu + przycisk generuj */
 .av-styl-row { display: flex; gap: 8px; padding: 12px 16px; background: #000; border-bottom: 1px solid var(--border); flex-shrink: 0; align-items: center; }
 .av-styl-btn { padding: 7px 16px; border-radius: var(--r-pill); background: var(--tlo-karta); border: 1px solid var(--border); font-size: 17px; font-weight: 800; color: var(--szary-j); cursor: pointer; transition: all 0.15s; }
 .av-styl-btn.selected { background: var(--bialy); color: #000; border-color: var(--bialy); }
@@ -153,12 +153,12 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .modal-btn-secondary { background: var(--tlo-karta2); color: var(--szary-j); border: 1px solid var(--border2); }
 .modal-btn-cancel { background: transparent; color: var(--szary); font-size: 17px; }
 
-/* �� Notatki trenera �� */
+/* === Notatki trenera === */
 .coach-notes { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 12px 14px; color: var(--bialy); font-size: 18px; font-weight: 600; font-family: var(--font); resize: none; min-height: 80px; }
 .coach-notes::placeholder { color: var(--szary); }
 .coach-notes:focus { border-color: var(--akcent); outline: none; }
 
-/* �� Kody dost�pu � lista �� */
+/* === Kody dostępu – lista === */
 .kod-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
 .kod-item.kod-aktywny { border-color: rgba(59,130,246,0.4); }
 .kod-item.kod-uzyty { border-color: rgba(74,222,128,0.3); }
@@ -175,29 +175,29 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .kod-meta strong { color: var(--szary-j); }
 .kod-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 
-/* �� Sticky save btn �� */
+/* === Sticky save btn === */
 .sticky-save { position: sticky; bottom: 0; padding: 14px 16px; background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
 
-/* �� Kod dost�pu �� */
+/* === Kod dostępu === */
 .kod-box { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; }
 .kod-val { font-family: var(--font-d); font-size: 27px; font-weight: 800; color: var(--bialy); letter-spacing: 4px; }
 .kod-copy { font-size: 16px; font-weight: 900; color: var(--akcent); cursor: pointer; }
 
-/* �� Select custom �� */
+/* === Select custom === */
 .form-select { width: 100%; background: var(--tlo-karta); border: 1.5px solid var(--border2); border-radius: 14px; padding: 14px 16px; color: var(--bialy); font-size: 20px; font-weight: 600; font-family: var(--font); appearance: none; cursor: pointer; }
 .form-select:focus { border-color: var(--akcent); outline: none; }
 .form-select option { background: #1a1a1a; }
 
-/* �� Empty state �� */
+/* === Empty state === */
 .zaw-empty { padding: 60px 20px; text-align: center; color: var(--szary); font-size: 18px; font-weight: 600; line-height: 1.6; width: 100%; max-width: 1100px; box-sizing: border-box; }
 
-/* �� Powi�zane konta �� */
+/* === Powiązane konta === */
 .pow-group-label { font-size: 15px; font-weight: 900; color: var(--szary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; margin-top: 4px; }
 .pow-item { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
 .pow-item:last-child { margin-bottom: 0; }
 .pow-item:hover { border-color: var(--akcent); }
 .pow-chevron { color: var(--szary); font-size: 17px; flex-shrink: 0; }
-/* Modal danych powi�zanego */
+/* Modal danych powiązanego */
 .pow-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 9000; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 .pow-modal-overlay.open { opacity: 1; pointer-events: all; }
 .pow-modal { background: var(--tlo-karta); border-radius: 20px 20px 0 0; padding: 20px 20px 36px; width: 100%; max-height: 80vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.25s cubic-bezier(.32,.72,0,1); }
@@ -279,42 +279,42 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
             <span class="ctx-arrow">▾</span>
         </div>
         <div class="top-bar-right">
-            <button class="import-btn" id="import-csv-btn" onclick="otworzImportCSV()" data-i18n="druzyna.importCsvButton">?? Importuj CSV</button>
+            <button class="import-btn" id="import-csv-btn" onclick="otworzImportCSV()" data-i18n="druzyna.importCsvButton">📥 Importuj CSV</button>
             <div class="menu-btn" id="menu-btn" onclick="toggleMenu()"><div class="menu-btn-lines"><span></span><span></span><span></span></div></div>
         </div>
     </div>
 
     <!-- Overlaye globalne -->
     <div class="ctx-overlay" id="ctx-ov">
-        <div class="ov-label">Wybierz klub i zesp�</div>
+        <div class="ov-label">Wybierz klub i zespół</div>
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
     <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
-        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczy�� przeczytane</span></div>
+        <div class="notif-hdr"><span class="notif-tytul">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()">Wyczyść przeczytane</span></div>
     </div>
 
-    <!-- G��wna zawarto�� -->
+    <!-- Główna zawartość -->
     <div class="screen-body">
 
         <!-- Sort bar -->
         <div class="sort-bar">
             <span class="sort-lbl" data-i18n="druzyna.sortLabel">Sortuj:</span>
             <button class="sort-btn active" data-sort="numer" onclick="sortujZawodnikow(this,'numer')" data-i18n="druzyna.sortNumber">Numer</button>
-            <button class="sort-btn" data-sort="imie" onclick="sortujZawodnikow(this,'imie')" data-i18n="druzyna.sortFirstName">Imi�</button>
+            <button class="sort-btn" data-sort="imie" onclick="sortujZawodnikow(this,'imie')" data-i18n="druzyna.sortFirstName">Imię</button>
             <button class="sort-btn" data-sort="pozycja" onclick="sortujZawodnikow(this,'pozycja')" data-i18n="druzyna.sortPosition">Pozycja</button>
             <button class="sort-btn" data-sort="grupa" onclick="sortujZawodnikow(this,'grupa')" data-i18n="druzyna.sortGroup">Grupa</button>
         </div>
 
         <div class="pow-filter-row" id="zaw-show-deleted-row" style="display:none;padding:0 16px 8px;">
             <input type="checkbox" id="zaw-show-deleted" onchange="renderujListe()">
-            <label for="zaw-show-deleted" data-i18n="druzyna.showDeleted">Poka� usuni�tych</label>
+            <label for="zaw-show-deleted" data-i18n="druzyna.showDeleted">Pokaż usuniętych</label>
         </div>
 
-        <!-- Lista zawodnik�w -->
+        <!-- Lista zawodników -->
         <div class="zaw-scroll" id="zaw-lista">
-            <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">�adowanie...</div>
+            <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">Ładowanie...</div>
         </div>
 
     </div><!-- /screen-body -->
@@ -328,8 +328,8 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="detail-panel" id="detail-panel">
         <div class="dp-topbar">
             <div class="dp-back" onclick="zamknijProfil()">
-                <div class="dp-back-icon">�</div>
-                <span data-i18n="nav.druzyna">Dru�yna</span>
+                <div class="dp-back-icon">←</div>
+                <span data-i18n="nav.druzyna">Drużyna</span>
             </div>
             <span class="dp-edit-btn" id="dp-edit-btn" style="display:none" onclick="edytujZawodnika()" data-i18n="edit">Edytuj</span>
         </div>
@@ -339,7 +339,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
             <div class="dp-hero-main">
                 <div style="position:relative;flex-shrink:0;">
                     <div class="dp-av" id="dp-av"><span class="dp-av-initials" id="dp-av-initials"></span></div>
-                    <div id="dp-av-edit-btn" style="display:none;position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--akcent);border:2px solid var(--tlo);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size: 16px;" onclick="otworzPickerAwatara()">??</div>
+                    <div id="dp-av-edit-btn" style="display:none;position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--akcent);border:2px solid var(--tlo);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size: 16px;" onclick="otworzPickerAwatara()">📷</div>
                 </div>
                 <div class="dp-info">
                     <div class="dp-nazwa" id="dp-nazwa"></div>
@@ -349,15 +349,15 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
             </div>
         </div>
 
-        <!-- Statystyki � X/Y z okresu -->
+        <!-- Statystyki – X/Y z okresu -->
         <div class="dp-stats">
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-mecze">�</div><div class="dp-stat-sub" id="dp-mecze-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.MECZ">Mecze</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-treningi">�</div><div class="dp-stat-sub" id="dp-treningi-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.TRENING">Treningi</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-wyjazdy">�</div><div class="dp-stat-sub" id="dp-wyjazdy-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.WYJAZD">Wyjazdy</div></div>
-            <div class="dp-stat"><div class="dp-stat-n" id="dp-inne">�</div><div class="dp-stat-sub" id="dp-inne-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.INNE">Inne</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-mecze">–</div><div class="dp-stat-sub" id="dp-mecze-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.MECZ">Mecze</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-treningi">–</div><div class="dp-stat-sub" id="dp-treningi-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.TRENING">Treningi</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-wyjazdy">–</div><div class="dp-stat-sub" id="dp-wyjazdy-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.WYJAZD">Wyjazdy</div></div>
+            <div class="dp-stat"><div class="dp-stat-n" id="dp-inne">–</div><div class="dp-stat-sub" id="dp-inne-sub"></div><div class="dp-stat-l" data-i18n="druzyna.typeLabels.INNE">Inne</div></div>
         </div>
 
-        <!-- Tre�� profilu -->
+        <!-- Treść profilu -->
         <div class="dp-scroll">
 
             <!-- Frekwencja -->
@@ -365,7 +365,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div class="dp-section-label" data-i18n="druzyna.frequencyLabel">Frekwencja</div>
                 <select id="dp-sezon-select" onchange="zmienSezonFrekwencji()" style="font-size: 16px;font-weight:700;margin-bottom:8px;background:transparent;border:none;color:var(--szary-j);padding:0;cursor:pointer;max-width:100%;"></select>
                 <div id="dp-frekwencja">
-                    <div style="color:var(--szary);font-size: 17px;">�adowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>
                 </div>
             </div>
 
@@ -373,75 +373,75 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
             <div class="dp-section">
                 <div style="display:flex;align-items:center;justify-content:space-between;">
                     <div class="dp-section-label" data-i18n="druzyna.absencesLabel">Absencje</div>
-                    <button class="btn-ghost" id="dp-btn-abs" style="display:none;font-size: 16px;padding:4px 12px;" onclick="otworzAbsencje()" data-i18n="druzyna.reportAbsenceButton">+ Zg�o�</button>
+                    <button class="btn-ghost" id="dp-btn-abs" style="display:none;font-size: 16px;padding:4px 12px;" onclick="otworzAbsencje()" data-i18n="druzyna.reportAbsenceButton">+ Zgłoś</button>
                 </div>
                 <div id="dp-absencje">
-                    <div style="color:var(--szary);font-size: 17px;">�adowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>
                 </div>
             </div>
 
             <!-- Notatki trenera (tylko trener) -->
             <div class="dp-section" id="dp-notatki-section" style="display:none">
                 <div class="dp-section-label" data-i18n="druzyna.coachNotesLabel">Notatki trenera</div>
-                <textarea class="coach-notes" id="dp-notatki" data-i18n-placeholder="druzyna.coachNotesPlaceholder" placeholder="Notatki widoczne tylko dla trener�w..." rows="3"></textarea>
+                <textarea class="coach-notes" id="dp-notatki" data-i18n-placeholder="druzyna.coachNotesPlaceholder" placeholder="Notatki widoczne tylko dla trenerów..." rows="3"></textarea>
                 <button class="btn-ghost" style="align-self:flex-end;font-size: 16px;" onclick="zapiszNotatki()" data-i18n="druzyna.saveNotesButton">Zapisz notatki</button>
             </div>
 
-            <!-- Kody dost�pu (tylko trener) -->
+            <!-- Kody dostępu (tylko trener) -->
             <div class="dp-section" id="dp-kod-section" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <div class="dp-section-label" style="margin-bottom:0" data-i18n="druzyna.accessCodesLabel">Kody dost�pu</div>
+                    <div class="dp-section-label" style="margin-bottom:0" data-i18n="druzyna.accessCodesLabel">Kody dostępu</div>
                     <div class="pow-filter-row" style="margin-bottom:0;">
                         <input type="checkbox" id="kod-show-inactive" onchange="aktualnyZawodnik && zaladujKody(aktualnyZawodnik)">
-                        <label for="kod-show-inactive" data-i18n="druzyna.showInactiveCodes">Poka� nieaktywne kody</label>
+                        <label for="kod-show-inactive" data-i18n="druzyna.showInactiveCodes">Pokaż nieaktywne kody</label>
                     </div>
                 </div>
-                <!-- Wyb�r typu kodu -->
+                <!-- Wybór typu kodu -->
                 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="dp-typ-kodu-row">
-                    <button class="sort-btn active" data-typ="RODZIC" onclick="wybierzTypKodu(this,'RODZIC')" data-i18n="druzyna.kodTypLabel.RODZIC">????? Rodzic</button>
+                    <button class="sort-btn active" data-typ="RODZIC" onclick="wybierzTypKodu(this,'RODZIC')" data-i18n="druzyna.kodTypLabel.RODZIC">👩‍👦 Rodzic</button>
                     <button class="sort-btn" data-typ="ZAWODNIK" onclick="wybierzTypKodu(this,'ZAWODNIK')" data-i18n="druzyna.kodTypLabel.ZAWODNIK">? Zawodnik</button>
                 </div>
                 <div id="dp-typ-kodu-info" style="font-size: 16px;color:var(--szary);margin-bottom:10px;line-height:1.5;"></div>
-                <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size: 17px;" onclick="generujKod()" data-i18n="druzyna.generateCodeButton">?? Wygeneruj nowy kod</button>
+                <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size: 17px;" onclick="generujKod()" data-i18n="druzyna.generateCodeButton">🔑 Wygeneruj nowy kod</button>
                 <div id="dp-kod-content">
-                    <div style="color:var(--szary);font-size: 17px;">�adowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>
                 </div>
             </div>
 
-            <!-- Powi�zane konta (tylko trener) -->
+            <!-- Powiązane konta (tylko trener) -->
             <div class="dp-section" id="dp-powiazane-section" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                    <div class="dp-section-label" style="margin-bottom:0;" data-i18n="druzyna.linkedAccountsLabel">Powi�zane konta</div>
+                    <div class="dp-section-label" style="margin-bottom:0;" data-i18n="druzyna.linkedAccountsLabel">Powiązane konta</div>
                     <div class="pow-filter-row" style="margin-bottom:0;">
                         <input type="checkbox" id="pow-show-inactive" onchange="toggleNieaktywnePowiazania()">
-                        <label for="pow-show-inactive" data-i18n="druzyna.showInactive">Poka� nieaktywne</label>
+                        <label for="pow-show-inactive" data-i18n="druzyna.showInactive">Pokaż nieaktywne</label>
                     </div>
                 </div>
                 <div id="dp-powiazane-content">
-                    <div style="color:var(--szary);font-size: 17px;">�adowanie...</div>
+                    <div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>
                 </div>
             </div>
 
-            <!-- Roz��cz profil rodzica (tylko trener, tylko gdy s� aktywni rodzice) -->
+            <!-- Rozłącz profil rodzica (tylko trener, tylko gdy są aktywni rodzice) -->
             <div class="dp-section" id="dp-przejmij-section" style="display:none">
-                <button class="btn-ghost" style="width:100%;padding:11px;font-size:18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">? Roz��cz profil rodzica</button>
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size:18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">? Rozłącz profil rodzica</button>
             </div>
 
-            <!-- Usu� zawodnika (tylko TRENER_GLOWNY) -->
+            <!-- Usuń zawodnika (tylko TRENER_GLOWNY) -->
             <div class="dp-section" id="dp-usun-section" style="display:none">
-                <button class="btn-ghost" style="width:100%;padding:11px;font-size: 18px;font-weight:800;color:#fff;border:1px solid #EF4444;background:#EF4444;border-radius:12px;" onclick="usunZawodnika()" data-i18n="druzyna.deletePlayerButton">??? Usu� zawodnika</button>
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size: 18px;font-weight:800;color:#fff;border:1px solid #EF4444;background:#EF4444;border-radius:12px;" onclick="usunZawodnika()" data-i18n="druzyna.deletePlayerButton">🗑️ Usuń zawodnika</button>
             </div>
 
         </div><!-- /dp-scroll -->
 
-        <!-- Modal danych powi�zanego -->
+        <!-- Modal danych powiązanego -->
         <div class="pow-modal-overlay" id="pow-modal-overlay" onclick="zamknijPowModal()">
             <div class="pow-modal" onclick="event.stopPropagation()">
                 <div class="pow-modal-header">
-                    <div class="pow-modal-avatar" id="pow-modal-avatar">??</div>
+                    <div class="pow-modal-avatar" id="pow-modal-avatar">👤</div>
                     <div style="flex:1;min-width:0">
-                        <div class="pow-modal-title" id="pow-modal-title">�</div>
-                        <div style="font-size: 16px;color:var(--szary);font-weight:600;margin-top:2px" id="pow-modal-subtitle">�</div>
+                        <div class="pow-modal-title" id="pow-modal-title">–</div>
+                        <div style="font-size: 16px;color:var(--szary);font-weight:600;margin-top:2px" id="pow-modal-subtitle">–</div>
                     </div>
                     <div class="pow-modal-close" onclick="zamknijPowModal()">?</div>
                 </div>
@@ -453,14 +453,14 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
         <div class="abs-panel" id="abs-panel">
             <div class="abs-panel-hdr">
                 <div class="dp-back" onclick="zamknijAbsencje()">
-                    <div class="dp-back-icon">�</div>
+                    <div class="dp-back-icon">←</div>
                     <span data-i18n="druzyna.backToProfile">Profil</span>
                 </div>
-                <span class="abs-panel-tytul" data-i18n="druzyna.reportAbsenceTitle">Zg�o� absencj�</span>
+                <span class="abs-panel-tytul" data-i18n="druzyna.reportAbsenceTitle">Zgłoś absencję</span>
             </div>
             <div class="abs-panel-body">
                 <div class="dp-section-label" data-i18n="druzyna.playerLabel">Zawodnik</div>
-                <div style="font-size: 19px;font-weight:800;color:var(--bialy);" id="abs-player-name">�</div>
+                <div style="font-size: 19px;font-weight:800;color:var(--bialy);" id="abs-player-name">–</div>
 
                 <div class="form-group">
                     <label class="form-lbl" data-i18n="druzyna.dateFromLabel">Data od *</label>
@@ -472,11 +472,11 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 </div>
                 <div class="form-group">
                     <label class="form-lbl" data-i18n="druzyna.commentLabel">Komentarz</label>
-                    <input type="text" class="form-inp" id="abs-comment" data-i18n-placeholder="druzyna.commentPlaceholder" placeholder="np. Z�amanie r�ki, Choroba...">
+                    <input type="text" class="form-inp" id="abs-comment" data-i18n-placeholder="druzyna.commentPlaceholder" placeholder="np. Złamanie ręki, Choroba...">
                 </div>
             </div>
             <div class="sticky-save">
-                <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()" data-i18n="druzyna.saveAbsenceButton">Zapisz absencj�</button>
+                <button class="btn-primary" style="width:100%;padding:14px;" onclick="zapiszAbsencje()" data-i18n="druzyna.saveAbsenceButton">Zapisz absencję</button>
             </div>
         </div><!-- /abs-panel -->
 
@@ -486,14 +486,14 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="add-player-panel" id="add-player-panel">
         <div class="add-player-hdr">
             <div class="dp-back" onclick="zamknijDodajZawodnika()">
-                <div class="dp-back-icon">�</div>
-                <span data-i18n="nav.druzyna">Dru�yna</span>
+                <div class="dp-back-icon">←</div>
+                <span data-i18n="nav.druzyna">Drużyna</span>
             </div>
             <span class="add-player-tytul" id="add-player-tytul" data-i18n="druzyna.newPlayerTitle">Nowy zawodnik</span>
         </div>
         <div class="add-player-body">
             <div class="form-group">
-                <label class="form-lbl" data-i18n="druzyna.firstNameRequired">Imi� *</label>
+                <label class="form-lbl" data-i18n="druzyna.firstNameRequired">Imię *</label>
                 <input type="text" class="form-inp" id="ap-firstname" data-i18n-placeholder="druzyna.firstNamePlaceholder" placeholder="Jan">
             </div>
             <div class="form-group">
@@ -520,7 +520,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <label class="form-lbl"><span data-i18n="druzyna.jerseyNumberLabel">Numer koszulki</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.optionalMasc">(opcjonalny)</span></label>
                 <input type="number" class="form-inp" id="ap-numer" data-i18n-placeholder="druzyna.jerseyNumberPlaceholder" placeholder="np. 10" min="1" max="99">
             </div>
-            <!-- TODO: Pole "Liga" konfigurowalne w Ustawieniach (nazwa i warto�ci) � do zaimplementowania w Priorytecie 4 (Ustawienia) -->
+            <!-- TODO: Pole "Liga" konfigurowalne w Ustawieniach (nazwa i wartości) – do zaimplementowania w Priorytecie 4 (Ustawienia) -->
             <div class="form-group">
                 <label class="form-lbl"><span data-i18n="druzyna.leagueLabel">Liga</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.coachOnlyHint">(widoczna tylko dla trenera)</span></label>
                 <input type="text" class="form-inp" id="ap-liga" data-i18n-placeholder="druzyna.leaguePlaceholder" placeholder="np. Liga A, Liga B...">
@@ -529,31 +529,31 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <label class="form-lbl" data-i18n="druzyna.parentPhone1Label">Tel. rodzica 1</label>
                 <div class="phone-row">
                     <select class="phone-prefix-select" id="ap-guardian-prefix1">
-                        <option value="+48">???? +48</option>
-                        <option value="+49">???? +49</option>
-                        <option value="+44">???? +44</option>
-                        <option value="+380">???? +380</option>
-                        <option value="+420">???? +420</option>
-                        <option value="+421">???? +421</option>
+                        <option value="+48">🇵🇱 +48</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+380">🇺🇦 +380</option>
+                        <option value="+420">🇨🇿 +420</option>
+                        <option value="+421">🇸🇰 +421</option>
                     </select>
                     <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone1" data-i18n-placeholder="druzyna.phonePlaceholder" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
                 </div>
-                <div class="phone-error" id="ap-guardian-phone1-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawid�owy numer (7�12 cyfr)</div>
+                <div class="phone-error" id="ap-guardian-phone1-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawidłowy numer (7–12 cyfr)</div>
             </div>
             <div class="form-group">
                 <label class="form-lbl"><span data-i18n="druzyna.parentPhone2Label">Tel. rodzica 2</span> <span style="color:var(--szary);font-weight:600;" data-i18n="druzyna.optionalMasc">(opcjonalny)</span></label>
                 <div class="phone-row">
                     <select class="phone-prefix-select" id="ap-guardian-prefix2">
-                        <option value="+48">???? +48</option>
-                        <option value="+49">???? +49</option>
-                        <option value="+44">???? +44</option>
-                        <option value="+380">???? +380</option>
-                        <option value="+420">???? +420</option>
-                        <option value="+421">???? +421</option>
+                        <option value="+48">🇵🇱 +48</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+380">🇺🇦 +380</option>
+                        <option value="+420">🇨🇿 +420</option>
+                        <option value="+421">🇸🇰 +421</option>
                     </select>
                     <input type="tel" inputmode="numeric" class="form-inp phone-num-inp" id="ap-guardian-phone2" data-i18n-placeholder="druzyna.phonePlaceholder" placeholder="600 000 000" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
                 </div>
-                <div class="phone-error" id="ap-guardian-phone2-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawid�owy numer (7�12 cyfr)</div>
+                <div class="phone-error" id="ap-guardian-phone2-error" data-i18n="druzyna.invalidPhoneNumber">Nieprawidłowy numer (7–12 cyfr)</div>
             </div>
         </div>
         <div class="sticky-save">
@@ -565,24 +565,24 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="import-panel" id="import-panel">
         <div class="import-hdr">
             <div class="dp-back" onclick="zamknijImportCSV()">
-                <div class="dp-back-icon">�</div>
-                <span data-i18n="common.back">� Wstecz</span>
+                <div class="dp-back-icon">←</div>
+                <span data-i18n="common.back">← Wstecz</span>
             </div>
-            <span class="import-tytul" data-i18n="druzyna.importCsvTitle">Import zawodnik�w</span>
+            <span class="import-tytul" data-i18n="druzyna.importCsvTitle">Import zawodników</span>
             <div style="width:60px"></div>
         </div>
         <div class="import-body" id="import-body">
         <div class="import-inner">
 
-            <!-- Krok 1: Pobierz przyk�ad -->
+            <!-- Krok 1: Pobierz przykład -->
             <div class="import-step">
                 <div class="import-step-num"><span data-i18n="common.step">Krok</span> 1</div>
                 <div class="import-step-title" data-i18n="druzyna.importStep1Title">Pobierz szablon</div>
                 <div class="import-step-body">
-                    <span data-i18n="druzyna.importStep1Body">Przygotowali�my gotowy szablon w Excel z instrukcj�. Wype�nij go danymi zawodnik�w i zapisz jako CSV.</span>
+                    <span data-i18n="druzyna.importStep1Body">Przygotowaliśmy gotowy szablon w Excel z instrukcją. Wypełnij go danymi zawodników i zapisz jako CSV.</span>
                     <div style="margin-top:10px;">
                         <a id="import-template-link" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--tlo-karta2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:800;color:var(--bialy);text-decoration:none;">
-                            ?? <span data-i18n="druzyna.importDownloadTemplate">Pobierz szablon Excel</span>
+                            📥 <span data-i18n="druzyna.importDownloadTemplate">Pobierz szablon Excel</span>
                         </a>
                     </div>
                 </div>
@@ -594,10 +594,10 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div class="import-step-title" data-i18n="druzyna.importStep2Title">Zapisz jako CSV w Excel</div>
                 <div class="import-step-body">
                     <ol>
-                        <li data-i18n="druzyna.importStep2a">Otw�rz wype�niony plik w Excel</li>
-                        <li data-i18n="druzyna.importStep2b">Kliknij <code>Plik</code> � <code>Zapisz jako</code></li>
+                        <li data-i18n="druzyna.importStep2a">Otwórz wypełniony plik w Excel</li>
+                        <li data-i18n="druzyna.importStep2b">Kliknij <code>Plik</code> – <code>Zapisz jako</code></li>
                         <li data-i18n="druzyna.importStep2c">W polu <strong>Typ pliku</strong> wybierz: <code>CSV UTF-8 (rozdzielany przecinkami)</code></li>
-                        <li data-i18n="druzyna.importStep2d">Kliknij <code>Zapisz</code> i potwierd� ewentualne ostrze�enia</li>
+                        <li data-i18n="druzyna.importStep2d">Kliknij <code>Zapisz</code> i potwierdź ewentualne ostrzeżenia</li>
                     </ol>
                 </div>
             </div>
@@ -607,9 +607,9 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div class="import-step-num"><span data-i18n="common.step">Krok</span> 3</div>
                 <div class="import-step-title" data-i18n="druzyna.importStep3Title">Wymagane kolumny</div>
                 <div class="import-step-body">
-                    <span data-i18n="druzyna.importStep3Body">Plik musi mie� nag��wki w pierwszym wierszu (kolejno�� nie ma znaczenia):</span>
+                    <span data-i18n="druzyna.importStep3Body">Plik musi mieć nagłówki w pierwszym wierszu (kolejność nie ma znaczenia):</span>
                     <div class="import-cols">
-                        <span class="import-col-tag req" data-i18n="druzyna.firstNameRequired">Imi� *</span>
+                        <span class="import-col-tag req" data-i18n="druzyna.firstNameRequired">Imię *</span>
                         <span class="import-col-tag req" data-i18n="druzyna.lastNameRequired">Nazwisko *</span>
                         <span class="import-col-tag" data-i18n="druzyna.birthDateLabel">Data urodzenia</span>
                         <span class="import-col-tag" data-i18n="druzyna.positionLabel">Pozycja</span>
@@ -625,21 +625,21 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <div class="import-step-num"><span data-i18n="common.step">Krok</span> 4</div>
                 <div class="import-step-title" data-i18n="druzyna.importStep4Title">Wybierz plik CSV</div>
                 <div class="import-file-zone" onclick="document.getElementById('import-file-input').click()">
-                    <div class="import-file-zone-icon">??</div>
-                    <div class="import-file-zone-label" id="import-file-label" data-i18n="druzyna.importFilePlaceholder">Kliknij aby wybra� plik .csv</div>
-                    <div class="import-file-zone-sub" data-i18n="druzyna.importFileHint">Obs�ugiwane: CSV (UTF-8, separator , lub ;)</div>
+                    <div class="import-file-zone-icon">📁</div>
+                    <div class="import-file-zone-label" id="import-file-label" data-i18n="druzyna.importFilePlaceholder">Kliknij aby wybrać plik .csv</div>
+                    <div class="import-file-zone-sub" data-i18n="druzyna.importFileHint">Obsługiwane: CSV (UTF-8, separator , lub ;)</div>
                 </div>
                 <input type="file" id="import-file-input" accept=".csv,text/csv" style="display:none" onchange="onImportFileSelected(this)">
             </div>
 
-            <!-- Podgl�d danych (pojawia si� po wyborze pliku) -->
+            <!-- Podgląd danych (pojawia się po wyborze pliku) -->
             <div id="import-preview-wrap" style="display:none">
                 <div class="import-preview">
                     <div class="import-preview-hdr" id="import-preview-hdr"></div>
                     <div class="import-preview-table" id="import-preview-table"></div>
                 </div>
                 <div id="import-errors" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;font-size:14px;color:#F87171;font-weight:700;margin-top:8px;"></div>
-                <button class="btn-primary" id="import-confirm-btn" style="width:100%;padding:14px;margin-top:4px;" onclick="doImportCSV()" data-i18n="druzyna.importConfirmButton">Importuj zawodnik�w</button>
+                <button class="btn-primary" id="import-confirm-btn" style="width:100%;padding:14px;margin-top:4px;" onclick="doImportCSV()" data-i18n="druzyna.importConfirmButton">Importuj zawodników</button>
             </div>
 
         </div><!-- /import-inner -->
@@ -650,7 +650,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="avatar-picker-panel" id="avatar-picker-panel">
         <div class="avatar-picker-hdr">
             <div class="dp-back" onclick="zamknijPickerAwatara()">
-                <div class="dp-back-icon">�</div>
+                <div class="dp-back-icon">←</div>
                 <span data-i18n="druzyna.backToProfile">Profil</span>
             </div>
             <span class="avatar-picker-tytul" data-i18n="druzyna.chooseAvatarTitle">Wybierz awatar</span>
@@ -658,9 +658,9 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 
         <!-- Styl + przycisk generuj -->
         <div class="av-styl-row">
-            <button class="av-styl-btn selected" onclick="wybierzStylGrid(this,'chlopiec')" data-i18n="druzyna.boyLabel">? Ch�opiec</button>
-            <button class="av-styl-btn" onclick="wybierzStylGrid(this,'dziewczynka')" data-i18n="druzyna.girlLabel">?? Dziewczynka</button>
-            <button class="av-generuj-btn" onclick="generujGrid()" data-i18n="druzyna.regenerateButton">?? Generuj ponownie</button>
+            <button class="av-styl-btn selected" onclick="wybierzStylGrid(this,'chlopiec')" data-i18n="druzyna.boyLabel">♂ Chłopiec</button>
+            <button class="av-styl-btn" onclick="wybierzStylGrid(this,'dziewczynka')" data-i18n="druzyna.girlLabel">👧 Dziewczynka</button>
+            <button class="av-generuj-btn" onclick="generujGrid()" data-i18n="druzyna.regenerateButton">🔄 Generuj ponownie</button>
         </div>
 
         <!-- Grid 20 miniaturek -->
@@ -679,9 +679,9 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <div class="modal-overlay" id="modal-kod">
         <div class="modal-box">
             <div class="modal-title" data-i18n="druzyna.activeCodeExistsTitle">Aktywny kod istnieje</div>
-            <div class="modal-body" id="modal-kod-body">Dla tego zawodnika istnieje ju� aktywny kod dost�pu. Co chcesz zrobi�?</div>
+            <div class="modal-body" id="modal-kod-body">Dla tego zawodnika istnieje już aktywny kod dostępu. Co chcesz zrobić?</div>
             <div class="modal-btns">
-                <button class="modal-btn modal-btn-primary" onclick="modalKodAkcja('dezaktywuj')" data-i18n="druzyna.deactivateAndGenerate">Dezaktywuj stary � wygeneruj nowy</button>
+                <button class="modal-btn modal-btn-primary" onclick="modalKodAkcja('dezaktywuj')" data-i18n="druzyna.deactivateAndGenerate">Dezaktywuj stary – wygeneruj nowy</button>
                 <button class="modal-btn modal-btn-secondary" onclick="modalKodAkcja('zachowaj')" data-i18n="druzyna.keepAndGenerate">Zachowaj i wygeneruj kolejny</button>
                 <button class="modal-btn modal-btn-cancel" onclick="modalKodAkcja('anuluj')" data-i18n="common.cancel">Anuluj</button>
             </div>
@@ -694,22 +694,22 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
         <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
         <button class="login-close" onclick="closeLogin()">?</button>
         <div class="login-body">
-            <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trener�w i dru�yn</div></div>
+            <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
             <div class="auth-tabs"><button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button><button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button></div>
             <div id="auth-login">
                 <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
-                <div class="form-group"><label class="form-lbl">Has�o</label><input type="password" class="form-inp" placeholder="��������"></div>
-                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj si� �</button>
+                <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="••••••••"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zaloguj się →</button>
                 <div class="auth-div"><div class="auth-div-line"></div><span class="auth-div-txt">lub</span><div class="auth-div-line"></div></div>
-                <div class="social-btns"><button class="social-btn"><span style="font-size: 22px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size: 22px">??</span> Apple</button></div>
+                <div class="social-btns"><button class="social-btn"><span style="font-size: 22px;font-weight:900">G</span> Google</button><button class="social-btn"><span style="font-size: 22px">🍎</span> Apple</button></div>
             </div>
             <div id="auth-register" style="display:none">
-                <div class="form-group"><label class="form-lbl">Kod dost�pu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size: 23px"></div>
-                <div class="form-group"><label class="form-lbl">Imi� i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
+                <div class="form-group"><label class="form-lbl">Kod dostępu</label><input type="text" class="form-inp" placeholder="7K2M4X" style="letter-spacing:4px;font-weight:900;text-transform:uppercase;text-align:center;font-family:var(--font-d);font-size: 23px"></div>
+                <div class="form-group"><label class="form-lbl">Imię i nazwisko</label><input type="text" class="form-inp" placeholder="Jan Kowalski"></div>
                 <div class="form-group"><label class="form-lbl">E-mail</label><input type="email" class="form-inp" placeholder="twoj@email.pl"></div>
-                <div class="form-group"><label class="form-lbl">Has�o</label><input type="password" class="form-inp" placeholder="min. 8 znak�w"></div>
-                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj si� �</button>
-                <div class="kod-info"><div class="kod-info-txt">?? Kod dost�pu otrzymasz od trenera lub opiekuna.<br>Jednorazowy � wa�ny 7 dni</div></div>
+                <div class="form-group"><label class="form-lbl">Hasło</label><input type="password" class="form-inp" placeholder="min. 8 znaków"></div>
+                <button class="btn-primary" style="width:100%;padding:15px" onclick="closeLogin()">Zarejestruj się →</button>
+                <div class="kod-info"><div class="kod-info-txt">🔑 Kod dostępu otrzymasz od trenera lub opiekuna.<br>Jednorazowy – ważny 7 dni</div></div>
             </div>
         </div>
     </div>
@@ -720,14 +720,14 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
         <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
         <div class="menu-panel-items">
 
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">M�j profil</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">P�atno�ci</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label">Dru�yny klubu</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">👥</div><span class="menu-item-label">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label">Płatności</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
         </div>
-        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt">Wyloguj si�</span></div></div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt">Wyloguj się</span></div></div>
     </div>
 
 </div><!-- /phone -->
@@ -735,20 +735,20 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 <script src="coachay-core.js?v=20261003b"></script>
 <script>
 /* ===================================================
-   DRU�YNA � logika ekranu
+   DRUŻYNA – logika ekranu
 =================================================== */
 
-// Sta�e
+// Stałe
 function getSquadLabel(sq) { return t('druzyna.squadLabels.' + sq) || sq; }
 function getTypeLabel(typ) { return t('druzyna.typeLabels.' + typ) || typ; }
 const TYPE_COLORS = { TRENING: 'freq-bar-trening', MECZ: 'freq-bar-mecz', WYJAZD: 'freq-bar-wyjazd', INNE: 'freq-bar-inne' };
 const TYPE_IDS = { TRENING: 'treningi', MECZ: 'mecze', WYJAZD: 'wyjazdy', INNE: 'inne' };
-// DiceBear � inicja�y (fallback bez photoURL)
+// DiceBear – inicjały (fallback bez photoURL)
 const DICEBEAR_INITIALS_URL = 'https://api.dicebear.com/9.x/initials/svg?seed=';
-// DiceBear � adventurer (picker) � kolorowy, kresk�wkowy, dla dzieci
+// DiceBear – adventurer (picker) – kolorowy, kreskówkowy, dla dzieci
 const DICEBEAR_BASE_URL = 'https://api.dicebear.com/9.x';
 
-// RoboHash - nowa alternatywa dla awatar�w sportowych
+// RoboHash - nowa alternatywa dla awatarów sportowych
 const ROBOHASH_BASE_URL = 'https://robohash.org';
 const ROBOHASH_STYLES = {
     ROBOT: 'set1',      // Roboty
@@ -758,7 +758,7 @@ const ROBOHASH_STYLES = {
     ALIEN: 'set5'       // Obcy
 };
 
-// Style RoboHash dla zawodnik�w (picker)
+// Style RoboHash dla zawodników (picker)
 const ROBOHASH_PLAYER_STYLES = ['ROBOT', 'MONSTER', 'HUMAN', 'CAT', 'ALIEN'];
 
 // FRYZURY przeniesione do HAIR_CHLOPIEC i HAIR_DZIEWCZYNKA (tablice losowania)
@@ -773,9 +773,9 @@ let aktualnyZawodnik = null; // zawodnik otwarty w panelu
 let aktualneAbsencje = []; // absencje pobranego zawodnika
 let sezonStart = null; // string YYYY-MM-DD z teams.settings.season.start
 let sezonEnd   = null; // string YYYY-MM-DD z teams.settings.season.end
-let dostepneSezony = []; // [{start,end,name}] � aktualny sezon + seasonHistory, najnowszy pierwszy
+let dostepneSezony = []; // [{start,end,name}] – aktualny sezon + seasonHistory, najnowszy pierwszy
 let aktualnySortKey = 'numer';
-let edycjaTryb = false; // czy edytujemy istniej�cego vs dodajemy nowego
+let edycjaTryb = false; // czy edytujemy istniejącego vs dodajemy nowego
 let _teamPositionsSettings = null; // {show, enabled} z settings.positions
 
 const POZYCJE_DEF = [
@@ -788,16 +788,16 @@ const POZYCJE_DEF = [
     { id: 'win' },
 ];
 
-// Mapa stary tekst (PL/EN, z emoji lub bez) � ID � dla danych sprzed prze��czenia na select
+// Mapa stary tekst (PL/EN, z emoji lub bez) – ID – dla danych sprzed przełączenia na select
 const POZYCJE_LEGACY_MAP = {
-    'Og�lna': 'general', 'General': 'general',
-    '? Og�lna': 'general', '? General': 'general',
-    'Bramkarz': 'gk', 'Goalkeeper': 'gk', '?? Bramkarz': 'gk', '?? Goalkeeper': 'gk',
-    'Obro�ca': 'def', 'Defender': 'def', '??? Obro�ca': 'def', '??? Defender': 'def',
-    'Pomocnik': 'mid', 'Midfielder': 'mid', '?? Pomocnik': 'mid', '?? Midfielder': 'mid',
+    'Ogólna': 'general', 'General': 'general',
+    '? Ogólna': 'general', '? General': 'general',
+    'Bramkarz': 'gk', 'Goalkeeper': 'gk', '🧤 Bramkarz': 'gk', '🧤 Goalkeeper': 'gk',
+    'Obrońca': 'def', 'Defender': 'def', '🛡️ Obrońca': 'def', '🛡️ Defender': 'def',
+    'Pomocnik': 'mid', 'Midfielder': 'mid', '🏃 Pomocnik': 'mid', '🏃 Midfielder': 'mid',
     'Napastnik': 'fwd', 'Forward': 'fwd', '? Napastnik': 'fwd', '? Forward': 'fwd',
-    '�rodkowy obro�ca': 'cb', 'Center back': 'cb', '?? �rodkowy obro�ca': 'cb', '?? Center back': 'cb',
-    'Skrzyd�owy': 'win', 'Winger': 'win', '?? Skrzyd�owy': 'win', '?? Winger': 'win',
+    'Środkowy obrońca': 'cb', 'Center back': 'cb', '🛡 Środkowy obrońca': 'cb', '🛡 Center back': 'cb',
+    'Skrzydłowy': 'win', 'Winger': 'win', '💨 Skrzydłowy': 'win', '💨 Winger': 'win',
 };
 
 function tPozycja(pos) {
@@ -821,25 +821,25 @@ function wypelnijPozycjeSelect(wybranaWartosc) {
     if (resolvedVal && [...sel.options].some(o => o.value === resolvedVal)) {
         sel.value = resolvedVal;
     }
-    // je�li brak dopasowania (puste lub nieznany tekst) � select zostaje na pierwszej opcji (general)
+    // jeśli brak dopasowania (puste lub nieznany tekst) – select zostaje na pierwszej opcji (general)
 }
 
 // Aktualny typ kodu do wygenerowania
 let aktualnyTypKodu = 'RODZIC';
 
-// Licznik zapyta� o kody � chroni przed nadpisaniem widoku przez sp�nion� odpowied�
-// z poprzedniej zak�adki/zawodnika (race condition przy szybkim prze��czaniu)
+// Licznik zapytań o kody – chroni przed nadpisaniem widoku przez spóźnioną odpowiedź
+// z poprzedniej zakładki/zawodnika (race condition przy szybkim przełączaniu)
 let _kodLoadSeq = 0;
 
 function getKodOpis(typ) { return t('druzyna.kodOpisy.' + typ) || ''; }
 
-// Kr�tkie etykiety typu do wy�wietlenia na pojedynczym kodzie (niezale�nie od aktywnej zak�adki)
+// Krótkie etykiety typu do wyświetlenia na pojedynczym kodzie (niezależnie od aktywnej zakładki)
 function getKodTypLabel(typ) { return t('druzyna.kodTypLabel.' + typ) || typ; }
 
-// Stan pickera awatara (zachowany dla kompatybilno�ci wstecznej)
+// Stan pickera awatara (zachowany dla kompatybilności wstecznej)
 let pickerStan = { styl: 'chlopiec' };
 
-/* �� Pomocnicze �� */
+/* === Pomocnicze === */
 function getLocalDateStr(date) {
     const d = date || new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -861,7 +861,7 @@ function getInitials(name) {
     return name.substring(0, 2).toUpperCase();
 }
 
-// Kolor t�a awatara DiceBear � deterministyczny z nazwy
+// Kolor tła awatara DiceBear – deterministyczny z nazwy
 function getAvatarBgColor(name) {
     const colors = ['3B82F6','10B981','F59E0B','EF4444','8B5CF6','EC4899','14B8A6','F97316'];
     let hash = 0;
@@ -912,7 +912,7 @@ function buildAvatarEl(player, size = 'small') {
     return container;
 }
 
-/* �� Inicjalizacja �� */
+/* === Inicjalizacja === */
 async function initDruzyna() {
     if (!requireAuth()) return;
 
@@ -926,7 +926,7 @@ async function initDruzyna() {
     aktualnyTeamId = team.teamId || team.id;
     aktualnyClubId = team.clubId || membership?.clubId || null;
 
-    // Pobierz daty sezonu z ustawie� dru�yny
+    // Pobierz daty sezonu z ustawień drużyny
     try {
         const teamDoc = await db.collection('teams').doc(aktualnyTeamId).get();
         if (teamDoc.exists) {
@@ -948,7 +948,7 @@ async function initDruzyna() {
     loadCtxOverlay(user, membership, team);
     loadMenuPanel(user, membership, team);
 
-    // Poka� FAB tylko trenerom
+    // Pokaż FAB tylko trenerom
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
     const fab = document.getElementById('fab-dodaj');
     if (fab) fab.style.display = isCoach ? 'flex' : 'none';
@@ -965,10 +965,10 @@ async function initDruzyna() {
 }
 
 
-/* �� �adowanie zawodnik�w �� */
+/* === Ładowanie zawodników === */
 async function zaladujZawodnikow() {
     const lista = document.getElementById('zaw-lista');
-    lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">�adowanie...</div>';
+    lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">Ładowanie...</div>';
 
     try {
         const snap = await playersOfTeamQuery(aktualnyTeamId, aktualnyClubId).get();
@@ -977,23 +977,23 @@ async function zaladujZawodnikow() {
         wszyscyZawodnicy = snap.docs
             .map(d => {
                 const data = d.data();
-                // Normalizuj stare pole guardianId (string) � guardianIds (array) � migracja v2.8
+                // Normalizuj stare pole guardianId (string) – guardianIds (array) – migracja v2.8
                 if (!data.guardianIds) data.guardianIds = data.guardianId ? [data.guardianId] : [];
                 return { id: d.id, ...data };
             })
             .filter(p => p.teams && p.teams.some(t => t.teamId === aktualnyTeamId && t.status === 'ACTIVE'))
             .filter(p => !isKibic || myPlayerIds.includes(p.playerId || p.id));
     } catch (e) {
-        console.error('B��d �adowania zawodnik�w:', e);
-        lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">B��d �adowania danych.</div>';
+        console.error('Błąd ładowania zawodników:', e);
+        lista.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size: 18px;">Błąd ładowania danych.</div>';
         return;
     }
 
     renderujListe();
-    console.log(`? Za�adowano ${wszyscyZawodnicy.length} zawodnik�w`);
+    console.log(`✅ Załadowano ${wszyscyZawodnicy.length} zawodników`);
 }
 
-/* �� Renderowanie listy �� */
+/* === Renderowanie listy === */
 function renderujListe() {
     const lista = document.getElementById('zaw-lista');
     lista.innerHTML = '';
@@ -1050,8 +1050,8 @@ function tworzKarteZawodnika(player) {
     wrap.appendChild(dot);
 
     const wiek = obliczWiek(player.birthDate);
-    const pozycja = tPozycja(player.position) || '�';
-    const sub = `${pozycja} � ${wiek} lat`;
+    const pozycja = tPozycja(player.position) || '–';
+    const sub = `${pozycja} – ${wiek} lat`;
 
     let metaHtml = '';
     if (isCoach && player.coachOnlyData?.level) {
@@ -1063,7 +1063,7 @@ function tworzKarteZawodnika(player) {
     }
 
     const usunietyBadge = player.isActive === false
-        ? `<div class="badge" style="background:rgba(239,68,68,0.15);color:#F87171;">Usuni�ty</div>` : '';
+        ? `<div class="badge" style="background:rgba(239,68,68,0.15);color:#F87171;">Usunięty</div>` : '';
 
     card.appendChild(wrap);
     card.innerHTML += `
@@ -1080,9 +1080,9 @@ function tworzKarteZawodnika(player) {
     return card;
 }
 
-/* �� Profil zawodnika �� */
+/* === Profil zawodnika === */
 async function otworzProfil(player) {
-    // Kontrola dost�pu: trener/owner widzi wszystkich, pozosta�e role tylko swoje
+    // Kontrola dostępu: trener/owner widzi wszystkich, pozostałe role tylko swoje
     const _coachRoles = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'OWNER'];
     if (!_coachRoles.includes(aktualnaRola)) {
         const _pid = player.playerId || player.id;
@@ -1108,37 +1108,37 @@ async function otworzProfil(player) {
     // Dane podstawowe
     document.getElementById('dp-nazwa').textContent = player.name;
     const wiek = obliczWiek(player.birthDate);
-    const nr = player.number ? ` � #${player.number}` : '';
+    const nr = player.number ? ` – #${player.number}` : '';
     const poz = tPozycja(player.position) || '';
-    document.getElementById('dp-sub').textContent = `${poz}${poz && wiek ? ' � ' : ''}${wiek} lat${nr}`;
+    document.getElementById('dp-sub').textContent = `${poz}${poz && wiek ? ' – ' : ''}${wiek} lat${nr}`;
 
     // Badges
     const badgesEl = document.getElementById('dp-badges');
     badgesEl.innerHTML = '';
     const squad = player.squad || 'FIRST';
     if (isCoach) {
-        // Trener widzi grup� + lig�
+        // Trener widzi grupę + ligę
         badgesEl.innerHTML = `<span class="badge badge-dark">${getSquadLabel(squad)}</span>`;
         if (player.coachOnlyData?.level) {
             badgesEl.innerHTML += `<span class="badge badge-warn" style="background:rgba(251,191,36,0.12);color:var(--warn);">${player.coachOnlyData.level}</span>`;
         }
     }
-    // Pozosta�e role nie widz� grupy ani ligi
+    // Pozostałe role nie widzą grupy ani ligi
 
-    // Statystyki � zostan� uzupe�nione po za�adowaniu frekwencji (X/Y z okresu)
+    // Statystyki – zostaną uzupełnione po załadowaniu frekwencji (X/Y z okresu)
     ['mecze','treningi','wyjazdy','inne'].forEach(id => {
-        document.getElementById(`dp-${id}`).textContent = '�';
+        document.getElementById(`dp-${id}`).textContent = '–';
         document.getElementById(`dp-${id}-sub`).textContent = '';
     });
 
-    // Przycisk edycji awatara � trener lub w�a�ciciel (zawodnik)
+    // Przycisk edycji awatara – trener lub właściciel (zawodnik)
     const avEditBtn = document.getElementById('dp-av-edit-btn');
     if (avEditBtn) {
         const isOwner = aktualnaRola === 'ZAWODNIK' && currentUserData?.playerId === (player.playerId || player.id);
         avEditBtn.style.display = (isCoach || isOwner) ? 'flex' : 'none';
     }
 
-    // Przycisk edycji danych � tylko trener
+    // Przycisk edycji danych – tylko trener
     const editBtn = document.getElementById('dp-edit-btn');
     if (editBtn) editBtn.style.display = isCoach ? '' : 'none';
 
@@ -1159,12 +1159,12 @@ async function otworzProfil(player) {
         if (kodShowInactiveCb) kodShowInactiveCb.checked = false;
     }
 
-    // Selector sezonu � wype�nij list�, domy�lnie aktualny (pierwszy po sortowaniu)
+    // Selector sezonu – wypełnij listę, domyślnie aktualny (pierwszy po sortowaniu)
     const sezonSelectEl = document.getElementById('dp-sezon-select');
     if (sezonSelectEl) {
         if (dostepneSezony.length > 0) {
             sezonSelectEl.innerHTML = dostepneSezony.map((s, i) =>
-                `<option value="${i}">${s.name || s.start.slice(0,7)}: ${s.start} � ${s.end}</option>`
+                `<option value="${i}">${s.name || s.start.slice(0,7)}: ${s.start} – ${s.end}</option>`
             ).join('');
             sezonSelectEl.selectedIndex = 0;
         } else {
@@ -1172,11 +1172,11 @@ async function otworzProfil(player) {
         }
     }
 
-    // Przycisk absencji � trener lub rodzic swojego dziecka (nie kibic)
+    // Przycisk absencji – trener lub rodzic swojego dziecka (nie kibic)
     const btnAbs = document.getElementById('dp-btn-abs');
     if (btnAbs) btnAbs.style.display = (isCoach || (isLinkedPlayer && !isKibic)) ? '' : 'none';
 
-    // �aduj frekwencj�, absencje i kody asynchronicznie
+    // ładuj frekwencję, absencje i kody asynchronicznie
     const promises = [
         zaladujFrekwencje(player, dostepneSezony[0]),
         zaladujAbsencje(player)
@@ -1193,8 +1193,8 @@ function zamknijProfil() {
     aktualnyZawodnik = null;
 }
 
-/* �� Frekwencja � �aduje dane, aktualizuje hero stats I paski �� */
-// sezon: opcjonalnie {start,end,name} wybrany z selectora; domy�lnie aktualny sezon dru�yny
+/* === Frekwencja – ładuje dane, aktualizuje hero stats I paski === */
+// sezon: opcjonalnie {start,end,name} wybrany z selectora; domyślnie aktualny sezon drużyny
 async function zaladujFrekwencje(player, sezon) {
     const el = document.getElementById('dp-frekwencja');
     el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Liczenie...</div>';
@@ -1212,10 +1212,10 @@ async function zaladujFrekwencje(player, sezon) {
     const fromStr = sStart;
     const toStr = sEnd && sEnd < todayStr ? sEnd : todayStr;
 
-    // Pobierz eventy dru�yny z okresu (tylko przesz�e � do dzi� lub ko�ca sezonu)
+    // Pobierz eventy drużyny z okresu (tylko przeszłe – do dziś lub końca sezonu)
     let events = [];
     try {
-        // 2026-09-25: tylko eventy tego zawodnika z okresu sezonu (zamiast wszystkich event�w dru�yny)
+        // 2026-09-25: tylko eventy tego zawodnika z okresu sezonu (zamiast wszystkich eventów drużyny)
         const snap = await db.collection('events')
             .where('teamId', '==', aktualnyTeamId)
             .where('attendance.invited', 'array-contains', pid)
@@ -1229,7 +1229,7 @@ async function zaladujFrekwencje(player, sezon) {
         return;
     }
 
-    // Grupuj per typ i licz frekwencj�
+    // Grupuj per typ i licz frekwencję
     const typy = ['TRENING', 'MECZ', 'WYJAZD', 'INNE'];
     const stats = {};
     for (const typ of typy) {
@@ -1241,7 +1241,7 @@ async function zaladujFrekwencje(player, sezon) {
         }
     }
 
-    // �� Aktualizuj hero statystyki (X/Y) ��
+    // === Aktualizuj hero statystyki (X/Y) ===
     const typToId = { TRENING: 'treningi', MECZ: 'mecze', WYJAZD: 'wyjazdy', INNE: 'inne' };
     for (const typ of typy) {
         const elN = document.getElementById(`dp-${typToId[typ]}`);
@@ -1254,15 +1254,15 @@ async function zaladujFrekwencje(player, sezon) {
             elN.style.color = col;
             elSub.textContent = `${pct}%`;
         } else {
-            elN.textContent = '�';
+            elN.textContent = '–';
             elN.style.color = '';
             elSub.textContent = '';
         }
     }
 
-    // �� Paski frekwencji ��
+    // === Paski frekwencji ===
     if (Object.keys(stats).length === 0) {
-        el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Brak event�w z udzia�em zawodnika w tym okresie.</div>';
+        el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Brak eventów z udziałem zawodnika w tym okresie.</div>';
         return;
     }
 
@@ -1277,7 +1277,7 @@ async function zaladujFrekwencje(player, sezon) {
                 <div class="freq-bar-wrap"><div class="freq-bar ${colorClass}" style="width:${pct}%"></div></div>
                 <span class="freq-pct" style="color:${pctColor}">${pct}%</span>
             </div>
-            <div style="font-size: 15px;color:var(--szary);padding-left:80px;margin-top:-4px;margin-bottom:8px;">${s.confirmed}/${s.invited} event�w</div>
+            <div style="font-size: 15px;color:var(--szary);padding-left:80px;margin-top:-4px;margin-bottom:8px;">${s.confirmed}/${s.invited} eventów</div>
         `;
     }
     el.innerHTML = html;
@@ -1291,10 +1291,10 @@ function zmienSezonFrekwencji() {
     if (sezon) zaladujFrekwencje(aktualnyZawodnik, sezon);
 }
 
-/* �� Absencje �� */
+/* === Absencje === */
 async function zaladujAbsencje(player) {
     const el = document.getElementById('dp-absencje');
-    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">�adowanie...</div>';
+    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>';
 
     const pid = player.playerId || player.id;
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
@@ -1306,7 +1306,7 @@ async function zaladujAbsencje(player) {
             .get();
         aktualneAbsencje = snap.docs.map(d => ({ absenceId: d.id, ...d.data() }));
 
-        // Poka� tylko absencje nachodz�ce na bie��cy miesi�c
+        // Pokaż tylko absencje nachodzące na bieżący miesięc
         const now = new Date();
         const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -1327,29 +1327,29 @@ async function zaladujAbsencje(player) {
         div.className = 'abs-item';
         div.innerHTML = `
             <div class="abs-dates">
-                <div class="abs-dates-main">?? ${od} � ${do_}</div>
+                <div class="abs-dates-main">📅 ${od} – ${do_}</div>
                 ${abs.reason ? `<div class="abs-dates-comment">${abs.reason}</div>` : ''}
             </div>
-            ${isCoach ? `<span class="abs-del" onclick="usunAbsencje('${abs.absenceId}')" title="Usu�">?</span>` : ''}
+            ${isCoach ? `<span class="abs-del" onclick="usunAbsencje('${abs.absenceId}')" title="Usuń">?</span>` : ''}
         `;
         el.appendChild(div);
     });
 }
 
 async function usunAbsencje(absenceId) {
-    if (!await showConfirmSheet('Usun�� t� absencj�?')) return;
+    if (!await showConfirmSheet('Usunąć tę absencję?')) return;
     try {
         await db.collection('absences').doc(absenceId).update({ isActive: false });
         await zaladujAbsencje(aktualnyZawodnik);
-        console.log('? Absencja usuni�ta:', absenceId);
-    } catch (e) { alert('B��d usuwania absencji.'); }
+        console.log('✅ Absencja usunięta:', absenceId);
+    } catch (e) { alert('Błąd usuwania absencji.'); }
 }
 
-/* �� Panel absencji �� */
+/* === Panel absencji === */
 function otworzAbsencje() {
     if (!aktualnyZawodnik) return;
     document.getElementById('abs-player-name').textContent = aktualnyZawodnik.name;
-    // Domy�lnie: od dzi� do +7 dni
+    // Domyślnie: od dziś do +7 dni
     const todayStr = getLocalDateStr();
     const plusTydzien = getLocalDateStr(new Date(Date.now() + 7 * 86400000));
     document.getElementById('abs-date-from').value = todayStr;
@@ -1367,8 +1367,8 @@ async function zapiszAbsencje() {
     const dateTo = document.getElementById('abs-date-to').value;
     const reason = document.getElementById('abs-comment').value.trim();
 
-    if (!dateFrom || !dateTo) { alert('Podaj dat� od i dat� do.'); return; }
-    if (dateTo < dateFrom) { alert('Data do musi by� p�niejsza ni� data od.'); return; }
+    if (!dateFrom || !dateTo) { alert('Podaj datę od i datę do.'); return; }
+    if (dateTo < dateFrom) { alert('Data do musi był późniejsza niż data od.'); return; }
     if (!aktualnyZawodnik) return;
 
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
@@ -1380,7 +1380,7 @@ async function zapiszAbsencje() {
         absenceId: `absence_${dateStr}_${rand}`,
         playerId: pid,
         teamId: aktualnyTeamId,
-        clubId: aktualnyClubId || '', // 2026-09-26: `aktualnyZawodnik.teams?.[0]?.clubId` mia� z�y kszta�t danych i zawsze dawa� '' � brak clubId psu� raporty per-klub
+        clubId: aktualnyClubId || '', // 2026-09-26: `aktualnyZawodnik.teams?.[0]?.clubId` miał zły kształt danych i zawsze dawał '' – brak clubId psuł raporty per-klub
         dateFrom: dateFrom,
         dateTo: dateTo,
         reason: reason || '',
@@ -1399,10 +1399,10 @@ async function zapiszAbsencje() {
         zamknijAbsencje();
         await zaladujAbsencje(aktualnyZawodnik);
         console.log('? Absencja zapisana:', absDoc.absenceId);
-    } catch (e) { alert('B��d zapisu absencji.'); console.error(e); }
+    } catch (e) { alert('Błąd zapisu absencji.'); console.error(e); }
 }
 
-/* �� Notatki trenera �� */
+/* === Notatki trenera === */
 async function zapiszNotatki() {
     if (!aktualnyZawodnik) return;
     const notes = document.getElementById('dp-notatki').value.trim();
@@ -1410,17 +1410,17 @@ async function zapiszNotatki() {
     try {
         await db.collection('players').doc(pid).update({ 'coachOnlyData.coachNotes': notes });
         aktualnyZawodnik.coachOnlyData = { ...(aktualnyZawodnik.coachOnlyData || {}), coachNotes: notes };
-        console.log('? Notatki zapisane');
-        // Kr�tki feedback
+        console.log('✅ Notatki zapisane');
+        // Krótki feedback
         const btn = event.target;
         const prev = btn.textContent;
-        btn.textContent = '? Zapisano';
+        btn.textContent = '✅ Zapisano';
         setTimeout(() => { btn.textContent = prev; }, 1500);
-    } catch (e) { alert('B��d zapisu notatek.'); }
+    } catch (e) { alert('Błąd zapisu notatek.'); }
 }
 
-/* �� Kod dost�pu dla rodzica �� */
-/* �� Kody dost�pu �� */
+/* === Kod dostępu dla rodzica === */
+/* === Kody dostępu === */
 
 function wybierzTypKodu(btn, typ) {
     document.querySelectorAll('#dp-typ-kodu-row .sort-btn').forEach(b => b.classList.remove('active'));
@@ -1428,18 +1428,18 @@ function wybierzTypKodu(btn, typ) {
     aktualnyTypKodu = typ;
     const info = document.getElementById('dp-typ-kodu-info');
     if (info) info.textContent = getKodOpis(typ);
-    // Prze�aduj list� kod�w dla nowego typu
+    // Przeładuj listę kodów dla nowego typu
     if (aktualnyZawodnik) zaladujKody(aktualnyZawodnik);
 }
 
-// Za�aduj i wyrenderuj list� kod�w dla zawodnika
+// Załaduj i wyrenderuj listę kodów dla zawodnika
 async function zaladujKody(player) {
     const el = document.getElementById('dp-kod-content');
     if (!el) return;
     const seq = ++_kodLoadSeq;
     const typRequest = aktualnyTypKodu;
     const pokazNieaktywne = document.getElementById('kod-show-inactive')?.checked || false;
-    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">�adowanie...</div>';
+    el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>';
 
     const pid = player.playerId || player.id;
     let kody = [];
@@ -1449,7 +1449,7 @@ async function zaladujKody(player) {
             .where('type', '==', typRequest)
             .get();
         kody = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
-        // Sortuj: aktywne na g�rze, potem po dacie utworzenia
+        // Sortuj: aktywne na górze, potem po dacie utworzenia
         kody.sort((a, b) => {
             if (!a.isUsed && b.isUsed) return -1;
             if (a.isUsed && !b.isUsed) return 1;
@@ -1458,16 +1458,16 @@ async function zaladujKody(player) {
             return tb - ta;
         });
     } catch (e) {
-        if (seq === _kodLoadSeq) el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">B��d �adowania.</div>';
+        if (seq === _kodLoadSeq) el.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Błąd ładowania.</div>';
         return;
     }
 
-    // Odpowied� sp�niona wzgl�dem nowszego zapytania (zmieniona zak�adka/zawodnik) � porzu� wynik
+    // Odpowiedź spóźniona względem nowszego zapytania (zmieniona zakładka/zawodnik) – porzuć wynik
     if (seq !== _kodLoadSeq) return;
 
     const now = new Date();
 
-    // Domy�lnie ukryj u�yte i wygas�e kody, chyba �e zaznaczono "Poka� nieaktywne"
+    // Domyślnie ukryj użyte i wygasłe kody, chyba że zaznaczono "Pokaż nieaktywne"
     if (!pokazNieaktywne) {
         kody = kody.filter(k => {
             const exp = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
@@ -1483,7 +1483,7 @@ async function zaladujKody(player) {
     el.innerHTML = '';
 
     for (const k of kody) {
-        if (seq !== _kodLoadSeq) return; // prze��czono zak�adk� w trakcie renderowania
+        if (seq !== _kodLoadSeq) return; // przełączono zakładkę w trakcie renderowania
         const expiresDate = k.expiresAt?.toDate?.() || new Date(k.expiresAt || 0);
         const createdDate = k.createdAt?.toDate?.() || new Date(k.createdAt || 0);
         const createdDateStr = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}-${String(createdDate.getDate()).padStart(2, '0')}`;
@@ -1495,7 +1495,7 @@ async function zaladujKody(player) {
             ? Math.ceil((expiresDate - now) / 86400000)
             : null;
 
-        // Dane rodzica je�li u�yty (pomijamy dezaktywowane � usedBy to tylko znacznik, nie realny user)
+        // Dane rodzica jeśli użyty (pomijamy dezaktywowane – usedBy to tylko znacznik, nie realny user)
         let rodziData = '';
         if (k.isUsed && k.usedBy && k.usedBy !== 'DEZAKTYWOWANY_PRZEZ_TRENERA') {
             try {
@@ -1503,7 +1503,7 @@ async function zaladujKody(player) {
                 if (uDoc.exists) {
                     const u = uDoc.data();
                     const usedDate = k.usedAt?.toDate?.() || new Date(k.usedAt || 0);
-                    rodziData = `<div class="kod-meta">?? <strong>${u.displayName || k.usedBy}</strong></div>
+                    rodziData = `<div class="kod-meta">👤 <strong>${u.displayName || k.usedBy}</strong></div>
                         <div class="kod-meta">${t('druzyna.usedPrefix')}<strong>${formatDateDisplay(usedDate.toISOString().slice(0,10))}</strong></div>`;
                 }
             } catch (e) { }
@@ -1514,12 +1514,12 @@ async function zaladujKody(player) {
 
         const statusClass = isDeactivated ? 'kod-nieaktywny' : isNaprawdeUzyty ? 'kod-uzyty' : wygasly ? 'kod-wygasly' : 'kod-aktywny';
         const statusBadge = isDeactivated
-            ? `<span class="kod-status-badge kod-status-nieaktywny">?? ${t('druzyna.codeStatusDeactivated')}</span>`
+            ? `<span class="kod-status-badge kod-status-nieaktywny">🚫 ${t('druzyna.codeStatusDeactivated')}</span>`
             : isNaprawdeUzyty
-            ? `<span class="kod-status-badge kod-status-uzyty">? ${t('druzyna.codeStatusUsed')}</span>`
+            ? `<span class="kod-status-badge kod-status-uzyty">✅ ${t('druzyna.codeStatusUsed')}</span>`
             : wygasly
-            ? `<span class="kod-status-badge kod-status-wygasly">? ${t('druzyna.codeStatusExpired')}</span>`
-            : `<span class="kod-status-badge kod-status-aktywny">?? ${t('druzyna.codeStatusActive')}</span>`;
+            ? `<span class="kod-status-badge kod-status-wygasly">⏰ ${t('druzyna.codeStatusExpired')}</span>`
+            : `<span class="kod-status-badge kod-status-aktywny">🟢 ${t('druzyna.codeStatusActive')}</span>`;
 
         const div = document.createElement('div');
         div.className = `kod-item ${statusClass}`;
@@ -1541,18 +1541,19 @@ async function zaladujKody(player) {
     }
 }
 
-// Wsp�lna tre�� wiadomo�ci z kodem � u�ywana i przy Kopiuj, i przy WhatsApp
+// Wspólna treść wiadomości z kodem – używana i przy Kopiuj, i przy WhatsApp
 function budujTrescKodu(kod) {
-    return `Tw�j kod dost�pu do Coachay: *${kod}*\n\nWejd� na https://coachay.com i kliknij "Mam kod".`;
+    return `Twój kod dostępu do Coachay: *${kod}*\n\
+Wejdź na https://coachay.com i kliknij "Mam kod".`;
 }
 
 async function generujKod() {
     if (!aktualnyZawodnik) return;
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
-    // Deklarowane na poziomie funkcji � u�ywane te� w drugim bloku try (dialog WhatsApp)
+    // Deklarowane na poziomie funkcji – używane też w drugim bloku try (dialog WhatsApp)
     let dlaRodzica2 = false;
 
-    // Sprawd� czy istnieje aktywny nieu�yty kod � je�li tak, poka� modal
+    // Sprawdź czy istnieje aktywny nieużyty kod – jeśli tak, pokaż modal
     try {
         const snap = await db.collection('inviteCodes')
             .where('playerId', '==', pid)
@@ -1567,7 +1568,7 @@ async function generujKod() {
         });
 
         if (aktywne.length > 0) {
-            // Poka� modal z 3 opcjami
+            // Pokaż modal z 3 opcjami
             const akcja = await pokazModalKodu(aktywne.length);
             if (akcja === 'anuluj') return;
             if (akcja === 'dezaktywuj') {
@@ -1581,7 +1582,7 @@ async function generujKod() {
             }
             if (akcja === 'zachowaj') dlaRodzica2 = true; // nowy kod = drugi rodzic
         }
-    } catch (e) { console.error('B��d sprawdzania kod�w:', e); }
+    } catch (e) { console.error('Błąd sprawdzania kodów:', e); }
 
     // Generuj nowy kod
     const znaki = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1621,42 +1622,42 @@ async function generujKod() {
     try {
         await db.collection('inviteCodes').doc(codeDoc.codeId).set(codeDoc);
         await zaladujKody(aktualnyZawodnik);
-        console.log('? Kod wygenerowany:', kod);
+        console.log('✅ Kod wygenerowany:', kod);
 
-        // Wiadomo�� z kodem od razu w schowku � zamiast dialogu WhatsApp
+        // Wiadomość z kodem od razu w schowku – zamiast dialogu WhatsApp
         try { await navigator.clipboard?.writeText(budujTrescKodu(kod)); } catch (e) {}
         if (typeof pokazKomunikat === 'function') {
             pokazKomunikat(`Kod ${kod} skopiowany do schowka`, 'sukces');
         }
-    } catch (e) { alert('B��d generowania kodu.'); console.error(e); }
+    } catch (e) { alert('Błąd generowania kodu.'); console.error(e); }
 }
 
 function wyslijWhatsAppBtn(kod, player) {
-    // Bez numeru � WhatsApp sam pozwala wybra� kontakt/czat, nie zgadujemy kt�ry rodzic
+    // Bez numeru – WhatsApp sam pozwala wybrać kontakt/czat, nie zgadujemy który rodzic
     const msg = encodeURIComponent(budujTrescKodu(kod));
-    return `<a href="https://wa.me/?text=${msg}" target="_blank" class="btn-ghost" style="font-size: 15px;padding:4px 10px;color:#25D366;text-decoration:none;">?? WhatsApp</a>`;
+    return `<a href="https://wa.me/?text=${msg}" target="_blank" class="btn-ghost" style="font-size: 15px;padding:4px 10px;color:#25D366;text-decoration:none;">💬 WhatsApp</a>`;
 }
 
 function kopiujKod(kod) {
     const tresc = budujTrescKodu(kod);
     navigator.clipboard?.writeText(tresc).then(() => {
-        // Kr�tki feedback zamiast alert
+        // Krótki feedback zamiast alert
         const btn = event.target;
         const prev = btn.textContent;
-        btn.textContent = '? Skopiowano';
+        btn.textContent = '✅ Skopiowano';
         setTimeout(() => { btn.textContent = prev; }, 1500);
     }).catch(() => {
-        prompt('Skopiuj wiadomo��:', tresc);
+        prompt('Skopiuj wiadomość:', tresc);
     });
 }
 
-/* �� Edycja zawodnika �� */
+/* === Edycja zawodnika === */
 function edytujZawodnika() {
     if (!aktualnyZawodnik) return;
     edycjaTryb = true;
     document.getElementById('add-player-tytul').textContent = typeof t === 'function' ? t('druzyna.editPlayerTitle') : 'Edytuj zawodnika';
 
-    // Wype�nij formularz aktualnymi danymi
+    // Wypełnij formularz aktualnymi danymi
     document.getElementById('ap-firstname').value = aktualnyZawodnik.firstName || (aktualnyZawodnik.name || '').split(' ')[0] || '';
     document.getElementById('ap-lastname').value  = aktualnyZawodnik.lastName  || (aktualnyZawodnik.name || '').split(' ').slice(1).join(' ') || '';
     document.getElementById('ap-urodziny').value = aktualnyZawodnik.birthDate || '';
@@ -1671,7 +1672,7 @@ function edytujZawodnika() {
     document.getElementById('add-player-panel').classList.add('open');
 }
 
-/* �� Dodaj zawodnika �� */
+/* === Dodaj zawodnika === */
 function otworzDodajZawodnika() {
     edycjaTryb = false;
     document.getElementById('add-player-tytul').textContent = typeof t === 'function' ? t('druzyna.newPlayerTitle') : 'Nowy zawodnik';
@@ -1729,12 +1730,12 @@ async function zapiszZawodnika() {
     }
     if (phoneError) return;
 
-    if (!firstName) { alert('Podaj imi� zawodnika.'); return; }
+    if (!firstName) { alert('Podaj imię zawodnika.'); return; }
     if (!lastName)  { alert('Podaj nazwisko zawodnika.'); return; }
-    if (!urodziny)  { alert('Podaj dat� urodzenia.'); return; }
+    if (!urodziny)  { alert('Podaj datę urodzenia.'); return; }
 
     if (edycjaTryb && aktualnyZawodnik) {
-        // Edycja istniej�cego
+        // Edycja istniejącego
         const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
         const updates = {
             firstName, lastName, name: fullName,
@@ -1749,15 +1750,15 @@ async function zapiszZawodnika() {
             await db.collection('players').doc(pid).update(updates);
             zamknijDodajZawodnika();
             await zaladujZawodnikow();
-            // Od�wie� z bazy � �eby guardianPhones i inne pola by�y aktualne
+            // Odśwież z bazy – żeby guardianPhones i inne pola były aktualne
             const fresh = await db.collection('players').doc(pid).get();
             if (fresh.exists) {
                 aktualnyZawodnik = { id: pid, ...fresh.data() };
                 if (!aktualnyZawodnik.guardianIds) aktualnyZawodnik.guardianIds = [];
             }
             otworzProfil(aktualnyZawodnik);
-            console.log('? Zawodnik zaktualizowany:', pid);
-        } catch (e) { alert('B��d zapisu.'); console.error(e); }
+            console.log('✅ Zawodnik zaktualizowany:', pid);
+        } catch (e) { alert('Błąd zapisu.'); console.error(e); }
     } else {
         // Nowy zawodnik
         const now = new Date().toISOString();
@@ -1798,7 +1799,7 @@ async function zapiszZawodnika() {
             await zaladujZawodnikow();
         } catch (e) {
             console.error('B3ad dodawania zawodnika:', e);
-            alert('B3ad podczas dodawania zawodnika. Spr�buj ponownie.');
+            alert('B3ad podczas dodawania zawodnika. Spróbuj ponownie.');
         }
     }
 }
@@ -1883,7 +1884,7 @@ function zamknijPickerAwatara() {
 async function zapiszAwatar() {
     if (!aktualnyZawodnik) return;
     if (!wybranyAvatarUrl) {
-        alert('Wybierz jeden z awatar�w klikaj�c na niego.');
+        alert('Wybierz jeden z awatarów klikając na niego.');
         return;
     }
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
@@ -1898,18 +1899,18 @@ async function zapiszAwatar() {
         dpAv.appendChild(img);
         renderujListe();
         zamknijPickerAwatara();
-        console.log('? Awatar zapisany');
-    } catch (e) { alert('B��d zapisu awatara.'); console.error(e); }
+        console.log('✅ Awatar zapisany');
+    } catch (e) { alert('Błąd zapisu awatara.'); console.error(e); }
 }
 
-/* �� Modal potwierdzenia kodu �� */
+/* === Modal potwierdzenia kodu === */
 let _modalKodResolve = null;
 
 function pokazModalKodu(liczbaKodow) {
     return new Promise(resolve => {
         _modalKodResolve = resolve;
         const body = document.getElementById('modal-kod-body');
-        if (body) body.textContent = `Dla tego zawodnika istnieje ju� ${liczbaKodow} aktywny kod (typ: ${aktualnyTypKodu}). Co chcesz zrobi�?`;
+        if (body) body.textContent = `Dla tego zawodnika istnieje już ${liczbaKodow} aktywny kod (typ: ${aktualnyTypKodu}). Co chcesz zrobić?`;
         document.getElementById('modal-kod').classList.add('open');
     });
 }
@@ -1922,7 +1923,7 @@ function modalKodAkcja(akcja) {
     }
 }
 
-/* �� Powi�zane konta �� */
+/* === Powiązane konta === */
 let _allRodzice = [], _allKibice = [], _powPlayer = null;
 
 function toggleNieaktywnePowiazania() {
@@ -1960,9 +1961,9 @@ function renderujPowiazane() {
 async function zaladujPowiazaneKonta(player) {
     const container = document.getElementById('dp-powiazane-content');
     if (!container) return;
-    container.innerHTML = '<div style="color:var(--szary);font-size: 17px;">�adowanie...</div>';
+    container.innerHTML = '<div style="color:var(--szary);font-size: 17px;">Ładowanie...</div>';
 
-    // Reset checkboxa przy ka�dym otwarciu profilu
+    // Reset checkboxa przy każdym otwarciu profilu
     const cb = document.getElementById('pow-show-inactive');
     if (cb) cb.checked = false;
 
@@ -1975,7 +1976,7 @@ async function zaladujPowiazaneKonta(player) {
 
     renderujPowiazane();
 
-    // Przycisk "Roz��cz profil rodzica" � aktywny tylko gdy jest cho� jeden aktywny rodzic/kibic
+    // Przycisk "Rozłącz profil rodzica" – aktywny tylko gdy jest choć jeden aktywny rodzic/kibic
     const przejmijSection = document.getElementById('dp-przejmij-section');
     if (przejmijSection && przejmijSection.style.display !== 'none') {
         const maAktywnych = _allRodzice.some(isAktywne) || _allKibice.some(isAktywne);
@@ -1987,7 +1988,7 @@ async function zaladujPowiazaneKonta(player) {
         }
     }
 
-    console.log(`? Powi�zane konta: ${rodzice.length} rodzic�w, ${kibice.length} kibic�w`);
+    console.log(`✅ Powiązane konta: ${rodzice.length} rodziców, ${kibice.length} kibiców`);
 }
 
 function renderPowiazanyItem(m, userMap, typ) {
@@ -1998,7 +1999,7 @@ function renderPowiazanyItem(m, userMap, typ) {
     const isActive  = st === 'active' || st === 'grace';
 
     const nazwa = user?.displayName || (isPending ? t('druzyna.linkedPendingName') : t('druzyna.linkedNoData'));
-    const ikona = typ === 'RODZIC' ? '??' : '???';
+    const ikona = typ === 'RODZIC' ? '👪' : '🏟️';
 
     const statusChip = isActive
         ? `<span class="pow-status pow-status-active">${t('druzyna.linkedStatusActive')}</span>`
@@ -2006,23 +2007,23 @@ function renderPowiazanyItem(m, userMap, typ) {
         ? `<span class="pow-status pow-status-pending">${t('druzyna.linkedStatusPending')}</span>`
         : `<span class="pow-status pow-status-expired">${t('druzyna.linkedStatusExpired')}</span>`;
 
-    // Kod dla oczekuj�cych
+    // Kod dla oczekujących
     let kodRow = '';
     if (isPending && m.code) {
         const exp = m.codeExpiresAt
             ? (m.codeExpiresAt.toDate ? m.codeExpiresAt.toDate() : new Date(m.codeExpiresAt))
             : null;
-        const expStr = exp ? exp.toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '�';
+        const expStr = exp ? exp.toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '–';
         kodRow = `<div class="pow-code-row">
             <span class="pow-code">${m.code}</span>
             <span class="pow-exp">${t('druzyna.validUntilPrefix')}${expStr}</span>
         </div>`;
     }
 
-    // Akcje � tylko dla oczekuj�cych kod�w (aktywne maj� akcje w modalu)
+    // Akcje – tylko dla oczekujących kodów (aktywne mają akcje w modalu)
     let akcje = '';
     if (isPending) {
-        akcje = `<button class="pow-action-btn" onclick="dezaktywujKodPow('${m.id}')">??? Dezaktywuj kod</button>`;
+        akcje = `<button class="pow-action-btn" onclick="dezaktywujKodPow('${m.id}')">🗑️ Dezaktywuj kod</button>`;
     }
 
     const onclickAttr = isActive && m.userId
@@ -2034,7 +2035,7 @@ function renderPowiazanyItem(m, userMap, typ) {
             <div class="pow-avatar">${ikona}</div>
             <div class="pow-name">${nazwa}</div>
             ${statusChip}
-            ${isActive && m.userId ? '<span class="pow-chevron">�</span>' : ''}
+            ${isActive && m.userId ? '<span class="pow-chevron">›</span>' : ''}
         </div>
         ${kodRow}
         ${akcje ? `<div class="pow-actions" onclick="event.stopPropagation()">${akcje}</div>` : ''}
@@ -2042,11 +2043,11 @@ function renderPowiazanyItem(m, userMap, typ) {
 }
 
 function dezaktywujKodPow(membershipId) {
-    pokazKomunikat('W trakcie budowy ??', 'info');
+    pokazKomunikat('W trakcie budowy 🚧', 'info');
 }
 
-/* �� Modal danych powi�zanego �� */
-let _powUserMap = {};  // przechowuje userMap z ostatniego �adowania
+/* === Modal danych powiązanego === */
+let _powUserMap = {};  // przechowuje userMap z ostatniego ładowania
 let _powActiveMembershipId = null;
 let _powActiveUserId = null;
 let _powActiveTyp = null;
@@ -2057,12 +2058,12 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
     _powActiveTyp = typ || null;
     const user = _powUserMap[userId];
     const player = aktualnyZawodnik;
-    const ikona = typ === 'RODZIC' ? '??' : '???';
+    const ikona = typ === 'RODZIC' ? '👪' : '🏟️';
     const typLabel = typ === 'RODZIC' ? t('druzyna.linkedTypeParent') : t('druzyna.linkedTypeSupporter');
 
-    // Dane kontaktowe � dla RODZIC z guardianData zawodnika, dla KIBIC z usera
+    // Dane kontaktowe – dla RODZIC z guardianData zawodnika, dla KIBIC z usera
     const gd = (typ === 'RODZIC' && player?.guardianData) ? player.guardianData : null;
-    const nazwa = user?.displayName || gd?.guardianName || '�';
+    const nazwa = user?.displayName || gd?.guardianName || '–';
     const email = gd?.guardianEmail || user?.email || null;
     const tel   = gd?.guardianPhone || user?.phone  || null;
     const adr   = gd?.address || null;
@@ -2070,12 +2071,12 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
     let rows = '';
 
     if (email) rows += `<div class="pow-modal-row">
-        <div class="pow-modal-icon">??</div>
+        <div class="pow-modal-icon">✉️</div>
         <div><div class="pow-modal-label">${t('druzyna.linkedEmail')}</div><div class="pow-modal-val">${email}</div></div>
     </div>`;
 
     if (tel) rows += `<div class="pow-modal-row">
-        <div class="pow-modal-icon">??</div>
+        <div class="pow-modal-icon">📱</div>
         <div><div class="pow-modal-label">${t('druzyna.linkedPhone')}</div><div class="pow-modal-val">${tel}</div></div>
     </div>`;
 
@@ -2085,14 +2086,14 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
             adr.postalCode && adr.city ? `${adr.postalCode} ${adr.city}` : (adr.city || null)
         ].filter(Boolean).join('\n');
         if (adres) rows += `<div class="pow-modal-row">
-            <div class="pow-modal-icon">??</div>
+            <div class="pow-modal-icon">📍</div>
             <div><div class="pow-modal-label">${t('druzyna.linkedAddress')}</div><div class="pow-modal-val" style="white-space:pre-line">${adres}</div></div>
         </div>`;
     }
 
     if (!rows) rows = `<div style="color:var(--szary);font-size: 17px;padding:10px 0">${t('druzyna.linkedNoContact')}</div>`;
 
-    // Przyciski akcji � tylko dla trenera
+    // Przyciski akcji – tylko dla trenera
     const isCoach = aktualnaRola === 'TRENER_GLOWNY' || aktualnaRola === 'TRENER_POMOCNICZY';
     let btnAkcje = '';
     if (isCoach && membershipId) {
@@ -2109,9 +2110,9 @@ function otworzDanePowiazanego(userId, typ, membershipId) {
     document.getElementById('pow-modal-overlay').classList.add('open');
 }
 
-// Od��cza rodzica/kibica od zawodnika: dezaktywuje membership (soft), czy�ci guardianId/guardianPhones
-// je�li to rodzic, i powiadamia od��czan� osob�. Wywo�ywane z przycisku "Od��cz rodzica"/"Od��cz kibica"
-// w sekcji Powi�zane konta � jedyne miejsce w oknie zawodnika do zarz�dzania dost�pem opiekun�w.
+// Odłącza rodzica/kibica od zawodnika: dezaktywuje membership (soft), czyści guardianId/guardianPhones
+// jeśli to rodzic, i powiadamia odłączaną osobę. Wywoływane z przycisku "Odłącz rodzica"/"Odłącz kibica"
+// w sekcji Powiązane konta – jedyne miejsce w oknie zawodnika do zarządzania dostępem opiekunów.
 async function odlaczOpiekunaOdZawodnika(userId, typ, membershipIdZnany) {
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
     const now = new Date().toISOString();
@@ -2153,11 +2154,11 @@ async function odlaczOpiekunaOdZawodnika(userId, typ, membershipIdZnany) {
             userId,
             teamId: aktualnyTeamId,
             type: 'INFO',
-            title: 'Utracono dost�p do profilu zawodnika',
-            body: `Trener od��czy� Ci� od profilu zawodnika ${aktualnyZawodnik.name || ''}. Skontaktuj si� z trenerem, je�li to pomy�ka.`,
+            title: 'Utracono dostęp do profilu zawodnika',
+            body: `Trener odłączył Cię od profilu zawodnika ${aktualnyZawodnik.name || ''}. Skontaktuj się z trenerem, jeśli to pomyłka.`,
             forPlayerId: pid
         });
-    } catch (e) { console.error('Powiadomienie o od��czeniu:', e); }
+    } catch (e) { console.error('Powiadomienie o odłączeniu:', e); }
 }
 
 async function odlaczPowiazanego() {
@@ -2170,7 +2171,7 @@ async function odlaczPowiazanego() {
         pokazKomunikat(t('druzyna.detachSuccess'), 'sukces');
         await zaladujPowiazaneKonta(aktualnyZawodnik);
     } catch (e) {
-        pokazKomunikat('B��d: ' + e.message, 'blad');
+        pokazKomunikat('Błąd: ' + e.message, 'blad');
     }
 }
 
@@ -2178,8 +2179,8 @@ function zamknijPowModal() {
     document.getElementById('pow-modal-overlay').classList.remove('open');
 }
 
-// Roz��cza WSZYSTKICH aktywnych rodzic�w i kibic�w od zawodnika � trener "przejmuje" zawodnika.
-// Przycisk widoczny tylko gdy s� aktywni rodzice/kibice (dp-przejmij-section).
+// Rozłącza WSZYSTKICH aktywnych rodziców i kibiców od zawodnika – trener "przejmuje" zawodnika.
+// Przycisk widoczny tylko gdy są aktywni rodzice/kibice (dp-przejmij-section).
 async function przejmijZawodnikaZPowrotem() {
     if (!aktualnyZawodnik) return;
     const aktywni = [
@@ -2205,22 +2206,22 @@ async function przejmijZawodnikaZPowrotem() {
         pokazKomunikat(t('druzyna.reclaimSuccess'), 'sukces');
         await zaladujPowiazaneKonta(aktualnyZawodnik);
     } catch (e) {
-        pokazKomunikat('B��d: ' + e.message, 'blad');
+        pokazKomunikat('Błąd: ' + e.message, 'blad');
     }
 }
 
-// Usuwa zawodnika (RODO � anonimizacja, nie hard-delete): od��cza wszystkich opiekun�w, czy�ci dane
-// osobowe, zachowuje histori�/statystyki. birthDate zostaje � bez nazwiska nie identyfikuje osoby.
-// Tylko TRENER_GLOWNY (patrz ARCHITEKTURA.md � tabela uprawnie�).
+// Usuwa zawodnika (RODO – anonimizacja, nie hard-delete): odłącza wszystkich opiekunów, czyści dane
+// osobowe, zachowuje historię/statystyki. birthDate zostaje – bez nazwiska nie identyfikuje osoby.
+// Tylko TRENER_GLOWNY (patrz ARCHITEKTURA.md – tabela uprawnień).
 async function usunZawodnika() {
     if (!aktualnyZawodnik) return;
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
     const imie = aktualnyZawodnik.name || 'tego zawodnika';
 
-    if (!await showConfirmSheet(`Usun�� zawodnika ${imie}? Dane osobowe zostan� trwale usuni�te, historia (mecze, statystyki) zostanie zachowana. Tej operacji nie mo�na cofn��.`)) return;
+    if (!await showConfirmSheet(`Usunąć zawodnika ${imie}? Dane osobowe zostaną trwale usunięte, historia (mecze, statystyki) zostanie zachowana. Tej operacji nie można cofnąć.`)) return;
 
     try {
-        // 1. Od��cz wszystkich aktywnych opiekun�w (rodzice + kibice)
+        // 1. Odłącz wszystkich aktywnych opiekunów (rodzice + kibice)
         const { rodzice, kibice } = await getMembershipsForPlayer(pid);
         const aktywni = [
             ...rodzice.filter(isAktywne).map(m => ({ ...m, typ: 'RODZIC' })),
@@ -2230,9 +2231,9 @@ async function usunZawodnika() {
             await odlaczOpiekunaOdZawodnika(m.userId, m.typ, m.id);
         }
 
-        // 2. Anonimizuj dane osobowe, zachowaj birthDate/statystyki/histori�
+        // 2. Anonimizuj dane osobowe, zachowaj birthDate/statystyki/historię
         await db.collection('players').doc(pid).update({
-            firstName: '', lastName: '', name: 'Usuni�ty zawodnik',
+            firstName: '', lastName: '', name: 'Usunięty zawodnik',
             photoURL: '', guardianPhones: [], guardianData: null,
             'coachOnlyData.coachNotes': '',
             isActive: false,
@@ -2240,18 +2241,18 @@ async function usunZawodnika() {
             deletedBy: aktualnyUserId
         });
 
-        pokazKomunikat('Zawodnik usuni�ty', 'sukces');
+        pokazKomunikat('Zawodnik usuniżty', 'sukces');
         zamknijProfil();
         await zaladujZawodnikow();
     } catch (e) {
-        pokazKomunikat('B��d: ' + e.message, 'blad');
+        pokazKomunikat('Błąd: ' + e.message, 'blad');
     }
 }
 
 
-/* �� Start �� */
+/* === Start === */
 window.addEventListener('DOMContentLoaded', () => {
-    if (typeof firebase === 'undefined') { console.error('? Firebase!'); return; }
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
     initFirebase();
     let _loaded = false;
     auth.onAuthStateChanged(async user => {
@@ -2278,13 +2279,13 @@ window.addEventListener('DOMContentLoaded', () => {
    IMPORT CSV
 =================================================== */
 let _importRows = [];      // sparsowane wiersze gotowe do zapisu
-const IMPORT_TEMPLATE_URL = ''; // uzupe�nij po przygotowaniu pliku
+const IMPORT_TEMPLATE_URL = ''; // uzupełnij po przygotowaniu pliku
 
 function otworzImportCSV() {
     _importRows = [];
     document.getElementById('import-file-input').value = '';
     document.getElementById('import-file-label').textContent =
-        typeof t === 'function' ? t('druzyna.importFilePlaceholder') : 'Kliknij aby wybra� plik .csv';
+        typeof t === 'function' ? t('druzyna.importFilePlaceholder') : 'Kliknij aby wybrać plik .csv';
     document.getElementById('import-preview-wrap').style.display = 'none';
     document.getElementById('import-panel').classList.add('open');
     // Ustaw URL szablonu
@@ -2307,7 +2308,7 @@ function onImportFileSelected(input) {
             const text = e.target.result;
             parseAndPreviewCSV(text);
         } catch (err) {
-            alert('B��d odczytu pliku: ' + err.message);
+            alert('Błąd odczytu pliku: ' + err.message);
         }
     };
     reader.readAsText(file, 'UTF-8');
@@ -2325,10 +2326,10 @@ function parseAndPreviewCSV(text) {
         return;
     }
 
-    // Nag��wki
+    // Nagłówki
     const rawHeaders = splitCSVLine(nonEmpty[0], sep).map(h => h.trim().toLowerCase());
     const COL_MAP = {
-        imie:            ['imi�', 'imie', 'first name', 'firstname', 'name'],
+        imie:            ['imię', 'imie', 'first name', 'firstname', 'name'],
         nazwisko:        ['nazwisko', 'last name', 'lastname', 'surname'],
         data_urodzenia:  ['data urodzenia', 'urodziny', 'data_urodzenia', 'birthdate', 'birth date', 'dob'],
         pozycja:         ['pozycja', 'position'],
@@ -2343,7 +2344,7 @@ function parseAndPreviewCSV(text) {
     }
 
     if (colIdx.imie === -1 || colIdx.nazwisko === -1) {
-        showImportError('Brak wymaganych kolumn: "Imi�" i/lub "Nazwisko". Sprawd� nag��wki w pliku.');
+        showImportError('Brak wymaganych kolumn: "Imię" i/lub "Nazwisko". Sprawdź nagłówki w pliku.');
         document.getElementById('import-preview-wrap').style.display = 'none';
         return;
     }
@@ -2405,14 +2406,14 @@ function renderImportPreview(rows) {
     const okCount  = rows.filter(r => r._ok).length;
 
     const hdr = document.getElementById('import-preview-hdr');
-    hdr.innerHTML = `Podgl�d: <strong>${okCount} zawodnik�w</strong> gotowych do importu` +
-        (errCount ? `<span class="import-err-badge">? ${errCount} b��d�w</span>` : '');
+    hdr.innerHTML = `Podgląd: <strong>${okCount} zawodników</strong> gotowych do importu` +
+        (errCount ? `<span class="import-err-badge">❌ ${errCount} błędów</span>` : '');
 
     const preview = rows.slice(0, 8);
     const _th = (key, fb) => typeof t === 'function' ? (t(key) || fb) : fb;
     const tableHtml = `<table>
         <tr>
-            <th>${_th('druzyna.firstNameRequired','Imi�')}</th>
+            <th>${_th('druzyna.firstNameRequired','Imię')}</th>
             <th>${_th('druzyna.lastNameRequired','Nazwisko')}</th>
             <th>${_th('druzyna.birthDateLabel','Data ur.')}</th>
             <th>${_th('druzyna.positionLabel','Pozycja')}</th>
@@ -2421,11 +2422,11 @@ function renderImportPreview(rows) {
         ${preview.map(r => `<tr class="${r._ok ? '' : 'err'}">
             <td>${r.imie || '<em>brak</em>'}</td>
             <td>${r.nazwisko || '<em>brak</em>'}</td>
-            <td>${r.birthDate || '�'}</td>
-            <td>${r.pozycja || '�'}</td>
-            <td>${r.numer || '�'}</td>
+            <td>${r.birthDate || '–'}</td>
+            <td>${r.pozycja || '–'}</td>
+            <td>${r.numer || '–'}</td>
         </tr>`).join('')}
-        ${rows.length > 8 ? `<tr><td colspan="5" style="color:var(--szary);text-align:center;padding:8px;">� i ${rows.length - 8} wi�cej</td></tr>` : ''}
+        ${rows.length > 8 ? `<tr><td colspan="5" style="color:var(--szary);text-align:center;padding:8px;">… i ${rows.length - 8} więcej</td></tr>` : ''}
     </table>`;
 
     document.getElementById('import-preview-table').innerHTML = tableHtml;
@@ -2435,7 +2436,7 @@ function renderImportPreview(rows) {
 
 function showImportError(msg) {
     const el = document.getElementById('import-errors');
-    el.textContent = '? ' + msg;
+    el.textContent = '❌ ' + msg;
     el.style.display = '';
 }
 
@@ -2445,7 +2446,8 @@ async function doImportCSV() {
     const teamName = document.getElementById('ctx-team')?.textContent || aktualnyTeamId;
     const confirmMsg = typeof t === 'function'
         ? t('druzyna.importConfirmMsg', { count: _importRows.length, team: teamName })
-        : `Importujesz ${_importRows.length} zawodnik�w do dru�yny "${teamName}".\n\nPotwierd� import.`;
+        : `Importujesz ${_importRows.length} zawodników do drużyny "${teamName}".\n\
+Potwierdź import.`;
 
     if (!await showConfirmSheet(confirmMsg)) return;
 
@@ -2454,7 +2456,7 @@ async function doImportCSV() {
     btn.textContent = 'Importowanie...';
 
     try {
-        // Pobierz istniej�cych zawodnik�w do wykrycia duplikat�w
+        // Pobierz istniejących zawodników do wykrycia duplikatów
         const existingSnap = await playersOfTeamQuery(aktualnyTeamId, aktualnyClubId).get();
         const existingPlayers = existingSnap.docs
             .map(d => d.data())
@@ -2464,10 +2466,10 @@ async function doImportCSV() {
         if (existingPlayers.length > 0) {
             const warnMsg = typeof t === 'function'
                 ? t('druzyna.importAlreadyHasPlayers', { team: teamName, existing: existingPlayers.length, count: _importRows.length })
-                : `W dru�ynie "${teamName}" jest ju� ${existingPlayers.length} zawodnik�w.\n\nImport dopisze kolejnych ${_importRows.length}. Kontynuowa�?`;
+                : `W drużynie "${teamName}" jest już ${existingPlayers.length} zawodników.\n\nImport dopisze kolejnych ${_importRows.length}. Kontynuować?`;
             if (!await showConfirmSheet(warnMsg)) {
                 btn.disabled = false;
-                btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodnik�w';
+                btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodników';
                 return;
             }
         }
@@ -2519,17 +2521,17 @@ async function doImportCSV() {
 
         let resultMsg = typeof t === 'function'
             ? t('druzyna.importSuccessMsg', { count: added })
-            : `? Zaimportowano ${added} zawodnik�w.`;
+            : `✅ Zaimportowano ${added} zawodników.`;
         if (dupNames.length) {
-            resultMsg += '\n\n? Mo�liwe duplikaty (to samo imi� i nazwisko):\n' + dupNames.join(', ');
+            resultMsg += '\n\n⚠️ Możliwe duplikaty (to samo imię i nazwisko):\n' + dupNames.join(', ');
         }
         await showConfirmSheet(resultMsg, { okOnly: true });
 
     } catch (err) {
-        console.error('? Import CSV:', err);
+        console.error('❌ Import CSV:', err);
         btn.disabled = false;
-        btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodnik�w';
-        alert('B��d importu: ' + err.message);
+        btn.textContent = typeof t === 'function' ? t('druzyna.importConfirmButton') : 'Importuj zawodników';
+        alert('Błąd importu: ' + err.message);
     }
 }
 </script>
