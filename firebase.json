@@ -1,6 +1,7 @@
 {
   "hosting": {
     "public": ".",
+    "predeploy": "node _check_encoding.js",
     "ignore": [
       "firebase.json",
       "**/.*",
