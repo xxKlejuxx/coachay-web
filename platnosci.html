@@ -18,7 +18,7 @@
 }
 .screen-body::-webkit-scrollbar { display: none; }
 
-/* �� Kontener � wy�rodkowany, max 1222px �� */
+/* ── Kontener — wyśrodkowany, max 1222px ── */
 .pay-container {
     max-width: 1222px;
     margin: 0 auto;
@@ -28,7 +28,7 @@
     flex-direction: column;
 }
 
-/* �� Tytu� sekcji �� */
+/* ── Tytuł sekcji ── */
 .pay-title {
     padding: 0 0 6px;
     font-family: var(--font-d); font-size: 27px; font-weight: 800;
@@ -40,7 +40,7 @@
     line-height: 1.6;
 }
 
-/* �� Toggle Indywidualny / Rodzinny �� */
+/* ── Toggle Indywidualny / Rodzinny ── */
 .pay-toggle-wrap {
     margin: 0 0 20px;
     background: var(--tlo-karta); border: 1px solid var(--border);
@@ -60,7 +60,7 @@
     border: 1px solid var(--border2);
 }
 
-/* �� Karty pakiet�w �� */
+/* ── Karty pakietów ── */
 .pay-cards { padding: 0; display: flex; flex-direction: column; gap: 10px; }
 
 .pay-card {
@@ -120,7 +120,7 @@
 }
 .pay-card-period { font-family: var(--font); font-size: 17px; font-weight: 600; color: var(--szary); margin-top: 2px; }
 
-/* �� Divider �� */
+/* ── Divider ── */
 .pay-divider {
     margin: 20px 0;
     display: flex; align-items: center; gap: 10px;
@@ -128,7 +128,7 @@
 .pay-divider-line { flex: 1; height: 1px; background: var(--border); }
 .pay-divider-txt { font-size: 16px; font-weight: 700; color: var(--szary); white-space: nowrap; }
 
-/* �� Sekcja metody p�atno�ci �� */
+/* ── Sekcja metody płatności ── */
 .pay-method-label {
     padding: 0 0 10px;
     font-size: 15px; font-weight: 900; letter-spacing: 2px;
@@ -163,14 +163,14 @@
 .pay-method-chevron { flex-shrink: 0; opacity: 0.5; transition: opacity 0.2s; }
 .pay-method-btn:hover .pay-method-chevron { opacity: 1; }
 
-/* �� Stopka �� */
+/* ── Stopka ── */
 .pay-footer {
     padding: 18px 0 0;
     font-size: 19px; font-weight: 600; color: var(--szary);
     text-align: center; line-height: 1.6;
 }
 
-/* �� Tryb blocked � ukryj sidebar, poka� pasek nawigacji �� */
+/* ── Tryb blocked — ukryj sidebar, pokaż pasek nawigacji ── */
 body.pay-blocked-mode #app-sidebar,
 body.pay-blocked-mode .sidebar { display: none !important; }
 .pay-blocked-bar {
@@ -201,17 +201,17 @@ body.pay-blocked-mode .pay-blocked-bar { display: flex; }
     <div class="notch"></div>
     <div class="pay-bg"></div>
 
-    <!-- Pasek nawigacji w trybie blocked (ukryty domy�lnie) -->
+    <!-- Pasek nawigacji w trybie blocked (ukryty domyślnie) -->
     <div class="pay-blocked-bar">
-        <button class="pay-blocked-back" onclick="history.back()" data-i18n="blocked.backButton">� Wr��</button>
-        <button class="pay-blocked-logout" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj si�</button>
+        <button class="pay-blocked-back" onclick="history.back()" data-i18n="blocked.backButton">← Wróć</button>
+        <button class="pay-blocked-logout" onclick="logout()" data-i18n="blocked.logoutButton">Wyloguj się</button>
     </div>
 
     <div class="screen-body">
       <div class="pay-container">
 
         <div class="pay-title" data-i18n="platnosci.headerTitle">Wybierz plan</div>
-        <div class="pay-subtitle" data-i18n="platnosci.subtitle">Pe�ny dost�p do Coachay. Anuluj kiedy chcesz.</div>
+        <div class="pay-subtitle" data-i18n="platnosci.subtitle">Pełny dostęp do Coachay. Anuluj kiedy chcesz.</div>
 
         <!-- Toggle Indywidualny / Rodzinny -->
         <div class="pay-toggle-wrap">
@@ -219,21 +219,21 @@ body.pay-blocked-mode .pay-blocked-bar { display: flex; }
             <button class="pay-toggle-btn" id="tab-fam" onclick="setTab('family')" data-i18n="platnosci.planFamily">Rodzinny</button>
         </div>
 
-        <!-- Karty pakiet�w -->
+        <!-- Karty pakietów -->
         <div class="pay-cards" id="pay-cards"></div>
 
         <!-- Divider -->
         <div class="pay-divider">
             <div class="pay-divider-line"></div>
-            <div class="pay-divider-txt" data-i18n="platnosci.methodLabel">Wybierz metod� p�atno�ci</div>
+            <div class="pay-divider-txt" data-i18n="platnosci.methodLabel">Wybierz metodę płatności</div>
             <div class="pay-divider-line"></div>
         </div>
 
-        <!-- Metody p�atno�ci -->
-        <div class="pay-method-label" data-i18n="platnosci.methodLabel">Zap�a� przez</div>
+        <!-- Metody płatności -->
+        <div class="pay-method-label" data-i18n="platnosci.methodLabel">Zapłać przez</div>
         <div class="pay-methods">
 
-            <!-- Przelewy24 � tylko PL -->
+            <!-- Przelewy24 — tylko PL -->
             <button class="pay-method-btn pl-only" id="btn-p24" onclick="payWith('przelewy24')">
                 <div class="pay-method-icon" style="background:#1A1A2E; border-color:#2D2D5E;">
                     <svg width="32" height="14" viewBox="0 0 120 52" fill="none">
@@ -243,12 +243,12 @@ body.pay-blocked-mode .pay-blocked-bar { display: flex; }
                 </div>
                 <div class="pay-method-info">
                     <div class="pay-method-name">Przelewy24</div>
-                    <div class="pay-method-sub" data-i18n="platnosci.methodP24Desc">BLIK � karta � przelew � tylko Polska</div>
+                    <div class="pay-method-sub" data-i18n="platnosci.methodP24Desc">BLIK — karta — przelew — tylko Polska</div>
                 </div>
                 <svg class="pay-method-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
             </button>
 
-            <!-- Google Play � tylko w aplikacji -->
+            <!-- Google Play — tylko w aplikacji -->
             <button class="pay-method-btn app-only" disabled>
                 <div class="pay-method-icon" style="background:#1A1A1A; border-color:#2A2A2A;">
                     <svg width="22" height="22" viewBox="0 0 24 24">
@@ -262,10 +262,10 @@ body.pay-blocked-mode .pay-blocked-bar { display: flex; }
                     <div class="pay-method-name" data-i18n="platnosci.methodGooglePlay">Google Play</div>
                     <div class="pay-method-sub" data-i18n="platnosci.appOnlySub">Tylko w aplikacji mobilnej</div>
                 </div>
-                <span class="app-only-badge">??</span>
+                <span class="app-only-badge">📱</span>
             </button>
 
-            <!-- Apple � tylko w aplikacji -->
+            <!-- Apple — tylko w aplikacji -->
             <button class="pay-method-btn app-only" disabled>
                 <div class="pay-method-icon" style="background:#1A1A1A; border-color:#2A2A2A;">
                     <svg width="20" height="22" viewBox="0 0 814 1000" fill="white">
@@ -276,14 +276,14 @@ body.pay-blocked-mode .pay-blocked-bar { display: flex; }
                     <div class="pay-method-name" data-i18n="platnosci.methodApple">Apple</div>
                     <div class="pay-method-sub" data-i18n="platnosci.appOnlySub">Tylko w aplikacji mobilnej</div>
                 </div>
-                <span class="app-only-badge">??</span>
+                <span class="app-only-badge">📱</span>
             </button>
 
         </div>
 
         <!-- Stopka -->
         <div class="pay-footer" id="pay-footer" data-i18n="platnosci.pickPlanFirstHint">
-            Wybierz pakiet powy�ej, a nast�pnie metod� p�atno�ci.
+            Wybierz pakiet powyżej, a następnie metodę płatności.
         </div>
 
       </div><!-- /.pay-container -->
@@ -293,7 +293,7 @@ body.pay-blocked-mode .pay-blocked-bar { display: flex; }
 <script src="coachay-core.js?v=20261003b"></script>
 <script>
 /* ===================================================
-   PLATNOSCI � logika ekranu
+   PLATNOSCI — logika ekranu
 =================================================== */
 
 const params   = new URLSearchParams(location.search);
@@ -304,46 +304,46 @@ if (params.get('mode') === 'blocked') {
     document.body.classList.add('pay-blocked-mode');
 }
 
-/* �� Pakiety �� */
+/* ── Pakiety ── */
 const _tPl = (key, fb) => typeof t === 'function' ? t(key) : fb;
 
 function getPLANS() {
     return {
         individual: [
             { id: 'sub_individual_monthly',
-              name: _tPl('platnosci.planMonthlyName', 'Miesi�czny'),
+              name: _tPl('platnosci.planMonthlyName', 'Miesięczny'),
               period: _tPl('platnosci.periodMonthly', 'mies.'),
-              sub: _tPl('platnosci.subMonthlyDesc', '30 dni dost�pu'),
-              priceBase: '4,99 z�', priceApple: '9,99 z�', badge: null },
+              sub: _tPl('platnosci.subMonthlyDesc', '30 dni dostępu'),
+              priceBase: '4,99 zł', priceApple: '9,99 zł', badge: null },
             { id: 'sub_individual_yearly',
               name: _tPl('platnosci.planYearlyName', 'Roczny'),
               period: _tPl('platnosci.periodYearly', 'rok'),
-              sub: _tPl('platnosci.subYearlyDesc', '2 miesi�ce gratis'),
-              priceBase: '49,99 z�', priceApple: '99,99 z�',
+              sub: _tPl('platnosci.subYearlyDesc', '2 miesiące gratis'),
+              priceBase: '49,99 zł', priceApple: '99,99 zł',
               badge: _tPl('platnosci.badgeRecommended', 'Polecane') },
         ],
         family: [
             { id: 'sub_family_monthly',
               name: _tPl('platnosci.planFamilyMonthlyName', 'Rodzinny mies.'),
               period: _tPl('platnosci.periodMonthly', 'mies.'),
-              sub: _tPl('platnosci.subFamilyMonthlyDesc', '6 kont � 30 dni'),
-              priceBase: '19,99 z�', priceApple: '39,99 z�', badge: null },
+              sub: _tPl('platnosci.subFamilyMonthlyDesc', '6 kont — 30 dni'),
+              priceBase: '19,99 zł', priceApple: '39,99 zł', badge: null },
             { id: 'sub_family_yearly',
               name: _tPl('platnosci.planFamilyYearlyName', 'Rodzinny roczny'),
               period: _tPl('platnosci.periodYearly', 'rok'),
-              sub: _tPl('platnosci.subFamilyYearlyDesc', '6 kont � 2 miesi�ce gratis'),
-              priceBase: '199,99 z�', priceApple: '399,99 z�',
+              sub: _tPl('platnosci.subFamilyYearlyDesc', '6 kont — 2 miesiące gratis'),
+              priceBase: '199,99 zł', priceApple: '399,99 zł',
               badge: _tPl('platnosci.badgeBest', 'Najlepszy') },
         ]
     };
 }
 
 let currentTab      = 'individual';
-let selectedPlanId  = 'sub_individual_yearly'; // domy�lnie
+let selectedPlanId  = 'sub_individual_yearly'; // domyślnie
 let isApple         = false;
 let isPL            = false;
 
-/* �� Detekcja kraju/platformy �� */
+/* ── Detekcja kraju/platformy ── */
 function detectContext() {
     isPL = navigator.language?.startsWith('pl') || false;
     isApple = /iPhone|iPad|iPod|Mac/.test(navigator.userAgent);
@@ -353,7 +353,7 @@ function detectContext() {
     }
 }
 
-/* �� Renderuj karty �� */
+/* ── Renderuj karty ── */
 function renderCards() {
     const plans = getPLANS()[currentTab];
     const container = document.getElementById('pay-cards');
@@ -393,14 +393,14 @@ function selectPlan(planId) {
 
 function setTab(tab) {
     currentTab = tab;
-    // Wybierz domy�lnie roczny dla ka�dego taba
+    // Wybierz domyślnie roczny dla każdego taba
     selectedPlanId = tab === 'individual' ? 'sub_individual_yearly' : 'sub_family_yearly';
     document.getElementById('tab-ind').classList.toggle('active', tab === 'individual');
     document.getElementById('tab-fam').classList.toggle('active', tab === 'family');
     renderCards();
 }
 
-/* �� Stopka z podsumowaniem �� */
+/* ── Stopka z podsumowaniem ── */
 function updateFooter() {
     const allPlans = [...getPLANS().individual, ...getPLANS().family];
     const plan = allPlans.find(p => p.id === selectedPlanId);
@@ -409,10 +409,10 @@ function updateFooter() {
     document.getElementById('pay-footer').textContent =
         typeof t === 'function'
             ? t('platnosci.payingComingBody')
-            : `Wybrany: ${plan.name} � ${price} / ${plan.period}. Anuluj w dowolnym momencie.`;
+            : `Wybrany: ${plan.name} — ${price} / ${plan.period}. Anuluj w dowolnym momencie.`;
 }
 
-/* �� Obs�uga p�atno�ci �� */
+/* ── Obsługa płatności ── */
 function payWith(provider) {
     if (!selectedPlanId) {
         alert(typeof t === 'function' ? t('platnosci.pickPlanFirstHint') : 'Wybierz pakiet przed kontynuowaniem.');
@@ -422,8 +422,8 @@ function payWith(provider) {
     const allPlans = [...getPLANS().individual, ...getPLANS().family];
     const plan = allPlans.find(p => p.id === selectedPlanId);
 
-    // TODO: implementacja webhook�w p�atno�ci
-    alert(typeof t === 'function' ? t('platnosci.payingComingBody') : 'P�atno�ci w appce wkr�tce � na razie zarz�dzaj subskrypcj� na stronie coachay.com.');
+    // TODO: implementacja webhoków płatności
+    alert(typeof t === 'function' ? t('platnosci.payingComingBody') : 'Płatności w appce wkrótce — na razie zarządzaj subskrypcją na stronie coachay.com.');
 }
 
 function goBack() {
@@ -434,7 +434,7 @@ function goBack() {
     }
 }
 
-/* �� Init �� */
+/* ── Init ── */
 detectContext();
 if (typeof onI18nReady === 'function') {
     onI18nReady(() => renderCards());
