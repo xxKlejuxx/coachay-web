@@ -43,7 +43,7 @@ body:has(#app-sidebar) .rodo-page-title { display: block; }
 }
 body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
 
-/* �� Sekcja �� */
+/* ── Sekcja ── */
 .rodo-section {
     background: var(--tlo-karta); border: 1px solid var(--border);
     border-radius: 16px; padding: 16px;
@@ -56,7 +56,7 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
     font-size: 18px; font-weight: 600; color: var(--szary-j); line-height: 1.7;
 }
 
-/* �� Przycisk usuni�cia konta �� */
+/* ── Przycisk usunięcia konta ── */
 .rodo-delete-btn {
     width: 100%; padding: 15px;
     background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.2);
@@ -83,7 +83,7 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
     <div class="screen-body">
 
         <div class="rodo-header">
-            <button class="rodo-back" onclick="history.back()">�</button>
+            <button class="rodo-back" onclick="history.back()">←</button>
             <div class="rodo-header-title" data-i18n="rodo.headerTitle">Polityka i RODO</div>
         </div>
 
@@ -101,8 +101,8 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
             <div class="rodo-section">
                 <div class="rodo-section-title" data-i18n="rodo.purposeTitle">Cel przetwarzania danych</div>
                 <div class="rodo-section-text" id="rodo-purpose-body">
-                    Dane przetwarzane s� wy��cznie w celu �wiadczenia us�ug aplikacji:
-                    zarz�dzanie dru�yn�, rejestrowanie obecno�ci, komunikacja mi�dzy
+                    Dane przetwarzane są wyłącznie w celu świadczenia usług aplikacji:
+                    zarządzanie drużynę, rejestrowanie obecności, komunikacja między
                     trenerami, zawodnikami i rodzicami.
                 </div>
             </div>
@@ -111,32 +111,32 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
                 <div class="rodo-section-title" data-i18n="rodo.rightsTitle">Twoje prawa</div>
                 <div class="rodo-section-text" id="rodo-rights-body">
                     Masz prawo do:<br>
-                    � dost�pu do swoich danych<br>
-                    � sprostowania nieprawid�owych danych<br>
-                    � usuni�cia danych (prawo do bycia zapomnianym)<br>
-                    � przenoszenia danych<br>
-                    � wniesienia sprzeciwu wobec przetwarzania
+                    • dostępu do swoich danych<br>
+                    • sprostowania nieprawidłowych danych<br>
+                    • usunięcia danych (prawo do bycia zapomnianym)<br>
+                    • przenoszenia danych<br>
+                    • wniesienia sprzeciwu wobec przetwarzania
                 </div>
             </div>
 
             <div class="rodo-section">
                 <div class="rodo-section-title" data-i18n="rodo.childrenTitle">Dane dzieci</div>
                 <div class="rodo-section-text" id="rodo-children-body">
-                    Dane zawodnik�w niepe�noletnich przetwarzamy wy��cznie za zgod�
-                    rodzica lub opiekuna prawnego. Profile zawodnik�w widoczne s�
-                    tylko dla trener�w i rodzic�w przypisanych do danej dru�yny.
+                    Dane zawodników niepełnoletnich przetwarzamy wyłącznie za zgodę
+                    rodzica lub opiekuna prawnego. Profile zawodników widoczne są
+                    tylko dla trenerów i rodziców przypisanych do danej drużyny.
                 </div>
             </div>
 
             <div class="rodo-section" style="cursor:pointer;" onclick="window.location.href='polityka-prywatnosci.html'">
-                <div class="rodo-section-title" data-i18n="rodo.fullPolicyLabel">?? Pe�na polityka prywatno�ci</div>
+                <div class="rodo-section-title" data-i18n="rodo.fullPolicyLabel">?? Pełna polityka prywatności</div>
                 <div class="rodo-section-text" id="rodo-fullpolicy-body">
-                    Szczeg�owy dokument � administrator danych, hosting, cookies, podmioty przetwarzaj�ce. �
+                    Szczegółowy dokument — administrator danych, hosting, cookies, podmioty przetwarzające. ›
                 </div>
             </div>
 
             <button class="rodo-delete-btn" onclick="requestDelete()" data-i18n="rodo.deleteAccountButton">
-                ??? Usu� moje konto i dane
+                ??? Usuń moje konto i dane
             </button>
 
         </div><!-- /rodo-wrap -->
@@ -146,7 +146,7 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
     <!-- Bottom nav -->
     <div class="bottom-nav">
         <a class="nav-item" href="start.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
-        <a class="nav-item" href="druzyna.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.druzyna">Dru�yna</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.druzyna">Drużyna</span></a>
     </div>
 </div>
 
@@ -164,14 +164,14 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 async function requestDelete() {
-    const msg = typeof t === 'function' ? t('rodo.deleteConfirmBody') : 'Aby usun�� konto i dane, wy�lij pro�b� na support@coachay.com. Otworzy� klienta email?';
-    const subj = typeof t === 'function' ? t('rodo.deleteMailSubject') : 'Usuni�cie konta COACHAY';
+    const msg = typeof t === 'function' ? t('rodo.deleteConfirmBody') : 'Aby usunąć konto i dane, wyślij prośbę na support@coachay.com. Otworzyć klienta email?';
+    const subj = typeof t === 'function' ? t('rodo.deleteMailSubject') : 'Usunięcie konta COACHAY';
     const vars = {
-        email: (auth && auth.currentUser && auth.currentUser.email) || '�',
-        name: (typeof currentUserData !== 'undefined' && currentUserData && currentUserData.displayName) || '�',
-        userId: (typeof getCurrentUserId === 'function' ? getCurrentUserId() : null) || '�',
-        clubId: (typeof aktualnyClubId !== 'undefined' ? aktualnyClubId : null) || '�',
-        role: (typeof aktualnaRola !== 'undefined' ? aktualnaRola : null) || '�',
+        email: (auth && auth.currentUser && auth.currentUser.email) || '—',
+        name: (typeof currentUserData !== 'undefined' && currentUserData && currentUserData.displayName) || '—',
+        userId: (typeof getCurrentUserId === 'function' ? getCurrentUserId() : null) || '—',
+        clubId: (typeof aktualnyClubId !== 'undefined' ? aktualnyClubId : null) || '—',
+        role: (typeof aktualnaRola !== 'undefined' ? aktualnaRola : null) || '—',
     };
     const body = typeof t === 'function' ? t('rodo.deleteMailBody', vars) : '';
     if (await showConfirmSheet(msg)) {
@@ -199,7 +199,7 @@ function renderRodoBodies() {
     if (rightsEl) {
         const list = typeof t === 'function' ? t('rodo.rightsList') : null;
         if (Array.isArray(list) && list.length) {
-            rightsEl.innerHTML = list.map(r => '� ' + r).join('<br>');
+            rightsEl.innerHTML = list.map(r => '• ' + r).join('<br>');
         }
     }
 }
