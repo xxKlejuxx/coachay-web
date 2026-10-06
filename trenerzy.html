@@ -15,7 +15,7 @@
 <style>
 .screen-body { padding: 0 !important; gap: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
 
-/* �� Nag��wek ekranu �� */
+/* === Nagłówek ekranu === */
 .tr-header { padding: 12px 16px 10px; background: var(--tlo); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .tr-header-title { font-family: var(--font-d); font-size:23px; font-weight: 800; color: var(--bialy); }
 .tr-header-right { display: flex; align-items: center; gap: 8px; }
@@ -24,12 +24,12 @@
 .tr-btn-invite:active { opacity: 0.8; }
 body:has(#app-sidebar) .tr-header { display: none; }
 
-/* �� FAB �� */
+/* === FAB === */
 .fab { position: absolute; bottom: 72px; right: 16px; width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size:19px; font-weight: 800; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); z-index: 10; }
 body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
 .fab:active { opacity: 0.85; }
 
-/* �� Lista trener�w �� */
+/* === Lista trenerów === */
 .tr-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .tr-scroll::-webkit-scrollbar { display: none; }
 .tr-inner { max-width: 1222px; margin: 0 auto; padding: 20px 28px 80px; display: flex; flex-direction: column; gap: 8px; }
@@ -50,7 +50,7 @@ body:has(#app-sidebar) .tr-inner { padding: 28px 24px 48px; }
 .tr-team-badge { font-size:14px; font-weight: 800; color: var(--akcent); background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2); border-radius: 999px; padding: 2px 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 .tr-arrow { color: var(--border2); font-size:21px; flex-shrink: 0; }
 
-/* �� Panel szczeg��w trenera �� */
+/* === Panel szczegółów trenera === */
 .detail-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); z-index: 130; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .detail-panel.open { transform: translateX(0); }
 
@@ -85,17 +85,17 @@ body:has(#app-sidebar) .tr-inner { padding: 28px 24px 48px; }
 .dp-btn-msg { width: 100%; padding: 14px; background: var(--akcent); border-radius: var(--r); font-size:19px; font-weight: 800; color: #fff; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .dp-btn-msg:active { opacity: 0.8; }
 
-/* �� Slide panels (mobile base � desktop override w _desktop.css) �� */
+/* === Slide panels (mobile base – desktop override w _desktop.css) === */
 .slide-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .slide-panel.open { transform: translateY(0); }
-/* edytuj trenera � ta sama szeroko�� co detail panel */
+/* edytuj trenera – ta sama szerokość co detail panel */
 body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !important; z-index: 310 !important; }
 
-/* �� Panel edycji trenera �� */
+/* === Panel edycji trenera === */
 .edit-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
 .edit-panel-body::-webkit-scrollbar { display: none; }
 
-/* �� Panel zaproszenia (u�ywa .slide-panel z _desktop.css na desktop) �� */
+/* === Panel zaproszenia (używa .slide-panel z _desktop.css na desktop) === */
 .invite-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: none; }
 
 .kod-box { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: center; }
@@ -110,7 +110,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 .kod-copy-btn { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size:17px; font-weight: 700; color: var(--bialy); cursor: pointer; }
 .kod-copy-btn:active { opacity: 0.7; }
 
-/* �� Toggle widoczno�ci �� */
+/* === Toggle widoczności === */
 .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
 .toggle-label { font-size:18px; font-weight: 700; color: var(--bialy); }
 .toggle-sub { font-size:16px; color: var(--szary); margin-top: 2px; }
@@ -121,7 +121,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 .toggle-switch input:checked + .toggle-slider { background: var(--akcent); }
 .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
 
-/* �� Avatar picker �� */
+/* === Avatar picker === */
 .av-gender-row { display: flex; gap: 6px; margin-bottom: 10px; }
 .av-gender-btn { flex: 1; padding: 8px; background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 10px; font-size:17px; font-weight: 700; color: var(--szary); cursor: pointer; text-align: center; }
 .av-gender-btn.selected { background: rgba(59,130,246,0.15); border-color: var(--akcent); color: var(--akcent); }
@@ -130,15 +130,15 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 .av-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .av-thumb.selected { border-color: var(--akcent); }
 
-/* �� Sticky save �� */
+/* === Sticky save === */
 .sticky-save { position: sticky; bottom: 0; padding: 14px 16px; background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
 
-/* �� Badges admin / blocked �� */
+/* === Badges admin / blocked === */
 .tr-admin-badge { font-size:14px; font-weight: 900; color: #FBBF24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); border-radius: 999px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; }
 .tr-blocked-badge { font-size:14px; font-weight: 900; color: #F87171; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); border-radius: 999px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; }
 .dp-admin-badge { display: inline-flex; align-items: center; gap: 4px; font-size:15px; font-weight: 900; color: #FBBF24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); border-radius: 999px; padding: 3px 10px; letter-spacing: 1px; text-transform: uppercase; margin-top: 6px; }
 
-/* �� Sekcja akcji admina w panelu �� */
+/* === Sekcja akcji admina w panelu === */
 .dp-actions { display: flex; flex-direction: column; gap: 8px; }
 .dp-action-btn { width: 100%; padding: 13px 16px; border-radius: var(--r); font-size:18px; font-weight: 800; cursor: pointer; border: none; text-align: left; display: flex; align-items: center; gap: 10px; transition: opacity 0.15s; }
 .dp-action-btn:active { opacity: 0.7; }
@@ -147,7 +147,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 .dp-action-btn-neutral { background: var(--tlo-karta2); color: var(--szary-j); border: 1px solid var(--border2); }
 .dp-action-btn-danger  { background: rgba(239,68,68,0.08); color: #F87171; border: 1px solid rgba(239,68,68,0.2); }
 
-/* �� Modal blokady �� */
+/* === Modal blokady === */
 .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
 .modal-overlay.open { opacity: 1; visibility: visible; }
 .modal-box { background: var(--tlo-karta); border: 1px solid var(--border2); border-radius: 20px 20px 0 0; padding: 20px 20px 32px; width: 100%; }
@@ -165,7 +165,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 <div class="phone">
     <div class="notch"></div>
 
-    <!-- �� Top bar �� -->
+    <!-- === Top bar === -->
     <div class="top-bar">
         <div class="ctx-switcher" onclick="toggleCtxOv()">
             <div class="ctx-dot" id="ctx-dot"></div>
@@ -180,24 +180,24 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
         </div>
     </div>
 
-    <!-- �� Overlaye globalne �� -->
+    <!-- === Overlaye globalne === -->
     <div class="ctx-overlay" id="ctx-ov">
-        <div class="ov-label" data-i18n="appShell.switcherTitle">Wybierz klub i zesp�</div>
+        <div class="ov-label" data-i18n="appShell.switcherTitle">Wybierz klub i zespół</div>
         <div class="ctx-klub-row" id="ctx-klub-row"><div class="ctx-klub-dot" id="ctx-ov-dot"></div><span class="ctx-klub-name" id="ctx-ov-klub-name"></span><span class="ctx-klub-role" id="ctx-ov-klub-role"></span></div>
         <div class="ctx-teams" id="ctx-teams"></div>
     </div>
     <div class="notif-backdrop" id="notif-backdrop" onclick="closeNotifOv()"></div>
     <div class="notif-overlay" id="notif-ov">
-        <div class="notif-hdr"><span class="notif-tytul" data-i18n="appShell.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="appShell.clearRead">Wyczy�� przeczytane</span></div>
+        <div class="notif-hdr"><span class="notif-tytul" data-i18n="appShell.notifications">Powiadomienia</span><span class="notif-clear" onclick="clearNotifs()" data-i18n="appShell.clearRead">Wyczyść przeczytane</span></div>
     </div>
 
-    <!-- �� Zawarto�� ekranu �� -->
+    <!-- === Zawartość ekranu === -->
     <div class="screen-body">
 
         <div class="tr-header">
             <div class="tr-header-title" data-i18n="trenerzy.headerTitle">Trenerzy</div>
             <div class="tr-header-right">
-                <div class="tr-header-count" id="tr-count">�</div>
+                <div class="tr-header-count" id="tr-count">…</div>
                 <button class="tr-btn-invite" id="tr-btn-invite" onclick="openAddPanel()" data-i18n="trenerzy.addButton">+ Dodaj</button>
             </div>
         </div>
@@ -206,23 +206,23 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 
         <div class="tr-scroll" id="tr-scroll">
             <div class="tr-inner" id="tr-inner">
-                <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;font-weight:600;" data-i18n="common.loading">�adowanie...</div>
+                <div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;font-weight:600;" data-i18n="common.loading">Ładowanie...</div>
             </div>
         </div>
 
     </div>
 
-    <!-- �� Bottom nav �� -->
+    <!-- === Bottom nav === -->
     <div class="bottom-nav">
-        <a class="nav-item" href="start.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
-        <a class="nav-item" href="druzyna.html"><span class="nav-icon">??</span><span class="nav-label" data-i18n="nav.druzyna">Dru�yna</span></a>
+        <a class="nav-item" href="start.html"><span class="nav-icon">🏠</span><span class="nav-label" data-i18n="nav.start">Start</span></a>
+        <a class="nav-item" href="druzyna.html"><span class="nav-icon">👥</span><span class="nav-label" data-i18n="nav.druzyna">Drużyna</span></a>
     </div>
 
-    <!-- == PANEL SZCZEGӣ�W TRENERA == -->
+    <!-- == PANEL SZCZEGÓŁÓW TRENERA == -->
     <div class="detail-panel" id="detail-panel">
         <div class="dp-topbar">
             <div class="dp-back" onclick="closeDetailPanel()">
-                <div class="dp-back-icon">�</div>
+                <div class="dp-back-icon">←</div>
                 <span data-i18n="trenerzy.headerTitle">Trenerzy</span>
             </div>
             <span class="dp-edit-btn" id="dp-edit-btn" onclick="openEditPanel()" data-i18n="common.edit">Edytuj</span>
@@ -246,14 +246,14 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
     <div class="slide-panel" id="edit-panel" style="z-index:310;">
         <div class="sp-hdr">
             <div class="dp-back" onclick="closeEditPanel()">
-                <div class="dp-back-icon">�</div>
+                <div class="dp-back-icon">←</div>
                 <span data-i18n="trenerzy.backToProfile">Profil</span>
             </div>
             <div class="sp-title" data-i18n="trenerzy.editTitle">Edytuj trenera</div>
         </div>
         <div class="edit-panel-body">
 
-            <!-- �� Awatar �� -->
+            <!-- === Awatar === -->
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.avatarLabel">Awatar</label>
                 <div style="display:flex;justify-content:center;margin-bottom:12px;">
@@ -262,16 +262,16 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
                     </div>
                 </div>
                 <div class="av-gender-row">
-                    <button class="av-gender-btn selected" id="av-btn-m" onclick="selectGender('mezczyzna', this)">> <span data-i18n="trenerzy.genderMale">M�czyzna</span></button>
+                    <button class="av-gender-btn selected" id="av-btn-m" onclick="selectGender('mezczyzna', this)">> <span data-i18n="trenerzy.genderMale">Mężczyzna</span></button>
                     <button class="av-gender-btn" id="av-btn-k" onclick="selectGender('kobieta', this)">+ <span data-i18n="trenerzy.genderFemale">Kobieta</span></button>
                 </div>
                 <div class="av-grid" id="ep-av-grid"></div>
-                <button type="button" onclick="regenAvatarGrid()" style="width:100%;padding:9px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:17px;font-weight:700;cursor:pointer;">? <span data-i18n="trenerzy.otherAvatarsButton">Inne awatary</span></button>
+                <button type="button" onclick="regenAvatarGrid()" style="width:100%;padding:9px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:17px;font-weight:700;cursor:pointer;">🔄 <span data-i18n="trenerzy.otherAvatarsButton">Inne awatary</span></button>
             </div>
 
             <div style="display:flex;gap:10px;">
                 <div class="form-group" style="flex:1">
-                    <label class="form-lbl" data-i18n="common.firstNameLabel">Imi�</label>
+                    <label class="form-lbl" data-i18n="common.firstNameLabel">Imię</label>
                     <input class="form-inp" id="ep-fname" type="text" placeholder="Jan" data-i18n-placeholder="trenerzy.firstNamePlaceholder">
                 </div>
                 <div class="form-group" style="flex:1">
@@ -282,13 +282,13 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             <div class="toggle-row" id="ep-admin-row" style="display:none">
                 <div>
                     <div class="toggle-label" data-i18n="trenerzy.clubAdminLabel">Administrator klubu</div>
-                    <div class="toggle-sub" data-i18n="trenerzy.clubAdminSub">pe�ny dost�p do zarz�dzania</div>
+                    <div class="toggle-sub" data-i18n="trenerzy.clubAdminSub">pełny dostęp do zarządzania</div>
                 </div>
                 <label class="toggle-switch"><input type="checkbox" id="ep-is-admin"><span class="toggle-slider"></span></label>
             </div>
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.bioLabel">O trenerze <span style="color:var(--szary);font-weight:600;">(bio)</span></label>
-                <textarea class="form-inp" id="ep-bio" rows="3" placeholder="Kilka s��w o trenerze..." data-i18n-placeholder="trenerzy.bioPlaceholder" style="resize:none;line-height:1.5;"></textarea>
+                <textarea class="form-inp" id="ep-bio" rows="3" placeholder="Kilka słów o trenerze..." data-i18n-placeholder="trenerzy.bioPlaceholder" style="resize:none;line-height:1.5;"></textarea>
             </div>
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.sinceLabel">Trener od roku</label>
@@ -300,10 +300,10 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             </div>
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.specLabel">Specjalizacja</label>
-                <input class="form-inp" id="ep-spec" type="text" placeholder="np. Pi�ka no�na m�odzie�owa" data-i18n-placeholder="trenerzy.specPlaceholder">
+                <input class="form-inp" id="ep-spec" type="text" placeholder="np. Piłka nożna młodzieżowa" data-i18n-placeholder="trenerzy.specPlaceholder">
             </div>
             <div class="form-group">
-                <label class="form-lbl" data-i18n="trenerzy.contactEmailLabel">E-mail kontaktowy <span style="color:var(--szary);font-weight:600;">(do wy�wietlenia)</span></label>
+                <label class="form-lbl" data-i18n="trenerzy.contactEmailLabel">E-mail kontaktowy <span style="color:var(--szary);font-weight:600;">(do wyświetlenia)</span></label>
                 <input class="form-inp" id="ep-email" type="email" placeholder="trener@email.pl" data-i18n-placeholder="trenerzy.contactEmailPlaceholder">
             </div>
             <div class="form-group">
@@ -313,14 +313,14 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             <div class="toggle-row">
                 <div>
                     <div class="toggle-label" data-i18n="trenerzy.phoneVisibleLabel">Telefon widoczny</div>
-                    <div class="toggle-sub" data-i18n="trenerzy.visibleSub">dla rodzic�w i zawodnik�w</div>
+                    <div class="toggle-sub" data-i18n="trenerzy.visibleSub">dla rodziców i zawodników</div>
                 </div>
                 <label class="toggle-switch"><input type="checkbox" id="ep-tel-visible"><span class="toggle-slider"></span></label>
             </div>
             <div class="toggle-row">
                 <div>
                     <div class="toggle-label" data-i18n="trenerzy.emailVisibleLabel">E-mail widoczny</div>
-                    <div class="toggle-sub" data-i18n="trenerzy.visibleSub">dla rodzic�w i zawodnik�w</div>
+                    <div class="toggle-sub" data-i18n="trenerzy.visibleSub">dla rodziców i zawodników</div>
                 </div>
                 <label class="toggle-switch"><input type="checkbox" id="ep-email-visible"><span class="toggle-slider"></span></label>
             </div>
@@ -334,18 +334,18 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
     <div class="slide-panel" id="add-panel">
         <div class="sp-hdr">
             <div class="dp-back" onclick="closeAddPanel()">
-                <div class="dp-back-icon">�</div>
+                <div class="dp-back-icon">←</div>
                 <span data-i18n="trenerzy.headerTitle">Trenerzy</span>
             </div>
             <div class="sp-title" data-i18n="trenerzy.addTitle">Nowy trener</div>
         </div>
         <div class="invite-panel-body">
             <div style="font-size:18px;color:var(--szary);line-height:1.6;background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:14px;" data-i18n-html="trenerzy.addHint">
-                Trener pojawi si� na li�cie ze statusem <strong style="color:var(--warn)">Oczekuje</strong>. Kod rejestracyjny b�dzie widoczny w jego profilu � przeka� go trenerowi.
+                Trener pojawi się na liście ze statusem <strong style="color:var(--warn)">Oczekuje</strong>. Kod rejestracyjny będzie widoczny w jego profilu – przekaż go trenerowi.
             </div>
             <div style="display:flex;gap:10px;">
                 <div class="form-group" style="flex:1">
-                    <label class="form-lbl" data-i18n="common.firstNameLabel">Imi�</label>
+                    <label class="form-lbl" data-i18n="common.firstNameLabel">Imię</label>
                     <input class="form-inp" id="add-fname" type="text" placeholder="Marek" data-i18n-placeholder="trenerzy.addFirstNamePlaceholder">
                 </div>
                 <div class="form-group" style="flex:1">
@@ -356,7 +356,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             <div class="form-group">
                 <label class="form-lbl" data-i18n="trenerzy.roleLabel">Rola</label>
                 <select class="form-select" id="add-rola">
-                    <option value="TRENER_GLOWNY" data-i18n="trenerzy.roleTrenerGlowny">Trener G��wny</option>
+                    <option value="TRENER_GLOWNY" data-i18n="trenerzy.roleTrenerGlowny">Trener Główny</option>
                     <option value="TRENER_POMOCNICZY" data-i18n="trenerzy.roleTrenerPomocniczy">Trener Pomocniczy</option>
                 </select>
             </div>
@@ -366,32 +366,32 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
         </div>
     </div>
 
-    <!-- �� Menu panel �� -->
+    <!-- === Menu panel === -->
     <div class="menu-panel-overlay" id="menu-overlay" onclick="closeMenu()"></div>
     <div class="menu-panel" id="menu-panel">
         <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
         <div class="menu-panel-items">
 
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">M�j profil</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">P�atno�ci</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">👥</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-sep"></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">�</span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Dru�yny klubu</span><span class="menu-item-arrow">�</span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">›</span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">›</span></div>
             <div class="menu-sep"></div>
         </div>
-        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj si�</span></div></div>
+        <div class="menu-panel-bottom"><div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj się</span></div></div>
     </div>
 
-    <!-- �� Modal: zakres blokady �� -->
+    <!-- === Modal: zakres blokady === -->
     <div class="modal-overlay" id="modal-block" onclick="closeBlockModal()">
         <div class="modal-box" onclick="event.stopPropagation()">
-            <div class="modal-title" data-i18n="trenerzy.blockModalTitle">Zablokowa� trenera?</div>
+            <div class="modal-title" data-i18n="trenerzy.blockModalTitle">Zablokować trenera?</div>
             <div class="modal-body" id="modal-block-body"></div>
             <div class="modal-btns">
-                <button class="modal-btn modal-btn-team" onclick="blockTrainer('TEAM')" data-i18n="trenerzy.blockScopeTeam">Tylko ta dru�yna</button>
-                <button class="modal-btn modal-btn-club" onclick="blockTrainer('CLUB')" data-i18n="trenerzy.blockScopeClub">Ca�y klub</button>
+                <button class="modal-btn modal-btn-team" onclick="blockTrainer('TEAM')" data-i18n="trenerzy.blockScopeTeam">Tylko ta drużyna</button>
+                <button class="modal-btn modal-btn-club" onclick="blockTrainer('CLUB')" data-i18n="trenerzy.blockScopeClub">Cały klub</button>
                 <button class="modal-btn modal-btn-cancel" onclick="closeBlockModal()" data-i18n="common.cancel">Anuluj</button>
             </div>
         </div>
@@ -404,7 +404,7 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
 <script src="coachay-core.js?v=20261003b"></script>
 <script>
 /* ===================================================
-   TRENERZY � logika ekranu
+   TRENERZY – logika ekranu
 =================================================== */
 
 let currentUserId = '';
@@ -416,7 +416,7 @@ let allClubTeams = [];
 let detailTrainer = null;
 let isGlowny = false;
 let isAdmin = false; // trainers.isClubAdmin aktualnego usera
-let selectedAvatarUrl = null;    // null = inicja�y, string = pe�ny URL DiceBear
+let selectedAvatarUrl = null;    // null = inicjały, string = pełny URL DiceBear
 let selectedGender    = 'mezczyzna';
 
 const DICEBEAR_BASE  = 'https://api.dicebear.com/9.x';
@@ -443,10 +443,10 @@ function getRoleLabel(role) {
     };
     const key = map[role];
     if (!key) return typeof t === 'function' ? t('trenerzy.defaultRoleLabel') : 'Trener';
-    return typeof t === 'function' ? t(key) : { 'trenerzy.roleTrenerGlowny': 'Trener G��wny', 'trenerzy.roleTrenerPomocniczy': 'Trener Pomocniczy', 'trenerzy.roleTrenerAsystent': 'Trener Asystent', 'trenerzy.roleOwner': 'W�a�ciciel' }[key] || role;
+    return typeof t === 'function' ? t(key) : { 'trenerzy.roleTrenerGlowny': 'Trener Główny', 'trenerzy.roleTrenerPomocniczy': 'Trener Pomocniczy', 'trenerzy.roleTrenerAsystent': 'Trener Asystent', 'trenerzy.roleOwner': 'Właściciel' }[key] || role;
 }
 
-/* �� Avatar helpers �� */
+/* === Avatar helpers === */
 function buildAvatarGrid() {
     const grid = document.getElementById('ep-av-grid');
     if (!grid) return;
@@ -488,7 +488,7 @@ function calcExpYears(coachingSince) {
     return Math.floor((Date.now() - new Date(coachingSince).getTime()) / (365.25 * 24 * 3600 * 1000));
 }
 
-/* �� Inicjalizacja �� */
+/* === Inicjalizacja === */
 async function initTrenerzy() {
     if (!requireAuth()) return;
 
@@ -499,10 +499,10 @@ async function initTrenerzy() {
         const _tt = (key, fb) => typeof t === 'function' ? t(key) : fb;
         document.getElementById('tr-inner').innerHTML = `
             <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;text-align:center;">
-                <div style="font-size:2rem">???</div>
-                <div style="font-size:.95rem;font-weight:600;color:var(--bialy)">${_tt('trenerzy.noTeamTitle','Brak dru�yny')}</div>
-                <div style="font-size:.82rem;color:var(--szary);line-height:1.5">${_tt('trenerzy.noTeamSub','Najpierw dodaj dru�yn� w sekcji Klub,\npotem wr�� tu i zapro� trenera.').replace(/\n/g,'<br>')}</div>
-                <button onclick="window.location.href='klub.html'" style="margin-top:8px;padding:10px 20px;background:var(--akcent);color:#fff;border:none;border-radius:8px;font-size:.85rem;cursor:pointer;">${_tt('trenerzy.goToClubButton','Przejd� do Klub �')}</button>
+                <div style="font-size:2rem">🏟️</div>
+                <div style="font-size:.95rem;font-weight:600;color:var(--bialy)">${_tt('trenerzy.noTeamTitle','Brak drużyny')}</div>
+                <div style="font-size:.82rem;color:var(--szary);line-height:1.5">${_tt('trenerzy.noTeamSub','Najpierw dodaj drużynę w sekcji Klub,\npotem wróć tu i zaproś trenera.').replace(/\n/g,'<br>')}</div>
+                <button onclick="window.location.href='klub.html'" style="margin-top:8px;padding:10px 20px;background:var(--akcent);color:#fff;border:none;border-radius:8px;font-size:.85rem;cursor:pointer;">${_tt('trenerzy.goToClubButton','Przejdź do Klub →')}</button>
             </div>`;
         return;
     }
@@ -515,7 +515,7 @@ async function initTrenerzy() {
     currentTeamId   = team.teamId || team.id;
     currentClubId   = membership?.clubId || team?.clubId || '';
 
-    // Za�aduj dru�yny klubu
+    // Załaduj drużyny klubu
     try {
         const teamsSnap = await db.collection('teams').where('clubId', '==', currentClubId).get();
         allClubTeams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -523,7 +523,7 @@ async function initTrenerzy() {
 
     isGlowny = currentUserRole === 'TRENER_GLOWNY' || currentUserRole === 'OWNER';
 
-    // Sprawd� isClubAdmin
+    // Sprawdź isClubAdmin
     try {
         const tSnap = await db.collection('trainers')
             .where('userId', '==', currentUserId)
@@ -532,7 +532,7 @@ async function initTrenerzy() {
         if (!tSnap.empty) isAdmin = tSnap.docs[0].data().isClubAdmin === true;
     } catch (e) {}
 
-    // Przycisk Dodaj � admin lub trener g��wny
+    // Przycisk Dodaj – admin lub trener główny
     if (isAdmin || isGlowny) {
         const btn = document.getElementById('tr-btn-invite');
         if (btn) btn.style.display = 'block';
@@ -543,7 +543,7 @@ async function initTrenerzy() {
     await loadTrainers();
 }
 
-/* �� Pobierz trener�w �� */
+/* === Pobierz trenerów === */
 async function loadTrainers() {
     try {
         const snap = await db.collection('trainers')
@@ -561,7 +561,7 @@ async function loadTrainers() {
             ]);
             const allMbrs = [...mbrSnap1.docs, ...mbrSnap2.docs].map(d => d.data());
 
-            // Buduj map� teamId � teamName z allClubTeams
+            // Buduj mapę teamId → teamName z allClubTeams
             const teamNameMap = {};
             allClubTeams.forEach(t => { teamNameMap[t.teamId || t.id] = t.teamName || t.displayName || t.name || ''; });
 
@@ -578,13 +578,13 @@ async function loadTrainers() {
 
         renderTrainers();
     } catch (e) {
-        console.error('? loadTrainers:', e);
+        console.error('❌ loadTrainers:', e);
         document.getElementById('tr-inner').innerHTML =
-            '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;">' + (typeof t === 'function' ? t('trenerzy.loadError') : 'B��d �adowania') + '</div>';
+            '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;">' + (typeof t === 'function' ? t('trenerzy.loadError') : 'Błąd ładowania') + '</div>';
     }
 }
 
-/* �� Renderuj list� �� */
+/* === Renderuj listę === */
 function renderTrainers() {
     const scroll = document.getElementById('tr-inner');
     const countEl = document.getElementById('tr-count');
@@ -593,22 +593,22 @@ function renderTrainers() {
     if (countEl) {
         const wordOne  = typeof t === 'function' ? t('trenerzy.countWordOne')  : 'trener';
         const wordFew  = typeof t === 'function' ? t('trenerzy.countWordFew')  : 'trenerzy';
-        const wordMany = typeof t === 'function' ? t('trenerzy.countWordMany') : 'trener�w';
+        const wordMany = typeof t === 'function' ? t('trenerzy.countWordMany') : 'trenerów';
         countEl.textContent = `${n} ${n === 1 ? wordOne : n < 5 ? wordFew : wordMany}`;
     }
 
     if (!n) {
-        scroll.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;font-weight:600;">' + (typeof t === 'function' ? t('trenerzy.noTrainersInClub') : 'Brak trener�w w klubie') + '</div>';
+        scroll.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--szary);font-size:18px;font-weight:600;">' + (typeof t === 'function' ? t('trenerzy.noTrainersInClub') : 'Brak trenerów w klubie') + '</div>';
         return;
     }
 
     const sorted = [...allTrainers].sort((a, b) => {
-        // Oczekuj�cy na ko�cu
+        // Oczekujący na końcu
         const aP = a.registrationStatus === 'PENDING';
         const bP = b.registrationStatus === 'PENDING';
         if (aP && !bP) return 1;
         if (!aP && bP) return -1;
-        // W�r�d aktywnych: g��wni pierwsi
+        // Wśród aktywnych: główni pierwsi
         const aG = a.role === 'TRENER_GLOWNY' || a.role === 'OWNER';
         const bG = b.role === 'TRENER_GLOWNY' || b.role === 'OWNER';
         if (aG && !bG) return -1;
@@ -620,7 +620,7 @@ function renderTrainers() {
     sorted.forEach(t => scroll.appendChild(buildTrainerCard(t)));
 }
 
-/* �� Karta trenera �� */
+/* === Karta trenera === */
 function buildTrainerCard(t) {
     const name = t.displayName || t.trainerId;
     const initials = name.split(' ').map(w => w[0].toUpperCase()).join('').slice(0, 2);
@@ -637,9 +637,9 @@ function buildTrainerCard(t) {
     item.onclick = () => openDetailPanel(t);
 
     const _tCard = (key, fb) => typeof window.t === 'function' ? window.t(key) : fb;
-    const adminBadge   = t.isClubAdmin ? `<span class="tr-admin-badge">? ${_tCard('trenerzy.adminBadge','Admin')}</span>` : '';
+    const adminBadge   = t.isClubAdmin ? `<span class="tr-admin-badge">⭐ ${_tCard('trenerzy.adminBadge','Admin')}</span>` : '';
     const blockedBadge = isBlocked ? `<span class="tr-blocked-badge">${_tCard('trenerzy.blockedBadge','Zablokowany')}</span>` : '';
-    const pendingBadge = isPending ? `<div class="tr-pending-badge">? ${_tCard('trenerzy.pendingBadge','Oczekuje na rejestracj�')}</div>` : '';
+    const pendingBadge = isPending ? `<div class="tr-pending-badge">⏳ ${_tCard('trenerzy.pendingBadge','Oczekuje na rejestrację')}</div>` : '';
     const teamsBadges  = (!isPending && !isBlocked && teamNames.length)
         ? `<div class="tr-teams">${teamNames.map(tn => `<div class="tr-team-badge">${tn}</div>`).join('')}</div>` : '';
 
@@ -655,11 +655,11 @@ function buildTrainerCard(t) {
             </div>
             ${blockedBadge}${pendingBadge}${teamsBadges}
         </div>
-        <div class="tr-arrow">�</div>`;
+        <div class="tr-arrow">›</div>`;
     return item;
 }
 
-/* �� Panel szczeg��w �� */
+/* === Panel szczegółów === */
 async function openDetailPanel(t) {
     detailTrainer = t;
     const name = t.displayName || t.trainerId;
@@ -675,9 +675,9 @@ async function openDetailPanel(t) {
     document.getElementById('dp-nazwa').textContent = name;
     document.getElementById('dp-sub').textContent = getRoleLabel(t.role);
 
-    // Dru�yny + badge admina
+    // Drużyny + badge admina
     const _tDP = (key, fb) => typeof window.t === 'function' ? window.t(key) : fb;
-    const adminBadgeHtml = t.isClubAdmin ? `<div class="dp-admin-badge">${_tDP('trenerzy.adminDetailBadge','? Administrator klubu')}</div>` : '';
+    const adminBadgeHtml = t.isClubAdmin ? `<div class="dp-admin-badge">${_tDP('trenerzy.adminDetailBadge','⭐ Administrator klubu')}</div>` : '';
     document.getElementById('dp-teams').innerHTML =
         (t.teamNames || []).filter(Boolean).map(tn => `<div class="tr-team-badge">${tn}</div>`).join('') +
         adminBadgeHtml;
@@ -686,7 +686,7 @@ async function openDetailPanel(t) {
     const isBlocked = t.status === 'BLOCKED';
     const isSelf    = t.userId === currentUserId;
 
-    // Przycisk Edytuj � tylko admin, nie dla siebie (profil � profil.html), nie pending
+    // Przycisk Edytuj – tylko admin, nie dla siebie (profil – profil.html), nie pending
     const editBtn = document.getElementById('dp-edit-btn');
     console.log('isAdmin:', isAdmin, 'isPending:', isPending, 'isSelf:', isSelf);
     console.log('editBtn.style.display:', (isAdmin && !isPending && !isSelf) ? 'block' : 'none');
@@ -695,30 +695,31 @@ async function openDetailPanel(t) {
     let html = '';
 
     if (isPending) {
-        // �� Widok oczekuj�cego trenera ��
+        // === Widok oczekującego trenera ===
         html += `<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:14px;padding:16px;text-align:center;">
-            <div style="font-size:24px;margin-bottom:8px;">?</div>
-            <div style="font-size:18px;font-weight:800;color:var(--warn);">${_tDP('trenerzy.pendingTitle','Oczekuje na rejestracj�')}</div>
-            <div style="font-size:17px;color:var(--szary);margin-top:4px;line-height:1.5;">${_tDP('trenerzy.pendingSub','Trener jeszcze nie za�o�y� konta.\nPrzeka� poni�szy kod.').replace(/\n/g,'<br>')}</div>
+            <div style="font-size:24px;margin-bottom:8px;">⏳</div>
+            <div style="font-size:18px;font-weight:800;color:var(--warn);">${_tDP('trenerzy.pendingTitle','Oczekuje na rejestrację')}</div>
+            <div style="font-size:17px;color:var(--szary);margin-top:4px;line-height:1.5;">${_tDP('trenerzy.pendingSub','Trener jeszcze nie założył konta.\
+Przekaż poniższy kod.').replace(/\n/g,'<br>')}</div>
         </div>`;
 
-        // Za�aduj kod z inviteCodes (async � placeholder na start)
+        // Załaduj kod z inviteCodes (async – placeholder na start)
         html += `<div class="dp-section">
             <div class="dp-section-label">${_tDP('trenerzy.regCodeLabel','Kod rejestracyjny')}</div>
             <div id="dp-kod-box" style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;">
-                <div style="font-size:16px;color:var(--szary);">${_tDP('trenerzy.loadingCode','�adowanie kodu...')}</div>
+                <div style="font-size:16px;color:var(--szary);">${_tDP('trenerzy.loadingCode','Ładowanie kodu...')}</div>
             </div>
             <div style="display:flex;gap:8px;margin-top:8px;">
-                <button onclick="regenTrainerCode()" style="flex:1;padding:10px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:17px;font-weight:700;cursor:pointer;">? ${_tDP('trenerzy.newCodeButton','Nowy kod')}</button>
-                <button onclick="cancelInvitation()" style="flex:1;padding:10px;background:transparent;border:1px solid rgba(248,113,113,0.3);border-radius:10px;color:var(--blad);font-size:17px;font-weight:700;cursor:pointer;">? ${_tDP('trenerzy.cancelInviteButton','Anuluj')}</button>
+                <button onclick="regenTrainerCode()" style="flex:1;padding:10px;background:var(--tlo-karta);border:1px solid var(--border);border-radius:10px;color:var(--szary);font-size:17px;font-weight:700;cursor:pointer;">🔑 ${_tDP('trenerzy.newCodeButton','Nowy kod')}</button>
+                <button onclick="cancelInvitation()" style="flex:1;padding:10px;background:transparent;border:1px solid rgba(248,113,113,0.3);border-radius:10px;color:var(--blad);font-size:17px;font-weight:700;cursor:pointer;">❌ ${_tDP('trenerzy.cancelInviteButton','Anuluj')}</button>
             </div>
         </div>`;
 
         document.getElementById('dp-scroll').innerHTML = html;
-        loadTrainerCode(t.trainerId); // async, wype�ni dp-kod-box
+        loadTrainerCode(t.trainerId); // async, wypełni dp-kod-box
 
     } else {
-        // �� Widok aktywnego trenera ��
+        // === Widok aktywnego trenera ===
         html += `<div class="dp-section">
             <div class="dp-section-label">${_tDP('trenerzy.aboutLabel','O trenerze')}</div>
             ${cp.bio ? `<div class="dp-section-value">${cp.bio}</div>` : `<div class="dp-section-empty">${_tDP('trenerzy.noBio','Brak opisu')}</div>`}
@@ -726,7 +727,7 @@ async function openDetailPanel(t) {
 
         const expYears = calcExpYears(cp.coachingSince);
         if (cp.coachingSince || cp.licenseLevel || cp.specialization) {
-            html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.experienceLabel','Do�wiadczenie')}</div>`;
+            html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.experienceLabel','Doświadczenie')}</div>`;
             if (cp.coachingSince) {
                 const since = new Date(cp.coachingSince).getFullYear();
                 const suffixKey = expYears === 1 ? 'trenerzy.yearSuffix1' : expYears < 5 ? 'trenerzy.yearSuffix2' : 'trenerzy.yearSuffix5';
@@ -734,23 +735,23 @@ async function openDetailPanel(t) {
                 const coachLine = typeof window.t === 'function'
                     ? window.t('trenerzy.coachSinceExp', {year: since, count: expYears, suffix})
                     : `Trener od ${since} r. (${expYears} ${suffix})`;
-                html += `<div class="dp-section-value">??? ${coachLine}</div>`;
+                html += `<div class="dp-section-value">🎖️ ${coachLine}</div>`;
             }
             if (cp.licenseLevel) {
                 const licLine = typeof window.t === 'function'
                     ? window.t('trenerzy.licenseLine', {license: cp.licenseLevel})
                     : `Licencja: ${cp.licenseLevel}`;
-                html += `<div class="dp-section-value">?? ${licLine}</div>`;
+                html += `<div class="dp-section-value">🔑 ${licLine}</div>`;
             }
-            if (cp.specialization) html += `<div class="dp-section-value">?? ${cp.specialization}</div>`;
+            if (cp.specialization) html += `<div class="dp-section-value">🎯 ${cp.specialization}</div>`;
             html += `</div>`;
         }
 
-        // Dru�yny z membership (read-only)
+        // Drużyny z membership (read-only)
         const teamNames = (t.teamNames || []).filter(Boolean);
         if (teamNames.length) {
             html += `<div class="dp-section">
-                <div class="dp-section-label">${_tDP('trenerzy.teamsLabel','Dru�yny')}</div>
+                <div class="dp-section-label">${_tDP('trenerzy.teamsLabel','Drużyny')}</div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                     ${teamNames.map(tn => `<div class="tr-team-badge">${tn}</div>`).join('')}
                 </div>
@@ -770,8 +771,8 @@ async function openDetailPanel(t) {
         if (phone || email) {
             html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.contactLabel','Kontakt')}</div>
                 <div style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:4px 12px;">`;
-            if (phone) html += `<div class="dp-contact-row"><div class="dp-contact-icon">??</div><div class="dp-contact-val">${phone}</div></div>`;
-            if (email) html += `<div class="dp-contact-row"><div class="dp-contact-icon">??</div><div class="dp-contact-val">${email}</div></div>`;
+            if (phone) html += `<div class="dp-contact-row"><div class="dp-contact-icon">📱</div><div class="dp-contact-val">${phone}</div></div>`;
+            if (email) html += `<div class="dp-contact-row"><div class="dp-contact-icon">✉️</div><div class="dp-contact-val">${email}</div></div>`;
             html += `</div></div>`;
         }
 
@@ -779,24 +780,24 @@ async function openDetailPanel(t) {
         // Akcje admina (nie dla siebie)
         if (isAdmin && !isSelf) {
             html += `<div class="dp-section">
-                <div class="dp-section-label">${_tDP('trenerzy.manageLabel','Zarz�dzanie')}</div>
+                <div class="dp-section-label">${_tDP('trenerzy.manageLabel','Zarządzanie')}</div>
                 <div class="dp-actions">`;
 
             if (!isBlocked) {
-                html += `<button class="dp-action-btn dp-action-btn-warn" onclick="showBlockModal()">?? ${_tDP('trenerzy.blockButton','Zablokuj trenera')}</button>`;
-                // Admin � tylko dla zarejestrowanych (nie pending, nie zablokowanych)
+                html += `<button class="dp-action-btn dp-action-btn-warn" onclick="showBlockModal()">🚫 ${_tDP('trenerzy.blockButton','Zablokuj trenera')}</button>`;
+                // Admin – tylko dla zarejestrowanych (nie pending, nie zablokowanych)
                 if (t.userId && !isBlocked) {
                     if (!t.isClubAdmin) {
-                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="grantAdminRole()">? ${_tDP('trenerzy.grantAdminButton','Nadaj prawa admina')}</button>`;
+                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="grantAdminRole()">⭐ ${_tDP('trenerzy.grantAdminButton','Nadaj prawa admina')}</button>`;
                     } else {
-                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="revokeAdminRole()">? ${_tDP('trenerzy.revokeAdminButton','Odbierz prawa admina')}</button>`;
+                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="revokeAdminRole()">⛔ ${_tDP('trenerzy.revokeAdminButton','Odbierz prawa admina')}</button>`;
                     }
                 }
             } else {
-                html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="unblockTrainer()">?? ${_tDP('trenerzy.unblockButton','Odblokuj trenera')}</button>`;
+                html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="unblockTrainer()">🔓 ${_tDP('trenerzy.unblockButton','Odblokuj trenera')}</button>`;
             }
 
-            html += `<button class="dp-action-btn dp-action-btn-danger" onclick="removeTrainerFromClub()">??? ${_tDP('trenerzy.removeButton','Usu� z klubu')}</button>
+            html += `<button class="dp-action-btn dp-action-btn-danger" onclick="removeTrainerFromClub()">🗑️ ${_tDP('trenerzy.removeButton','Usuń z klubu')}</button>
                 </div>
             </div>`;
         }
@@ -813,13 +814,13 @@ function closeDetailPanel() {
 }
 
 
-/* �� Edycja trenera �� */
+/* === Edycja trenera === */
 async function openEditPanel() {
     if (!detailTrainer) return;
     const t = detailTrainer;
     const cp = t.coachProfile || {};
 
-    // Rozdziel imi� i nazwisko � najpierw z osobnych p�l, fallback ze split displayName
+    // Rozdziel imię i nazwisko – najpierw z osobnych pól, fallback ze split displayName
     const existingFirst = t.firstName || (t.displayName || '').split(' ')[0] || '';
     const existingLast  = t.lastName  || (t.displayName || '').split(' ').slice(1).join(' ') || '';
     document.getElementById('ep-fname').value   = existingFirst;
@@ -828,7 +829,7 @@ async function openEditPanel() {
     document.getElementById('ep-since').value   = cp.coachingSince ? new Date(cp.coachingSince).getFullYear() : '';
     document.getElementById('ep-licencja').value= cp.licenseLevel || '';
     document.getElementById('ep-spec').value    = cp.specialization || '';
-    // Email � z trainer doc lub users doc
+    // Email – z trainer doc lub users doc
     let trainerEmail = t.email || '';
     if (!trainerEmail && t.userId) {
         try {
@@ -858,7 +859,7 @@ async function openEditPanel() {
     buildAvatarGrid();
 
 
-    // Admin toggle � widoczny tylko dla zalogowanego admina edytuj�cego innych
+    // Admin toggle – widoczny tylko dla zalogowanego admina edytującego innych
     const adminRow = document.getElementById('ep-admin-row');
     if (isAdmin) {
         adminRow.style.display = '';
@@ -876,7 +877,7 @@ function closeEditPanel() {
 
 async function saveEditTrainer() {
     if (!detailTrainer || !db) return;
-    // Pobierz �wie�e dane � lokalny cache mo�e mie� stare userId (null przed rejestracj�)
+    // Pobierz świeże dane – lokalny cache może mieć stare userId (null przed rejestrację)
     let t = detailTrainer;
     try {
         const fresh = await db.collection('trainers').doc(t.trainerId).get();
@@ -911,19 +912,19 @@ async function saveEditTrainer() {
 
             // Zaktualizuj users doc
             try {
-                console.log('?? users update � userId:', t.userId);
+                console.log('🔍 users update – userId:', t.userId);
                 const uDoc = await db.collection('users').doc(t.userId).get();
-                console.log('?? users doc exists:', uDoc.exists, 'data:', uDoc.exists ? uDoc.data()?.displayName : 'N/A');
+                console.log('🔍 users doc exists:', uDoc.exists, 'data:', uDoc.exists ? uDoc.data()?.displayName : 'N/A');
                 const uData = uDoc.exists ? uDoc.data() : {};
                 const uUpdates = { firstName: newFirstName, lastName: newLastName, displayName: newDisplayName };
                 const newEmail = document.getElementById('ep-email').value.trim();
                 const newPhone = document.getElementById('ep-tel').value.trim();
                 if (!uData.email && newEmail) uUpdates.email = newEmail;
                 if (!uData.phone && newPhone) uUpdates.phone = newPhone;
-                console.log('?? users uUpdates:', uUpdates);
+                console.log('🔍 users uUpdates:', uUpdates);
                 await db.collection('users').doc(t.userId).update(uUpdates);
-                console.log('? users updated');
-            } catch(e) { console.error('? users update failed:', e.code, e.message); }
+                console.log('✅ users updated');
+            } catch(e) { console.error('❌ users update failed:', e.code, e.message); }
         }
 
         // Zaktualizuj trainer doc
@@ -956,36 +957,36 @@ async function saveEditTrainer() {
         closeEditPanel();
         openDetailPanel(detailTrainer);
         renderTrainers();
-        console.log('? Trener zaktualizowany');
+        console.log('✅ Trener zaktualizowany');
     } catch (e) {
-        console.error('? saveEditTrainer:', e);
-        alert('B��d zapisu: ' + e.message);
+        console.error('❌ saveEditTrainer:', e);
+        alert('Błąd zapisu: ' + e.message);
     }
 }
 
-/* �� Modal blokady (zakres) �� */
+/* === Modal blokady (zakres) === */
 function showBlockModal() {
     if (!detailTrainer) return;
     const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'trenera');
     document.getElementById('modal-block-body').textContent =
         typeof window.t === 'function'
             ? window.t('trenerzy.blockModalBody', {name})
-            : `Zablokowa� ${name} tylko w tej dru�ynie, czy w ca�ym klubie?`;
+            : `Zablokować ${name} tylko w tej drużynie, czy w całym klubie?`;
     document.getElementById('modal-block').classList.add('open');
 }
 function closeBlockModal() {
     document.getElementById('modal-block').classList.remove('open');
 }
 
-/* �� Zablokuj trenera �� */
+/* === Zablokuj trenera === */
 async function blockTrainer(scope) {
     closeBlockModal();
     if (!detailTrainer || !db) return;
     const t = detailTrainer;
-    if (!t.userId) { alert('Trener nie ma jeszcze konta � nie mo�na zablokowa�.'); return; }
+    if (!t.userId) { alert('Trener nie ma jeszcze konta – nie można zablokować.'); return; }
     const now = new Date().toISOString();
     try {
-        // Znajd� memberships TRENER dla tego usera w tym klubie
+        // Znajdź memberships TRENER dla tego usera w tym klubie
         let q = db.collection('memberships')
             .where('userId', '==', t.userId)
             .where('clubId', '==', currentClubId)
@@ -993,13 +994,13 @@ async function blockTrainer(scope) {
         if (scope === 'TEAM') q = q.where('teamId', '==', currentTeamId);
         const snap = await q.get();
 
-        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu � BLOCKED
+        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu → BLOCKED
 
         const batch = db.batch();
         snap.docs.forEach(d => batch.update(d.ref, { status: 'BLOCKED', blockedAt: now, blockedBy: currentUserId }));
         await batch.commit();
 
-        // Aktualizuj trainers doc je�li blokada ca�ego klubu
+        // Aktualizuj trainers doc jeśli blokada całego klubu
         if (scope === 'CLUB') {
             await db.collection('trainers').doc(t.trainerId).update({
                 status: 'BLOCKED', blockedAt: now, blockedBy: currentUserId
@@ -1013,20 +1014,20 @@ async function blockTrainer(scope) {
 
         closeDetailPanel();
         renderTrainers();
-        console.log(`? Trener zablokowany (${scope})`);
+        console.log(`✅ Trener zablokowany (${scope})`);
     } catch (e) {
-        console.error('? blockTrainer:', e);
-        alert('B��d: ' + e.message);
+        console.error('❌ blockTrainer:', e);
+        alert('Błąd: ' + e.message);
     }
 }
 
-/* �� Odblokuj trenera �� */
+/* === Odblokuj trenera === */
 async function unblockTrainer() {
     if (!detailTrainer || !db) return;
     const t = detailTrainer;
     if (!t.userId) return;
     const name = t.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'trenera');
-    const unblockBody = typeof window.t === 'function' ? window.t('trenerzy.unblockConfirmBody', {name}) : `Odblokowa� ${name}?`;
+    const unblockBody = typeof window.t === 'function' ? window.t('trenerzy.unblockConfirmBody', {name}) : `Odblokować ${name}?`;
     if (!await showConfirmSheet(unblockBody)) return;
     try {
         const snap = await db.collection('memberships')
@@ -1042,18 +1043,18 @@ async function unblockTrainer() {
         detailTrainer.status = 'ACTIVE';
         closeDetailPanel();
         renderTrainers();
-        console.log('? Trener odblokowany');
+        console.log('✅ Trener odblokowany');
     } catch (e) {
-        console.error('? unblockTrainer:', e);
-        alert('B��d: ' + e.message);
+        console.error('❌ unblockTrainer:', e);
+        alert('Błąd: ' + e.message);
     }
 }
 
-/* �� Usu� z klubu �� */
+/* === Usuń z klubu === */
 async function grantAdminRole() {
     if (!detailTrainer || !db || !isAdmin) return;
     const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
-    const grantBody = typeof window.t === 'function' ? window.t('trenerzy.grantAdminBody', {name}) : `Nada� ${name} prawa Administratora klubu?\n\nOba konta b�d� mia�y uprawnienia admina. Nowy admin mo�e p�niej odebra� Ci te prawa.`;
+    const grantBody = typeof window.t === 'function' ? window.t('trenerzy.grantAdminBody', {name}) : `Nadać ${name} prawa Administratora klubu?\n\nOba konta będą miały uprawnienia admina. Nowy admin może później odebrać Ci te prawa.`;
     if (!await showConfirmSheet(grantBody)) return;
     try {
         await db.collection('trainers').doc(detailTrainer.trainerId).update({ isClubAdmin: true });
@@ -1072,14 +1073,14 @@ async function grantAdminRole() {
         openDetailPanel(detailTrainer);
         renderTrainers();
     } catch (e) {
-        alert('B��d: ' + e.message);
+        alert('Błąd: ' + e.message);
     }
 }
 
 async function revokeAdminRole() {
     if (!detailTrainer || !db || !isAdmin) return;
     const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
-    const revokeBody = typeof window.t === 'function' ? window.t('trenerzy.revokeAdminBody', {name}) : `Odebra� ${name} prawa Administratora klubu?`;
+    const revokeBody = typeof window.t === 'function' ? window.t('trenerzy.revokeAdminBody', {name}) : `Odebrać ${name} prawa Administratora klubu?`;
     if (!await showConfirmSheet(revokeBody)) return;
     try {
         await db.collection('trainers').doc(detailTrainer.trainerId).update({ isClubAdmin: false });
@@ -1098,7 +1099,7 @@ async function revokeAdminRole() {
         openDetailPanel(detailTrainer);
         renderTrainers();
     } catch (e) {
-        alert('B��d: ' + e.message);
+        alert('Błąd: ' + e.message);
     }
 }
 
@@ -1107,7 +1108,7 @@ async function removeTrainerFromClub() {
     const t = detailTrainer;
     const name = t.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
 
-    // Ryzyko osieroconej dru�yny: je�li trener ma jakiekolwiek aktywne przypisanie do dru�yny, zablokuj usuni�cie
+    // Ryzyko osieroconej drużyny: jeśli trener ma jakiekolwiek aktywne przypisanie do drużyny, zablokuj usunięcie
     if (t.userId) {
         try {
             const snap = await db.collection('memberships')
@@ -1120,21 +1121,21 @@ async function removeTrainerFromClub() {
                 return m.teamId && (st === 'active' || st === 'grace');
             });
             if (maAktywneDruzyny) {
-                alert(typeof window.t === 'function' ? window.t('trenerzy.hasActiveTeamsError') : 'Oddaj dru�yn� innemu trenerowi przed usuni�ciem konta, lub zg�o� si� do zarz�dcy klubu.');
+                alert(typeof window.t === 'function' ? window.t('trenerzy.hasActiveTeamsError') : 'Oddaj drużynę innemu trenerowi przed usunięciem konta, lub zgłoś się do zarządcy klubu.');
                 return;
             }
         } catch (e) {
-            console.error('? Sprawdzanie przypisa� trenera:', e);
-            alert('B��d: ' + e.message);
+            console.error('❌ Sprawdzanie przypisać trenera:', e);
+            alert('Błąd: ' + e.message);
             return;
         }
     }
 
-    const removeBody = typeof window.t === 'function' ? window.t('trenerzy.removeConfirmBody', {name}) : `Usun�� ${name} z klubu?\n\nWszystkie jego przypisania do dru�yn zostan� usuni�te.`;
+    const removeBody = typeof window.t === 'function' ? window.t('trenerzy.removeConfirmBody', {name}) : `Usunąć ${name} z klubu?\n\nWszystkie jego przypisania do drużyn zostaną usunięte.`;
     if (!await showConfirmSheet(removeBody)) return;
     const now = new Date().toISOString();
     try {
-        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu � REMOVED
+        // Slot zwalniany automatycznie przez CF onMembershipUpdated przy zmianie statusu → REMOVED
 
         // Ustaw wszystkie memberships TRENER na REMOVED
         if (t.userId) {
@@ -1153,14 +1154,14 @@ async function removeTrainerFromClub() {
         allTrainers = allTrainers.filter(x => x.trainerId !== t.trainerId);
         closeDetailPanel();
         renderTrainers();
-        console.log('? Trener usuni�ty z klubu');
+        console.log('✅ Trener usunięty z klubu');
     } catch (e) {
-        console.error('? removeTrainerFromClub:', e);
-        alert('B��d: ' + e.message);
+        console.error('❌ removeTrainerFromClub:', e);
+        alert('Błąd: ' + e.message);
     }
 }
 
-/* �� Panel Dodaj trenera �� */
+/* === Panel Dodaj trenera === */
 function openAddPanel() {
     document.getElementById('add-fname').value = '';
     document.getElementById('add-lname').value = '';
@@ -1178,7 +1179,7 @@ async function saveNewTrainer() {
     const lastName  = document.getElementById('add-lname').value.trim();
     const name = (firstName + ' ' + lastName).trim();
     const role = document.getElementById('add-rola').value;
-    if (!firstName) { alert(typeof window.t === 'function' ? window.t('trenerzy.firstNameRequiredTitle') : 'Podaj imi� trenera.'); document.getElementById('add-fname').focus(); return; }
+    if (!firstName) { alert(typeof window.t === 'function' ? window.t('trenerzy.firstNameRequiredTitle') : 'Podaj imię trenera.'); document.getElementById('add-fname').focus(); return; }
     if (!lastName)  { alert(typeof window.t === 'function' ? window.t('trenerzy.lastNameRequiredTitle') : 'Podaj nazwisko trenera.'); document.getElementById('add-lname').focus(); return; }
 
     const now = new Date();
@@ -1205,20 +1206,20 @@ async function saveNewTrainer() {
 
     try {
         await db.collection('trainers').doc(trainerId).set(trainerData);
-        // Generuj kod powi�zany z trainerem
+        // Generuj kod powiązany z trainerem
         await _generateCode(trainerId, firstName + '|' + lastName, role);
-        // Dodaj lokalnie i od�wie�
+        // Dodaj lokalnie i odśwież
         allTrainers.push({ trainerId, ...trainerData });
         closeAddPanel();
         renderTrainers();
-        console.log('? Trener dodany');
+        console.log('✅ Trener dodany');
     } catch (e) {
-        console.error('? saveNewTrainer:', e);
-        alert('B��d: ' + e.message);
+        console.error('❌ saveNewTrainer:', e);
+        alert('Błąd: ' + e.message);
     }
 }
 
-/* �� Generowanie kodu (wsp�lna funkcja) �� */
+/* === Generowanie kodu (wspólna funkcja) === */
 async function _generateCode(trainerId, forName, role) {
     const now = new Date();
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1245,7 +1246,7 @@ async function _generateCode(trainerId, forName, role) {
     return { code, expiresAt };
 }
 
-/* �� Kod w panelu szczeg��w �� */
+/* === Kod w panelu szczegółów === */
 async function loadTrainerCode(trainerId) {
     const box = document.getElementById('dp-kod-box');
     if (!box || !db) return;
@@ -1260,11 +1261,11 @@ async function loadTrainerCode(trainerId) {
             .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 
         if (!wszystkie.length) {
-            box.innerHTML = `<div style="font-size:17px;color:var(--szary);text-align:center;">${_tLTC('trenerzy.noCodesYet', {}, 'Brak kod�w. Kliknij "Nowy kod" aby wygenerowa�.')}</div>`;
+            box.innerHTML = `<div style="font-size:17px;color:var(--szary);text-align:center;">${_tLTC('trenerzy.noCodesYet', {}, 'Brak kodów. Kliknij "Nowy kod" aby wygenerować.')}</div>`;
             return;
         }
 
-        // Znajd� aktywny (nieu�yty, niewyegas�y)
+        // Znajdź aktywny (nieużyty, niewyegasły)
         const active = wszystkie.find(c => {
             if (c.isUsed) return false;
             const exp = c.expiresAt?.toDate ? c.expiresAt.toDate() : null;
@@ -1274,42 +1275,42 @@ async function loadTrainerCode(trainerId) {
         function kodStatusStr(c) {
             if (c.isUsed && c.usedBy && c.usedBy !== 'DEZAKTYWOWANY_PRZEZ_TRENERA') {
                 const d = c.usedAt ? new Date(c.usedAt).toLocaleDateString('pl-PL') : '';
-                return { icon: '?', txt: _tLTC('trenerzy.codeUsedOn', {date: d}, `Wykorzystany � ${d}`) };
+                return { icon: '✅', txt: _tLTC('trenerzy.codeUsedOn', {date: d}, `Wykorzystany – ${d}`) };
             }
             if (c.isUsed)
-                return { icon: '??', txt: _tLTC('trenerzy.codeDeactivated', {}, 'Dezaktywowany') };
+                return { icon: '🚫', txt: _tLTC('trenerzy.codeDeactivated', {}, 'Dezaktywowany') };
             const exp = c.expiresAt?.toDate ? c.expiresAt.toDate() : null;
             if (exp && exp < now) {
                 const d = exp.toLocaleDateString('pl-PL');
-                return { icon: '?', txt: _tLTC('trenerzy.codeExpiredOn', {date: d}, `Wygas� � ${d}`) };
+                return { icon: '⏰', txt: _tLTC('trenerzy.codeExpiredOn', {date: d}, `Wygasł – ${d}`) };
             }
-            const expStr = exp ? exp.toLocaleDateString('pl-PL') : '�';
-            return { icon: '?', txt: _tLTC('trenerzy.codeActiveUntil', {date: expStr}, `Aktywny � wa�ny do ${expStr}`) };
+            const expStr = exp ? exp.toLocaleDateString('pl-PL') : '–';
+            return { icon: '✅', txt: _tLTC('trenerzy.codeActiveUntil', {date: expStr}, `Aktywny – ważny do ${expStr}`) };
         }
 
         let html = '';
 
-        // Aktywny kod � prominentnie
+        // Aktywny kod – prominentnie
         if (active) {
             const exp = active.expiresAt?.toDate ? active.expiresAt.toDate() : null;
-            const expStr = exp ? exp.toLocaleDateString('pl-PL') : '�';
-            const validLine = _tLTC('trenerzy.validUntilLine', {date: expStr}, `Wa�ny do: ${expStr}`);
+            const expStr = exp ? exp.toLocaleDateString('pl-PL') : '–';
+            const validLine = _tLTC('trenerzy.validUntilLine', {date: expStr}, `Ważny do: ${expStr}`);
             const copyBtn  = _tLTC('trenerzy.copyButton', {}, 'Kopiuj kod');
-            const copiedLbl = _tLTC('trenerzy.copiedLabel', {}, 'Skopiowano ?');
+            const copiedLbl = _tLTC('trenerzy.copiedLabel', {}, 'Skopiowano ✅');
             html += `
                 <div style="text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">
-                    <div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--szary);">${_tLTC('trenerzy.activeCodeLabel', {}, 'Aktywny kod dost�pu')}</div>
+                    <div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--szary);">${_tLTC('trenerzy.activeCodeLabel', {}, 'Aktywny kod dostępu')}</div>
                     <div style="font-family:var(--font-d);font-size:32px;font-weight:800;color:var(--akcent);letter-spacing:8px;margin:8px 0;">${active.code}</div>
                     <div style="font-size:16px;color:var(--szary);margin-bottom:10px;">${validLine}</div>
                     <button class="kod-copy-btn" onclick="navigator.clipboard.writeText('${active.code}').then(()=>this.textContent='${copiedLbl}')">${copyBtn}</button>
                 </div>`;
         } else {
-            html += `<div style="font-size:17px;color:var(--szary);text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">${_tLTC('trenerzy.noActiveCode', {}, 'Brak aktywnego kodu � wygeneruj nowy')}</div>`;
+            html += `<div style="font-size:17px;color:var(--szary);text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">${_tLTC('trenerzy.noActiveCode', {}, 'Brak aktywnego kodu – wygeneruj nowy')}</div>`;
         }
 
-        // Historia wszystkich kod�w
+        // Historia wszystkich kodów
         if (wszystkie.length > 0) {
-            html += `<div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--szary);margin-bottom:8px;">${_tLTC('trenerzy.codeHistoryLabel', {}, 'Historia kod�w')}</div>`;
+            html += `<div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--szary);margin-bottom:8px;">${_tLTC('trenerzy.codeHistoryLabel', {}, 'Historia kodów')}</div>`;
             html += wszystkie.map(c => {
                 const s = kodStatusStr(c);
                 return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
@@ -1323,7 +1324,7 @@ async function loadTrainerCode(trainerId) {
         }
 
         box.innerHTML = html;
-    } catch (e) { console.warn('loadTrainerCode:', e); box.innerHTML = `<div style="color:var(--szary);font-size:17px;">${_tLTC('trenerzy.loadError', {}, 'B��d �adowania')}</div>`; }
+    } catch (e) { console.warn('loadTrainerCode:', e); box.innerHTML = `<div style="color:var(--szary);font-size:17px;">${_tLTC('trenerzy.loadError', {}, 'Błąd ładowania')}</div>`; }
 }
 
 async function regenTrainerCode() {
@@ -1331,7 +1332,7 @@ async function regenTrainerCode() {
     const t = detailTrainer;
     const now = new Date();
 
-    // Sprawd� czy jest aktywny kod
+    // Sprawdź czy jest aktywny kod
     const snap = await db.collection('inviteCodes')
         .where('trainerId', '==', t.trainerId)
         .where('isUsed', '==', false)
@@ -1345,11 +1346,12 @@ async function regenTrainerCode() {
     if (activeCode) {
         const regenBody = typeof window.t === 'function'
             ? window.t('trenerzy.activeCodeExistsBody', {code: activeCode.code})
-            : `Aktualny kod "${activeCode.code}" jest jeszcze aktywny.\nDezaktywowa� i wygenerowa� nowy?`;
+            : `Aktualny kod "${activeCode.code}" jest jeszcze aktywny.\
+Dezaktywować i wygenerować nowy?`;
         if (!await showConfirmSheet(regenBody)) return;
     }
 
-    // Dezaktywuj wszystkie nieu�yte kody
+    // Dezaktywuj wszystkie nieużyte kody
     for (const d of snap.docs) {
         await d.ref.update({ isUsed: true, usedBy: 'DEZAKTYWOWANY_PRZEZ_TRENERA', usedAt: now.toISOString() });
     }
@@ -1362,7 +1364,7 @@ async function cancelInvitation() {
     const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
     const cancelBody = typeof window.t === 'function'
         ? window.t('trenerzy.cancelInviteBody', {name})
-        : `Anulowa� zaproszenie dla ${name}?\nTrener zostanie usuni�ty z listy.`;
+        : `Anulować zaproszenie dla ${name}?\nTrener zostanie usunięty z listy.`;
     if (!await showConfirmSheet(cancelBody)) return;
     try {
         await db.collection('trainers').doc(detailTrainer.trainerId).update({
@@ -1378,25 +1380,25 @@ async function cancelInvitation() {
         allTrainers = allTrainers.filter(t => t.trainerId !== detailTrainer.trainerId);
         closeDetailPanel();
         renderTrainers();
-    } catch (e) { alert('B��d: ' + e.message); }
+    } catch (e) { alert('Błąd: ' + e.message); }
 }
 
-/* �� Reset dost�pu trenera �� */
+/* === Reset dostępu trenera === */
 async function resetTrainerAccess() {
     if (!detailTrainer || !db) return;
     const t = detailTrainer;
     const name = t.displayName || 'tego trenera';
 
     if (!await showConfirmSheet(
-        `Resetowa� dost�p dla ${name}?\n\n` +
-        `Trener straci mo�liwo�� logowania si� obecnym kontem i b�dzie musia� zarejestrowa� si� ponownie (mo�e u�y� innego e-maila).\n\n` +
-        `Wszystkie dane profilu, historia i przypisania zostan� zachowane.`
+        `Resetować dostęp dla ${name}?\n\n` +
+        `Trener straci możliwość logowania się obecnym kontem i będzie musiał zarejestrować się ponownie (może użył innego e-maila).\n\n` +
+        `Wszystkie dane profilu, historia i przypisania zostaną zachowane.`
     )) return;
 
     try {
         const now = new Date().toISOString();
 
-        // Cofnij do statusu PENDING, wyczy�� userId i email logowania
+        // Cofnij do statusu PENDING, wyczyść userId i email logowania
         await db.collection('trainers').doc(t.trainerId).update({
             registrationStatus: 'PENDING',
             userId: null,
@@ -1417,7 +1419,7 @@ async function resetTrainerAccess() {
         // Wygeneruj nowy kod
         await _generateCode(t.trainerId, (t.firstName||'') + '|' + (t.lastName||''), t.role);
 
-        // Aktualizuj lokalnie i od�wie� widok
+        // Aktualizuj lokalnie i odśwież widok
         const idx = allTrainers.findIndex(x => x.trainerId === t.trainerId);
         if (idx >= 0) {
             allTrainers[idx].registrationStatus = 'PENDING';
@@ -1426,19 +1428,19 @@ async function resetTrainerAccess() {
         detailTrainer.registrationStatus = 'PENDING';
         detailTrainer.userId = null;
 
-        // Otw�rz panel jak dla oczekuj�cego (poka�e nowy kod)
+        // Otwórz panel jak dla oczekującego (pokaże nowy kod)
         openDetailPanel(detailTrainer);
         renderTrainers();
-        console.log('? Dost�p trenera zresetowany');
+        console.log('✅ Dostęp trenera zresetowany');
     } catch (e) {
-        console.error('? resetTrainerAccess:', e);
-        alert('B��d: ' + e.message);
+        console.error('❌ resetTrainerAccess:', e);
+        alert('Błąd: ' + e.message);
     }
 }
 
-/* �� Start �� */
+/* === Start === */
 window.addEventListener('DOMContentLoaded', () => {
-    if (typeof firebase === 'undefined') { console.error('? Firebase!'); return; }
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
     initFirebase();
     let _loaded = false;
     auth.onAuthStateChanged(async user => {
