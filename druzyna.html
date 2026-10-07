@@ -2218,6 +2218,32 @@ async function usunZawodnika() {
     const pid = aktualnyZawodnik.playerId || aktualnyZawodnik.id;
     const imie = aktualnyZawodnik.name || 'tego zawodnika';
 
+    // 0. Blokada: jeśli zawodnik ma własne konto w aplikacji (membership ZAWODNIK z realnym
+    // userId), trener NIE MOŻE usunąć jego danych — to decyzja należy wyłącznie do samego
+    // zawodnika (lub jego opiekuna), nie do trenera. Bez tej blokady profil byłby anonimizowany,
+    // a konto/login zawodnika zostałoby nietknięte i wciąż aktywne — czyli komunikat o "trwałym
+    // usunięciu danych osobowych" byłby nieprawdziwy.
+    try {
+        const wlasneKontoSnap = await db.collection('memberships')
+            .where('playerId', '==', pid)
+            .where('role', '==', 'ZAWODNIK')
+            .get({ source: 'server' });
+        const maWlasneKonto = wlasneKontoSnap.docs.some(d => {
+            const m = d.data();
+            return m.userId && ['active','ACTIVE','grace','GRACE'].includes(m.status);
+        });
+        if (maWlasneKonto) {
+            await showConfirmSheet(
+                `${imie} ma własne konto w aplikacji Coachay. Jako trener nie możesz usunąć jego danych — to może zrobić tylko sam zawodnik (lub jego opiekun), przez Ustawienia → Polityka i RODO na swoim koncie.`,
+                { okOnly: true, okLabel: 'Rozumiem' }
+            );
+            return;
+        }
+    } catch (e) {
+        pokazKomunikat('Błąd sprawdzania konta zawodnika: ' + e.message, 'blad');
+        return;
+    }
+
     if (!await showConfirmSheet(`Usunąć zawodnika ${imie}? Dane osobowe zostaną trwale usunięte, historia (mecze, statystyki) zostanie zachowana. Tej operacji nie można cofnąć.`)) return;
 
     try {
@@ -2241,7 +2267,7 @@ async function usunZawodnika() {
             deletedBy: aktualnyUserId
         });
 
-        pokazKomunikat('Zawodnik usuniżty', 'sukces');
+        pokazKomunikat('Zawodnik usunięty', 'sukces');
         zamknijProfil();
         await zaladujZawodnikow();
     } catch (e) {
