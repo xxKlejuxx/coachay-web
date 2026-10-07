@@ -56,6 +56,13 @@ Wersja: 4.7 | Data: 2026-04-17
 6. **`players` bez `clubId`** — nowo dodawani zawodnicy przez `zapiszZawodnika()` w `druzyna.html` nie mieli pola `clubId` w dokumencie. Reguły Firestore dla `players` wymagają `clubId` do izolacji, więc nowi zawodnicy byli dostępni szerzej niż powinni.
 7. **Memberships KIBIC bez `clubId` (legacy)** — stare KIBIC memberships zarejestrowane przed migracją miały `clubId: null`. Reguły z `|| resource.data.clubId == null` były tymczasowym fallbackiem, nie docelowym rozwiązaniem.
 8. **Wildcard reguła Firestore pozwalała pisać do `authIndex` innych userów** — dopóki nie było szczegółowej reguły dla `authIndex/{authUid}`, każdy zalogowany user mógł zapisać dokument `authIndex` innej osoby (odkryte przy pierwszej migracji — ta migracja działała właśnie przez tę lukę).
+9. **Nadawanie `isClubAdmin` bez żadnych ograniczeń (2026-10-07)** — `grantAdminRole()` w `trenerzy.html` + checkbox w panelu edycji trenera pozwalały obecnemu adminowi klubu nadać `isClubAdmin: true` komukolwiek, bez limitu. Wektor nadużycia triala: jedyny trener-admin klubu, kończy się jego trial → zakłada nowe konto, dodaje do tego samego klubu, nadaje mu admina (nowe konto ma świeży 90-dniowy trial, bo trial jest liczony per `userId+clubId`) → nowe konto usuwa stare przez `removeTrainerFromClub()` → klub działa dalej bez przerwy, w kółko, nigdy nie płacąc. Naprawione (patrz "Co zbudowaliśmy" niżej).
+10. **Brak sprawdzania roli w regułach Firestore dla `memberships`/`teams`/`trainers`/`players` (2026-10-07, NIE naprawione)** — `allow update, delete` dla tych kolekcji sprawdza tylko `inMyClub(clubId)` (przynależność do klubu), nigdy rolę/`isClubAdmin` wywołującego. Efekt: **każdy** zweryfikowany członek klubu — nawet zwykły RODZIC/KIBIC/ZAWODNIK/OBSERWATOR bez żadnych praw admina/trenera — może przez bezpośrednie wywołanie Firestore API (z pominięciem UI, np. z konsoli DevTools):
+    - czytać WSZYSTKIE memberships w klubie (nie tylko swój),
+    - zaktualizować/usunąć JAKIKOLWIEK membership w klubie (zmienić status na `REMOVED`/`BLOCKED`, `teamId`, `role` — poza polem `isClubAdmin`, które jest już zablokowane),
+    - czytać/edytować/usuwać dowolną drużynę (`teams`), dowolnego trenera (`trainers`, poza `isClubAdmin`), dowolnego zawodnika (`players`).
+
+    Ochrona widoczna w appce (przyciski tylko dla admina) jest **tylko kosmetyczna, po stronie UI** — baza i tak przepuści to samo zapytanie od kogokolwiek z klubu. Rafał: zdecydowane na razie "nie ten moment" (2026-10-07) — wraca jako TODO niżej, nie naprawione.
 
 ---
 
@@ -117,9 +124,65 @@ gcloud auth application-default login
 node fix_legacy_kibic.js
 ```
 
+#### Blokada nadawania `isClubAdmin` (2026-10-07)
+
+Naprawa punktu 9 z "Co znaleźliśmy" (wektor nadużycia triala). Decyzja Rafała: zablokować samo
+nadawanie admina, nie kombinować z ochroną "właściciela klubu" (nie istnieje w danych —
+`TRENER_GLOWNY` to rola głównego trenera *per zespół*, nie admin klubu).
+
+`trenerzy.html`, commit `4363a0f` — `grantAdminRole()` wyłączone:
+```js
+async function grantAdminRole() {
+    if (!detailTrainer || !db || !isAdmin) return;
+    await showConfirmSheet(
+        'Nadawanie praw administratora innym trenerom jest obecnie wyłączone z powodów bezpieczeństwa (ochrona przed obchodzeniem okresu próbnego).',
+        { okOnly: true, okLabel: 'Rozumiem' }
+    );
+    return;
+}
+```
+`revokeAdminRole()` zostało bez zmian (odbieranie admina nie jest wektorem nadużycia).
+
+Checkbox "Administrator klubu" w panelu edycji trenera (`openEditPanel()`/`saveEditTrainer()`) może
+już tylko odebrać admina, nigdy nadać:
+```js
+epIsAdmin.checked = !!t.isClubAdmin;
+epIsAdmin.disabled = !t.isClubAdmin;   // disabled, gdy jeszcze nie jest adminem
+// ...
+const newIsAdmin = isAdmin
+    ? ((document.getElementById('ep-is-admin')?.checked || false) && !!t.isClubAdmin)
+    : (t.isClubAdmin || false);
+```
+
+**`firestore.rules`** (ta część jest realna ochrona — UI-blokada sama nie wystarczy, dałoby się ją
+obejść bezpośrednim wywołaniem Firestore API):
+```
+match /trainers/{trainerId} {
+  allow update: if isVerified() && inMyClub(resource.data.clubId) &&
+    (request.resource.data.isClubAdmin == resource.data.isClubAdmin ||
+     request.resource.data.isClubAdmin == false ||
+     isPlatformAdmin());
+  ...
+}
+match /memberships/{membershipId} {
+  allow update: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId)) &&
+    (request.resource.data.isClubAdmin == resource.data.isClubAdmin ||
+     request.resource.data.isClubAdmin == false ||
+     isPlatformAdmin());
+  ...
+}
+```
+Zmiana pola `isClubAdmin` dozwolona tylko gdy wartość się nie zmienia albo zmienia na `false`.
+Nadanie `true` tylko przez `create` (pierwszy trener klubu) albo `isPlatformAdmin()` (support).
+
+Pełny opis z kodem: `sync/sync_20261007_193000_0113.md`.
+
 ---
 
 ### TODO — do zrobienia
+
+- [ ] **Brak sprawdzania roli w regułach Firestore dla `memberships`/`teams`/`trainers`/`players` (2026-10-07)** — patrz punkt 10 w "Co znaleźliśmy" wyżej. Dziś `allow update, delete` dla tych kolekcji sprawdza tylko przynależność do klubu (`inMyClub`), nie rolę — każdy zweryfikowany członek klubu (nawet RODZIC/KIBIC/ZAWODNIK bez praw admina) może przez bezpośrednie wywołanie API czytać/edytować/usuwać dowolny membership/drużynę/trenera/zawodnika w klubie, pomijając UI. Rafał: "nie ten moment" (2026-10-07) — czeka na decyzję kiedy wrócić.
+  - Do ustalenia przy realizacji: osobna funkcja w regułach typu `isMyClubAdmin(clubId)` (sprawdzająca `isClubAdmin` wywołującego przez `trainers`/`memberships`), użyta tam gdzie operacja powinna być zarezerwowana dla admina/trenera (usuwanie trenera, usuwanie drużyny, zmiana ról) — ale NIE wszędzie, bo część operacji (np. edycja własnego profilu) musi zostać dostępna dla każdego z klubu.
 
 - [ ] **App Check (reCAPTCHA v3)** — blokada botów / niezautoryzowanych klientów przed Firebase API.
   - Rafał: utwórz klucz w [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin) → typ reCAPTCHA v3, domena `coachay.com`.
