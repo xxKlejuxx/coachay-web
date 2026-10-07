@@ -443,7 +443,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                         <div class="pow-modal-title" id="pow-modal-title">–</div>
                         <div style="font-size: 16px;color:var(--szary);font-weight:600;margin-top:2px" id="pow-modal-subtitle">–</div>
                     </div>
-                    <div class="pow-modal-close" onclick="zamknijPowModal()">?</div>
+                    <div class="pow-modal-close" onclick="zamknijPowModal()">✕</div>
                 </div>
                 <div id="pow-modal-rows"></div>
             </div>
@@ -694,7 +694,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
     <!-- Login overlay -->
     <div class="login-overlay" id="login-ov">
         <div class="login-handle" onclick="closeLogin()"><div class="login-handle-bar"></div></div>
-        <button class="login-close" onclick="closeLogin()">?</button>
+        <button class="login-close" onclick="closeLogin()">✕</button>
         <div class="login-body">
             <div class="login-logo"><div class="login-logo-txt">COACHAY</div><div class="login-logo-sub">Platforma dla trenerów i drużyn</div></div>
             <div class="auth-tabs"><button class="auth-tab active" onclick="authTab(this,'login')">Logowanie</button><button class="auth-tab" onclick="authTab(this,'register')">Rejestracja</button></div>
@@ -1075,7 +1075,7 @@ function tworzKarteZawodnika(player) {
         </div>
         ${usunietyBadge}
         ${metaHtml}
-        ${isMyChild ? '<div style="font-size:18px;color:var(--akcent);margin-left:auto;padding-left:8px;flex-shrink:0;">?</div>' : ''}
+        ${isMyChild ? '<div style="font-size:18px;color:var(--akcent);margin-left:auto;padding-left:8px;flex-shrink:0;">★</div>' : ''}
     `;
 
     card.onclick = () => otworzProfil(player);
@@ -1332,7 +1332,7 @@ async function zaladujAbsencje(player) {
                 <div class="abs-dates-main">📅 ${od} – ${do_}</div>
                 ${abs.reason ? `<div class="abs-dates-comment">${abs.reason}</div>` : ''}
             </div>
-            ${isCoach ? `<span class="abs-del" onclick="usunAbsencje('${abs.absenceId}')" title="Usuń">?</span>` : ''}
+            ${isCoach ? `<span class="abs-del" onclick="usunAbsencje('${abs.absenceId}')" title="Usuń">✕</span>` : ''}
         `;
         el.appendChild(div);
     });
