@@ -55,7 +55,7 @@
 .sub-chip.trial   { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
 .sub-chip.expired { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
 .sub-chip.free    { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
-.sub-chip.info    { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); text-transform: none; letter-spacing: normal; }
+.sub-chip.info    { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
 
 /* === Sub info wiersze === */
 .sub-info-row { padding: 10px 14px 0; display: flex; flex-direction: column; gap: 4px; }
@@ -686,7 +686,7 @@ async function renderSubscription() {
     };
     // Rodzaj planu (miesięczny/roczny/2-letni) — z productId zapisanego przez webhook RevenueCat
     // (users.subscription.productId / access_rights.productId / clubs.license.planId).
-    const PLAN_LABEL = {
+    const PERIOD_LABEL = {
         sub_individual_monthly: _tP('profil.planMonthly', 'miesięczny'),
         sub_individual_yearly:  _tP('profil.planYearly', 'roczny'),
         sub_family_monthly:     _tP('profil.planMonthly', 'miesięczny'),
@@ -695,8 +695,19 @@ async function renderSubscription() {
         club_yearly:            _tP('profil.planYearly', 'roczny'),
         club_2year:             _tP('profil.plan2Year', '2-letni')
     };
-    const planLabel = PLAN_LABEL[(access.productId || '').split(':')[0]] || '';
-    const dateText  = fmtDate(access.expiryDate);
+    const GROUP_LABEL = {
+        sub_individual_monthly: _tP('platnosci.planIndividual', 'Indywidualny'),
+        sub_individual_yearly:  _tP('platnosci.planIndividual', 'Indywidualny'),
+        sub_family_monthly:     _tP('platnosci.planFamily', 'Rodzinny'),
+        sub_family_yearly:      _tP('platnosci.planFamily', 'Rodzinny'),
+        club_monthly:           _tP('profil.subSourceClubLicense', 'Licencja klubowa'),
+        club_yearly:            _tP('profil.subSourceClubLicense', 'Licencja klubowa'),
+        club_2year:             _tP('profil.subSourceClubLicense', 'Licencja klubowa')
+    };
+    const planKey   = (access.productId || '').split(':')[0];
+    const planLabel = GROUP_LABEL[planKey] ? `${GROUP_LABEL[planKey]} - ${PERIOD_LABEL[planKey]}` : '';
+    const rawDate   = fmtDate(access.expiryDate);
+    const dateText  = rawDate ? `${_tP('profil.subValidUntil', 'Ważne do')} ${rawDate}` : '';
     dateEl.textContent = dateText;
     dateEl.style.display = dateText ? '' : 'none';
     planEl.textContent = planLabel;

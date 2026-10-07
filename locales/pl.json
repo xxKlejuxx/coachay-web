@@ -1062,6 +1062,7 @@
   "planMonthly": "miesięczny",
   "planYearly": "roczny",
   "plan2Year": "2-letni",
+  "subValidUntil": "Ważne do",
   "subSlotsLabel": "Wykorzystanie licencji: {{used}}/{{total}}",
   "subNoClub": "Brak klubu",
   "subLoadError": "Błąd",

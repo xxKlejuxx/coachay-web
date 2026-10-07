@@ -1062,6 +1062,7 @@
   "planMonthly": "monthly",
   "planYearly": "yearly",
   "plan2Year": "2-year",
+  "subValidUntil": "Valid until",
   "subSlotsLabel": "License usage: {{used}}/{{total}}",
   "subNoClub": "No club",
   "subLoadError": "Error",

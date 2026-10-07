@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261007a'; // 2026-10-07: bump po dodaniu profil.planMonthly/planYearly/plan2Year, druzyna.importSquadFormat
+    const LOCALE_V  = '20261007b'; // 2026-10-07: bump po dodaniu profil.subValidUntil
 
     let _lang = localStorage.getItem('coachay_lang') || 'pl';
     if (!SUPPORTED.includes(_lang)) _lang = 'pl';
