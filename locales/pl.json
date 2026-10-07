@@ -1393,7 +1393,12 @@
   "deleteConfirmSend": "Wyślij prośbę",
   "deleteMailSubject": "Prośba o usunięcie konta i danych",
   "deleteMailBody": "Proszę o usunięcie mojego konta i wszystkich powiązanych danych z aplikacji Coachay, zgodnie z RODO.\n\nEmail: {{email}}\nNazwa: {{name}}\nID użytkownika: {{userId}}\nID klubu: {{clubId}}\nRola: {{role}}",
-  "deleteMailError": "Nie udało się otworzyć aplikacji e-mail. Napisz bezpośrednio na support@coachay.com."
+  "deleteMailError": "Nie udało się otworzyć aplikacji e-mail. Napisz bezpośrednio na support@coachay.com.",
+  "deleteContactSupportLink": "Problem z usunięciem konta? Napisz do nas",
+  "selfDeleteConfirmBody": "Usunięcie konta jest NIEODWRACALNE. Twoje dane osobowe (imię, nazwisko, email, telefon) zostaną trwale zanonimizowane, utracisz dostęp do konta, a wszystkie Twoje powiązania (członkostwa w klubach/drużynach) zostaną zakończone. Historia meczów/statystyk zawodników pozostaje zachowana dla drużyny. Czy na pewno chcesz kontynuować?",
+  "selfDeleteConfirmBtn": "Usuń moje konto",
+  "selfDeleteDoneBody": "Konto zostało usunięte. Dziękujemy za korzystanie z Coachay.",
+  "selfDeleteDoneBtn": "Rozumiem"
  },
  "rodo2": {
   "pageTitle": "Usunięcie konta — Coachay",

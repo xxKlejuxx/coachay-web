@@ -281,6 +281,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // temp — WBREW NAZWIE: archiwum zaszyfrowanych (AES-256-GCM) danych osobowych usuniętych
+    // kont (selfDeleteAccount, 2026-10-07, decyzja Rafała o celowo nijakiej nazwie kolekcji).
+    // Zero dostępu klienta w obie strony — zapis/odczyt wyłącznie przez Cloud Function
+    // (Admin SDK, klucz szyfrujący w Secret Manager) na wypadek przywrócenia konta lub
+    // dochodzenia bezpieczeństwa. Jawna reguła zamiast polegania na samym default-deny,
+    // żeby nikt przypadkiem nie "odkrył" i nie odczytał tej kolekcji przez przyszły catch-all.
+    match /temp/{docId} {
+      allow read, write: if false;
+    }
+
     // 2026-09-26 (sync #0057): catch-all USUNIĘTY — pasował też do kolekcji już obsłużonych
     // wyżej i przez OR unieważniał ich scoping (patrz sync #0057 - APP potwierdziło #0058).
     // Firestore domyślnie ODMAWIA dostępu gdy żadna reguła nie pasuje - to jest bezpieczny

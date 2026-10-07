@@ -6,18 +6,24 @@
 const { setGlobalOptions } = require('firebase-functions/v2');
 const { onDocumentCreated, onDocumentUpdated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
-const { onRequest } = require('firebase-functions/v2/https');
+const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https');
 
 setGlobalOptions({ region: 'europe-west1' });
 const { defineSecret } = require('firebase-functions/params');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
+const { getAuth } = require('firebase-admin/auth');
 const https = require('https');
+const crypto = require('crypto');
 
 const WHATSAPP_TOKEN_SECRET    = defineSecret('WHATSAPP_TOKEN');
 const WHATSAPP_PHONE_ID_SECRET = defineSecret('WHATSAPP_PHONE_ID');
 const REVENUECAT_WEBHOOK_SECRET = defineSecret('REVENUECAT_WEBHOOK_SECRET');
+// 2026-10-07: klucz do szyfrowania danych osobowych archiwizowanych przy samodzielnym
+// usunięciu konta (patrz selfDeleteAccount / kolekcja `temp`) — 32 bajty hex, nigdy nie
+// trafia do klienta ani do logów, dostępny wyłącznie wewnątrz tej funkcji.
+const SELFDELETE_ENC_KEY = defineSecret('SELFDELETE_ENC_KEY');
 
 initializeApp();
 const db = getFirestore();
@@ -3340,4 +3346,220 @@ exports.collectUsageMetrics = onSchedule({ schedule: '0 6 * * *', timeZone: 'Eur
     } catch (e) {
         console.error('collectUsageMetrics error:', e);
     }
+});
+
+/* ═══════════════════════════════════════════════════
+   selfDeleteAccount — samodzielne, nieodwracalne usunięcie własnego konta.
+   Sync #0113/#0116. Wyłącznie self-delete — initiator musi być właścicielem
+   usuwanego konta (request.auth.uid), nikt nie może wywołać tego dla kogoś innego.
+
+   Kroki (patrz sync #0113):
+   0. Pre-check: ostatni admin/właściciel klubu z aktywnymi drużynami/członkami -> BLOKADA.
+   1. Anonimizacja danych osobowych (users/{userId}) — oryginał trafia zaszyfrowany (AES-256-GCM,
+      klucz w Secret Manager, nigdy po stronie klienta) do kolekcji `temp` (nazwa celowo nijaka —
+      patrz decyzja Rafała 2026-10-07 — dostęp wyłącznie z tej funkcji, firestore.rules blokuje
+      klienta całkowicie).
+   2. Rozliczenie licencji/slotów — nie kasujemy access_rights (niech wygaśnie naturalnie),
+      tylko informujemy zależne konta (kibice rodzinnego planu), że slot nie zostanie odnowiony.
+      Zwroty/anulowanie subskrypcji w RevenueCat — poza zakresem tej funkcji (decyzja Rafała:
+      "tylko informujemy, zwroty ogarniemy później").
+   3. Własne rzeczy — powiadomienia jako odbiorca: usuwane (prywatna skrzynka, nikomu już
+      niepotrzebna). Zadania (tasks.assignedTo / createdBy) — NIE dotykane: po kroku 1 i tak
+      wyświetlą się z już zanonimizowanego users/{userId}, więc działają poprawnie bez zmian.
+   4. Odłączenie relacji — wszystkie aktywne memberships usuwanego usera -> status REMOVED.
+      Dla RODZIC: czyścimy guardianId/guardianPhones na powiązanym zawodniku (bez powiadomienia —
+      inicjator to ten sam user, nie trener).
+   5. Czyszczenie danych lokalnych na telefonie — N/A dla tej funkcji (dotyczy MOBILE; patrz sync).
+   6. Usunięcie authIndex/{authUid}.
+   7. Usunięcie konta Firebase Auth — zawsze ostatni krok, zawsze na końcu.
+   8. Zwrot sukcesu do klienta (ekran końcowy renderowany po stronie WEB).
+   ═══════════════════════════════════════════════════ */
+
+const SELFDELETE_OWNER_BLOCKED_MSG =
+    'Nie możesz usunąć konta Właściciela Klubu, dopóki w systemie istnieją aktywne drużyny lub ' +
+    'inni członkowie. Aby zamknąć konto, musisz najpierw usunąć wszystkie drużyny (co wiąże się ' +
+    'z bezpowrotnym skasowaniem danych) LUB skontaktować się z nami bezpośrednio pod adresem ' +
+    'support@coachay.com w celu ręcznego przeniesienia własności organizacji.';
+
+const SELFDELETE_ACTIVE_STATUSES = ['active', 'ACTIVE', 'grace', 'GRACE'];
+
+function _encryptSelfDeletePayload(plainObj, keyHex) {
+    const key = Buffer.from(keyHex, 'hex');
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    const json = Buffer.from(JSON.stringify(plainObj), 'utf8');
+    const encrypted = Buffer.concat([cipher.update(json), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+    return {
+        v: 1,
+        alg: 'aes-256-gcm',
+        data: encrypted.toString('base64'),
+        iv: iv.toString('base64'),
+        authTag: authTag.toString('base64'),
+    };
+}
+
+async function _resolveSelfDeleteUserId(authUid) {
+    const idxDoc = await db.collection('authIndex').doc(authUid).get();
+    if (idxDoc.exists && idxDoc.data().userId) return idxDoc.data().userId;
+    const snap = await db.collection('users').where('authUid', '==', authUid).limit(1).get();
+    if (!snap.empty) return snap.docs[0].id;
+    return null;
+}
+
+exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    }
+    const authUid = request.auth.uid;
+
+    const userId = await _resolveSelfDeleteUserId(authUid);
+    if (!userId) {
+        throw new HttpsError('not-found', 'Nie znaleziono konta powiązanego z tym loginem.');
+    }
+
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
+        throw new HttpsError('not-found', 'Konto użytkownika nie istnieje.');
+    }
+    const userData = userSnap.data();
+
+    // ── Krok 0: pre-check — ostatni admin/właściciel klubu ─────────────────
+    const myMembershipsSnap = await db.collection('memberships')
+        .where('userId', '==', userId).get();
+    const myMemberships = myMembershipsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const activeMine = myMemberships.filter(m => SELFDELETE_ACTIVE_STATUSES.includes(m.status));
+
+    const adminClubIds = [...new Set(
+        activeMine
+            .filter(m => m.role === 'TRENER_GLOWNY' || m.isClubAdmin === true)
+            .map(m => m.clubId)
+            .filter(Boolean)
+    )];
+
+    for (const clubId of adminClubIds) {
+        const [teamsSnap, othersSnap] = await Promise.all([
+            db.collection('teams').where('clubId', '==', clubId).limit(1).get(),
+            db.collection('memberships')
+                .where('clubId', '==', clubId)
+                .where('userId', '!=', userId)
+                .limit(1).get(),
+        ]);
+        const innyAktywny = othersSnap.docs.some(d => SELFDELETE_ACTIVE_STATUSES.includes(d.data().status));
+        if (!teamsSnap.empty || innyAktywny) {
+            throw new HttpsError('failed-precondition', SELFDELETE_OWNER_BLOCKED_MSG);
+        }
+    }
+
+    const nowIso = new Date().toISOString();
+
+    // ── Krok 1: anonimizacja + archiwizacja zaszyfrowana w `temp` ──────────
+    const archivePayload = {
+        userId,
+        authUid,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        displayName: userData.displayName || null,
+        email: userData.email || null,
+        phone: userData.phone || null,
+        photoURL: userData.photoURL || null,
+        pinHash: userData.pinHash || null,
+        language: userData.language || null,
+    };
+    const encKey = SELFDELETE_ENC_KEY.value();
+    const encrypted = _encryptSelfDeletePayload(archivePayload, encKey);
+    await db.collection('temp').doc(userId).set({
+        ...encrypted,
+        deletedAt: nowIso,
+    });
+
+    await userRef.update({
+        firstName: '',
+        lastName: '',
+        displayName: 'Usunięty użytkownik',
+        email: null,
+        phone: null,
+        photoURL: '',
+        pinHash: '',
+        authUid: null,
+        isDeleted: true,
+        deletedAt: nowIso,
+    });
+
+    // ── Krok 2: rozliczenie licencji/slotów — tylko powiadomienie zależnych ─
+    try {
+        const kibiceSnap = await db.collection('memberships')
+            .where('familySlotParent', '==', authUid).get();
+        for (const d of kibiceSnap.docs) {
+            const m = d.data();
+            if (!SELFDELETE_ACTIVE_STATUSES.includes(m.status) || !m.userId) continue;
+            await db.collection('notifications').add({
+                userId: m.userId,
+                teamId: m.teamId || null,
+                type: 'INFO',
+                title: 'Licencja rodzinna nie zostanie odnowiona',
+                body: 'Osoba użyczająca Ci licencji rodzinnej usunęła swoje konto. Twój dostęp ' +
+                      'pozostaje aktywny do końca opłaconego okresu, ale nie zostanie automatycznie przedłużony.',
+                requiresAction: false,
+                priority: 'NORMAL',
+                createdAt: nowIso,
+            });
+        }
+    } catch (e) {
+        console.error(`selfDeleteAccount[${userId}] krok 2 (powiadomienia rodzinne):`, e);
+    }
+
+    // ── Krok 3: własne rzeczy — usuń powiadomienia jako odbiorca ───────────
+    try {
+        const notifSnap = await db.collection('notifications').where('userId', '==', userId).get();
+        for (const d of notifSnap.docs) await d.ref.delete();
+    } catch (e) {
+        console.error(`selfDeleteAccount[${userId}] krok 3 (notifications):`, e);
+    }
+
+    // ── Krok 4: odłączenie relacji — wszystkie aktywne memberships ─────────
+    for (const m of activeMine) {
+        try {
+            await db.collection('memberships').doc(m.id).update({
+                status: 'REMOVED',
+                removedAt: nowIso,
+                removedBy: 'SELF_DELETE',
+            });
+            if (m.role === 'RODZIC' && m.playerId) {
+                const playerRef = db.collection('players').doc(m.playerId);
+                const playerSnap = await playerRef.get();
+                if (playerSnap.exists) {
+                    const pd = playerSnap.data();
+                    const updates = {};
+                    if (pd.guardianId === userId) updates.guardianId = null;
+                    if (userData.phone && Array.isArray(pd.guardianPhones) && pd.guardianPhones.includes(userData.phone)) {
+                        updates.guardianPhones = pd.guardianPhones.filter(p => p !== userData.phone);
+                    }
+                    if (Object.keys(updates).length) await playerRef.update(updates);
+                }
+            }
+        } catch (e) {
+            console.error(`selfDeleteAccount[${userId}] krok 4 (membership ${m.id}):`, e);
+        }
+    }
+
+    // ── Krok 6: authIndex ───────────────────────────────────────────────────
+    try {
+        await db.collection('authIndex').doc(authUid).delete();
+    } catch (e) {
+        console.error(`selfDeleteAccount[${userId}] krok 6 (authIndex):`, e);
+    }
+
+    // ── Krok 7: Firebase Auth — zawsze ostatnie ─────────────────────────────
+    try {
+        await getAuth().deleteUser(authUid);
+    } catch (e) {
+        console.error(`selfDeleteAccount[${userId}] krok 7 (Auth deleteUser):`, e);
+        throw new HttpsError('internal',
+            'Dane zostały usunięte, ale wystąpił błąd przy usuwaniu konta logowania. Skontaktuj się z support@coachay.com.');
+    }
+
+    console.log(`selfDeleteAccount OK userId=${userId} authUid=${authUid}`);
+    return { success: true };
 });

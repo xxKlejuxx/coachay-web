@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
@@ -6,12 +6,13 @@
 <title>COACHAY — Polityka i RODO</title>
 <link rel="stylesheet" href="_global.css?v=20260802d">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20261003c"></script>
+<script src="_i18n.js?v=20261007c"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 <style>
 :root { --phone-h: 750px; }
 
@@ -135,9 +136,14 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
                 </div>
             </div>
 
-            <button class="rodo-delete-btn" onclick="requestDelete()" data-i18n="rodo.deleteAccountButton">
+            <button class="rodo-delete-btn" onclick="selfDeleteFlow()" data-i18n="rodo.deleteAccountButton">
                 🗑️ Usuń moje konto i dane
             </button>
+            <div style="text-align:center;margin-top:10px;">
+                <span style="color:var(--szary);font-size:13px;cursor:pointer;text-decoration:underline;" onclick="requestDelete()" data-i18n="rodo.deleteContactSupportLink">
+                    Problem z usunięciem konta? Napisz do nas
+                </span>
+            </div>
 
         </div><!-- /rodo-wrap -->
 
@@ -176,6 +182,50 @@ async function requestDelete() {
     const body = typeof t === 'function' ? t('rodo.deleteMailBody', vars) : '';
     if (await showConfirmSheet(msg)) {
         window.location.href = 'mailto:support@coachay.com?subject=' + encodeURIComponent(subj) + (body ? '&body=' + encodeURIComponent(body) : '');
+    }
+}
+
+// 2026-10-07: samodzielne, automatyczne usunięcie konta (sync #0113/#0116) — zastępuje
+// wyłącznie-mailowy requestDelete() jako główną ścieżkę; requestDelete() zostaje jako
+// ręczny fallback (link "Problem z usunięciem? Napisz do nas") na wypadek błędu lub
+// sytuacji, których Cloud Function celowo nie obsługuje automatycznie (np. ostatni admin
+// klubu — patrz komunikat blokady poniżej, który przychodzi z backendu).
+async function selfDeleteFlow() {
+    const potwierdzenie = await showConfirmSheet(
+        (typeof t === 'function' ? t('rodo.selfDeleteConfirmBody') : null) ||
+        'Usunięcie konta jest NIEODWRACALNE. Twoje dane osobowe (imię, nazwisko, email, telefon) ' +
+        'zostaną trwale zanonimizowane, utracisz dostęp do konta, a wszystkie Twoje powiązania ' +
+        '(członkostwa w klubach/drużynach) zostaną zakończone. Historia meczów/statystyk zawodników ' +
+        'pozostaje zachowana dla drużyny. Czy na pewno chcesz kontynuować?',
+        { tak: (typeof t === 'function' ? t('rodo.selfDeleteConfirmBtn') : null) || 'Usuń moje konto', nie: (typeof t === 'function' ? t('cancel') : null) || 'Anuluj' }
+    );
+    if (!potwierdzenie) return;
+
+    const btn = document.querySelector('.rodo-delete-btn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+
+    try {
+        const fx = firebase.app().functions('europe-west1');
+        const call = fx.httpsCallable('selfDeleteAccount');
+        await call();
+
+        await showConfirmSheet(
+            (typeof t === 'function' ? t('rodo.selfDeleteDoneBody') : null) ||
+            'Konto zostało usunięte. Dziękujemy za korzystanie z Coachay.',
+            { okOnly: true, okLabel: (typeof t === 'function' ? t('rodo.selfDeleteDoneBtn') : null) || 'Rozumiem' }
+        );
+
+        try { localStorage.clear(); } catch (e) {}
+        try { await auth.signOut(); } catch (e) {}
+        window.location.href = 'index.html';
+    } catch (e) {
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        const kod = e && e.code;
+        if (kod === 'functions/failed-precondition') {
+            await showConfirmSheet(e.message, { okOnly: true, okLabel: 'Rozumiem' });
+        } else {
+            pokazKomunikat('Błąd usuwania konta: ' + (e && e.message ? e.message : e), 'blad');
+        }
     }
 }
 

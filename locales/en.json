@@ -1393,7 +1393,12 @@
   "deleteConfirmSend": "Send request",
   "deleteMailSubject": "Account and data deletion request",
   "deleteMailBody": "Please delete my account and all associated data from the Coachay app, in accordance with GDPR.\n\nEmail: {{email}}\nName: {{name}}\nUser ID: {{userId}}\nClub ID: {{clubId}}\nRole: {{role}}",
-  "deleteMailError": "Couldn't open a mail app. Please email support@coachay.com directly."
+  "deleteMailError": "Couldn't open a mail app. Please email support@coachay.com directly.",
+  "deleteContactSupportLink": "Trouble deleting your account? Contact us",
+  "selfDeleteConfirmBody": "Deleting your account is IRREVERSIBLE. Your personal data (first name, last name, email, phone) will be permanently anonymized, you'll lose access to your account, and all your memberships (clubs/teams) will end. Match/player statistics history remains for the team. Are you sure you want to continue?",
+  "selfDeleteConfirmBtn": "Delete my account",
+  "selfDeleteDoneBody": "Your account has been deleted. Thank you for using Coachay.",
+  "selfDeleteDoneBtn": "Got it"
  },
  "rodo2": {
   "pageTitle": "Account deletion — Coachay",
