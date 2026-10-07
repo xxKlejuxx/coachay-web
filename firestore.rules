@@ -112,9 +112,12 @@ service cloud.firestore {
       // Pole isClubAdmin może tylko zostać ODEBRANE (true->false) albo pozostać bez zmian;
       // nadanie (false/brak->true) wymaga isPlatformAdmin() (support) albo dzieje się tylko
       // przy create (rejestracja pierwszego trenera klubu, index.html).
+      // 2026-10-07 (fix): .get(key, false) zamiast bezpośredniego dostępu — większość istniejących
+      // dokumentów nie ma w ogóle pola isClubAdmin, a odczyt nieistniejącego pola przez .data.isClubAdmin
+      // rzuca błędem ewaluacji reguły (= odmowa dostępu) nawet przy aktualizacjach niezwiązanych z adminem.
       allow update: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId)) &&
-        (request.resource.data.isClubAdmin == resource.data.isClubAdmin ||
-         request.resource.data.isClubAdmin == false ||
+        (request.resource.data.get('isClubAdmin', false) == resource.data.get('isClubAdmin', false) ||
+         request.resource.data.get('isClubAdmin', false) == false ||
          isPlatformAdmin());
       allow delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
     }
@@ -132,9 +135,10 @@ service cloud.firestore {
       allow read: if isVerified() && inMyClub(resource.data.clubId);
       allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
       // 2026-10-07: ta sama blokada nadawania isClubAdmin jak w memberships (patrz komentarz tam).
+      // 2026-10-07 (fix): .get(key, false) zamiast bezpośredniego dostępu — patrz komentarz w memberships.
       allow update: if isVerified() && inMyClub(resource.data.clubId) &&
-        (request.resource.data.isClubAdmin == resource.data.isClubAdmin ||
-         request.resource.data.isClubAdmin == false ||
+        (request.resource.data.get('isClubAdmin', false) == resource.data.get('isClubAdmin', false) ||
+         request.resource.data.get('isClubAdmin', false) == false ||
          isPlatformAdmin());
       allow delete: if isVerified() && inMyClub(resource.data.clubId);
     }
