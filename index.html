@@ -1353,6 +1353,7 @@ function esc(s) {
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 <script src="coachay-core.js?v=20261007b"></script>
 <script>
 /* == AUTH DRAWER ============================================== */
@@ -1383,11 +1384,40 @@ document.addEventListener('keydown', function(e) {
 /* == FIREBASE INIT ============================================ */
 initFirebase();
 
+/* == APPLE: przechwycenie authorizationCode do późniejszego odwołania tokenu ========
+   2026-10-07: wymóg Apple Guideline 5.1.1v (usunięcie konta musi też odwołać tokeny
+   logowania przez stronę trzecią). authorizationCode jest JEDNORAZOWY — jeśli nie
+   złapiemy go TU, przy logowaniu, przepada bezpowrotnie i selfDeleteAccount nie będzie
+   miał czym odwołać dostępu Apple przy usunięciu konta (patrz sync #0116/#0117).
+   NIEZWERYFIKOWANE EMPIRYCZNIE: nie jest 100% pewne czy hostowany popup/redirect
+   Firebase dla providera 'apple.com' faktycznie udostępnia nam surowy authorizationCode
+   w obiekcie credential, czy konsumuje go po swojej stronie bez przekazania klientowi.
+   Stąd diagnostyczny console.log całego credentiala przy KAŻDYM logowaniu Apple —
+   pierwszy realny test z kontem Apple zweryfikuje, czy to działa. */
+async function _captureAppleAuthCodeIfPresent(result) {
+    try {
+        var cred = result && result.credential;
+        if (!cred || cred.providerId !== 'apple.com') return;
+        console.log('[Apple capture] credential (diagnostyka):', JSON.stringify(cred));
+        var code = cred.accessToken || cred.oauthCode || cred.authorizationCode || null;
+        if (!code) {
+            console.warn('[Apple capture] Nie znaleziono authorizationCode w credential — patrz log powyżej, zgłoś do Claude.');
+            return;
+        }
+        var fx = firebase.app().functions('europe-west1');
+        await fx.httpsCallable('appleCaptureAuthCode')({ authorizationCode: code });
+        console.log('[Apple capture] zapisano — selfDeleteAccount będzie mógł odwołać token Apple.');
+    } catch (e) {
+        console.error('[Apple capture] błąd (nieblokujący logowania):', e);
+    }
+}
+
 /* == OBSŁUGA POWROTU PO REDIRECT (Google / Apple) ============ */
 (async function handleRedirectResult() {
     try {
         var result = await auth.getRedirectResult();
         if (!result || !result.user) return;
+        await _captureAppleAuthCodeIfPresent(result);
         var intent = localStorage.getItem('authRedirectIntent');
         localStorage.removeItem('authRedirectIntent');
         localStorage.removeItem('authRedirectProvider');
@@ -1915,6 +1945,7 @@ async function doRegisterWithApple() {
         var provider = new firebase.auth.OAuthProvider('apple.com');
         provider.addScope('email'); provider.addScope('name');
         var cred = await auth.signInWithPopup(provider);
+        await _captureAppleAuthCodeIfPresent(cred);
         var existing = await findUserByAuthUid(cred.user.uid);
         if (existing) { await auth.signOut(); showRegError('To konto Apple jest już zarejestrowane'); btn.disabled=false; btn.textContent='Kontynuuj z Apple'; return; }
         if (['RODZIC','OBSERWATOR'].includes(window._inviteCode?.type) || !window._regName?.fname) {

@@ -24,6 +24,13 @@ const REVENUECAT_WEBHOOK_SECRET = defineSecret('REVENUECAT_WEBHOOK_SECRET');
 // usunięciu konta (patrz selfDeleteAccount / kolekcja `temp`) — 32 bajty hex, nigdy nie
 // trafia do klienta ani do logów, dostępny wyłącznie wewnątrz tej funkcji.
 const SELFDELETE_ENC_KEY = defineSecret('SELFDELETE_ENC_KEY');
+// 2026-10-07: odwołanie tokenu "Sign in with Apple" przy selfDeleteAccount (wymóg Apple
+// Guideline 5.1.1v). Wartości z Apple Developer -> Certificates, Identifiers & Profiles ->
+// Keys (klucz z włączonym "Sign in with Apple"). Rafał dostarczy wartości osobno.
+const APPLE_TEAM_ID     = defineSecret('APPLE_TEAM_ID');
+const APPLE_KEY_ID       = defineSecret('APPLE_KEY_ID');
+const APPLE_PRIVATE_KEY  = defineSecret('APPLE_PRIVATE_KEY'); // cała treść pliku .p8
+const APPLE_CLIENT_ID    = defineSecret('APPLE_CLIENT_ID');   // Services ID używany przy Apple OAuth na WEB
 
 initializeApp();
 const db = getFirestore();
@@ -3407,7 +3414,99 @@ async function _resolveSelfDeleteUserId(authUid) {
     return null;
 }
 
-exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async (request) => {
+function _decryptSelfDeletePayload(encObj, keyHex) {
+    const key = Buffer.from(keyHex, 'hex');
+    const iv = Buffer.from(encObj.iv, 'base64');
+    const authTag = Buffer.from(encObj.authTag, 'base64');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(authTag);
+    const decrypted = Buffer.concat([decipher.update(Buffer.from(encObj.data, 'base64')), decipher.final()]);
+    return JSON.parse(decrypted.toString('utf8'));
+}
+
+/* ═══════════════════════════════════════════════════
+   Apple "Sign in with Apple" — przechwycenie authorizationCode przy logowaniu (żeby
+   móc PÓŹNIEJ, przy selfDeleteAccount, odwołać token po stronie Apple bez konieczności
+   ponownego natywnego gestu usera — wymóg Apple Guideline 5.1.1v). Apple's authorization
+   code jest JEDNORAZOWY — jeśli nie złapiemy go TU, przy logowaniu, przepada bezpowrotnie.
+   Konta zarejestrowane PRZED wdrożeniem tego mechanizmu nie mają zapisanego tokenu —
+   potrzebują jednego kolejnego logowania przez Apple, żeby się "donasycić" (patrz sync #0116).
+   ═══════════════════════════════════════════════════ */
+
+function _base64url(bufOrStr) {
+    const buf = Buffer.isBuffer(bufOrStr) ? bufOrStr : Buffer.from(bufOrStr);
+    return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// client_secret dla Apple REST API (/auth/token, /auth/revoke) — JWT podpisany ES256
+// prywatnym kluczem "Sign in with Apple" z Apple Developer. Ważny max 6 mies. według Apple,
+// generujemy krótkożyjący (5 min) na każde wywołanie — prościej, bez cache'owania.
+function _buildAppleClientSecret(teamId, keyId, clientId, privateKeyPem) {
+    const now = Math.floor(Date.now() / 1000);
+    const header  = { alg: 'ES256', kid: keyId };
+    const payload = { iss: teamId, iat: now, exp: now + 300, aud: 'https://appleid.apple.com', sub: clientId };
+    const signingInput = _base64url(JSON.stringify(header)) + '.' + _base64url(JSON.stringify(payload));
+    const signature = crypto.sign('sha256', Buffer.from(signingInput), { key: privateKeyPem, dsaEncoding: 'ieee-p1363' });
+    return signingInput + '.' + _base64url(signature);
+}
+
+const APPLE_SECRETS = [APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY, APPLE_CLIENT_ID];
+
+// Wywoływane z klienta (index.html) natychmiast po logowaniu/rejestracji przez Apple —
+// zanim authorizationCode przepadnie. Wymienia go na refresh_token u Apple i zapisuje
+// zaszyfrowany w kolekcji `appleTokens` (zero dostępu klienta — patrz firestore.rules).
+exports.appleCaptureAuthCode = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECRETS] }, async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    }
+    const authUid = request.auth.uid;
+    const authorizationCode = request.data && request.data.authorizationCode;
+    if (!authorizationCode) {
+        throw new HttpsError('invalid-argument', 'Brak authorizationCode.');
+    }
+
+    const authUser = await getAuth().getUser(authUid);
+    const hasApple = (authUser.providerData || []).some(p => p.providerId === 'apple.com');
+    if (!hasApple) {
+        throw new HttpsError('failed-precondition', 'To konto nie jest powiązane z logowaniem Apple.');
+    }
+
+    const clientSecret = _buildAppleClientSecret(
+        APPLE_TEAM_ID.value(), APPLE_KEY_ID.value(), APPLE_CLIENT_ID.value(), APPLE_PRIVATE_KEY.value()
+    );
+    const params = new URLSearchParams({
+        client_id: APPLE_CLIENT_ID.value(),
+        client_secret: clientSecret,
+        code: authorizationCode,
+        grant_type: 'authorization_code',
+    });
+
+    let json;
+    try {
+        const resp = await fetch('https://appleid.apple.com/auth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+        });
+        json = await resp.json();
+        if (!resp.ok || !json.refresh_token) {
+            console.error('appleCaptureAuthCode: Apple /auth/token odrzucił wymianę:', resp.status, json);
+            throw new HttpsError('internal', 'Apple nie potwierdził logowania.');
+        }
+    } catch (e) {
+        if (e instanceof HttpsError) throw e;
+        console.error('appleCaptureAuthCode: błąd sieci do Apple:', e);
+        throw new HttpsError('internal', 'Błąd komunikacji z Apple.');
+    }
+
+    const encrypted = _encryptSelfDeletePayload({ refreshToken: json.refresh_token }, SELFDELETE_ENC_KEY.value());
+    await db.collection('appleTokens').doc(authUid).set({ ...encrypted, savedAt: new Date().toISOString() });
+
+    console.log(`appleCaptureAuthCode OK authUid=${authUid}`);
+    return { success: true };
+});
+
+exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECRETS] }, async (request) => {
     if (!request.auth || !request.auth.uid) {
         throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
     }
@@ -3549,6 +3648,40 @@ exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async (req
         await db.collection('authIndex').doc(authUid).delete();
     } catch (e) {
         console.error(`selfDeleteAccount[${userId}] krok 6 (authIndex):`, e);
+    }
+
+    // ── Krok 6b: odwołanie tokenu Apple (jeśli logowanie przez Apple i mamy zapisany
+    // refresh_token — patrz appleCaptureAuthCode). Brak zapisanego tokenu (np. konto
+    // zarejestrowane PRZED wdrożeniem tego mechanizmu) -> no-op, nie blokujemy usunięcia.
+    try {
+        const appleDoc = await db.collection('appleTokens').doc(authUid).get();
+        if (appleDoc.exists) {
+            const { refreshToken } = _decryptSelfDeletePayload(appleDoc.data(), SELFDELETE_ENC_KEY.value());
+            const clientSecret = _buildAppleClientSecret(
+                APPLE_TEAM_ID.value(), APPLE_KEY_ID.value(), APPLE_CLIENT_ID.value(), APPLE_PRIVATE_KEY.value()
+            );
+            const params = new URLSearchParams({
+                client_id: APPLE_CLIENT_ID.value(),
+                client_secret: clientSecret,
+                token: refreshToken,
+                token_type_hint: 'refresh_token',
+            });
+            const resp = await fetch('https://appleid.apple.com/auth/revoke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString(),
+            });
+            if (!resp.ok) {
+                console.error(`selfDeleteAccount[${userId}] krok 6b (Apple revoke) HTTP ${resp.status}:`, await resp.text());
+            } else {
+                console.log(`selfDeleteAccount[${userId}] krok 6b: token Apple odwołany`);
+            }
+            await appleDoc.ref.delete();
+        }
+    } catch (e) {
+        console.error(`selfDeleteAccount[${userId}] krok 6b (Apple revoke):`, e);
+        // błąd odwołania tokenu Apple NIE blokuje usunięcia konta — lepiej usunąć
+        // konto z nieodwołanym tokenem niż zablokować usera na trwale.
     }
 
     // ── Krok 7: Firebase Auth — zawsze ostatnie ─────────────────────────────

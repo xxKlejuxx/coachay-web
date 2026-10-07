@@ -291,6 +291,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // appleTokens — zaszyfrowany refresh_token "Sign in with Apple" (appleCaptureAuthCode /
+    // selfDeleteAccount, 2026-10-07). Zero dostępu klienta, wyłącznie Cloud Function.
+    match /appleTokens/{docId} {
+      allow read, write: if false;
+    }
+
     // 2026-09-26 (sync #0057): catch-all USUNIĘTY — pasował też do kolekcji już obsłużonych
     // wyżej i przez OR unieważniał ich scoping (patrz sync #0057 - APP potwierdziło #0058).
     // Firestore domyślnie ODMAWIA dostępu gdy żadna reguła nie pasuje - to jest bezpieczny
