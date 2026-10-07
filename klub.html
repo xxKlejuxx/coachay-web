@@ -577,7 +577,7 @@ function buildTeamCard(team) {
                     ? (window.trainersByTeam[tid])
                         .sort((a,b) => b.isGlowny - a.isGlowny)
                         .map(tr => `<div style="font-size:17px;font-weight:600;color:var(--szary-j);">
-                            🧑 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:15px;color:#FBBF24;font-weight:800;">?</span>' : ''}
+                            🧑 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:15px;color:#FBBF24;font-weight:800;">⭐</span>' : ''}
                         </div>`).join('')
                     : `<div style="font-size:17px;color:var(--szary);">${_tt('klub.noTrainerLabel','Brak trenera')}</div>`
                 }
@@ -687,7 +687,7 @@ async function openTeamDetail(team) {
     if (dpTrainers.length) {
         dpCoachRow.innerHTML = dpTrainers
             .sort((a,b) => b.isGlowny - a.isGlowny)
-            .map(tr => `<span style="margin-right:8px;">🧑 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:15px;color:#FBBF24;font-weight:800;">?</span>' : ''}</span>`)
+            .map(tr => `<span style="margin-right:8px;">🧑 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:15px;color:#FBBF24;font-weight:800;">⭐</span>' : ''}</span>`)
             .join('');
     } else {
         dpCoachRow.textContent = typeof t === 'function' ? t('klub.noTrainerLabel') : 'Brak trenera';
