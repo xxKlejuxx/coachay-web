@@ -55,6 +55,7 @@
 .sub-chip.trial   { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
 .sub-chip.expired { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
 .sub-chip.free    { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+.sub-chip.info    { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); text-transform: none; letter-spacing: normal; }
 
 /* === Sub info wiersze === */
 .sub-info-row { padding: 10px 14px 0; display: flex; flex-direction: column; gap: 4px; }
@@ -243,8 +244,8 @@
             <!-- Subskrypcja -->
             <div class="pr-card" id="pr-card-sub">
                 <div class="pr-card-title" data-i18n="profil.subscriptionTitle">Subskrypcja</div>
-                <div class="pr-row" style="border-bottom:none;">
-                    <span class="pr-row-label" id="pr-sub-date" style="color:var(--szary);font-size:12px;font-weight:600;white-space:nowrap;">…</span>
+                <div class="pr-row" style="border-bottom:none; flex-wrap:wrap; gap:8px; justify-content:flex-start;">
+                    <span id="pr-sub-date" class="sub-chip info">…</span>
                     <span id="pr-sub-chip" class="sub-chip trial">Ładowanie</span>
                 </div>
             </div>
@@ -636,6 +637,7 @@ async function renderSubscription() {
         chip.textContent = _tP('profil.subscriptionFreeChip', 'Bezpłatny');
         chip.className = 'sub-chip free';
         dateEl.textContent = '';
+        dateEl.style.display = 'none';
         return;
     }
 
@@ -643,6 +645,7 @@ async function renderSubscription() {
         chip.textContent = _tP('profil.subNoClub', 'Brak klubu');
         chip.className = 'sub-chip expired';
         dateEl.textContent = '';
+        dateEl.style.display = 'none';
         return;
     }
 
@@ -653,6 +656,7 @@ async function renderSubscription() {
         chip.textContent = _tP('profil.subLoadError', 'Błąd');
         chip.className = 'sub-chip expired';
         dateEl.textContent = '';
+        dateEl.style.display = 'none';
         return;
     }
 
@@ -699,7 +703,9 @@ async function renderSubscription() {
     const planLabel   = PLAN_LABEL[(access.productId || '').split(':')[0]] || '';
     const sourceLabel = SOURCE_MAP[access.source] || '';
     const sourceFull  = planLabel ? `${sourceLabel} (${planLabel})` : sourceLabel;
-    dateEl.textContent = [sourceFull, fmtDate(access.expiryDate)].filter(Boolean).join(' ');
+    const dateText    = [sourceFull, fmtDate(access.expiryDate)].filter(Boolean).join(' · ');
+    dateEl.textContent = dateText;
+    dateEl.style.display = dateText ? '' : 'none';
 
     // Family slots bar
     try {
