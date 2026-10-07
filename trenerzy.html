@@ -859,11 +859,15 @@ async function openEditPanel() {
     buildAvatarGrid();
 
 
-    // Admin toggle – widoczny tylko dla zalogowanego admina edytującego innych
+    // Admin toggle – widoczny tylko dla zalogowanego admina edytującego innych.
+    // BLOKADA (2026-10-07): nadawanie admina wyłączone (ochrona przed obchodzeniem triala) —
+    // checkbox pozwala tylko ODEBRAĆ admina (jeśli już go ma), nigdy nadać od nowa.
     const adminRow = document.getElementById('ep-admin-row');
+    const epIsAdmin = document.getElementById('ep-is-admin');
     if (isAdmin) {
         adminRow.style.display = '';
-        document.getElementById('ep-is-admin').checked = !!t.isClubAdmin;
+        epIsAdmin.checked = !!t.isClubAdmin;
+        epIsAdmin.disabled = !t.isClubAdmin;
     } else {
         adminRow.style.display = 'none';
     }
@@ -887,8 +891,10 @@ async function saveEditTrainer() {
     const dateStr = now.slice(0,10).replace(/-/g,'');
 
 
+    // BLOKADA (2026-10-07): checkbox może tylko ODEBRAĆ admina (true->false), nigdy nadać
+    // (false->true) — ochrona przed obchodzeniem triala przez nowe konto-admin.
     const newIsAdmin = isAdmin
-        ? (document.getElementById('ep-is-admin')?.checked || false)
+        ? ((document.getElementById('ep-is-admin')?.checked || false) && !!t.isClubAdmin)
         : (t.isClubAdmin || false);
 
     const sinceYear = parseInt(document.getElementById('ep-since').value);
@@ -1052,29 +1058,14 @@ async function unblockTrainer() {
 
 /* === Usuń z klubu === */
 async function grantAdminRole() {
+    // BLOKADA (2026-10-07): nadawanie admina innemu trenerowi wyłączone — wektor nadużycia
+    // (nowe konto dostaje admina -> usuwa poprzedniego trenera -> "świeży" trial w kółko).
     if (!detailTrainer || !db || !isAdmin) return;
-    const name = detailTrainer.displayName || (typeof window.t === 'function' ? window.t('trenerzy.thisTrainer') : 'tego trenera');
-    const grantBody = typeof window.t === 'function' ? window.t('trenerzy.grantAdminBody', {name}) : `Nadać ${name} prawa Administratora klubu?\n\nOba konta będą miały uprawnienia admina. Nowy admin może później odebrać Ci te prawa.`;
-    if (!await showConfirmSheet(grantBody)) return;
-    try {
-        await db.collection('trainers').doc(detailTrainer.trainerId).update({ isClubAdmin: true });
-        if (detailTrainer.userId) {
-            const snap = await db.collection('memberships')
-                .where('userId', '==', detailTrainer.userId)
-                .where('clubId', '==', currentClubId)
-                .where('status', '==', 'ACTIVE').get();
-            const batch = db.batch();
-            snap.docs.forEach(d => batch.update(d.ref, { isClubAdmin: true }));
-            await batch.commit();
-        }
-        detailTrainer.isClubAdmin = true;
-        const idx = allTrainers.findIndex(t => t.trainerId === detailTrainer.trainerId);
-        if (idx !== -1) allTrainers[idx].isClubAdmin = true;
-        openDetailPanel(detailTrainer);
-        renderTrainers();
-    } catch (e) {
-        alert('Błąd: ' + e.message);
-    }
+    await showConfirmSheet(
+        'Nadawanie praw administratora innym trenerom jest obecnie wyłączone z powodów bezpieczeństwa (ochrona przed obchodzeniem okresu próbnego).',
+        { okOnly: true, okLabel: 'Rozumiem' }
+    );
+    return;
 }
 
 async function revokeAdminRole() {

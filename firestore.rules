@@ -107,7 +107,16 @@ service cloud.firestore {
         inMyClub(playerClubId(resource.data.playerId))
       ));
       allow create: if request.auth != null && (request.resource.data.clubId == null || inMyClub(request.resource.data.clubId));
-      allow update, delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
+      // 2026-10-07: blokada nadawania isClubAdmin przez klienta — wektor nadużycia triala
+      // (nowe konto dostaje admina -> usuwa poprzedniego trenera -> "świeży" trial w kółko).
+      // Pole isClubAdmin może tylko zostać ODEBRANE (true->false) albo pozostać bez zmian;
+      // nadanie (false/brak->true) wymaga isPlatformAdmin() (support) albo dzieje się tylko
+      // przy create (rejestracja pierwszego trenera klubu, index.html).
+      allow update: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId)) &&
+        (request.resource.data.isClubAdmin == resource.data.isClubAdmin ||
+         request.resource.data.isClubAdmin == false ||
+         isPlatformAdmin());
+      allow delete: if isVerified() && (resource.data.clubId == null || inMyClub(resource.data.clubId));
     }
 
     // teams — izolacja po clubId.
@@ -122,7 +131,12 @@ service cloud.firestore {
     match /trainers/{trainerId} {
       allow read: if isVerified() && inMyClub(resource.data.clubId);
       allow create: if request.auth != null && inMyClub(request.resource.data.clubId);
-      allow update, delete: if isVerified() && inMyClub(resource.data.clubId);
+      // 2026-10-07: ta sama blokada nadawania isClubAdmin jak w memberships (patrz komentarz tam).
+      allow update: if isVerified() && inMyClub(resource.data.clubId) &&
+        (request.resource.data.isClubAdmin == resource.data.isClubAdmin ||
+         request.resource.data.isClubAdmin == false ||
+         isPlatformAdmin());
+      allow delete: if isVerified() && inMyClub(resource.data.clubId);
     }
 
     // players — izolacja po clubId; legacy docs z clubId==null dostępne dla zweryfikowanych
