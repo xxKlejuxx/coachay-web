@@ -3593,7 +3593,7 @@ async function getFamilySlots(uid, clubId) {
         const d = snap.docs[0].data();
         if (!d.slots_total || d.slots_total < 2) return null;
         const validUntil = d.valid_until?.toDate?.() ?? (d.valid_until ? new Date(d.valid_until) : null);
-        return { slotsTotal: d.slots_total, slotsUsed: d.slots_used || 0, validUntil, arRef: snap.docs[0].ref };
+        return { slotsTotal: d.slots_total, slotsUsed: d.slots_used || 0, validUntil, arRef: snap.docs[0].ref, productId: d.productId || null };
     } catch (e) {
         console.error('getFamilySlots:', e);
         return null;
@@ -3721,14 +3721,14 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
     const graceMs     = GRACE_DAYS * 86400 * 1000;
     const graceCutoff = new Date(now.getTime() - graceMs);
 
-    const _r = (status, source, expiry, overrideDays) => {
+    const _r = (status, source, expiry, overrideDays, productId) => {
         let daysLeft = 0;
         if (overrideDays !== undefined) {
             daysLeft = overrideDays;
         } else if (expiry) {
             daysLeft = Math.ceil((expiry - now) / 86400000);
         }
-        return { status, source, daysLeft: Math.max(0, daysLeft), expiryDate: expiry || null };
+        return { status, source, daysLeft: Math.max(0, daysLeft), expiryDate: expiry || null, productId: productId || null };
     };
 
     try {
@@ -3785,7 +3785,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
             // bywa opóźniony (sandbox ~1-1,5 min po końcu okresu). Bez marginesu gdy willRenew!=true.
             const _RENEW_GRACE_MS = 10 * 60 * 1000;
             const _subLimit = _sub.willRenew === true ? new Date(_subExpiry.getTime() + _RENEW_GRACE_MS) : _subExpiry;
-            if (_subLimit > now) return _r('ACTIVE', 'individual', _subExpiry);
+            if (_subLimit > now) return _r('ACTIVE', 'individual', _subExpiry, undefined, _sub.productId);
         }
 
         // ── P1: Własna licencja (access_rights) ───────────────────
@@ -3816,7 +3816,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
                 const ar         = arDoc.data();
                 const validUntil = ar.valid_until?.toDate?.() ?? new Date(ar.valid_until);
                 if (validUntil > now)
-                    return _r('ACTIVE', ar.source || 'individual', validUntil);
+                    return _r('ACTIVE', ar.source || 'individual', validUntil, undefined, ar.productId);
                 // Karencja wyłączona — natychmiastowa blokada po wygaśnięciu licencji
                 // if (validUntil > graceCutoff)
                 //     return _r('GRACE', ar.source || 'individual', validUntil,
@@ -3838,7 +3838,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         if (canUseB2B) {
             // Slot przydzielony przez CF lub webhook
             if (mData.usedSlot === 1 && licExpiry) {
-                if (licExpiry > now) return _r('ACTIVE', 'club_license', licExpiry);
+                if (licExpiry > now) return _r('ACTIVE', 'club_license', licExpiry, undefined, lic?.planId);
                 return _r('EXPIRED', 'club_license_expired', null);
             }
 
@@ -3846,7 +3846,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
             if (claimSlot && licExpiry && licExpiry > now) {
                 const claimed = await claimClubLicenseSlot(uid, clubId, mDoc);
                 if (claimed.success)
-                    return _r('ACTIVE', claimed.source, claimed.expiryDate, claimed.daysLeft);
+                    return _r('ACTIVE', claimed.source, claimed.expiryDate, claimed.daysLeft, lic?.planId);
                 return _r('EXPIRED', claimed.source, null);
             }
         }
@@ -3889,7 +3889,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
                 }
 
                 if (fs.validUntil > now)
-                    return _r('ACTIVE', 'family_license', fs.validUntil);
+                    return _r('ACTIVE', 'family_license', fs.validUntil, undefined, fs.productId);
                 // Karencja wyłączona — natychmiastowa blokada po wygaśnięciu family license
                 // if (fs.validUntil > graceCutoff)
                 //     return _r('GRACE', 'family_license', fs.validUntil,

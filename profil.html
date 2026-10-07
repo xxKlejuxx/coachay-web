@@ -683,8 +683,21 @@ async function renderSubscription() {
         const mi   = String(w.getMinutes()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
     };
+    // Rodzaj planu (miesięczny/roczny/2-letni) — z productId zapisanego przez webhook RevenueCat
+    // (users.subscription.productId / access_rights.productId / clubs.license.planId).
+    const PLAN_LABEL = {
+        sub_individual_monthly: _tP('profil.planMonthly', 'miesięczny'),
+        sub_individual_yearly:  _tP('profil.planYearly', 'roczny'),
+        sub_family_monthly:     _tP('profil.planMonthly', 'miesięczny'),
+        sub_family_yearly:      _tP('profil.planYearly', 'roczny'),
+        club_monthly:           _tP('profil.planMonthly', 'miesięczny'),
+        club_yearly:            _tP('profil.planYearly', 'roczny'),
+        club_2year:             _tP('profil.plan2Year', '2-letni')
+    };
+    const planLabel   = PLAN_LABEL[(access.productId || '').split(':')[0]] || '';
     const sourceLabel = SOURCE_MAP[access.source] || '';
-    dateEl.textContent = [sourceLabel, fmtDate(access.expiryDate)].filter(Boolean).join(' ');
+    const sourceFull  = planLabel ? `${sourceLabel} (${planLabel})` : sourceLabel;
+    dateEl.textContent = [sourceFull, fmtDate(access.expiryDate)].filter(Boolean).join(' ');
 
     // Family slots bar
     try {
