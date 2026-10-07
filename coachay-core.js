@@ -3593,7 +3593,7 @@ async function getFamilySlots(uid, clubId) {
         const d = snap.docs[0].data();
         if (!d.slots_total || d.slots_total < 2) return null;
         const validUntil = d.valid_until?.toDate?.() ?? (d.valid_until ? new Date(d.valid_until) : null);
-        return { slotsTotal: d.slots_total, slotsUsed: d.slots_used || 0, validUntil, arRef: snap.docs[0].ref, productId: d.productId || null };
+        return { slotsTotal: d.slots_total, slotsUsed: d.slots_used || 0, validUntil, arRef: snap.docs[0].ref, productId: d.productId || d.product_id || null };
     } catch (e) {
         console.error('getFamilySlots:', e);
         return null;
@@ -3785,7 +3785,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
             // bywa opóźniony (sandbox ~1-1,5 min po końcu okresu). Bez marginesu gdy willRenew!=true.
             const _RENEW_GRACE_MS = 10 * 60 * 1000;
             const _subLimit = _sub.willRenew === true ? new Date(_subExpiry.getTime() + _RENEW_GRACE_MS) : _subExpiry;
-            if (_subLimit > now) return _r('ACTIVE', 'individual', _subExpiry, undefined, _sub.productId);
+            if (_subLimit > now) return _r('ACTIVE', 'individual', _subExpiry, undefined, _sub.productId || _sub.product_id);
         }
 
         // ── P1: Własna licencja (access_rights) ───────────────────
@@ -3816,7 +3816,7 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
                 const ar         = arDoc.data();
                 const validUntil = ar.valid_until?.toDate?.() ?? new Date(ar.valid_until);
                 if (validUntil > now)
-                    return _r('ACTIVE', ar.source || 'individual', validUntil, undefined, ar.productId);
+                    return _r('ACTIVE', ar.source || 'individual', validUntil, undefined, ar.productId || ar.product_id);
                 // Karencja wyłączona — natychmiastowa blokada po wygaśnięciu licencji
                 // if (validUntil > graceCutoff)
                 //     return _r('GRACE', ar.source || 'individual', validUntil,
