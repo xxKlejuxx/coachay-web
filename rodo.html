@@ -190,7 +190,61 @@ async function requestDelete() {
 // ręczny fallback (link "Problem z usunięciem? Napisz do nas") na wypadek błędu lub
 // sytuacji, których Cloud Function celowo nie obsługuje automatycznie (np. ostatni admin
 // klubu — patrz komunikat blokady poniżej, który przychodzi z backendu).
+// Mapa store -> nazwa czytelna dla usera (wartości store takie jak zapisuje RevenueCat
+// webhook w functions/index.js, pole subscription.store).
+const _STORE_LABELS = {
+    APP_STORE: 'App Store (iPhone)',
+    MAC_APP_STORE: 'App Store (Mac)',
+    PLAY_STORE: 'Google Play',
+    AMAZON: 'Amazon Appstore',
+    STRIPE: 'stronie Coachay (karta/przelew)',
+};
+
+// 2026-10-07 (decyzja Rafała pkt 4): jeśli user ma aktywną, odnawiającą się subskrypcję,
+// TYLKO informujemy przed usunięciem konta — nie blokujemy i nie anulujemy niczego
+// automatycznie (zwroty/anulowanie w RevenueCat poza zakresem). Sprawdzamy: własną
+// subskrypcję indywidualną (users.subscription, P0.5) oraz własną licencję rodzinną
+// (access_rights, source='family_license', P4) — licencja klubowa pomijana, bo to
+// własność klubu, nie osobista subskrypcja usera.
+async function _selfDeleteSubscriptionWarning() {
+    try {
+        const uid = auth.currentUser && auth.currentUser.uid;
+        const userId = typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
+        if (!userId) return null;
+
+        const uDoc = await db.collection('users').doc(userId).get();
+        const sub = uDoc.exists ? (uDoc.data().subscription || {}) : {};
+        if (sub.status === 'ACTIVE' && sub.willRenew === true) {
+            const storeLabel = _STORE_LABELS[sub.store] || 'sklepie, w którym kupiono subskrypcję';
+            return storeLabel;
+        }
+
+        if (uid) {
+            const arSnap = await db.collection('access_rights').where('uid', '==', uid).get();
+            const familyActive = arSnap.docs.some(d => {
+                const a = d.data();
+                return a.source === 'family_license' && a.willRenew !== false;
+            });
+            if (familyActive) return 'sklepie, w którym kupiono licencję rodzinną';
+        }
+    } catch (e) {
+        console.error('Sprawdzanie aktywnej subskrypcji przed usunięciem konta:', e);
+    }
+    return null;
+}
+
 async function selfDeleteFlow() {
+    const storeLabel = await _selfDeleteSubscriptionWarning();
+    if (storeLabel) {
+        await showConfirmSheet(
+            `Uwaga! Posiadasz aktywną, odnawiającą się subskrypcję Coachay. Zanim usuniesz konto, ` +
+            `anuluj jej odnawianie w ustawieniach ${storeLabel}, aby uniknąć kolejnej opłaty — ` +
+            `usunięcie konta w Coachay tego nie robi automatycznie. Po anulowaniu wróć tutaj, ` +
+            `aby trwale usunąć konto.`,
+            { okOnly: true, okLabel: 'Rozumiem' }
+        );
+    }
+
     const potwierdzenie = await showConfirmSheet(
         (typeof t === 'function' ? t('rodo.selfDeleteConfirmBody') : null) ||
         'Usunięcie konta jest NIEODWRACALNE. Twoje dane osobowe (imię, nazwisko, email, telefon) ' +
