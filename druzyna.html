@@ -1782,6 +1782,12 @@ async function zapiszZawodnika() {
             guardianData: null,
             history: [],
             teams: [{ teamId: aktualnyTeamId, status: 'ACTIVE' }],
+            // 2026-10-07: teamIds jest normalnie dociągane asynchronicznie przez CF
+            // onPlayerWrittenIndex (patrz coachay-core.js:1014) — ale to tworzy wyścig:
+            // zaladujZawodnikow() wywoływane tuż po set() odpytuje po teamIds, zanim CF
+            // zdąży je dopisać, więc nowo dodany zawodnik nie pojawiał się na liście.
+            // Ustawiamy je też tu, od razu — CF i tak potwierdzi tę samą wartość (no-op).
+            teamIds: aktualnyTeamId ? [aktualnyTeamId] : [],
             coachOnlyData: { coachNotes: '', level: liga || '' },
             publicData: { goals: 0, assists: 0, matches: 0, attendance: '0/0', yellowCards: 0, redCards: 0, cleanSheets: 0 },
             userAccountId: null,
