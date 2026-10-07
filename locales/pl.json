@@ -115,6 +115,7 @@
   "importStep3Title": "Wymagane kolumny",
   "importStep3Body": "Plik musi mieć nagłówki w pierwszym wierszu (kolejność nie ma znaczenia):",
   "importDateFormat": "Data urodzenia: format RRRR-MM-DD lub DD.MM.RRRR (np. 2012-05-20 lub 20.05.2012)",
+  "importSquadFormat": "Grupa: Pierwsza / Druga / Trzecia (albo FIRST / SECOND / THIRD)",
   "importStep4Title": "Wybierz plik CSV",
   "importFilePlaceholder": "Kliknij aby wybrać plik .csv",
   "importFileHint": "Obsługiwane: CSV (UTF-8, separator , lub ;)",

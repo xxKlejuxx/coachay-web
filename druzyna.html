@@ -611,12 +611,14 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                     <div class="import-cols">
                         <span class="import-col-tag req" data-i18n="druzyna.firstNameRequired">Imię *</span>
                         <span class="import-col-tag req" data-i18n="druzyna.lastNameRequired">Nazwisko *</span>
+                        <span class="import-col-tag req" data-i18n="druzyna.squadLabel">Grupa *</span>
                         <span class="import-col-tag" data-i18n="druzyna.birthDateLabel">Data urodzenia</span>
                         <span class="import-col-tag" data-i18n="druzyna.positionLabel">Pozycja</span>
                         <span class="import-col-tag" data-i18n="druzyna.jerseyNumberLabel">Numer koszulki</span>
                         <span class="import-col-tag" data-i18n="druzyna.leagueLabel">Poziom</span>
                     </div>
                     <div style="margin-top:8px;font-size:13px;color:var(--szary);" data-i18n="druzyna.importDateFormat">Data urodzenia: format RRRR-MM-DD lub DD.MM.RRRR (np. 2012-05-20 lub 20.05.2012)</div>
+                    <div style="margin-top:4px;font-size:13px;color:var(--szary);" data-i18n="druzyna.importSquadFormat">Grupa: Pierwsza / Druga / Trzecia (albo FIRST / SECOND / THIRD)</div>
                 </div>
             </div>
 
@@ -2337,13 +2339,25 @@ function onImportFileSelected(input) {
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
-            const text = e.target.result;
+            const buf = e.target.result;
+            // 2026-10-07: Excel na Windows (PL) przy "Zapisz jako CSV" domyślnie zapisuje
+            // w Windows-1250, nie UTF-8 — odczyt jako UTF-8 psuje polskie znaki w nagłówku
+            // ("Imię" → "Imi<U+FFFD>"), kolumna "Imię" nie jest rozpoznana i import się
+            // zatrzymuje z niewidocznym komunikatem o brakującej kolumnie. Wykryj to (znak
+            // zastępczy U+FFFD po dekodowaniu UTF-8) i spróbuj ponownie jako windows-1250.
+            let text = new TextDecoder('utf-8').decode(buf);
+            if (text.includes('\uFFFD')) {
+                try {
+                    const text1250 = new TextDecoder('windows-1250').decode(buf);
+                    if (!text1250.includes('\uFFFD')) text = text1250;
+                } catch (e2) {}
+            }
             parseAndPreviewCSV(text);
         } catch (err) {
             alert('Błąd odczytu pliku: ' + err.message);
         }
     };
-    reader.readAsText(file, 'UTF-8');
+    reader.readAsArrayBuffer(file);
 }
 
 function parseAndPreviewCSV(text) {
@@ -2364,6 +2378,7 @@ function parseAndPreviewCSV(text) {
         imie:            ['imię', 'imie', 'first name', 'firstname', 'name'],
         nazwisko:        ['nazwisko', 'last name', 'lastname', 'surname'],
         data_urodzenia:  ['data urodzenia', 'urodziny', 'data_urodzenia', 'birthdate', 'birth date', 'dob'],
+        grupa:           ['grupa', 'squad', 'group'],
         pozycja:         ['pozycja', 'position'],
         numer:           ['numer koszulki', 'numer', 'number', 'jersey', 'jersey number'],
         poziom:          ['poziom', 'level', 'liga'],
@@ -2375,8 +2390,11 @@ function parseAndPreviewCSV(text) {
         colIdx[key] = idx >= 0 ? idx : -1;
     }
 
-    if (colIdx.imie === -1 || colIdx.nazwisko === -1) {
-        showImportError('Brak wymaganych kolumn: "Imię" i/lub "Nazwisko". Sprawdź nagłówki w pliku.');
+    // 2026-10-07: "Grupa" jest wymagana przy ręcznym dodawaniu zawodnika (ap-grupa, pole
+    // obowiązkowe) — import musi wymagać tego samego, inaczej zawodnik trafia do bazy bez
+    // grupy (dotychczas squad był na trwałe ustawiany na '').
+    if (colIdx.imie === -1 || colIdx.nazwisko === -1 || colIdx.grupa === -1) {
+        showImportError('Brak wymaganych kolumn: "Imię", "Nazwisko" i/lub "Grupa". Sprawdź nagłówki w pliku.');
         document.getElementById('import-preview-wrap').style.display = 'none';
         return;
     }
@@ -2392,19 +2410,37 @@ function parseAndPreviewCSV(text) {
 
         const rawDate = colIdx.data_urodzenia >= 0 ? (cells[colIdx.data_urodzenia] || '').trim() : '';
         const birthDate = parseImportDate(rawDate);
+        const rawSquad = (cells[colIdx.grupa] || '').trim();
+        const squad = parseImportSquad(rawSquad);
 
         rows.push({
             imie, nazwisko,
             birthDate,
+            squad, rawSquad,
             pozycja: colIdx.pozycja >= 0 ? (cells[colIdx.pozycja] || '').trim() : '',
             numer:   colIdx.numer   >= 0 ? parseInt(cells[colIdx.numer] || '') || null : null,
             poziom:  colIdx.poziom  >= 0 ? (cells[colIdx.poziom] || '').trim() : '',
-            _ok: !!imie && !!nazwisko,
+            _ok: !!imie && !!nazwisko && !!squad,
         });
     }
 
     _importRows = rows.filter(r => r._ok);
     renderImportPreview(rows);
+}
+
+// 2026-10-07: mapuje wartość kolumny "Grupa" z CSV na kod squad (FIRST/SECOND/THIRD) —
+// akceptuje polskie etykiety (Pierwsza/Druga/Trzecia, jak w <select id="ap-grupa">),
+// angielskie, cyfry i cyfry rzymskie. Nierozpoznana wartość → '' (wiersz oznaczony jako błąd).
+const IMPORT_SQUAD_MAP = {
+    'pierwsza': 'FIRST', 'first': 'FIRST', 'i': 'FIRST', '1': 'FIRST',
+    'druga':    'SECOND', 'second': 'SECOND', 'ii': 'SECOND', '2': 'SECOND',
+    'trzecia':  'THIRD', 'third': 'THIRD', 'iii': 'THIRD', '3': 'THIRD',
+};
+function parseImportSquad(raw) {
+    if (!raw) return '';
+    const key = raw.trim().toLowerCase();
+    if (['first', 'second', 'third'].includes(key)) return key.toUpperCase();
+    return IMPORT_SQUAD_MAP[key] || '';
 }
 
 function parseImportDate(raw) {
@@ -2448,17 +2484,19 @@ function renderImportPreview(rows) {
             <th>${_th('druzyna.firstNameRequired','Imię')}</th>
             <th>${_th('druzyna.lastNameRequired','Nazwisko')}</th>
             <th>${_th('druzyna.birthDateLabel','Data ur.')}</th>
+            <th>${_th('druzyna.squadLabel','Grupa')}</th>
             <th>${_th('druzyna.positionLabel','Pozycja')}</th>
             <th>${_th('druzyna.jerseyNumberLabel','Nr')}</th>
         </tr>
         ${preview.map(r => `<tr class="${r._ok ? '' : 'err'}">
             <td>${r.imie || '<em>brak</em>'}</td>
             <td>${r.nazwisko || '<em>brak</em>'}</td>
+            <td>${r.squad ? (typeof t === 'function' ? t('druzyna.squadLabels.' + r.squad) : r.squad) : `<em>${r.rawSquad ? 'nierozpoznana: ' + r.rawSquad : 'brak'}</em>`}</td>
             <td>${r.birthDate || '–'}</td>
             <td>${r.pozycja || '–'}</td>
             <td>${r.numer || '–'}</td>
         </tr>`).join('')}
-        ${rows.length > 8 ? `<tr><td colspan="5" style="color:var(--szary);text-align:center;padding:8px;">… i ${rows.length - 8} więcej</td></tr>` : ''}
+        ${rows.length > 8 ? `<tr><td colspan="6" style="color:var(--szary);text-align:center;padding:8px;">… i ${rows.length - 8} więcej</td></tr>` : ''}
     </table>`;
 
     document.getElementById('import-preview-table').innerHTML = tableHtml;
@@ -2521,11 +2559,12 @@ Potwierdź import.`;
 
             const playerDoc = {
                 playerId: pid,
+                clubId: aktualnyClubId || null,
                 firstName: row.imie,
                 lastName:  row.nazwisko,
                 name:      fullName,
                 birthDate: row.birthDate || '',
-                squad:     '',
+                squad:     row.squad || '',
                 position:  row.pozycja || '',
                 number:    row.numer || null,
                 photoURL:  '',
@@ -2536,6 +2575,10 @@ Potwierdź import.`;
                 guardianData: null,
                 history:   [],
                 teams:     [{ teamId: aktualnyTeamId, status: 'ACTIVE' }],
+                // 2026-10-07: ten sam fix co w zapiszZawodnika() - teamIds dociąga CF
+                // onPlayerWrittenIndex z opóźnieniem, co powodowało że zaimportowani
+                // zawodnicy nie pojawiali się od razu na liście.
+                teamIds:   aktualnyTeamId ? [aktualnyTeamId] : [],
                 coachOnlyData: { coachNotes: '', level: row.poziom || '' },
                 publicData: { goals: 0, assists: 0, matches: 0, attendance: '0/0', yellowCards: 0, redCards: 0, cleanSheets: 0 },
                 userAccountId: null,
