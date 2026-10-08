@@ -16,6 +16,7 @@ const { getMessaging } = require('firebase-admin/messaging');
 const { getAuth } = require('firebase-admin/auth');
 const https = require('https');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const WHATSAPP_TOKEN_SECRET    = defineSecret('WHATSAPP_TOKEN');
 const WHATSAPP_PHONE_ID_SECRET = defineSecret('WHATSAPP_PHONE_ID');
@@ -31,6 +32,10 @@ const APPLE_TEAM_ID     = defineSecret('APPLE_TEAM_ID');
 const APPLE_KEY_ID       = defineSecret('APPLE_KEY_ID');
 const APPLE_PRIVATE_KEY  = defineSecret('APPLE_PRIVATE_KEY'); // cała treść pliku .p8
 const APPLE_CLIENT_ID    = defineSecret('APPLE_CLIENT_ID');   // Services ID używany przy Apple OAuth na WEB
+// 2026-10-08: hasło do skrzynki support@coachay.com (OVH, SMTP ssl0.ovh.net:465) — używane
+// wyłącznie do wysyłki powiadomienia o usunięciu konta (selfDeleteAccount). Host/port/user
+// nie są tajne, więc zaszyte na stałe w _sendSelfDeleteEmail — tajne jest tylko hasło.
+const SMTP_PASSWORD = defineSecret('SMTP_PASSWORD');
 
 initializeApp();
 const db = getFirestore();
@@ -3452,6 +3457,37 @@ function _buildAppleClientSecret(teamId, keyId, clientId, privateKeyPem) {
 
 const APPLE_SECRETS = [APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY, APPLE_CLIENT_ID];
 
+// 2026-10-08: powiadomienie mailowe do support@coachay.com po samodzielnym usunięciu konta
+// (decyzja Rafała) — błąd wysyłki NIE blokuje usunięcia konta, tylko logujemy.
+async function _sendSelfDeleteEmail({ userId, firstName, lastName, clubName, reason }) {
+    try {
+        const transporter = nodemailer.createTransport({
+            host: 'ssl0.ovh.net',
+            port: 465,
+            secure: true,
+            auth: { user: 'support@coachay.com', pass: SMTP_PASSWORD.value() },
+        });
+        const imieNazwisko = `${firstName || ''} ${lastName || ''}`.trim() || '—';
+        const subject = `Usunięto dane usera ${userId}, ${imieNazwisko} z klubu ${clubName || '—'}`;
+        const text = [
+            `Użytkownik: ${imieNazwisko} (ID: ${userId})`,
+            `Klub: ${clubName || '—'}`,
+            `Data usunięcia: ${new Date().toLocaleString('pl-PL')}`,
+            '',
+            'Powód podany przez użytkownika:',
+            reason && reason.trim() ? reason.trim() : '(nie podano)',
+        ].join('\n');
+        await transporter.sendMail({
+            from: '"Coachay" <support@coachay.com>',
+            to: 'support@coachay.com',
+            subject,
+            text,
+        });
+    } catch (e) {
+        console.error(`selfDeleteAccount[${userId}] wysyłka maila do support:`, e);
+    }
+}
+
 // Wywoływane z klienta (index.html) natychmiast po logowaniu/rejestracji przez Apple —
 // zanim authorizationCode przepadnie. Wymienia go na refresh_token u Apple i zapisuje
 // zaszyfrowany w kolekcji `appleTokens` (zero dostępu klienta — patrz firestore.rules).
@@ -3506,11 +3542,15 @@ exports.appleCaptureAuthCode = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_S
     return { success: true };
 });
 
-exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECRETS] }, async (request) => {
+exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECRETS, SMTP_PASSWORD] }, async (request) => {
     if (!request.auth || !request.auth.uid) {
         throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
     }
     const authUid = request.auth.uid;
+    // Powód usunięcia podany przez usera na usunkonto.html — opcjonalny, wolny tekst.
+    const reason = (request.data && typeof request.data.reason === 'string')
+        ? request.data.reason.trim().slice(0, 2000)
+        : '';
 
     const userId = await _resolveSelfDeleteUserId(authUid);
     if (!userId) {
@@ -3691,6 +3731,25 @@ exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECR
         console.error(`selfDeleteAccount[${userId}] krok 7 (Auth deleteUser):`, e);
         throw new HttpsError('internal',
             'Dane zostały usunięte, ale wystąpił błąd przy usuwaniu konta logowania. Skontaktuj się z support@coachay.com.');
+    }
+
+    // ── Powiadomienie mailowe do support@coachay.com (po wszystkim, nie blokuje) ──
+    try {
+        const pierwszyClubId = (activeMine[0] && activeMine[0].clubId) || (myMemberships[0] && myMemberships[0].clubId) || null;
+        let clubName = null;
+        if (pierwszyClubId) {
+            const clubSnap = await db.collection('clubs').doc(pierwszyClubId).get();
+            if (clubSnap.exists) clubName = clubSnap.data().clubName || clubSnap.data().legalName || null;
+        }
+        await _sendSelfDeleteEmail({
+            userId,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            clubName,
+            reason,
+        });
+    } catch (e) {
+        console.error(`selfDeleteAccount[${userId}] przygotowanie maila do support:`, e);
     }
 
     console.log(`selfDeleteAccount OK userId=${userId} authUid=${authUid}`);

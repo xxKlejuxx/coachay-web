@@ -12,7 +12,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 <style>
 :root { --phone-h: 750px; }
 
@@ -136,14 +135,9 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
                 </div>
             </div>
 
-            <button class="rodo-delete-btn" onclick="selfDeleteFlow()" data-i18n="rodo.deleteAccountButton">
+            <button class="rodo-delete-btn" onclick="window.location.href='usunkonto.html'" data-i18n="rodo.deleteAccountButton">
                 🗑️ Usuń moje konto i dane
             </button>
-            <div style="text-align:center;margin-top:10px;">
-                <span style="color:var(--szary);font-size:13px;cursor:pointer;text-decoration:underline;" onclick="requestDelete()" data-i18n="rodo.deleteContactSupportLink">
-                    Problem z usunięciem konta? Napisz do nas
-                </span>
-            </div>
 
         </div><!-- /rodo-wrap -->
 
@@ -168,120 +162,6 @@ window.addEventListener('DOMContentLoaded', () => {
         await initSession();
     });
 });
-
-async function requestDelete() {
-    const msg = typeof t === 'function' ? t('rodo.deleteConfirmBody') : 'Aby usunąć konto i dane, wyślij prośbę na support@coachay.com. Otworzyć klienta email?';
-    const subj = typeof t === 'function' ? t('rodo.deleteMailSubject') : 'Usunięcie konta COACHAY';
-    const vars = {
-        email: (auth && auth.currentUser && auth.currentUser.email) || '—',
-        name: (typeof currentUserData !== 'undefined' && currentUserData && currentUserData.displayName) || '—',
-        userId: (typeof getCurrentUserId === 'function' ? getCurrentUserId() : null) || '—',
-        clubId: (typeof aktualnyClubId !== 'undefined' ? aktualnyClubId : null) || '—',
-        role: (typeof aktualnaRola !== 'undefined' ? aktualnaRola : null) || '—',
-    };
-    const body = typeof t === 'function' ? t('rodo.deleteMailBody', vars) : '';
-    if (await showConfirmSheet(msg)) {
-        window.location.href = 'mailto:support@coachay.com?subject=' + encodeURIComponent(subj) + (body ? '&body=' + encodeURIComponent(body) : '');
-    }
-}
-
-// 2026-10-07: samodzielne, automatyczne usunięcie konta (sync #0113/#0116) — zastępuje
-// wyłącznie-mailowy requestDelete() jako główną ścieżkę; requestDelete() zostaje jako
-// ręczny fallback (link "Problem z usunięciem? Napisz do nas") na wypadek błędu lub
-// sytuacji, których Cloud Function celowo nie obsługuje automatycznie (np. ostatni admin
-// klubu — patrz komunikat blokady poniżej, który przychodzi z backendu).
-// Mapa store -> nazwa czytelna dla usera (wartości store takie jak zapisuje RevenueCat
-// webhook w functions/index.js, pole subscription.store).
-const _STORE_LABELS = {
-    APP_STORE: 'App Store (iPhone)',
-    MAC_APP_STORE: 'App Store (Mac)',
-    PLAY_STORE: 'Google Play',
-    AMAZON: 'Amazon Appstore',
-    STRIPE: 'stronie Coachay (karta/przelew)',
-};
-
-// 2026-10-07 (decyzja Rafała pkt 4): jeśli user ma aktywną, odnawiającą się subskrypcję,
-// TYLKO informujemy przed usunięciem konta — nie blokujemy i nie anulujemy niczego
-// automatycznie (zwroty/anulowanie w RevenueCat poza zakresem). Sprawdzamy: własną
-// subskrypcję indywidualną (users.subscription, P0.5) oraz własną licencję rodzinną
-// (access_rights, source='family_license', P4) — licencja klubowa pomijana, bo to
-// własność klubu, nie osobista subskrypcja usera.
-async function _selfDeleteSubscriptionWarning() {
-    try {
-        const uid = auth.currentUser && auth.currentUser.uid;
-        const userId = typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
-        if (!userId) return null;
-
-        const uDoc = await db.collection('users').doc(userId).get();
-        const sub = uDoc.exists ? (uDoc.data().subscription || {}) : {};
-        if (sub.status === 'ACTIVE' && sub.willRenew === true) {
-            const storeLabel = _STORE_LABELS[sub.store] || 'sklepie, w którym kupiono subskrypcję';
-            return storeLabel;
-        }
-
-        if (uid) {
-            const arSnap = await db.collection('access_rights').where('uid', '==', uid).get();
-            const familyActive = arSnap.docs.some(d => {
-                const a = d.data();
-                return a.source === 'family_license' && a.willRenew !== false;
-            });
-            if (familyActive) return 'sklepie, w którym kupiono licencję rodzinną';
-        }
-    } catch (e) {
-        console.error('Sprawdzanie aktywnej subskrypcji przed usunięciem konta:', e);
-    }
-    return null;
-}
-
-async function selfDeleteFlow() {
-    const storeLabel = await _selfDeleteSubscriptionWarning();
-    if (storeLabel) {
-        await showConfirmSheet(
-            `Uwaga! Posiadasz aktywną, odnawiającą się subskrypcję Coachay. Zanim usuniesz konto, ` +
-            `anuluj jej odnawianie w ustawieniach ${storeLabel}, aby uniknąć kolejnej opłaty — ` +
-            `usunięcie konta w Coachay tego nie robi automatycznie. Po anulowaniu wróć tutaj, ` +
-            `aby trwale usunąć konto.`,
-            { okOnly: true, okLabel: 'Rozumiem' }
-        );
-    }
-
-    const potwierdzenie = await showConfirmSheet(
-        (typeof t === 'function' ? t('rodo.selfDeleteConfirmBody') : null) ||
-        'Usunięcie konta jest NIEODWRACALNE. Twoje dane osobowe (imię, nazwisko, email, telefon) ' +
-        'zostaną trwale zanonimizowane, utracisz dostęp do konta, a wszystkie Twoje powiązania ' +
-        '(członkostwa w klubach/drużynach) zostaną zakończone. Historia meczów/statystyk zawodników ' +
-        'pozostaje zachowana dla drużyny. Czy na pewno chcesz kontynuować?',
-        { tak: (typeof t === 'function' ? t('rodo.selfDeleteConfirmBtn') : null) || 'Usuń moje konto', nie: (typeof t === 'function' ? t('cancel') : null) || 'Anuluj' }
-    );
-    if (!potwierdzenie) return;
-
-    const btn = document.querySelector('.rodo-delete-btn');
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
-
-    try {
-        const fx = firebase.app().functions('europe-west1');
-        const call = fx.httpsCallable('selfDeleteAccount');
-        await call();
-
-        await showConfirmSheet(
-            (typeof t === 'function' ? t('rodo.selfDeleteDoneBody') : null) ||
-            'Konto zostało usunięte. Dziękujemy za korzystanie z Coachay.',
-            { okOnly: true, okLabel: (typeof t === 'function' ? t('rodo.selfDeleteDoneBtn') : null) || 'Rozumiem' }
-        );
-
-        try { localStorage.clear(); } catch (e) {}
-        try { await auth.signOut(); } catch (e) {}
-        window.location.href = 'index.html';
-    } catch (e) {
-        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-        const kod = e && e.code;
-        if (kod === 'functions/failed-precondition') {
-            await showConfirmSheet(e.message, { okOnly: true, okLabel: 'Rozumiem' });
-        } else {
-            pokazKomunikat('Błąd usuwania konta: ' + (e && e.message ? e.message : e), 'blad');
-        }
-    }
-}
 
 if (typeof onI18nReady === 'function') {
     onI18nReady(renderRodoBodies);
