@@ -517,12 +517,10 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
   .pitch-inner { grid-template-columns: 1fr; gap: 40px; }
   .pitch-right { display: none; }
 }
-/* === MOBILE – brak logowania === */
+/* === MOBILE: logowanie dostępne (potrzebne dla usuwania konta przez www, patrz usunkonto.html) === */
 @media (max-width: 768px) {
-  .btn-login { display: none !important; }
   .hero-actions { display: none !important; }
   .cta-section .btn-cta { display: none !important; }
-  .mobile-notice { display: flex !important; }
 }
 .mobile-notice {
   display: none;
@@ -961,11 +959,32 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
 </div>
 
 <script>
+// Dokąd przekierować po zalogowaniu: domyślnie start.html, ale jeśli strona została otwarta
+// z ?redirect=<dozwolony-cel> (np. usunkonto.html, gdy user próbował usunąć konto przez www
+// bez bycia zalogowanym), to tam. Whitelist, żeby nie dało się zrobić open-redirect przez
+// dowolny parametr w URL.
+var _REDIRECT_WHITELIST = ['usunkonto.html'];
+function _goAfterLogin() {
+    var target = sessionStorage.getItem('authRedirectTarget');
+    sessionStorage.removeItem('authRedirectTarget');
+    window.location.replace((target && _REDIRECT_WHITELIST.includes(target)) ? target : 'start.html');
+}
+
 // Redirect zalogowanego usera
 (function () {
+    var params = new URLSearchParams(window.location.search);
+    var redirectParam = params.get('redirect');
+    if (redirectParam) sessionStorage.setItem('authRedirectTarget', redirectParam);
+
     var uid = localStorage.getItem('currentUserId');
     var demo = localStorage.getItem('demoMode');
-    if (uid || demo === 'true') window.location.replace('start.html');
+    if (uid || demo === 'true') { _goAfterLogin(); return; }
+
+    // Niezalogowany user przyszedł tu, żeby się zalogować i dokończyć usuwanie konta —
+    // od razu otwórz panel logowania, żeby nie musiał szukać przycisku na landing page.
+    if (redirectParam === 'usunkonto.html') {
+        document.addEventListener('DOMContentLoaded', function () { openAuthPanel(); });
+    }
 })();
 
 var _PRICES = {
@@ -1361,7 +1380,6 @@ function isMobile() {
     return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 }
 function openAuthPanel() {
-    if (isMobile()) return;
     document.getElementById('auth-overlay').classList.add('open');
     document.getElementById('auth-drawer').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -1432,7 +1450,7 @@ async function _captureAppleAuthCodeIfPresent(result) {
             }
             localStorage.removeItem('selectedMembershipId'); localStorage.removeItem('demoMode'); localStorage.removeItem('demoRole');
             localStorage.setItem('currentUserId', userCode); sessionStorage.setItem('showSplash','1');
-            window.location.href = 'start.html';
+            _goAfterLogin();
 
         } else if (intent === 'register') {
             var ic = JSON.parse(localStorage.getItem('authRedirectInviteCode') || 'null');
@@ -1565,7 +1583,7 @@ async function doLogin() {
         localStorage.removeItem('demoMode'); localStorage.removeItem('demoRole');
         localStorage.setItem('currentUserId', userCode);
         sessionStorage.setItem('showSplash','1');
-        window.location.href = 'start.html';
+        _goAfterLogin();
     } catch(e) { showLoginError(mapAuthError(e.code)); setLoginLoading(false); }
 }
 
@@ -1605,7 +1623,7 @@ async function doLoginPhoneConfirm() {
         localStorage.removeItem('demoMode'); localStorage.removeItem('demoRole');
         localStorage.setItem('currentUserId', userCode);
         sessionStorage.setItem('showSplash','1');
-        window.location.href = 'start.html';
+        _goAfterLogin();
     } catch(e) { showLoginError(mapAuthError(e.code)); setLoginLoading(false); }
 }
 
