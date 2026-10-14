@@ -17,6 +17,15 @@
     const SUPPORTED = ['pl', 'en'];
     const LOCALE_V  = '20261014a'; // 2026-10-14: bump po dodaniu blocked.deleteAccountLink (link usun konto na ekranie blokady)
 
+    /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
+       pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */
+    try {
+        var _urlLang = new URLSearchParams(window.location.search).get('lang');
+        if (_urlLang && SUPPORTED.includes(_urlLang)) {
+            localStorage.setItem('coachay_lang', _urlLang);
+        }
+    } catch (e) {}
+
     let _lang = localStorage.getItem('coachay_lang') || 'pl';
     if (!SUPPORTED.includes(_lang)) _lang = 'pl';
 

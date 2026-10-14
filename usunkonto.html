@@ -6,7 +6,7 @@
 <title>COACHAY — Usuń konto</title>
 <link rel="stylesheet" href="_global.css?v=20260802d">
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20261012a"></script>
+<script src="_i18n.js?v=20261014b"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
@@ -32,6 +32,20 @@
 .rodo-header-title {
     font-family: var(--font-d); font-size: 23px; font-weight: 800; color: var(--bialy);
 }
+.rodo-header .lang-toggle {
+    margin-left: auto; display: flex; align-items: center;
+    background: var(--tlo-karta); border: 1px solid var(--border2);
+    border-radius: 7px; padding: 2px;
+}
+.rodo-header .lang-toggle button {
+    padding: 4px 11px;
+    font-size: 12px; font-weight: 800; letter-spacing: 0.04em;
+    color: var(--szary);
+    border-radius: 5px;
+    transition: all 0.12s;
+}
+.rodo-header .lang-toggle button.lang-active { background: var(--bialy); color: #000; }
+.rodo-header .lang-toggle button:hover:not(.lang-active) { color: var(--bialy); }
 body:has(#app-sidebar) .rodo-header { display: none; }
 
 .rodo-page-title { display: none; font-family: var(--font-d); font-size: 27px; font-weight: 800; color: var(--bialy); }
@@ -138,6 +152,10 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
         <div class="rodo-header">
             <button class="rodo-back" onclick="history.back()">←</button>
             <div class="rodo-header-title" data-i18n="rodo.deleteAccountButton">Usuń konto</div>
+            <div class="lang-toggle">
+                <button data-lang="pl" onclick="setLang('pl')">PL</button>
+                <button data-lang="en" onclick="setLang('en')">EN</button>
+            </div>
         </div>
 
         <div class="rodo-wrap">
