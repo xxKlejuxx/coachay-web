@@ -3477,7 +3477,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const _PIN_EXEMPT   = ['pin.html', 'index.html', 'blocked.html', 'platnosci-banner.html'];
 const _RODO_EXEMPT  = ['index.html', 'rodo-consent.html', 'pin.html', 'blocked.html', 'platnosci-banner.html'];
-const _PAY_EXEMPT   = [..._RODO_EXEMPT, 'platnosci.html', 'rodo.html'];
+const _PAY_EXEMPT   = [..._RODO_EXEMPT, 'platnosci.html', 'rodo.html', 'usunkonto.html'];
 const _PIN_TIMEOUT  = 5 * 60 * 1000; // 5 min
 
 async function sha256(text) {
