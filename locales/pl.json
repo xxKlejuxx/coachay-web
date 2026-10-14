@@ -1545,7 +1545,8 @@
   "poolFullTitle": "Brak wolnych miejsc w klubie",
   "poolFullBody": "Klub wykorzystał wszystkie miejsca licencji. Kup własną licencję, aby korzystać z Coachay.",
   "poolFullContactTitle": "lub skontaktuj się z trenerem",
-  "poolFullContactBody": "Trener może dokupić dodatkowe miejsca licencji dla całego klubu."
+  "poolFullContactBody": "Trener może dokupić dodatkowe miejsca licencji dla całego klubu.",
+  "deleteAccountLink": "🗑️ Usuń moje konto i dane"
  },
  "consent": {
   "headerTitle": "Zanim przejdziesz dalej",

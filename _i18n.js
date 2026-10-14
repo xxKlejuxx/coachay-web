@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261012c'; // 2026-10-12: bump po dodaniu rodo.deleteInfo* i polityka pkt 4.8 (sync #0119)
+    const LOCALE_V  = '20261014a'; // 2026-10-14: bump po dodaniu blocked.deleteAccountLink (link usun konto na ekranie blokady)
 
     let _lang = localStorage.getItem('coachay_lang') || 'pl';
     if (!SUPPORTED.includes(_lang)) _lang = 'pl';

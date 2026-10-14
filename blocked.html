@@ -6,7 +6,7 @@
 <title>COACHAY — Brak dostępu</title>
 <link rel="stylesheet" href="_global.css?v=20260826e">
 <link rel="stylesheet" href="_desktop.css?v=20260826e">
-<script src="_i18n.js?v=20261007c"></script>
+<script src="_i18n.js?v=20261014a"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -159,6 +159,14 @@ body:has(#app-sidebar) .blocked-ctx-ov { top: 0; }
             <div class="dev-card-body" id="dev-purchase-body">
                 <div class="dev-msg" id="dev-msg"></div>
             </div>
+        </div>
+
+        <!-- Usuń konto — dostępne nawet gdy dostęp do appki jest zablokowany, bo user jest
+             zalogowany (Firebase Auth), więc usunkonto.html zadziała normalnie. -->
+        <div style="text-align:center;margin:16px 16px 0;">
+            <span style="color:var(--szary);font-size:12px;cursor:pointer;text-decoration:underline;" onclick="window.location.href='usunkonto.html'" data-i18n="blocked.deleteAccountLink">
+                🗑️ Usuń moje konto i dane
+            </span>
         </div>
 
     </div><!-- /screen-body -->
