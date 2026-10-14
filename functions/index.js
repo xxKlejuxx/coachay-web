@@ -553,7 +553,9 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
                         if (!doc.exists) continue;
                         const token = (doc.data().pushToken || '').trim();
                         if (token && Expo.isExpoPushToken(token)) {
-                            messages.push({ to: token, sound: null, _contentAvailable: true, data: pushData });
+                            // TTL 3h (2026-10-15) — cichy push live/wynik jest bezuzyteczny
+                            // po dluzszej przerwie (np. telefon offline), mecz dawno sie skonczy.
+                            messages.push({ to: token, sound: null, _contentAvailable: true, data: pushData, ttl: 3 * 3600 });
                         }
                     }
                     if (messages.length > 0) {
@@ -1108,6 +1110,43 @@ exports.onMembershipUpdated = onDocumentUpdated('memberships/{membershipId}', as
 const { Expo } = require('expo-server-sdk');
 const expo = new Expo(); // v2
 
+/* ═══════════════════════════════════════════════════
+   TTL / expiration dla pushy (2026-10-15, sync #0124)
+   Limit nakladamy TYLKO tam, gdzie spoznienie robi z pusha cos faktycznie
+   blednego — powiadomienie o wydarzeniu (mecz/trening), ktore juz minelo.
+   Czat/zadania/info/licencja CELOWO zostaja bez limitu (decyzja Rafala,
+   2026-10-15): spozniona wiadomosc nadal jest prawdziwa i nieprzeczytana,
+   obcinanie jej tylko wycina sam push — dane i tak zostaja w appce.
+   ═══════════════════════════════════════════════════ */
+const PUSH_TTL_EVENT_FALLBACK = 24 * 3600; // eventowe, gdy nie da się ustalić startu wydarzenia
+const PUSH_TTL_BADGE       = 24 * 3600; // sam licznik badge — krotki TTL wystarczy
+
+// Unix seconds (dla Expo `expiration`), z minimalnym zapasem 60s żeby
+// nie odrzucić pusha od razu, gdy wydarzenie już się właśnie zaczyna.
+function _expirationFromMs(ms) {
+    const nowSec = Math.floor(Date.now() / 1000);
+    const targetSec = Math.floor((typeof ms === 'number' && !isNaN(ms) ? ms : Date.now()) / 1000);
+    return Math.max(nowSec + 60, targetSec);
+}
+
+// Dla powiadomien powiazanych z wydarzeniem (referenceType === 'event') ustala czas
+// jego startu (strefa Europe/Warsaw, patrz _warsawLocalToMs) i zwraca unix seconds do
+// uzycia jako `expiration`. Zwraca null dla pozostalych typow (czat/zadania/info/licencja) —
+// wywolujacy uzyje wtedy domyslnego TTL.
+async function _eventExpirationForNotif(notif) {
+    if (notif.referenceType !== 'event' || !notif.referenceId) return null;
+    try {
+        const evSnap = await db.collection('events').doc(notif.referenceId).get();
+        if (!evSnap.exists) return null;
+        const ev = evSnap.data();
+        if (!ev.date) return null;
+        return _expirationFromMs(_warsawLocalToMs(ev.date, ev.timeFrom || '23:59'));
+    } catch (e) {
+        console.error('_eventExpirationForNotif:', e);
+        return null;
+    }
+}
+
 // Badge = suma z users/{userId}.badgeCounts (aktualizowanej przez triggery)
 async function calcBadgeCount(userId) {
     const userDoc = await db.collection('users').doc(userId).get();
@@ -1118,19 +1157,25 @@ async function calcBadgeCount(userId) {
 
 // Wysyła cichy push EVENT_REMINDER (bez tytułu/treści) — appka mobilna
 // sama dociąga event po referenceId i buduje lokalne powiadomienie
-async function sendDirectPush(userId, eventId) {
+// eventStartMs (opcjonalnie, ms) — gdy wołający już zna czas startu wydarzenia (tak jak
+// sendEventReminders), użyj go do expiration zamiast dociągać event ponownie z Firestore.
+async function sendDirectPush(userId, eventId, eventStartMs) {
     try {
         const userDoc = await db.collection('users').doc(userId).get();
         if (!userDoc.exists) return;
         const userData = userDoc.data();
         const expoToken = (userData.pushToken || '').trim() || null;
         const fcmToken  = (userData.fcmToken  || '').trim() || null;
+        const expirationSec = typeof eventStartMs === 'number'
+            ? _expirationFromMs(eventStartMs)
+            : Math.floor(Date.now() / 1000) + PUSH_TTL_EVENT_FALLBACK;
         if (expoToken && Expo.isExpoPushToken(expoToken)) {
             const tickets = await expo.sendPushNotificationsAsync([{
                 to: expoToken,
                 sound: null,
                 _contentAvailable: true,
                 priority: 'high',
+                expiration: expirationSec,
                 data: { type: 'EVENT_REMINDER', referenceId: eventId }
             }]);
             // 2026-09-24: diagnostyka — status odpowiedzi Expo (ok / error + powód, np. DeviceNotRegistered)
@@ -1138,9 +1183,11 @@ async function sendDirectPush(userId, eventId) {
             await _recordPushTicket(tk, { userId, type: 'EVENT_REMINDER', referenceId: eventId, token: expoToken });
             console.log(`EVENT_REMINDER → ${userId} expo ${expoToken.slice(0, 30)}… ticket: ${tk.status}${tk.id ? ' id=' + tk.id : ''}${tk.message ? ' msg=' + tk.message : ''}${tk.details?.error ? ' err=' + tk.details.error : ''}`);
         } else if (fcmToken) {
+            const ttlSec = Math.max(60, expirationSec - Math.floor(Date.now() / 1000));
             await getMessaging().send({
                 token: fcmToken,
-                data: { type: 'EVENT_REMINDER', referenceId: eventId }
+                data: { type: 'EVENT_REMINDER', referenceId: eventId },
+                webpush: { headers: { TTL: String(ttlSec) } }
             });
         }
     } catch (e) {
@@ -1166,6 +1213,7 @@ async function sendBadgePush(userId) {
             badge: total,
             sound: null,
             _contentAvailable: true,
+            ttl: PUSH_TTL_BADGE,
             data: { type: 'BADGE_UPDATE', events, tasks, messages },
         }]);
         await _recordPushTicket(bTickets?.[0], { userId, type: 'BADGE_UPDATE', referenceId: null, token: expoToken });
@@ -1200,14 +1248,24 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
             notificationId: event.params.notificationId
         };
 
+        // TTL/expiration (2026-10-15, sync #0124) — tylko tam, gdzie spóźnienie robi z pusha
+        // coś FAKTYCZNIE BŁĘDNEGO: powiadomienie o wydarzeniu, które już minęło. Limit = godzina
+        // startu wydarzenia (fallback 24h gdy nie da się ustalić). Czat/zadania/info/licencja —
+        // BEZ limitu: spóźniona wiadomość nadal jest prawdziwa i nieprzeczytana, obcinanie jej
+        // tylko wycina push, a dane i tak zostają na liście w appce (decyzja Rafała, 2026-10-15).
+        const nowSec = Math.floor(Date.now() / 1000);
+        let expirationSec = await _eventExpirationForNotif(notif);
+        if (expirationSec === null && notif.referenceType === 'event') {
+            expirationSec = nowSec + PUSH_TTL_EVENT_FALLBACK;
+        }
+
         // --- Expo push (natywna aplikacja iOS/Android) ---
         const isValidExpoToken = expoToken && Expo.isExpoPushToken(expoToken);
         if (isValidExpoToken) {
             const badgeCount = await calcBadgeCount(notif.userId);
-            const chunks = expo.chunkPushNotifications([{
-                to: expoToken, sound: 'default', badge: badgeCount,
-                title, body, data: notifData
-            }]);
+            const msg = { to: expoToken, sound: 'default', badge: badgeCount, title, body, data: notifData };
+            if (expirationSec !== null) msg.expiration = expirationSec;
+            const chunks = expo.chunkPushNotifications([msg]);
             for (const chunk of chunks) {
                 const nTickets = await expo.sendPushNotificationsAsync(chunk);
                 await _recordPushTicket(nTickets?.[0], { userId: notif.userId, type: notif.type || 'NOTIFICATION', referenceId: notif.referenceId || null, token: expoToken });
@@ -1217,11 +1275,11 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
 
         // --- FCM push (web) — tylko jeśli brak Expo tokenu, żeby nie dublować na iOS ---
         if (fcmToken && !isValidExpoToken) {
-            await getMessaging().send({
-                token: fcmToken,
-                notification: { title, body },
-                data: notifData
-            });
+            const fcmMsg = { token: fcmToken, notification: { title, body }, data: notifData };
+            if (expirationSec !== null) {
+                fcmMsg.webpush = { headers: { TTL: String(Math.max(60, expirationSec - nowSec)) } };
+            }
+            await getMessaging().send(fcmMsg);
             console.log(`FCM push wyslany do ${notif.userId}`);
         }
 
@@ -1941,7 +1999,7 @@ exports.sendEventReminders = onSchedule({ schedule: '5,20,35,50 * * * *', timeZo
             )];
 
             for (const userId of userIds) {
-                await sendDirectPush(userId, ev.id);
+                await sendDirectPush(userId, ev.id, evTime);
             }
 
             console.log(`✅ Reminder: ${ev.id} (${ev.date} ${ev.timeFrom} PL = ${new Date(evTime).toISOString()}) → cichy push ${new Date(now).toISOString()} do ${userIds.length} users, rh=${rh}h`);
