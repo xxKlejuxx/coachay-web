@@ -281,6 +281,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // admin_broadcasts — kolejka push-ogłoszeń od admina platformy (2026-10-15).
+    // Świadomie BEZ create/update/delete z klienta — wszystko (wysyłka, planowanie,
+    // anulowanie) idzie przez callable Cloud Functions (adminSendBroadcast/
+    // adminCancelBroadcast) z Admin SDK, które same sprawdzają isPlatformAdmin
+    // server-side. Powód: dokładnie ta sama klasa "poluzowanie reguły dla
+    // notifications" już raz spowodowała wielodniowego buga w produkcji (patrz
+    // komentarz przy /notifications poniżej) — tu nie powtarzamy tego błędu.
+    // Read tylko do panelu historii w support.html.
+    match /admin_broadcasts/{broadcastId} {
+      allow read: if isVerified() && isPlatformAdmin();
+      allow write: if false;
+    }
+
     // temp — WBREW NAZWIE: archiwum zaszyfrowanych (AES-256-GCM) danych osobowych usuniętych
     // kont (selfDeleteAccount, 2026-10-07, decyzja Rafała o celowo nijakiej nazwie kolekcji).
     // Zero dostępu klienta w obie strony — zapis/odczyt wyłącznie przez Cloud Function

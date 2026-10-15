@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 <style>
 .screen-body {
     flex: 1; display: flex; flex-direction: column;
@@ -332,6 +333,48 @@
     background: rgba(59,130,246,0.12); color: #60A5FA;
     border: 1px solid rgba(59,130,246,0.25);
 }
+
+/* === Broadcast push (2026-10-15) === */
+.bcast-card {
+    background: var(--tlo-karta); border: 1.5px solid var(--border);
+    border-radius: var(--r); padding: 20px 22px; margin-bottom: 14px;
+}
+.bcast-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.bcast-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.bcast-chip {
+    padding: 7px 13px; border-radius: var(--r-pill); border: 1.5px solid var(--border2);
+    background: var(--tlo-karta2); color: var(--szary-j);
+    font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.15s;
+}
+.bcast-chip.selected { border-color: var(--akcent); color: var(--akcent); background: rgba(59,130,246,0.08); }
+.bcast-send-btn {
+    padding: 12px 20px; border-radius: 12px; background: var(--akcent); border: none;
+    color: #fff; font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 14px;
+}
+.bcast-send-btn:disabled { opacity: 0.5; cursor: default; }
+.bcast-msg { margin-top: 10px; font-size: 12px; font-weight: 700; display: none; }
+.bcast-msg.ok  { color: var(--sukces); display: block; }
+.bcast-msg.err { color: var(--blad);   display: block; }
+.bcast-hist-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 0;
+    border-bottom: 1px solid var(--border2); font-size: 12px;
+}
+.bcast-hist-item:last-child { border-bottom: none; }
+.bcast-hist-title { font-weight: 800; color: var(--bialy); flex: 1; }
+.bcast-hist-meta { color: var(--szary); font-size: 11px; }
+.bcast-hist-status {
+    padding: 3px 9px; border-radius: var(--r-pill); font-size: 9px; font-weight: 900;
+    letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+}
+.bcast-hist-status.sent      { background: rgba(34,197,94,0.12);  color: var(--sukces); }
+.bcast-hist-status.pending   { background: rgba(251,191,36,0.12); color: var(--warn); }
+.bcast-hist-status.sending   { background: rgba(59,130,246,0.12); color: #60A5FA; }
+.bcast-hist-status.cancelled,
+.bcast-hist-status.failed    { background: rgba(239,68,68,0.12);  color: var(--blad); }
+.bcast-hist-cancel {
+    padding: 4px 10px; border-radius: var(--r-pill); border: 1px solid var(--border2);
+    background: transparent; color: var(--szary); font-size: 10px; font-weight: 800; cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -492,6 +535,62 @@
             </div>
         </div>
 
+        <!-- Powiadomienie push od admina (broadcast) — 2026-10-15 -->
+        <div class="s-label">Powiadomienie push (admin)</div>
+        <div class="bcast-card">
+            <div class="sup-sheet-field">
+                <div class="sup-sheet-label">Temat</div>
+                <input type="text" id="bcast-title" class="sup-sheet-input" maxlength="200" placeholder="np. Nowa funkcja w aplikacji">
+            </div>
+            <div class="sup-sheet-field">
+                <div class="sup-sheet-label">Treść</div>
+                <textarea id="bcast-body" class="sup-sheet-input" maxlength="1000" rows="3" style="resize:vertical" placeholder="Treść powiadomienia..."></textarea>
+            </div>
+
+            <div class="sup-sheet-label" style="margin-top:4px">Odbiorcy</div>
+            <div class="bcast-row">
+                <button class="bcast-chip selected" id="bcast-scope-all" onclick="bcastSetScope('all')">Wszyscy</button>
+                <button class="bcast-chip" id="bcast-scope-filter" onclick="bcastSetScope('filter')">Wybierz kluby/role</button>
+                <button class="bcast-chip" id="bcast-scope-user" onclick="bcastSetScope('user')">Konkretny user</button>
+            </div>
+
+            <div id="bcast-filter-block" style="display:none; margin-top:12px">
+                <div class="sup-sheet-label">Kluby (puste = wszystkie)</div>
+                <div class="bcast-chips" id="bcast-clubs-chips"></div>
+                <div class="sup-sheet-label" style="margin-top:12px">Role (puste = wszystkie)</div>
+                <div class="bcast-chips" id="bcast-roles-chips">
+                    <button class="bcast-chip" data-role="TRENER_GLOWNY" onclick="bcastToggleRole(this)">Trener główny</button>
+                    <button class="bcast-chip" data-role="TRENER_POMOCNICZY" onclick="bcastToggleRole(this)">Trener pomocniczy</button>
+                    <button class="bcast-chip" data-role="RODZIC" onclick="bcastToggleRole(this)">Rodzic</button>
+                    <button class="bcast-chip" data-role="ZAWODNIK" onclick="bcastToggleRole(this)">Zawodnik</button>
+                    <button class="bcast-chip" data-role="KIBIC" onclick="bcastToggleRole(this)">Kibic</button>
+                </div>
+            </div>
+
+            <div id="bcast-user-block" style="display:none; margin-top:12px">
+                <div class="sup-sheet-field" style="margin-bottom:0">
+                    <div class="sup-sheet-label">userId</div>
+                    <input type="text" id="bcast-user-id" class="sup-sheet-input" placeholder="np. user_TRENER_...">
+                </div>
+            </div>
+
+            <div id="bcast-estimate" style="font-size:11px;color:var(--szary);margin-top:10px"></div>
+
+            <div class="sup-sheet-label" style="margin-top:14px">Termin</div>
+            <div class="bcast-row">
+                <button class="bcast-chip selected" id="bcast-when-now" onclick="bcastSetWhen('now')">Wyślij teraz</button>
+                <button class="bcast-chip" id="bcast-when-later" onclick="bcastSetWhen('later')">Zaplanuj</button>
+                <input type="datetime-local" id="bcast-schedule-at" class="sup-sheet-input" style="display:none; max-width:220px">
+            </div>
+
+            <button class="bcast-send-btn" id="bcast-send-btn" onclick="bcastSend()">Wyślij</button>
+            <div class="bcast-msg" id="bcast-msg"></div>
+        </div>
+
+        <!-- Historia broadcastów -->
+        <div class="s-label">Historia powiadomień push</div>
+        <div id="bcast-history" style="font-size:12px;color:var(--szary);padding:8px 0">Ładowanie...</div>
+
     </div><!-- /sup-container -->
     </div><!-- /screen-body -->
 
@@ -502,6 +601,7 @@
 =================================================== */
 
 let allClubs    = [];   // { id, name, color, memberCount, teamCount, licenseStatus, licenseExpiry }
+let allMemberships = []; // surowe dane memberships (do szacowania odbiorców broadcastu)
 let sheetClubId = '';
 let sheetPlanSelected = 'club_klub';
 
@@ -564,6 +664,7 @@ window.addEventListener('DOMContentLoaded', () => {
             checkImpersonationBanner();
             loadClubs();
             loadUsageMetrics();
+            bcastLoadHistory();
         } else {
             window.location.href = 'index.html';
         }
@@ -609,6 +710,7 @@ async function loadClubs() {
                 membersByClub[cid].add(userId);
             }
         });
+        allMemberships = membSnap.docs.map(d => d.data());
 
         allClubs = [];
         let active = 0, trial = 0, expired = 0;
@@ -675,6 +777,8 @@ async function loadClubs() {
 
         allClubs.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
         renderClubs(allClubs);
+        bcastRenderClubChips();
+        bcastEstimateRecipients();
     } catch (e) {
         console.error('loadClubs:', e);
         document.getElementById('sup-clubs').innerHTML =
@@ -1515,6 +1619,178 @@ async function loadUsageMetrics() {
         console.error('loadUsageMetrics:', e);
         document.getElementById('usage-loading').textContent = 'Błąd wczytywania danych zużycia.';
     }
+}
+
+/* ===================================================
+   Broadcast push od admina (2026-10-15)
+   Całość (rozwiązanie odbiorców + zapis notifications) po stronie Cloud Function
+   (adminSendBroadcast/adminCancelBroadcast) — żadnego bezpośredniego zapisu z klienta.
+=================================================== */
+
+let bcastScope = 'all';   // 'all' | 'filter' | 'user'
+let bcastWhen  = 'now';   // 'now' | 'later'
+let bcastSelectedClubs = new Set();
+let bcastSelectedRoles = new Set();
+
+function bcastSetScope(scope) {
+    bcastScope = scope;
+    ['all', 'filter', 'user'].forEach(s => {
+        document.getElementById(`bcast-scope-${s}`).classList.toggle('selected', s === scope);
+    });
+    document.getElementById('bcast-filter-block').style.display = scope === 'filter' ? 'block' : 'none';
+    document.getElementById('bcast-user-block').style.display   = scope === 'user'   ? 'block' : 'none';
+    bcastEstimateRecipients();
+}
+
+function bcastSetWhen(when) {
+    bcastWhen = when;
+    document.getElementById('bcast-when-now').classList.toggle('selected', when === 'now');
+    document.getElementById('bcast-when-later').classList.toggle('selected', when === 'later');
+    document.getElementById('bcast-schedule-at').style.display = when === 'later' ? '' : 'none';
+    document.getElementById('bcast-send-btn').textContent = when === 'later' ? 'Zaplanuj' : 'Wyślij';
+}
+
+function bcastRenderClubChips() {
+    const wrap = document.getElementById('bcast-clubs-chips');
+    wrap.innerHTML = allClubs.map(c =>
+        `<button class="bcast-chip" data-club="${c.id}" onclick="bcastToggleClub(this)">${c.name}</button>`
+    ).join('');
+}
+
+function bcastToggleClub(btn) {
+    const id = btn.dataset.club;
+    if (bcastSelectedClubs.has(id)) { bcastSelectedClubs.delete(id); btn.classList.remove('selected'); }
+    else { bcastSelectedClubs.add(id); btn.classList.add('selected'); }
+    bcastEstimateRecipients();
+}
+
+function bcastToggleRole(btn) {
+    const role = btn.dataset.role;
+    if (bcastSelectedRoles.has(role)) { bcastSelectedRoles.delete(role); btn.classList.remove('selected'); }
+    else { bcastSelectedRoles.add(role); btn.classList.add('selected'); }
+    bcastEstimateRecipients();
+}
+
+// Szacowanie liczby odbiorców — WYŁĄCZNIE do podglądu w UI, liczone lokalnie z już
+// załadowanej listy memberships. Autorytatywne liczenie robi dopiero Cloud Function.
+function bcastEstimateRecipients() {
+    const el = document.getElementById('bcast-estimate');
+    if (bcastScope === 'user') { el.textContent = ''; return; }
+    if (bcastScope === 'all') {
+        const ids = new Set(allMemberships.filter(m => m.userId && ['active','ACTIVE','grace','GRACE'].includes(m.status)).map(m => m.userId));
+        el.textContent = `Szacowana liczba odbiorców: ${ids.size}`;
+        return;
+    }
+    const clubSet = bcastSelectedClubs.size ? bcastSelectedClubs : null;
+    const roleSet = bcastSelectedRoles.size ? bcastSelectedRoles : null;
+    const ids = new Set();
+    allMemberships.forEach(m => {
+        if (!m.userId || !['active','ACTIVE','grace','GRACE'].includes(m.status)) return;
+        if (clubSet && !clubSet.has(m.clubId)) return;
+        if (roleSet && !roleSet.has(m.role)) return;
+        ids.add(m.userId);
+    });
+    el.textContent = `Szacowana liczba odbiorców: ${ids.size}`;
+}
+
+async function bcastSend() {
+    const btn = document.getElementById('bcast-send-btn');
+    const msg = document.getElementById('bcast-msg');
+    msg.className = 'bcast-msg';
+    msg.textContent = '';
+
+    const title = document.getElementById('bcast-title').value.trim();
+    const body  = document.getElementById('bcast-body').value.trim();
+    if (!title || !body) {
+        msg.className = 'bcast-msg err';
+        msg.textContent = 'Temat i treść są wymagane.';
+        return;
+    }
+
+    const payload = { title, body };
+    if (bcastScope === 'user') {
+        const uid = document.getElementById('bcast-user-id').value.trim();
+        if (!uid) { msg.className = 'bcast-msg err'; msg.textContent = 'Podaj userId.'; return; }
+        payload.targetUserId = uid;
+    } else if (bcastScope === 'filter') {
+        payload.clubIds = [...bcastSelectedClubs];
+        payload.roles   = [...bcastSelectedRoles];
+    }
+
+    if (bcastWhen === 'later') {
+        const val = document.getElementById('bcast-schedule-at').value;
+        if (!val) { msg.className = 'bcast-msg err'; msg.textContent = 'Podaj termin wysyłki.'; return; }
+        payload.scheduledAt = new Date(val).toISOString();
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Wysyłanie...';
+    try {
+        const fx = firebase.app().functions('europe-west1');
+        const call = fx.httpsCallable('adminSendBroadcast');
+        const res = await call(payload);
+        msg.className = 'bcast-msg ok';
+        msg.textContent = res.data.scheduled
+            ? `Zaplanowano na ${new Date(res.data.scheduledAt).toLocaleString('pl-PL')}.`
+            : `Wysłano do ${res.data.recipientCount} odbiorców.`;
+        document.getElementById('bcast-title').value = '';
+        document.getElementById('bcast-body').value = '';
+        bcastLoadHistory();
+    } catch (e) {
+        console.error('bcastSend:', e);
+        msg.className = 'bcast-msg err';
+        msg.textContent = 'Błąd: ' + (e.message || e);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = bcastWhen === 'later' ? 'Zaplanuj' : 'Wyślij';
+    }
+}
+
+async function bcastLoadHistory() {
+    const el = document.getElementById('bcast-history');
+    try {
+        const snap = await db.collection('admin_broadcasts').orderBy('createdAt', 'desc').limit(20).get();
+        if (snap.empty) {
+            el.textContent = 'Brak wysłanych powiadomień.';
+            return;
+        }
+        el.innerHTML = snap.docs.map(doc => {
+            const b = doc.data();
+            const status = b.status || 'pending';
+            const when = b.sentAt?.toDate?.()
+                ? b.sentAt.toDate().toLocaleString('pl-PL')
+                : (b.scheduledAt ? new Date(b.scheduledAt).toLocaleString('pl-PL') : '');
+            const recipients = (b.recipientCount != null) ? `${b.recipientCount} odbiorców` : '';
+            const cancelBtn = status === 'pending'
+                ? `<button class="bcast-hist-cancel" onclick="bcastCancel('${doc.id}')">Anuluj</button>`
+                : '';
+            return `<div class="bcast-hist-item">
+                <span class="bcast-hist-status ${status}">${status}</span>
+                <span class="bcast-hist-title">${_escHtml(b.title || '')}</span>
+                <span class="bcast-hist-meta">${when}${recipients ? ' · ' + recipients : ''}</span>
+                ${cancelBtn}
+            </div>`;
+        }).join('');
+    } catch (e) {
+        console.error('bcastLoadHistory:', e);
+        el.textContent = 'Błąd wczytywania historii.';
+    }
+}
+
+async function bcastCancel(broadcastId) {
+    try {
+        const fx = firebase.app().functions('europe-west1');
+        const call = fx.httpsCallable('adminCancelBroadcast');
+        await call({ broadcastId });
+        bcastLoadHistory();
+    } catch (e) {
+        console.error('bcastCancel:', e);
+        alert('Błąd anulowania: ' + (e.message || e));
+    }
+}
+
+function _escHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
 </script>
 </body>

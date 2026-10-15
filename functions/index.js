@@ -3477,6 +3477,90 @@ async function _resolveSelfDeleteUserId(authUid) {
     return null;
 }
 
+/* ═══════════════════════════════════════════════════
+   Admin push-broadcast (2026-10-15) — panel support.html, funkcjonalność
+   "wyślij powiadomienie push do wybranych userów/klubów", decyzja Rafała:
+   CAŁOŚĆ (rozwiązywanie odbiorców + zapis notifications) po stronie Cloud Function
+   z Admin SDK — żadnego poluzowania firestore.rules dla notifications/admin_broadcasts
+   (patrz komentarz w firestore.rules przy /admin_broadcasts).
+   ═══════════════════════════════════════════════════ */
+
+const BROADCAST_ROLES = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'RODZIC', 'ZAWODNIK', 'KIBIC'];
+const BROADCAST_ACTIVE_STATUSES = ['active', 'ACTIVE', 'grace', 'GRACE'];
+
+// Sprawdza isPlatformAdmin SERVER-SIDE (nikt dotąd tego nie robił w żadnej Cloud Function —
+// do tej pory sprawdzane tylko po stronie klienta i w firestore.rules' isPlatformAdmin()).
+// Resolver authUid->userId reużywa _resolveSelfDeleteUserId (nazwa myląca, ale logika
+// identyczna — generyczne "znajdź mój userId po moim Firebase Auth uid").
+async function _assertPlatformAdmin(authUid) {
+    const userId = await _resolveSelfDeleteUserId(authUid);
+    if (!userId) throw new HttpsError('permission-denied', 'Brak dostępu.');
+    const userSnap = await db.collection('users').doc(userId).get();
+    if (!userSnap.exists || userSnap.data().isPlatformAdmin !== true) {
+        throw new HttpsError('permission-denied', 'Brak dostępu.');
+    }
+    return userId;
+}
+
+// Rozwiązuje listę userId odbiorców broadcastu — pętla po całej kolekcji memberships
+// i filtrowanie w JS (ten sam wzorzec co _reconcileOneClub/sendNotificationsForEvent),
+// a nie złożone zapytania Firestore. Przy dużej skali to nadal jedno proste .get().
+async function _resolveBroadcastRecipients({ targetUserId, clubIds, roles }) {
+    if (targetUserId) return [targetUserId];
+
+    const mbrSnap = await db.collection('memberships').get();
+    const clubSet = Array.isArray(clubIds) && clubIds.length ? new Set(clubIds) : null;
+    const roleSet = Array.isArray(roles) && roles.length ? new Set(roles) : null;
+
+    const userIds = new Set();
+    mbrSnap.docs.forEach(d => {
+        const m = d.data();
+        if (!m.userId) return;
+        if (!BROADCAST_ACTIVE_STATUSES.includes(m.status)) return;
+        if (clubSet && !clubSet.has(m.clubId)) return;
+        if (roleSet && !roleSet.has(m.role)) return;
+        userIds.add(m.userId);
+    });
+    return [...userIds];
+}
+
+// Tworzy notifications/{id} (typ ADMIN_BROADCAST) dla każdego odbiorcy, batch po 450 —
+// to samo uruchamia istniejący onNotificationCreated (push Expo/FCM), zero nowego kodu wysyłki.
+async function _createBroadcastNotifications(userIds, { title, body, broadcastId }) {
+    const nowIso = new Date().toISOString();
+    for (let i = 0; i < userIds.length; i += 450) {
+        const batch = db.batch();
+        const slice = userIds.slice(i, i + 450);
+        slice.forEach((userId, j) => {
+            const notifId = `bcast_${broadcastId}_${i + j}_${Math.random().toString(36).slice(2, 8)}`;
+            batch.set(db.collection('notifications').doc(notifId), {
+                notificationId: notifId,
+                userId,
+                teamId: null,
+                type: 'ADMIN_BROADCAST',
+                title: title || 'Coachay',
+                body: body || '',
+                referenceId: broadcastId,
+                referenceType: 'admin_broadcast',
+                forPlayerId: null,
+                requiresAction: false,
+                actionType: null,
+                actionDone: false,
+                actionResult: null,
+                actionComment: null,
+                createdAt: nowIso,
+                readAt: null,
+                isRead: false,
+                priority: 'NORMAL',
+                isDemo: false,
+                demoSetId: null,
+                source: 'admin_broadcast',
+            });
+        });
+        await batch.commit();
+    }
+}
+
 function _decryptSelfDeletePayload(encObj, keyHex) {
     const key = Buffer.from(keyHex, 'hex');
     const iv = Buffer.from(encObj.iv, 'base64');
@@ -3598,6 +3682,106 @@ exports.appleCaptureAuthCode = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_S
 
     console.log(`appleCaptureAuthCode OK authUid=${authUid}`);
     return { success: true };
+});
+
+exports.adminSendBroadcast = onCall(async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    }
+    await _assertPlatformAdmin(request.auth.uid);
+
+    const data = request.data || {};
+    const title = String(data.title || '').trim().slice(0, 200);
+    const body  = String(data.body  || '').trim().slice(0, 1000);
+    if (!title || !body) {
+        throw new HttpsError('invalid-argument', 'Temat i treść są wymagane.');
+    }
+
+    const targetUserId = (typeof data.targetUserId === 'string' && data.targetUserId.trim()) ? data.targetUserId.trim() : null;
+    const clubIds = Array.isArray(data.clubIds) ? data.clubIds.filter(Boolean) : [];
+    const roles   = Array.isArray(data.roles)   ? data.roles.filter(r => BROADCAST_ROLES.includes(r)) : [];
+
+    const scheduledAtMs = data.scheduledAt ? new Date(data.scheduledAt).getTime() : null;
+    const isFuture = !!(scheduledAtMs && !isNaN(scheduledAtMs) && scheduledAtMs > Date.now() + 60000); // >1 min w przyszłości
+
+    const broadcastRef = db.collection('admin_broadcasts').doc();
+    const scheduledAtIso = isFuture ? new Date(scheduledAtMs).toISOString() : null;
+
+    await broadcastRef.set({
+        title, body, targetUserId, clubIds, roles,
+        createdBy: request.auth.uid,
+        createdAt: FieldValue.serverTimestamp(),
+        status: isFuture ? 'pending' : 'sending',
+        scheduledAt: scheduledAtIso,
+        sentAt: null,
+        recipientCount: null,
+        error: null,
+    });
+
+    if (isFuture) {
+        console.log(`adminSendBroadcast: zaplanowano ${broadcastRef.id} na ${scheduledAtIso}`);
+        return { scheduled: true, scheduledAt: scheduledAtIso, broadcastId: broadcastRef.id };
+    }
+
+    try {
+        const userIds = await _resolveBroadcastRecipients({ targetUserId, clubIds, roles });
+        await _createBroadcastNotifications(userIds, { title, body, broadcastId: broadcastRef.id });
+        await broadcastRef.update({
+            status: 'sent',
+            sentAt: FieldValue.serverTimestamp(),
+            recipientCount: userIds.length,
+        });
+        console.log(`adminSendBroadcast: ${broadcastRef.id} wyslany do ${userIds.length} odbiorcow`);
+        return { sent: true, recipientCount: userIds.length, broadcastId: broadcastRef.id };
+    } catch (e) {
+        console.error('adminSendBroadcast:', e);
+        await broadcastRef.update({ status: 'failed', error: String(e.message || e) }).catch(() => {});
+        throw new HttpsError('internal', 'Błąd wysyłki: ' + (e.message || e));
+    }
+});
+
+exports.adminCancelBroadcast = onCall(async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    }
+    await _assertPlatformAdmin(request.auth.uid);
+
+    const broadcastId = request.data && request.data.broadcastId;
+    if (!broadcastId || typeof broadcastId !== 'string') {
+        throw new HttpsError('invalid-argument', 'Brak broadcastId.');
+    }
+    const ref = db.collection('admin_broadcasts').doc(broadcastId);
+    const snap = await ref.get();
+    if (!snap.exists) throw new HttpsError('not-found', 'Nie znaleziono.');
+    if (snap.data().status !== 'pending') {
+        throw new HttpsError('failed-precondition', 'Można anulować tylko zaplanowane (jeszcze niewysłane) ogłoszenie.');
+    }
+    await ref.update({ status: 'cancelled', cancelledAt: FieldValue.serverTimestamp() });
+    return { cancelled: true };
+});
+
+// Odpala co 10 min zaplanowane broadcasty, którym minął termin (sprawdzenie scheduledAt
+// w JS po prostym .where('status','==','pending').get() — bez range-query na dacie,
+// żeby nie wymagać composite indexu; ilość jednocześnie "pending" broadcastów jest i tak mała).
+exports.sendScheduledBroadcasts = onSchedule('every 10 minutes', async () => {
+    const nowIso = new Date().toISOString();
+    const snap = await db.collection('admin_broadcasts').where('status', '==', 'pending').get();
+    const due = snap.docs.filter(d => d.data().scheduledAt && d.data().scheduledAt <= nowIso);
+    if (!due.length) return;
+
+    for (const doc of due) {
+        const b = doc.data();
+        try {
+            await doc.ref.update({ status: 'sending' }); // anty-duplikat gdyby odpalilo sie 2x
+            const userIds = await _resolveBroadcastRecipients({ targetUserId: b.targetUserId, clubIds: b.clubIds, roles: b.roles });
+            await _createBroadcastNotifications(userIds, { title: b.title, body: b.body, broadcastId: doc.id });
+            await doc.ref.update({ status: 'sent', sentAt: FieldValue.serverTimestamp(), recipientCount: userIds.length });
+            console.log(`sendScheduledBroadcasts: ${doc.id} -> ${userIds.length} odbiorcow`);
+        } catch (e) {
+            console.error(`sendScheduledBroadcasts[${doc.id}]:`, e);
+            await doc.ref.update({ status: 'failed', error: String(e.message || e) }).catch(() => {});
+        }
+    }
 });
 
 exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECRETS, SMTP_PASSWORD] }, async (request) => {
