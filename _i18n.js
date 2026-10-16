@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261016a'; // 2026-10-16: bump po dodaniu sekcji regulamin.* + landing.footerTerms
+    const LOCALE_V  = '20261016b'; // 2026-10-16: bump po dodaniu regulamin.* (PL+EN) + landing.footerTerms (PL+EN)
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */

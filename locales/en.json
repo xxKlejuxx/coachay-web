@@ -1477,6 +1477,58 @@
    }
   ]
  },
+ "regulamin": {
+  "headerTitle": "Terms of Use",
+  "intro": "Terms of Use for the COACHAY service and mobile app (coachay.com).",
+  "back": "← Back",
+  "footer": "© 2026 Coachay. All rights reserved.",
+  "sections": [
+   {
+    "title": "1. General Provisions",
+    "body": "1.1. These Terms of Use (\"Terms\") set out the rules for using the COACHAY website and mobile application, available at coachay.com and through the App Store and Google Play (together, the \"Service\" or \"App\").\n\n1.2. The Service is operated by the Coachay service operator, Tax ID (NIP): 771-222-88-03 (the \"Operator\"). Contact: support@coachay.com.\n\n1.3. These Terms constitute terms of service for electronic services within the meaning of Article 8 of the Polish Act of 18 July 2002 on the Provision of Electronic Services.\n\n1.4. Using the App is voluntary and requires acceptance of these Terms and the Privacy Policy, which describes how personal data is processed.\n\n1.5. These Terms are available free of charge at coachay.com/regulamin.html, in a form that allows them to be downloaded, saved, and printed."
+   },
+   {
+    "title": "2. Definitions",
+    "body": "2.1. Service / App — the COACHAY website and mobile application used to manage amateur sports teams.\n\n2.2. Operator — the Coachay service operator, Tax ID (NIP): 771-222-88-03.\n\n2.3. User — an individual using the App as a Coach, Parent/Guardian, Player, or Supporter.\n\n2.4. Consumer — a User who is a natural person entering into a contract not directly related to their business or professional activity.\n\n2.5. Club / Team — a sports team created and managed in the App by a Head Coach.\n\n2.6. Account — an individual User account in the App, identified by an email address.\n\n2.7. Subscription — paid, automatically renewing access to App features under the Individual or Family plan, purchased through the App Store (Apple) or Google Play.\n\n2.8. Club License — paid access to App features granted to a Club by the Operator for a fixed period, based on separate arrangements with the Club."
+   },
+   {
+    "title": "3. Type and Scope of Services",
+    "body": "3.1. The App enables: creating and managing a Club/Team, maintaining player rosters, scheduling trainings and matches, recording attendance, internal communication (chat, announcements, tasks), and push notifications.\n\n3.2. The App is designed primarily for amateur youth sports teams and the people around them (coaches, parents/guardians, players, supporters) in Poland.\n\n3.3. The Operator may develop, modify, or limit the App's functionality; Users will be informed of material changes within the App."
+   },
+   {
+    "title": "4. Terms of Service and User Account",
+    "body": "4.1. Creating an Account requires an email address and password, or signing in with a Google or Apple account.\n\n4.2. Minor players do not have their own Accounts — their profiles are created by a Coach or a Parent/Guardian, only with the consent of a parent or legal guardian, as described in the Privacy Policy.\n\n4.3. Users must provide accurate information and use the App in a manner consistent with the law, these Terms, and good practice, in particular by not posting unlawful, offensive, or rights-infringing content.\n\n4.4. In the event of a breach of these Terms, the Operator may restrict, suspend, or delete a User's Account, and in particularly serious cases may do so without a prior warning to stop the violation.\n\n4.5. A User may delete their own Account at any time at coachay.com/usunkonto.html."
+   },
+   {
+    "title": "5. Payments, Subscriptions and Club Licenses",
+    "body": "5.1. Full access to the App's features for Coaches and Parents/Guardians requires an active individual Subscription or an active Club License assigned to the Club the User belongs to.\n\n5.2. Current Subscription plans available in the mobile app (gross prices in Polish złoty, billed through the App Store / Google Play):\n\n• Individual Monthly — 30 days of access — PLN 9.99\n• Individual Yearly — 12 months of access (2 months free) — PLN 99.99\n• Family Monthly (up to 6 accounts) — 30 days of access — PLN 39.99\n• Family Yearly (up to 6 accounts) — 12 months of access (2 months free) — PLN 399.99\n\n5.3. Mobile app subscriptions are auto-renewable subscriptions — billing is handled through the User's Apple ID (App Store) or Google account (Google Play). A Subscription automatically renews for the same length of period unless cancelled at least 24 hours before the end of the current period; the renewal charge is collected within 24 hours before the end of the current period.\n\n5.4. Cancelling a Subscription, changing plans, and refunds for payments made through the App Store or Google Play are handled exclusively through the User's Apple ID or Google account settings, in accordance with the respective platform's own rules — the Operator has no technical ability to issue a refund or cancel such a Subscription.\n\n5.5. Prices shown on coachay.com may differ from prices in the mobile app — the difference results from the commission charged by mobile platform operators (Apple, Google) on in-app purchases. Any direct payment option made available on coachay.com, and the rules for its automatic renewal (if any), will be stated at the time of purchase.\n\n5.6. A Club License is granted and extended by the Operator for a fixed period, based on separate arrangements with the Club (e.g. an order or invoice) — it is not an auto-renewing subscription within the meaning of the App Store or Google Play.\n\n5.7. The Operator may offer new Users a free trial period (currently: 90 days) of access to App features; the specific terms of the trial (duration, scope of features) are shown in the App when it is activated and may change."
+   },
+   {
+    "title": "6. Right of Withdrawal",
+    "body": "6.1. A Consumer who has entered into a distance contract has the right to withdraw from it within 14 days without giving any reason, in accordance with the Polish Consumer Rights Act of 30 May 2014.\n\n6.2. The right of withdrawal does not apply to contracts for the supply of digital content or digital services not delivered on a tangible medium, where performance began with the Consumer's prior express consent and after the Consumer was informed that they would lose the right of withdrawal (Article 38(13) of the Consumer Rights Act) — this applies in particular to gaining immediate access to App features upon activation of a Subscription.\n\n6.3. For Subscriptions purchased through the App Store or Google Play, refund requests are handled in accordance with the respective platform's own rules — the Consumer should contact Apple or Google directly."
+   },
+   {
+    "title": "7. Complaints",
+    "body": "7.1. Complaints about how the App works can be submitted to support@coachay.com, including a description of the issue and information allowing the Account to be identified.\n\n7.2. The Operator will handle complaints within 14 calendar days of receipt and will inform the User of the outcome at the email address provided.\n\n7.3. Complaints about payments made through the App Store or Google Play are handled by the respective platform operator, in accordance with its own procedures."
+   },
+   {
+    "title": "8. Liability",
+    "body": "8.1. The Operator makes every effort to ensure the App works correctly and without interruption, but does not guarantee uninterrupted availability of the App, in particular for reasons beyond the Operator's control (e.g. technical outages at infrastructure providers — Google Cloud, Apple, Google).\n\n8.2. The Operator is not responsible for content entered into the App by Users (e.g. chat messages, announcements) or for the consequences of its use.\n\n8.3. The Operator is not responsible for decisions made by Coaches and Clubs in managing a Team (e.g. squad selection, organizational decisions) — the App is a tool supporting team management, not a party to those decisions.\n\n8.4. The Operator's liability towards Consumers is not limited beyond the extent permitted by applicable law."
+   },
+   {
+    "title": "9. Personal Data",
+    "body": "9.1. The rules for processing Users' personal data, including the data of minor players, are described in the Privacy Policy available at polityka-prywatnosci.html, which forms an integral supplement to these Terms.\n\n9.2. In the relationship between a Club and the Operator, the Club (represented by its Head Coach) acts as the controller of the personal data of players and parents within the meaning of the GDPR, and the Operator acts as a processor, under a data processing agreement accepted when the Club registers."
+   },
+   {
+    "title": "10. Changes to the Terms",
+    "body": "10.1. The Operator reserves the right to change these Terms in the event of a change in the App's functionality, a change in laws affecting the content of the Terms, or a change in payment rules.\n\n10.2. Users will be informed of changes to the Terms in the App at least 7 days before the changes take effect.\n\n10.3. Continuing to use the App after the changes take effect is deemed acceptance of them; a User who does not accept the changes may delete their Account as described in Section 4.5."
+   },
+   {
+    "title": "11. Final Provisions",
+    "body": "11.1. Matters not covered by these Terms are governed by applicable Polish law, in particular the Civil Code, the Act on the Provision of Electronic Services, and the Consumer Rights Act.\n\n11.2. A Consumer may use out-of-court complaint and redress procedures, including the assistance of the competent district or municipal consumer ombudsman (powiatowy/miejski rzecznik konsumentów).\n\n11.3. These Terms come into force on 16 October 2026."
+   }
+  ]
+ },
  "blocked": {
   "appName": "Coachay",
   "suspendedTitle": "Account suspended",
@@ -1665,6 +1717,7 @@
   ],
   "navLogin": "Log in",
   "footerRights": "© 2026 Coachay. All rights reserved.",
+  "footerTerms": "Terms of Use",
   "footerPrivacy": "Privacy policy",
   "trialBadge": "90 days free",
   "eyebrowFeatures": "Features",
