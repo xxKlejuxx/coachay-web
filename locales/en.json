@@ -1447,6 +1447,7 @@
   "footerRodo": "GDPR (when signed in)"
  },
  "polityka": {
+  "back": "← Back",
   "headerTitle": "Privacy Policy",
   "intro": "For the COACHAY service and app (coachay.com) and its personal data protection rules.",
   "footer": "© 2026 Coachay. All rights reserved.",

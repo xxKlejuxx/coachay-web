@@ -43,6 +43,22 @@ header { position: sticky; top: 0; z-index: 100; background: rgba(8,8,8,0.85); b
 .btn-back { padding: 8px 20px; background: transparent; border: 1px solid var(--border2); border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--szary-j); transition: all 0.12s; }
 .btn-back:hover { border-color: rgba(255,255,255,0.2); color: var(--bialy); }
 
+.header-right { display: flex; align-items: center; gap: 12px; }
+.lang-toggle {
+  display: flex; align-items: center;
+  background: var(--tlo-karta); border: 1px solid var(--border2);
+  border-radius: 7px; padding: 2px;
+}
+.lang-toggle button {
+  padding: 4px 11px;
+  font-size: 12px; font-weight: 800; letter-spacing: 0.04em;
+  color: var(--szary);
+  border-radius: 5px;
+  transition: all 0.12s;
+}
+.lang-toggle button.lang-active { background: var(--bialy); color: #000; }
+.lang-toggle button:hover:not(.lang-active) { color: var(--bialy); }
+
 .legal-hero { padding: 56px 0 8px; }
 .legal-hero h1 { font-family: var(--font-d); font-size: clamp(32px,4vw,48px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px; }
 .legal-hero p { font-size: 16px; color: var(--szary-j); line-height: 1.65; max-width: 640px; }
@@ -79,7 +95,13 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
         <span class="logo-name">COACHAY</span>
         <span class="logo-sub" data-i18n="splash.tagline">Platforma dla trenerów i drużyn</span>
       </a>
-      <a href="https://coachay.com" class="btn-back" data-i18n="regulamin.back">← Wróć</a>
+      <div class="header-right">
+        <div class="lang-toggle">
+          <button data-lang="pl" onclick="setLang('pl')">PL</button>
+          <button data-lang="en" onclick="setLang('en')">EN</button>
+        </div>
+        <a href="https://coachay.com" class="btn-back" data-i18n="regulamin.back">← Wróć</a>
+      </div>
     </div>
   </div>
 </header>
