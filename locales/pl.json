@@ -1477,6 +1477,58 @@
    }
   ]
  },
+ "regulamin": {
+  "headerTitle": "Regulamin",
+  "intro": "Regulamin świadczenia usług serwisu i aplikacji mobilnej COACHAY (coachay.com).",
+  "back": "← Wróć",
+  "footer": "© 2026 Coachay. Wszelkie prawa zastrzeżone.",
+  "sections": [
+   {
+    "title": "1. Postanowienia ogólne",
+    "body": "1.1. Niniejszy Regulamin określa zasady korzystania z serwisu internetowego i aplikacji mobilnej COACHAY, dostępnych pod adresem coachay.com oraz za pośrednictwem App Store i Google Play (zwanych dalej łącznie „Serwisem” lub „Aplikacją”).\n\n1.2. Operatorem Serwisu jest Operator serwisu Coachay, NIP: 771-222-88-03 (zwany dalej „Operatorem”). Kontakt: support@coachay.com.\n\n1.3. Regulamin stanowi regulamin świadczenia usług drogą elektroniczną w rozumieniu art. 8 ustawy z dnia 18 lipca 2002 r. o świadczeniu usług drogą elektroniczną.\n\n1.4. Korzystanie z Aplikacji jest dobrowolne i wymaga akceptacji niniejszego Regulaminu oraz Polityki Prywatności, w której opisano zasady przetwarzania danych osobowych.\n\n1.5. Regulamin jest dostępny bezpłatnie na stronie coachay.com/regulamin.html, w formie umożliwiającej jego pobranie, zapisanie i wydrukowanie."
+   },
+   {
+    "title": "2. Definicje",
+    "body": "2.1. Serwis / Aplikacja — serwis internetowy oraz aplikacja mobilna COACHAY, służące do zarządzania amatorskimi zespołami sportowymi.\n\n2.2. Operator — Operator serwisu Coachay, NIP: 771-222-88-03.\n\n2.3. Użytkownik — osoba fizyczna korzystająca z Aplikacji w roli Trenera, Rodzica/Opiekuna, Zawodnika lub Kibica.\n\n2.4. Konsument — Użytkownik będący osobą fizyczną, zawierający umowę niezwiązaną bezpośrednio z jego działalnością gospodarczą lub zawodową.\n\n2.5. Klub / Drużyna — zespół sportowy utworzony i zarządzany w Aplikacji przez Trenera Głównego.\n\n2.6. Konto — indywidualne, oznaczone adresem e-mail konto Użytkownika w Aplikacji.\n\n2.7. Subskrypcja — płatny, odnawiający się automatycznie dostęp do funkcji Aplikacji w Planie Indywidualnym lub Rodzinnym, zakupiony za pośrednictwem App Store (Apple) lub Google Play.\n\n2.8. Licencja Klubowa — płatny dostęp do funkcji Aplikacji przyznawany Klubowi przez Operatora na czas określony, na podstawie odrębnych ustaleń z Klubem."
+   },
+   {
+    "title": "3. Rodzaj i zakres usług",
+    "body": "3.1. Aplikacja umożliwia: tworzenie i zarządzanie Klubem/Drużyną, prowadzenie list zawodników, planowanie treningów i meczów, rejestrowanie obecności, komunikację wewnętrzną (czat, ogłoszenia, zadania) oraz powiadomienia push.\n\n3.2. Aplikacja jest przeznaczona przede wszystkim dla amatorskich, młodzieżowych zespołów sportowych i ich otoczenia (trenerzy, rodzice/opiekunowie, zawodnicy, kibice) na terenie Polski.\n\n3.3. Operator może rozwijać, modyfikować lub ograniczać funkcjonalność Aplikacji; o istotnych zmianach Użytkownicy będą informowani w Aplikacji."
+   },
+   {
+    "title": "4. Warunki świadczenia usług i konto Użytkownika",
+    "body": "4.1. Założenie Konta wymaga podania adresu e-mail i hasła albo zalogowania się przy użyciu konta Google lub Apple ID.\n\n4.2. Profile zawodników niepełnoletnich nie są samodzielnymi Kontami — tworzone są przez Trenera lub Rodzica/Opiekuna wyłącznie za zgodą rodzica lub opiekuna prawnego, zgodnie z Polityką Prywatności.\n\n4.3. Użytkownik zobowiązany jest do podawania prawdziwych danych oraz korzystania z Aplikacji w sposób zgodny z prawem, Regulaminem i dobrymi obyczajami, w szczególności do niezamieszczania treści bezprawnych, obraźliwych lub naruszających prawa osób trzecich.\n\n4.4. W przypadku naruszenia Regulaminu Operator może ograniczyć, zawiesić lub usunąć Konto Użytkownika, w szczególnie poważnych przypadkach bez wcześniejszego wezwania do zaniechania naruszeń.\n\n4.5. Użytkownik może w każdej chwili usunąć swoje Konto samodzielnie, na stronie coachay.com/usunkonto.html."
+   },
+   {
+    "title": "5. Płatności, Subskrypcje i Licencje Klubowe",
+    "body": "5.1. Pełny dostęp do funkcji Aplikacji dla Trenerów i Rodziców/Opiekunów wymaga aktywnej Subskrypcji indywidualnej lub aktywnej Licencji Klubowej przypisanej do Klubu, w którym Użytkownik działa.\n\n5.2. Aktualne Plany Subskrypcji dostępne w aplikacji mobilnej (ceny brutto w złotych polskich, rozliczane przez App Store / Google Play):\n\n• Indywidualny Miesięczny — 30 dni dostępu — 9,99 zł\n• Indywidualny Roczny — 12 miesięcy dostępu (2 miesiące gratis) — 99,99 zł\n• Rodzinny Miesięczny (do 6 kont) — 30 dni dostępu — 39,99 zł\n• Rodzinny Roczny (do 6 kont) — 12 miesięcy dostępu (2 miesiące gratis) — 399,99 zł\n\n5.3. Subskrypcje w aplikacji mobilnej są subskrypcjami automatycznie odnawiającymi się (auto-renewable) — rozliczenie następuje za pośrednictwem konta Apple ID (App Store) lub konta Google (Google Play) Użytkownika. Subskrypcja odnawia się automatycznie na kolejny, taki sam okres, o ile nie zostanie anulowana co najmniej 24 godziny przed końcem bieżącego okresu rozliczeniowego; opłata za odnowienie pobierana jest w ciągu 24 godzin przed końcem bieżącego okresu.\n\n5.4. Anulowanie Subskrypcji, zmiana planu oraz zwroty związane z płatnościami dokonanymi przez App Store lub Google Play odbywają się wyłącznie za pośrednictwem ustawień konta Apple ID lub konta Google Użytkownika, zgodnie z zasadami odpowiedniego operatora platformy — Operator Aplikacji nie ma technicznej możliwości dokonania zwrotu ani anulowania takiej Subskrypcji.\n\n5.5. Ceny widoczne na stronie coachay.com mogą różnić się od cen w aplikacji mobilnej — różnica wynika z prowizji pobieranej przez operatorów platform mobilnych (Apple, Google) od zakupów realizowanych w aplikacji. Udostępnienie płatności bezpośrednich na stronie coachay.com oraz zasady ewentualnej automatycznej odnawialności takich płatności zostaną każdorazowo wskazane przy zakupie.\n\n5.6. Licencja Klubowa jest przyznawana i przedłużana przez Operatora na czas określony, na podstawie odrębnych ustaleń z Klubem (np. zamówienie, faktura) — nie jest subskrypcją odnawiającą się automatycznie w rozumieniu App Store lub Google Play.\n\n5.7. Operator może udostępnić nowym Użytkownikom bezpłatny okres próbny (obecnie: 90 dni) dostępu do funkcji Aplikacji; szczegółowe warunki okresu próbnego wskazywane są w Aplikacji w momencie jego aktywacji i mogą się zmieniać."
+   },
+   {
+    "title": "6. Prawo odstąpienia od umowy",
+    "body": "6.1. Konsumentowi, który zawarł umowę na odległość, przysługuje prawo odstąpienia od umowy w terminie 14 dni bez podania przyczyny, zgodnie z ustawą z dnia 30 maja 2014 r. o prawach konsumenta.\n\n6.2. Prawo odstąpienia nie przysługuje w odniesieniu do umów o dostarczanie treści cyfrowych lub usług cyfrowych niedostarczanych na materialnym nośniku, w sytuacji gdy spełnianie świadczenia rozpoczęło się za wyraźną i uprzednią zgodą Konsumenta, który został poinformowany o utracie prawa odstąpienia (art. 38 pkt 13 ustawy o prawach konsumenta) — dotyczy to w szczególności uzyskania natychmiastowego dostępu do funkcji Aplikacji po aktywacji Subskrypcji.\n\n6.3. W przypadku Subskrypcji zakupionych za pośrednictwem App Store lub Google Play, wnioski o zwrot płatności rozpatrywane są zgodnie z zasadami odpowiedniego operatora platformy — Konsument powinien skontaktować się bezpośrednio z Apple lub Google."
+   },
+   {
+    "title": "7. Reklamacje",
+    "body": "7.1. Reklamacje dotyczące funkcjonowania Aplikacji można składać na adres e-mail support@coachay.com, podając opis problemu oraz dane umożliwiające identyfikację Konta.\n\n7.2. Operator rozpatruje reklamacje w terminie do 14 dni kalendarzowych od ich otrzymania i informuje Użytkownika o wyniku na podany adres e-mail.\n\n7.3. Reklamacje dotyczące płatności dokonanych za pośrednictwem App Store lub Google Play rozpatrywane są przez odpowiedniego operatora platformy, zgodnie z jego własnymi procedurami."
+   },
+   {
+    "title": "8. Odpowiedzialność",
+    "body": "8.1. Operator dokłada starań, aby Aplikacja działała poprawnie i nieprzerwanie, nie gwarantuje jednak nieprzerwanej dostępności Aplikacji, w szczególności z przyczyn niezależnych od Operatora (np. przerwy techniczne u dostawców infrastruktury — Google Cloud, Apple, Google).\n\n8.2. Operator nie ponosi odpowiedzialności za treści wprowadzane do Aplikacji przez Użytkowników (np. wiadomości w czacie, ogłoszenia) oraz za skutki ich wykorzystania.\n\n8.3. Operator nie ponosi odpowiedzialności za decyzje podejmowane przez Trenerów i Kluby w ramach zarządzania Drużyną — Aplikacja jest narzędziem wspierającym zarządzanie, nie stroną tych decyzji.\n\n8.4. Odpowiedzialność Operatora wobec Konsumentów nie jest ograniczona ponad zakres dopuszczony przepisami prawa powszechnie obowiązującego."
+   },
+   {
+    "title": "9. Dane osobowe",
+    "body": "9.1. Zasady przetwarzania danych osobowych Użytkowników, w tym danych zawodników niepełnoletnich, opisane są w Polityce Prywatności dostępnej na stronie polityka-prywatnosci.html, stanowiącej integralne uzupełnienie niniejszego Regulaminu.\n\n9.2. W relacji Klub–Operator, Klub (reprezentowany przez Trenera Głównego) występuje jako administrator danych osobowych zawodników i rodziców w rozumieniu RODO, a Operator jako podmiot przetwarzający, na podstawie umowy powierzenia przetwarzania danych akceptowanej przy rejestracji Klubu."
+   },
+   {
+    "title": "10. Zmiany Regulaminu",
+    "body": "10.1. Operator zastrzega sobie prawo do zmiany Regulaminu w przypadku zmiany zakresu funkcjonalności Aplikacji, zmiany przepisów prawa mających wpływ na treść Regulaminu lub zmiany zasad płatności.\n\n10.2. O zmianie Regulaminu Użytkownicy zostaną poinformowani w Aplikacji z co najmniej 7-dniowym wyprzedzeniem przed wejściem zmian w życie.\n\n10.3. Dalsze korzystanie z Aplikacji po wejściu zmian w życie jest równoznaczne z ich akceptacją; Użytkownik, który nie akceptuje zmian, może usunąć swoje Konto zgodnie z pkt 4.5."
+   },
+   {
+    "title": "11. Postanowienia końcowe",
+    "body": "11.1. W sprawach nieuregulowanych Regulaminem zastosowanie mają powszechnie obowiązujące przepisy prawa polskiego, w szczególności Kodeksu cywilnego, ustawy o świadczeniu usług drogą elektroniczną oraz ustawy o prawach konsumenta.\n\n11.2. Konsument może skorzystać z pozasądowych sposobów rozpatrywania reklamacji i dochodzenia roszczeń, w tym z pomocy właściwego powiatowego lub miejskiego rzecznika konsumentów.\n\n11.3. Regulamin wchodzi w życie w dniu 16 października 2026 r."
+   }
+  ]
+ },
  "blocked": {
   "appName": "Coachay",
   "suspendedTitle": "Konto zawieszone",
@@ -1666,6 +1718,7 @@
   "navLogin": "Zaloguj się",
   "footerRights": "© 2026 Coachay. Wszelkie prawa zastrzeżone.",
   "footerPrivacy": "Polityka prywatności",
+  "footerTerms": "Regulamin",
   "trialBadge": "90 dni bezpłatnie",
   "eyebrowFeatures": "Funkcje",
   "eyebrowScreenshots": "Aplikacja",

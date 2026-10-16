@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261014a'; // 2026-10-14: bump po dodaniu blocked.deleteAccountLink (link usun konto na ekranie blokady)
+    const LOCALE_V  = '20261016a'; // 2026-10-16: bump po dodaniu sekcji regulamin.* + landing.footerTerms
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */
