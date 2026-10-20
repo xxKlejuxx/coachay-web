@@ -222,7 +222,7 @@
 
             <!-- Dane konta -->
             <div class="pr-card" id="pr-card-dane">
-                <div class="pr-card-title" style="display:flex;align-items:center;justify-content:space-between;"><span data-i18n="profil.accountCardTitle">Dane konta</span><button class="pr-title-btn" onclick="saveName()" data-i18n="profil.saveButton">Zapisz</button></div>
+                <div class="pr-card-title" style="display:flex;align-items:center;justify-content:space-between;"><span data-i18n="profil.accountCardTitle">Dane konta</span><button class="pr-title-btn" id="pr-save-name-btn" onclick="saveName()" data-i18n="profil.saveButton">Zapisz</button></div>
                 <div class="pr-row">
                     <span class="pr-row-label" data-i18n="profil.firstNameLabel">Imię</span>
                     <input class="pr-row-input" id="pr-input-fname" type="text" data-i18n-placeholder="profil.firstNamePlaceholder" placeholder="np. Jan" autocomplete="off">
@@ -382,7 +382,7 @@ let currentUserRole = '';
 let currentTeamId  = '';
 let currentClubId  = '';
 let currentUserDoc = null;   // pełny dokument users/{uid}
-let currentTrainerId = null; // jeśli rola TRENER – dla syncu awatara
+let currentTrainerIds = []; // jeśli rola TRENER – ID z `trainers` we WSZYSTKICH klubach tego usera (sync awatara/nazwiska)
 
 let selectedAvatarUrl = '';
 let selectedGender    = 'mezczyzna';
@@ -429,20 +429,15 @@ async function initProfil() {
     loadCtxOverlay(user, membership, team);
     loadMenuPanel(user, membership, team);
 
-    // Trener – pobierz trainerId dla syncu awatara
+    // Trener – pobierz WSZYSTKIE trainerId tego usera (może pracować w kilku klubach) dla syncu awatara/nazwiska
     if (currentUserRole.startsWith('TRENER') || currentUserRole === 'OWNER') {
-        if (user.trainerId) {
-            currentTrainerId = user.trainerId;
-        } else {
-            // Wyszukaj po userId w trainers
-            try {
-                const snap = await db.collection('trainers')
-                    .where('clubId', '==', currentClubId)
-                    .where('userId', '==', currentUserId)
-                    .limit(1).get();
-                if (!snap.empty) currentTrainerId = snap.docs[0].id;
-            } catch(e) { console.warn('Nie znaleziono trainerId:', e); }
-        }
+        try {
+            const snap = await db.collection('trainers')
+                .where('userId', '==', currentUserId)
+                .get();
+            currentTrainerIds = snap.docs.map(d => d.id);
+            if (user.trainerId && !currentTrainerIds.includes(user.trainerId)) currentTrainerIds.push(user.trainerId);
+        } catch(e) { console.warn('Nie znaleziono trainerId:', e); }
     }
 
     renderProfile(user);
@@ -479,6 +474,14 @@ function renderProfile(user) {
     const lName = user.lastName  || (name !== '–' ? name.split(' ').slice(1).join(' ') : '');
     document.getElementById('pr-input-fname').value = fName;
     document.getElementById('pr-input-lname').value = lName;
+
+    // Zawodnik nie edytuje swoich danych na Profilu – tylko podgląd (dane zarządzane przez trenera w drużynie)
+    const isZawodnik = currentUserRole === 'ZAWODNIK';
+    document.getElementById('pr-input-fname').disabled = isZawodnik;
+    document.getElementById('pr-input-lname').disabled = isZawodnik;
+    const saveNameBtn = document.getElementById('pr-save-name-btn');
+    if (saveNameBtn) saveNameBtn.style.display = isZawodnik ? 'none' : '';
+
     document.getElementById('pr-email-val').textContent = hasEmail ? email : _tP('profil.emailFallbackNoEmail', 'Brak (konto bez emaila)');
     document.getElementById('pr-role-val').textContent = getRoleLabel(currentUserRole);
 
@@ -563,13 +566,17 @@ async function saveAvatar() {
         // Zapisz na users
         await db.collection('users').doc(currentUserId).update(updates);
 
-        // Sync na trainers (jeśli trener)
-        if (currentTrainerId) {
-            await db.collection('trainers').doc(currentTrainerId).update({
-                'coachProfile.avatarUrl':    selectedAvatarUrl,
-                'coachProfile.avatarGender': selectedGender,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        // Sync na trainers (jeśli trener – we wszystkich klubach, w których pracuje)
+        if (currentTrainerIds.length) {
+            const avBatch = db.batch();
+            currentTrainerIds.forEach(tid => {
+                avBatch.update(db.collection('trainers').doc(tid), {
+                    'coachProfile.avatarUrl':    selectedAvatarUrl,
+                    'coachProfile.avatarGender': selectedGender,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
             });
+            await avBatch.commit();
         }
 
         // Odśwież hero
@@ -584,9 +591,14 @@ async function saveAvatar() {
 
 /* === Zapis imienia i nazwiska === */
 async function saveName() {
+    if (currentUserRole === 'ZAWODNIK') return; // zawodnik nie edytuje swoich danych na Profilu – pola są disabled, to tylko zabezpieczenie
+
     const firstName = document.getElementById('pr-input-fname').value.trim();
     const lastName  = document.getElementById('pr-input-lname').value.trim();
-    if (!firstName && !lastName) return;
+    if (!firstName || !lastName) {
+        showToast(_tP('profil.nameValidationError', 'Podaj imię i nazwisko.'), true);
+        return;
+    }
     const displayName = (firstName + ' ' + lastName).trim();
     const ts = firebase.firestore.FieldValue.serverTimestamp();
 
@@ -596,10 +608,10 @@ async function saveName() {
         // users
         batch.update(db.collection('users').doc(currentUserId), { firstName, lastName, displayName, updatedAt: ts });
 
-        // trainers (jeśli trener/owner)
-        if (currentTrainerId) {
-            batch.update(db.collection('trainers').doc(currentTrainerId), { firstName, lastName, displayName, updatedAt: ts });
-        }
+        // trainers (jeśli trener/owner – we wszystkich klubach, w których pracuje)
+        currentTrainerIds.forEach(tid => {
+            batch.update(db.collection('trainers').doc(tid), { firstName, lastName, displayName, updatedAt: ts });
+        });
 
         await batch.commit();
         document.getElementById('pr-hero-name').textContent = displayName;
@@ -610,7 +622,7 @@ async function saveName() {
         return;
     }
 
-    // memberships
+    // memberships – displayName we wszystkich aktywnych kontekstach (ZAWODNIK nigdy tu nie dociera, patrz early return wyżej)
     try {
         const mbrSnap = await db.collection('memberships')
             .where('userId', '==', currentUserId)
@@ -619,11 +631,6 @@ async function saveName() {
         const updates = [];
         mbrSnap.forEach(doc => {
             updates.push(doc.ref.update({ displayName }));
-            if (currentUserRole === 'ZAWODNIK' && doc.data().playerId) {
-                updates.push(db.collection('players').doc(doc.data().playerId).update({
-                    name: displayName, firstname: firstName, lastname: lastName
-                }));
-            }
         });
         await Promise.all(updates);
     } catch(e) {

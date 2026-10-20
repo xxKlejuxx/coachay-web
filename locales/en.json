@@ -1011,6 +1011,7 @@
   "roleFieldLabel": "Role",
   "nameSavedToast": "Details saved ✓",
   "nameSaveError": "Save failed.",
+  "nameValidationError": "Please enter both first and last name.",
   "subscriptionTitle": "Subscription",
   "subscriptionFreeChip": "Free",
   "pinTitle": "PIN",

@@ -1011,6 +1011,7 @@
   "roleFieldLabel": "Rola",
   "nameSavedToast": "Dane zapisane ✓",
   "nameSaveError": "Błąd zapisu.",
+  "nameValidationError": "Podaj imię i nazwisko.",
   "subscriptionTitle": "Subskrypcja",
   "subscriptionFreeChip": "Bezpłatny",
   "pinTitle": "PIN",
