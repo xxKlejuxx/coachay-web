@@ -4,6 +4,7 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 
 ---
 
+[2026-10-20 12:00] [WEB] [DONE] profil.html — walidacja imię/nazwisko (wymagane oba pola), blokada edycji dla ZAWODNIK, fix sync nazwiska/awatara trenera w wielu klubach (patrz wpis poniżej)
 [2026-09-21 00:00] [WEB] [DONE] sendEventReminders — nowa Cloud Function (co 15 min), powiadomienie przed eventem, ustawienie per klub (clubs/{clubId}.reminderHoursBefore), okno ±7.5 min, push do wszystkich członków drużyny
 [2026-09-21 00:00] [WEB] [DONE] ustawienia.html — nowy wiersz + panel "Powiadomienie przed eventem" (admin only), select 1-24h, zapis do clubs/{clubId}.reminderHoursBefore
 [2026-09-21 00:00] [WEB] [DONE] i18n — dodane klucze settings.reminder*, LOCALE_V → 20260921c; push w języku użytkownika (getLang per userId, I18N.pl/en.reminderTitle + reminderReady)
@@ -17,6 +18,34 @@ Format wpisu: `[YYYY-MM-DD HH:MM] [WEB|APP] [DONE|TODO|INFO] treść`
 [2026-09-16 00:00] [APP] [INFO] syncEntitlementToAccessRights — slots_total/slots_used bezpieczne, brak konfliktu z webhookiem (patrz wpis poniżej)
 [2026-09-16 00:00] [APP] [INFO] Koncepcja V2 (po premierze): denormalizacja statusu licencji na memberships (patrz wpis poniżej)
 [2026-09-16 00:00] [WEB] [DONE] functions/index.js — revenuecatWebhook: nowy routing dla produktów rodzinnych + applyFamilyLicenseUpdate
+
+---
+
+## Profil — walidacja imię/nazwisko, blokada ZAWODNIK, multi-klub sync (2026-10-20)
+
+### Problem (był)
+
+Ekran Profil (`profil.html`, funkcja `saveName()`) miał trzy błędy:
+
+1. **Walidacja:** `if (!firstName && !lastName) return;` — blokowała zapis TYLKO gdy OBA pola były puste. Jedno wypełnione, drugie puste → zapis przechodził (np. samo imię bez nazwiska).
+2. **Brak blokady dla ZAWODNIK:** zawodnik mógł sam zmieniać swoje imię/nazwisko na Profilu — a te dane powinien zarządzać wyłącznie trener (przez ekran drużyny). Dodatkowo stary kod przy takiej zmianie pisał do `players` pod błędnymi, małymi literami (`firstname`/`lastname`) zamiast `firstName`/`lastName` używanych wszędzie indziej w kodzie — więc i tak nigdy realnie się nie synchronizowało.
+3. **Trener w więcej niż jednym klubie:** `trainerId` był rozwiązywany tylko dla AKTUALNEGO klubu (`where('clubId','==',currentClubId)`). Zmiana nazwiska na Profilu aktualizowała tylko JEDEN dokument `trainers` — w pozostałych klubach tego samego trenera lista Trenerzy pokazywała starą nazwę, dopóki nie przełączył się na ten klub i nie zapisał zmiany ponownie. Ten sam błąd dotyczył synchronizacji awatara trenera.
+
+### Fix w WEB (profil.html)
+
+1. Walidacja zmieniona na `if (!firstName || !lastName) { pokaż błąd; return; }` — wymaga OBU pól.
+2. Dla `currentUserRole === 'ZAWODNIK'`: pola imienia/nazwiska są `disabled`, przycisk "Zapisz" ukryty, a funkcja zapisu ma dodatkowo early-return dla tej roli (podwójne zabezpieczenie: UI + logika). Martwy fragment pisania do `players.firstname/lastname` usunięty.
+3. Zamiast pojedynczego `trainerId`, kod zbiera teraz WSZYSTKIE dokumenty `trainers` danego `userId` (zapytanie bez filtra `clubId`) i aktualizuje je wszystkie w jednym batchu — dotyczy zarówno zmiany nazwiska, jak i awatara.
+
+### Dla APP
+
+Dotyczy w pełni, jeśli APP ma analogiczny ekran profilu z edytowalnym imieniem/nazwiskiem:
+
+1. Wymagaj OBU pól (imię i nazwisko) przy zapisie — nie pozwalaj zapisać z jednym pustym.
+2. Zablokuj/ukryj edycję imienia i nazwiska dla roli ZAWODNIK (pola read-only albo brak formularza edycji) — te dane zarządza wyłącznie trener.
+3. Jeśli APP synchronizuje zmianę nazwiska (lub awatara) trenera do kolekcji `trainers` — upewnij się, że robi to dla WSZYSTKICH dokumentów `trainers` danego `userId` (zapytanie bez filtra po `clubId`), nie tylko dla aktualnie wybranego klubu/kontekstu.
+
+Rozważcie też (opcjonalnie, nie zrobione po stronie WEB w tym fixie — to był tylko fix klienta): regułę Firestore blokującą zapis `firstName`/`lastName`/`displayName` na `users/{uid}` gdy rola usera to ZAWODNIK, żeby nie dało się tego obejść z pominięciem UI (np. bezpośrednim wywołaniem API).
 
 ---
 
