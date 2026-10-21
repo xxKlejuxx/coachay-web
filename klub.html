@@ -456,7 +456,7 @@ async function loadTeamStats() {
                 if (isGlowny && !mainTrainerByTeam[m.teamId])
                     mainTrainerByTeam[m.teamId] = m.userId;
                 if (!window.trainersByTeam[m.teamId]) window.trainersByTeam[m.teamId] = [];
-                window.trainersByTeam[m.teamId].push({ userId: m.userId, isGlowny });
+                window.trainersByTeam[m.teamId].push({ userId: m.userId, isGlowny, isClubAdmin: m.isClubAdmin === true });
             });
         }
 
@@ -577,7 +577,7 @@ function buildTeamCard(team) {
                     ? (window.trainersByTeam[tid])
                         .sort((a,b) => b.isGlowny - a.isGlowny)
                         .map(tr => `<div style="font-size:17px;font-weight:600;color:var(--szary-j);">
-                            🧑 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:15px;color:#FBBF24;font-weight:800;">⭐</span>' : ''}
+                            🧑 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:15px;color:#FBBF24;font-weight:800;">⭐</span>' : ''}${tr.isClubAdmin ? ` <span style="font-size:12px;font-weight:800;letter-spacing:0.04em;color:#60A5FA;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);border-radius:5px;padding:1px 6px;vertical-align:middle;">${_tt('klub.adminBadge','Admin')}</span>` : ''}
                         </div>`).join('')
                     : `<div style="font-size:17px;color:var(--szary);">${_tt('klub.noTrainerLabel','Brak trenera')}</div>`
                 }
@@ -685,9 +685,10 @@ async function openTeamDetail(team) {
     const dpTrainers = window.trainersByTeam[_dpTid] || [];
     const dpCoachRow = document.getElementById('dp-coach-row');
     if (dpTrainers.length) {
+        const _ttDp = (key, fb) => typeof t === 'function' ? t(key) : fb;
         dpCoachRow.innerHTML = dpTrainers
             .sort((a,b) => b.isGlowny - a.isGlowny)
-            .map(tr => `<span style="margin-right:8px;">🧑 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:15px;color:#FBBF24;font-weight:800;">⭐</span>' : ''}</span>`)
+            .map(tr => `<span style="margin-right:8px;">🧑 ${getTrainerName(tr.userId)}${tr.isGlowny ? ' <span style="font-size:15px;color:#FBBF24;font-weight:800;">⭐</span>' : ''}${tr.isClubAdmin ? ` <span style="font-size:12px;font-weight:800;letter-spacing:0.04em;color:#60A5FA;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);border-radius:5px;padding:1px 6px;vertical-align:middle;">${_ttDp('klub.adminBadge','Admin')}</span>` : ''}</span>`)
             .join('');
     } else {
         dpCoachRow.textContent = typeof t === 'function' ? t('klub.noTrainerLabel') : 'Brak trenera';
@@ -889,6 +890,24 @@ async function fillTrainersList(teamId, preselectedUserId) {
 }
 
 
+/* Mapa userId → isClubAdmin (true/false), czytana z `trainers` (źródło prawdy dla statusu admina klubu).
+   Używana żeby przy przypisywaniu trenera do (nowej) drużyny jego status admina klubu
+   przeszedł też na nowo tworzony membership – inaczej ginie dla tej konkretnej drużyny. */
+async function getClubAdminMap(userIds) {
+    const map = {};
+    const uniq = [...new Set(userIds.filter(Boolean))];
+    for (let i = 0; i < uniq.length; i += 10) {
+        const chunk = uniq.slice(i, i + 10);
+        if (!chunk.length) continue;
+        const snap = await db.collection('trainers')
+            .where('clubId', '==', currentClubId)
+            .where('userId', 'in', chunk)
+            .get();
+        snap.docs.forEach(d => { map[d.data().userId] = d.data().isClubAdmin === true; });
+    }
+    return map;
+}
+
 async function saveTeam() {
     if (!requireWriteAccess()) return;
     const name = document.getElementById('te-name').value.trim();
@@ -941,6 +960,7 @@ async function saveTeam() {
             }
 
             // Memberships dla wybranych trenerów
+            const _newTeamAdminMap = await getClubAdminMap(selectedTrainers.map(st => st.userId));
             for (const { userId, isGlowny } of selectedTrainers) {
                 const role = isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY';
                 // Jeśli to twórca i miał stary membership bez teamId – już zaktualizowany
@@ -949,7 +969,7 @@ async function saveTeam() {
                     const mbrId = makeMbrId(role);
                     await db.collection('memberships').doc(mbrId).set(buildMembership({
                         membershipId: mbrId, userId, teamId, clubId: currentClubId,
-                        role, trainerRole: role, status: 'ACTIVE',
+                        role, trainerRole: role, status: 'ACTIVE', isClubAdmin: _newTeamAdminMap[userId] || false,
                         displayName: getTrainerName(userId), joinedAt: now
                     }));
                 }
@@ -986,18 +1006,20 @@ async function saveTeam() {
             }
 
             // Dodaj/reaktywuj – upsert (nie tworzy duplikatu)
+            const _toAddAdminMap = await getClubAdminMap(toAdd.map(x => x.userId));
             for (const { userId, isGlowny } of toAdd) {
                 const role = isGlowny ? 'TRENER_GLOWNY' : 'TRENER_POMOCNICZY';
+                const _isClubAdminForUser = _toAddAdminMap[userId] || false;
                 const existing = await getActiveMbrs(userId);
                 if (existing.length > 0) {
-                    await existing[0].ref.update({ role, trainerRole: role, status: 'ACTIVE' });
+                    await existing[0].ref.update({ role, trainerRole: role, status: 'ACTIVE', isClubAdmin: _isClubAdminForUser });
                     for (const dup of existing.slice(1)) await dup.ref.delete();
                 } else {
                     // Sprawdź też REMOVED – reaktywuj zamiast tworzyć nowe
                     const removedSnap = await db.collection('memberships')
                         .where('userId','==',userId).where('teamId','==',teamId).where('status','==','REMOVED').limit(1).get();
                     if (!removedSnap.empty) {
-                        await removedSnap.docs[0].ref.update({ role, trainerRole: role, status: 'ACTIVE', rejoinedAt: now });
+                        await removedSnap.docs[0].ref.update({ role, trainerRole: role, status: 'ACTIVE', isClubAdmin: _isClubAdminForUser, rejoinedAt: now });
                     } else {
                         const mbrId = makeMbrId(role);
                         await db.collection('memberships').doc(mbrId).set(buildMembership({

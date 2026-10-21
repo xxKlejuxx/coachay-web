@@ -294,6 +294,7 @@
   "deleteTeamWarning": "W drużynie \"{{name}}\" są zawodnicy ({{count}}).\n\nUsunięcie spowoduje utratę danych — wszyscy zawodnicy, rodzice i kibice tej drużyny utracą dostęp do aplikacji.\n\nCzy na pewno usunąć?",
   "deleteTeamConfirm": "Usunąć drużynę \"{{name}}\"?",
   "noTrainerLabel": "Brak trenera",
+  "adminBadge": "Admin",
   "playersCount": "Zawodnicy ({{count}})",
   "addPlayerButton": "+ Dodaj",
   "noPlayersHint": "Brak zawodników — dodaj pierwszego.",

@@ -686,11 +686,10 @@ async function openDetailPanel(t) {
     const isBlocked = t.status === 'BLOCKED';
     const isSelf    = t.userId === currentUserId;
 
-    // Przycisk Edytuj – tylko admin, nie dla siebie (profil – profil.html), nie pending
+    // Przycisk Edytuj – admin (dowolnego trenera) ALBO własna karta (dane trenerskie: bio, od kiedy, licencja,
+    // specjalizacja, telefon, widoczność), nigdy dla pending (jeszcze nie zarejestrowany)
     const editBtn = document.getElementById('dp-edit-btn');
-    console.log('isAdmin:', isAdmin, 'isPending:', isPending, 'isSelf:', isSelf);
-    console.log('editBtn.style.display:', (isAdmin && !isPending && !isSelf) ? 'block' : 'none');
-    editBtn.style.display = (isAdmin && !isPending) ? 'block' : 'none';
+    editBtn.style.display = ((isAdmin || isSelf) && !isPending) ? 'block' : 'none';
 
     let html = '';
 

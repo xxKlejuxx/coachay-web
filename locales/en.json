@@ -294,6 +294,7 @@
   "deleteTeamWarning": "The team \"{{name}}\" has players ({{count}}).\n\nDeleting it will remove data — all players, parents and supporters of this team will lose access to the app.\n\nAre you sure you want to delete it?",
   "deleteTeamConfirm": "Delete team \"{{name}}\"?",
   "noTrainerLabel": "No coach",
+  "adminBadge": "Admin",
   "playersCount": "Players ({{count}})",
   "addPlayerButton": "+ Add",
   "noPlayersHint": "No players — add the first one.",
