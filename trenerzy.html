@@ -727,8 +727,12 @@ Przekaż poniższy kod.').replace(/\n/g,'<br>')}</div>
             ${cp.bio ? `<div class="dp-section-value">${cp.bio}</div>` : `<div class="dp-section-empty">${_tDP('trenerzy.noBio','Brak opisu')}</div>`}
         </div>`;
 
+        // Admin (i sam trener na swojej karcie) widzi sekcje Doświadczenie/Kontakt zawsze – nawet gdy puste –
+        // żeby było widać BRAKI w danych, a nie tylko to co ktoś faktycznie uzupełnił (inaczej admin nie ma
+        // jak się zorientować, kogo poprosić o uzupełnienie profilu).
+        const canSeeContactAlways = isAdmin || isSelf;
         const expYears = calcExpYears(cp.coachingSince);
-        if (cp.coachingSince || cp.licenseLevel || cp.specialization) {
+        if (cp.coachingSince || cp.licenseLevel || cp.specialization || canSeeContactAlways) {
             html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.experienceLabel','Doświadczenie')}</div>`;
             if (cp.coachingSince) {
                 const since = new Date(cp.coachingSince).getFullYear();
@@ -738,14 +742,22 @@ Przekaż poniższy kod.').replace(/\n/g,'<br>')}</div>
                     ? window.t('trenerzy.coachSinceExp', {year: since, count: expYears, suffix})
                     : `Trener od ${since} r. (${expYears} ${suffix})`;
                 html += `<div class="dp-section-value">🎖️ ${coachLine}</div>`;
+            } else if (canSeeContactAlways) {
+                html += `<div class="dp-section-empty">🎖️ ${_tDP('trenerzy.noSinceYear','Nie podano roku rozpoczęcia')}</div>`;
             }
             if (cp.licenseLevel) {
                 const licLine = typeof window.t === 'function'
                     ? window.t('trenerzy.licenseLine', {license: cp.licenseLevel})
                     : `Licencja: ${cp.licenseLevel}`;
                 html += `<div class="dp-section-value">🔑 ${licLine}</div>`;
+            } else if (canSeeContactAlways) {
+                html += `<div class="dp-section-empty">🔑 ${_tDP('trenerzy.noLicense','Nie podano licencji')}</div>`;
             }
-            if (cp.specialization) html += `<div class="dp-section-value">🎯 ${cp.specialization}</div>`;
+            if (cp.specialization) {
+                html += `<div class="dp-section-value">🎯 ${cp.specialization}</div>`;
+            } else if (canSeeContactAlways) {
+                html += `<div class="dp-section-empty">🎯 ${_tDP('trenerzy.noSpecialization','Nie podano specjalizacji')}</div>`;
+            }
             html += `</div>`;
         }
 
@@ -761,8 +773,8 @@ Przekaż poniższy kod.').replace(/\n/g,'<br>')}</div>
         }
 
         // phoneVisible/emailVisible = widoczność DLA RODZICÓW/ZAWODNIKÓW. Admin klubu (i sam trener
-        // na swojej karcie) widzi dane kontaktowe zawsze – to on je zbiera i musi móc je sprawdzić/poprawić.
-        const canSeeContactAlways = isAdmin || isSelf;
+        // na swojej karcie) widzi dane kontaktowe zawsze – to on je zbiera i musi móc je sprawdzić/poprawić –
+        // oraz zawsze widzi braki (żeby wiedzieć kogo poprosić o uzupełnienie).
         const phone = (canSeeContactAlways || cp.phoneVisible) ? cp.phone : null;
         // email: trainer doc || users doc (Google rejestracja zapisuje tylko w users)
         let emailVal = t.email || null;
@@ -773,11 +785,13 @@ Przekaż poniższy kod.').replace(/\n/g,'<br>')}</div>
             } catch(e) {}
         }
         const email = (canSeeContactAlways || cp.emailVisible) ? emailVal : null;
-        if (phone || email) {
+        if (phone || email || canSeeContactAlways) {
             html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.contactLabel','Kontakt')}</div>
                 <div style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:4px 12px;">`;
             if (phone) html += `<div class="dp-contact-row"><div class="dp-contact-icon">📱</div><div class="dp-contact-val">${phone}${!cp.phoneVisible ? ` <span style="color:var(--szary);font-size:13px;">(${_tDP('trenerzy.hiddenFromParents','niewidoczny dla rodziców/zawodników')})</span>` : ''}</div></div>`;
+            else if (canSeeContactAlways) html += `<div class="dp-contact-row"><div class="dp-contact-icon">📱</div><div class="dp-contact-val" style="color:var(--szary);">${_tDP('trenerzy.noPhone','Brak numeru telefonu')}</div></div>`;
             if (email) html += `<div class="dp-contact-row"><div class="dp-contact-icon">✉️</div><div class="dp-contact-val">${email}${!cp.emailVisible ? ` <span style="color:var(--szary);font-size:13px;">(${_tDP('trenerzy.hiddenFromParents','niewidoczny dla rodziców/zawodników')})</span>` : ''}</div></div>`;
+            else if (canSeeContactAlways) html += `<div class="dp-contact-row"><div class="dp-contact-icon">✉️</div><div class="dp-contact-val" style="color:var(--szary);">${_tDP('trenerzy.noEmail','Brak adresu e-mail')}</div></div>`;
             html += `</div></div>`;
         }
 
@@ -790,14 +804,8 @@ Przekaż poniższy kod.').replace(/\n/g,'<br>')}</div>
 
             if (!isBlocked) {
                 html += `<button class="dp-action-btn dp-action-btn-warn" onclick="showBlockModal()">🚫 ${_tDP('trenerzy.blockButton','Zablokuj trenera')}</button>`;
-                // Admin – tylko dla zarejestrowanych (nie pending, nie zablokowanych)
-                if (t.userId && !isBlocked) {
-                    if (!t.isClubAdmin) {
-                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="grantAdminRole()">⭐ ${_tDP('trenerzy.grantAdminButton','Nadaj prawa admina')}</button>`;
-                    } else {
-                        html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="revokeAdminRole()">⛔ ${_tDP('trenerzy.revokeAdminButton','Odbierz prawa admina')}</button>`;
-                    }
-                }
+                // Przyciski "Nadaj/Odbierz prawa admina" ukryte (2026-10-21, na prośbę Rafała) –
+                // grantAdminRole()/revokeAdminRole() wciąż istnieją w kodzie, ale nie są eksponowane w UI.
             } else {
                 html += `<button class="dp-action-btn dp-action-btn-neutral" onclick="unblockTrainer()">🔓 ${_tDP('trenerzy.unblockButton','Odblokuj trenera')}</button>`;
             }
