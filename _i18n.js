@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261016c'; // 2026-10-16: bump po dodaniu polityka.back (PL+EN, brakujacy klucz) + przelacznik jezyka na stronach prawnych
+    const LOCALE_V  = '20261021'; // 2026-10-21: bump po dodaniu klub.adminBadge (PL+EN) - plakietka Admin na ekranie Klub
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */

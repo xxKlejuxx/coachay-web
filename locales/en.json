@@ -1120,6 +1120,7 @@
   "coachSinceLine": "Coach since {{year}} ({{count}} yrs)",
   "licenseLine": "License: {{license}}",
   "contactLabel": "Contact",
+  "hiddenFromParents": "hidden from parents/players",
   "manageLabel": "Management",
   "regCodeLabel": "Registration code",
   "pendingTitle": "Awaiting registration",

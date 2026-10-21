@@ -523,7 +523,9 @@ async function initTrenerzy() {
 
     isGlowny = currentUserRole === 'TRENER_GLOWNY' || currentUserRole === 'OWNER';
 
-    // Sprawdź isClubAdmin
+    // Sprawdź isClubAdmin – trainers (źródło prawdy) z fallbackiem na membership
+    // (membership.isClubAdmin może być aktualniejsze niż trainers, np. gdy trainers nie zostało
+    // zsynchronizowane przy przypisaniu do drużyny – patrz sync #0127)
     try {
         const tSnap = await db.collection('trainers')
             .where('userId', '==', currentUserId)
@@ -531,6 +533,7 @@ async function initTrenerzy() {
             .limit(1).get();
         if (!tSnap.empty) isAdmin = tSnap.docs[0].data().isClubAdmin === true;
     } catch (e) {}
+    if (!isAdmin && membership?.isClubAdmin === true) isAdmin = true;
 
     // Przycisk Dodaj – admin lub trener główny
     if (isAdmin || isGlowny) {
@@ -757,7 +760,10 @@ Przekaż poniższy kod.').replace(/\n/g,'<br>')}</div>
             </div>`;
         }
 
-        const phone = cp.phoneVisible ? cp.phone : null;
+        // phoneVisible/emailVisible = widoczność DLA RODZICÓW/ZAWODNIKÓW. Admin klubu (i sam trener
+        // na swojej karcie) widzi dane kontaktowe zawsze – to on je zbiera i musi móc je sprawdzić/poprawić.
+        const canSeeContactAlways = isAdmin || isSelf;
+        const phone = (canSeeContactAlways || cp.phoneVisible) ? cp.phone : null;
         // email: trainer doc || users doc (Google rejestracja zapisuje tylko w users)
         let emailVal = t.email || null;
         if (!emailVal && t.userId) {
@@ -766,12 +772,12 @@ Przekaż poniższy kod.').replace(/\n/g,'<br>')}</div>
                 if (uDoc.exists) emailVal = uDoc.data().email || null;
             } catch(e) {}
         }
-        const email = cp.emailVisible ? emailVal : null;
+        const email = (canSeeContactAlways || cp.emailVisible) ? emailVal : null;
         if (phone || email) {
             html += `<div class="dp-section"><div class="dp-section-label">${_tDP('trenerzy.contactLabel','Kontakt')}</div>
                 <div style="background:var(--tlo-karta);border:1px solid var(--border);border-radius:12px;padding:4px 12px;">`;
-            if (phone) html += `<div class="dp-contact-row"><div class="dp-contact-icon">📱</div><div class="dp-contact-val">${phone}</div></div>`;
-            if (email) html += `<div class="dp-contact-row"><div class="dp-contact-icon">✉️</div><div class="dp-contact-val">${email}</div></div>`;
+            if (phone) html += `<div class="dp-contact-row"><div class="dp-contact-icon">📱</div><div class="dp-contact-val">${phone}${!cp.phoneVisible ? ` <span style="color:var(--szary);font-size:13px;">(${_tDP('trenerzy.hiddenFromParents','niewidoczny dla rodziców/zawodników')})</span>` : ''}</div></div>`;
+            if (email) html += `<div class="dp-contact-row"><div class="dp-contact-icon">✉️</div><div class="dp-contact-val">${email}${!cp.emailVisible ? ` <span style="color:var(--szary);font-size:13px;">(${_tDP('trenerzy.hiddenFromParents','niewidoczny dla rodziców/zawodników')})</span>` : ''}</div></div>`;
             html += `</div></div>`;
         }
 

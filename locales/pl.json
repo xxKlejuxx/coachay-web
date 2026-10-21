@@ -1120,6 +1120,7 @@
   "coachSinceLine": "Trener od {{year}} r. ({{count}} lat)",
   "licenseLine": "Licencja: {{license}}",
   "contactLabel": "Kontakt",
+  "hiddenFromParents": "niewidoczny dla rodziców/zawodników",
   "manageLabel": "Zarządzanie",
   "regCodeLabel": "Kod rejestracyjny",
   "pendingTitle": "Oczekuje na rejestrację",
