@@ -1247,13 +1247,15 @@ function esc(s) {
         <div class="form-group">
           <label class="form-lbl" data-i18n="auth.howToStart">Jak chcesz zacząć?</label>
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="role-opt-dr" id="reg-type-trener" onclick="pickRegType('trener')">
-              <span style="font-size:22px;flex-shrink:0;">🏆</span>
-              <div><div style="font-size:14px;font-weight:900;color:var(--bialy);" data-i18n="auth.optionCreateClub">Zakładam klub</div><div style="font-size:11px;font-weight:600;color:var(--szary);margin-top:2px;" data-i18n="auth.optionCreateClubDesc">Tworzę nowy klub i zarządzam drużyną</div></div>
-            </button>
             <button class="role-opt-dr" id="reg-type-kod" onclick="pickRegType('kod')">
               <span style="font-size:22px;flex-shrink:0;">🔑</span>
               <div><div style="font-size:14px;font-weight:900;color:var(--bialy);" data-i18n="auth.optionHaveCode">Mam kod</div><div style="font-size:11px;font-weight:600;color:var(--szary);margin-top:2px;" data-i18n="auth.optionHaveCodeDesc">Dołączam do drużyny z kodem od trenera</div></div>
+            </button>
+            <!-- 2026-10-24 (sync #0133/#0134): "Mam kod" przeniesione na 1. miejsce — 0/19 testerów
+                 użyło kodu zaproszenia, mimo że dostali go mailem; wszyscy poszli ścieżką "Zakładam klub". -->
+            <button class="role-opt-dr" id="reg-type-trener" onclick="pickRegType('trener')">
+              <span style="font-size:22px;flex-shrink:0;">🏆</span>
+              <div><div style="font-size:14px;font-weight:900;color:var(--bialy);" data-i18n="auth.optionCreateClub">Zakładam klub</div><div style="font-size:11px;font-weight:600;color:var(--szary);margin-top:2px;" data-i18n="auth.optionCreateClubDesc">Tworzę nowy klub i zarządzam drużyną</div></div>
             </button>
           </div>
         </div>
