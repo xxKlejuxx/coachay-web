@@ -86,13 +86,15 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-live-indicator { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-d); font-size: 13px; font-weight: 800; color: #DC2626; letter-spacing: .05em; }
 .mc-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #DC2626; animation: mc-pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
 @keyframes mc-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
-.mc-scoreboard { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 8px 0 4px; }
-.mc-sb-team { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.mc-scoreboard { display: flex; align-items: stretch; justify-content: space-between; gap: 6px; margin: 8px 0 4px; }
+.mc-sb-team { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 12px; padding: 6px 4px; }
+.mc-sb-team--our { background: rgba(22,163,74,0.10); border: 1px solid rgba(22,163,74,0.30); }
+.mc-sb-team--opp { background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.28); }
 .mc-sb-name { font-family: var(--font-d); font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; text-align: center; line-height: 1.2; }
 .mc-sb-name--our { color: #16A34A; }
 .mc-sb-name--opp { color: #DC2626; }
 .mc-sb-score { font-family: var(--font-d); font-size: 38px; font-weight: 900; color: var(--czarny); line-height: 1; }
-.mc-sb-sep { font-family: var(--font-d); font-size: 28px; font-weight: 900; color: var(--szary); padding-bottom: 4px; }
+.mc-sb-sep { font-family: var(--font-d); font-size: 28px; font-weight: 900; color: var(--bialy); padding-bottom: 4px; align-self: center; background: var(--czarny); border-radius: 10px; padding: 4px 10px; }
 .mc-counts { display: flex; gap: 8px; margin-top: 8px; }
 .mcc { flex: 1; border-radius: 12px; padding: 8px; text-align: center; }
 .mcc-g { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25); }
@@ -1208,12 +1210,12 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             const oppName  = md.opponent || (vsMatch ? vsMatch[2].trim() : '') || 'Przeciwnik';
             scoreboardHtml = `
                 <div class="mc-scoreboard">
-                    <div class="mc-sb-team">
+                    <div class="mc-sb-team mc-sb-team--our">
                         <div class="mc-sb-name mc-sb-name--our">${ourName}</div>
                         <div class="mc-sb-score">${ourScore}</div>
                     </div>
                     <div class="mc-sb-sep">:</div>
-                    <div class="mc-sb-team">
+                    <div class="mc-sb-team mc-sb-team--opp">
                         <div class="mc-sb-name mc-sb-name--opp">${oppName}</div>
                         <div class="mc-sb-score">${oppScore}</div>
                     </div>
