@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261021b'; // 2026-10-21: bump po dodaniu kluczy braku danych trenera (noPhone/noEmail/noLicense/noSince/noSpecialization) + klub.adminBadge
+    const LOCALE_V  = '20261025'; // 2026-10-25: bump po dodaniu addEvent.opponentLabel/opponentPlaceholder/opponentValidationError (pole "Z kim gramy?")
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */

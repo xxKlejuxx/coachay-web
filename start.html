@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="_desktop.css?v=20260821c">
-<script src="_i18n.js?v=20261007c"></script>
+<script src="_i18n.js?v=20261025"></script>
 <script src="_sidebar.js?v=20260821b"></script>
 <style>
 :root { --phone-h: 750px; }
@@ -558,7 +558,13 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 </select>
                 <input type="text" class="form-inp" id="ev-add-topic-custom" placeholder="Wpisz nowy temat..." style="display:none;margin-top:8px;">
             </div>
-            <div class="form-group">
+            <!-- Przeciwnik (tylko mecz) — sync #0134/#0136: tytuł meczu budujemy automatycznie
+                 z prawdziwej nazwy drużyny + przeciwnika, zamiast ręcznego wpisywania "Nazwa vs Nazwa" -->
+            <div class="form-group" id="ev-opponent-group" style="display:none">
+                <div class="form-lbl"><span data-i18n="addEvent.opponentLabel">Z kim gramy?</span> <span class="char-count" id="ev-opponent-count">0/20</span></div>
+                <input type="text" class="form-inp" id="ev-add-opponent" maxlength="20" oninput="updateEvOpponentCount()" data-i18n-placeholder="addEvent.opponentPlaceholder" placeholder="Nazwa przeciwnika">
+            </div>
+            <div class="form-group" id="ev-title-group">
                 <div class="form-lbl"><span data-i18n="addEvent.titleLabel">Tytuł</span> <span class="char-count" id="ev-title-count">0/40</span></div>
                 <input type="text" class="form-inp" id="ev-add-title" maxlength="40" oninput="updateEvTitleCount()" data-i18n-placeholder="addEvent.titlePlaceholder" placeholder="Nazwa wydarzenia">
             </div>
@@ -2825,9 +2831,13 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
             document.querySelectorAll('#ev-type-picker .type-opt').forEach(o => o.classList.toggle('selected', o.dataset.type === event.type));
             document.getElementById('ev-topic-group').style.display = event.type === 'TRENING' ? '' : 'none';
+            document.getElementById('ev-opponent-group').style.display = event.type === 'MECZ' ? '' : 'none';
+            document.getElementById('ev-title-group').style.display = event.type === 'MECZ' ? 'none' : '';
 
             document.getElementById('ev-add-title').value = event.title || '';
             updateEvTitleCount();
+            document.getElementById('ev-add-opponent').value = event.matchData?.opponent || '';
+            updateEvOpponentCount();
             document.getElementById('ev-add-desc').value = event.description || '';
             updateEvDescCount();
             document.getElementById('ev-date-from').value = event.date || '';
@@ -2876,10 +2886,20 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         el.classList.add('selected');
         const type = el.dataset.type;
         document.getElementById('ev-topic-group').style.display = type === 'TRENING' ? '' : 'none';
+        document.getElementById('ev-opponent-group').style.display = type === 'MECZ' ? '' : 'none';
+        document.getElementById('ev-title-group').style.display = type === 'MECZ' ? 'none' : '';
         const PRIO_MAP = { MECZ: 1, TRENING: 2, WYJAZD: 3, INNE: 999 };
         const prioSel = document.getElementById('ev-display-priority');
         if (prioSel) prioSel.value = PRIO_MAP[type] || 999;
         updateEvTitleCount();
+        updateEvOpponentCount();
+    }
+
+    function updateEvOpponentCount() {
+        const input = document.getElementById('ev-add-opponent');
+        const counter = document.getElementById('ev-opponent-count');
+        if (!input || !counter) return;
+        counter.textContent = `${input.value.length}/20`;
     }
 
     function toggleEvCycle() {
@@ -3000,6 +3020,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         _editingEventId = null;
         _setEventPanelMode(false);
         document.getElementById('ev-add-title').value = '';
+        document.getElementById('ev-add-opponent').value = '';
         document.getElementById('ev-add-desc').value = '';
         document.getElementById('ev-date-from').value = '';
         document.getElementById('ev-date-to').value = '';
@@ -3008,6 +3029,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         document.getElementById('ev-venue').value = '';
         document.getElementById('ev-address').value = '';
         document.getElementById('ev-title-count').textContent = '0/40';
+        document.getElementById('ev-opponent-count').textContent = '0/20';
         document.getElementById('ev-desc-count').textContent = '0/50';
         const cycleToggle = document.getElementById('ev-cycle-toggle');
         cycleToggle.classList.remove('on');
@@ -3015,6 +3037,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         document.querySelectorAll('#ev-cycle-days .day-chip').forEach(c => c.classList.remove('selected'));
         document.querySelectorAll('#ev-type-picker .type-opt').forEach((o, i) => o.classList.toggle('selected', i === 0));
         document.getElementById('ev-topic-group').style.display = '';
+        document.getElementById('ev-opponent-group').style.display = 'none';
+        document.getElementById('ev-title-group').style.display = '';
         const topicSel = document.getElementById('ev-add-topic');
         if (topicSel) topicSel.value = '';
         const topicCus = document.getElementById('ev-add-topic-custom');
@@ -3046,7 +3070,22 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             topicTitle = resolved.title;
         }
 
-        const title = document.getElementById('ev-add-title').value.trim() || topicTitle;
+        // Mecz: tytuł budujemy automatycznie z prawdziwej nazwy drużyny + przeciwnika
+        // (sync #0134/#0136) zamiast wymagać ręcznego wpisania "Nazwa vs Nazwa".
+        let opponent = '';
+        let title;
+        if (type === 'MECZ') {
+            opponent = document.getElementById('ev-add-opponent').value.trim();
+            if (!opponent) { alert(t('addEvent.opponentValidationError') || 'Podaj z kim gramy'); return; }
+            let ourTeamName = '';
+            try {
+                const teamDoc = await db.collection('teams').doc(_activeTeamId).get();
+                if (teamDoc.exists) ourTeamName = teamDoc.data().teamName || teamDoc.data().displayName || '';
+            } catch (e) {}
+            title = (ourTeamName ? (ourTeamName + ' vs ' + opponent) : opponent).substring(0, 40);
+        } else {
+            title = document.getElementById('ev-add-title').value.trim() || topicTitle;
+        }
         if (!title) { alert(t('addEvent.validationError') || 'Podaj tytuł i datę'); return; }
         const dateTo   = document.getElementById('ev-date-to').value || dateFrom;
         const timeFrom = document.getElementById('ev-time-from').value || '';
@@ -3108,6 +3147,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 updatedAt: new Date().toISOString(),
                 updatedBy: createdBy
             };
+            if (type === 'MECZ') baseUpdate['matchData.opponent'] = opponent;
             const updateDataThis = { ...baseUpdate, date: item.date };
 
             let editScope = 'single';
@@ -3161,7 +3201,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     isDemo: false, demoSetId: null
                 };
                 if (type === 'MECZ') {
-                    eventData.matchData = { opponent: '', homeAway: 'HOME', matchStatus: 'UPCOMING', result: null, endedAt: null, endedBy: null, liveAssistant: null, takeoverRequest: null, playerEvents: [], lineup: [] };
+                    eventData.matchData = { opponent, homeAway: 'HOME', matchStatus: 'UPCOMING', result: null, endedAt: null, endedBy: null, liveAssistant: null, takeoverRequest: null, playerEvents: [], lineup: [] };
                 }
                 await db.collection('events').doc(eventData.eventId).set(eventData);
                 await manageNotifications('create', 'event', eventData.eventId, { event: eventData });
