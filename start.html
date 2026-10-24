@@ -1091,7 +1091,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 const td = teamDoc.data();
                 const ml = td.settings?.matchLive;
                 if (ml && ml.parentsCanAssist === false) _parentsCanAssist = false;
-                _teamName = td.name || '';
+                _teamName = td.teamName || td.displayName || '';
             }
         } catch (e) {}
         const parentsCanAssist = _parentsCanAssist;

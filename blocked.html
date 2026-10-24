@@ -433,11 +433,11 @@ async function renderBlockedCtx(memberships) {
         try {
             if (m.teamId) {
                 const tDoc = await db.collection('teams').doc(m.teamId).get();
-                if (tDoc.exists) { teamName = tDoc.data().name || ''; clubName = tDoc.data().clubName || clubName; color = tDoc.data().teamColor || color; }
+                if (tDoc.exists) { teamName = tDoc.data().teamName || tDoc.data().displayName || ''; clubName = tDoc.data().clubName || clubName; color = tDoc.data().teamColor || color; }
             }
             if (m.clubId && !clubName) {
                 const cDoc = await db.collection('clubs').doc(m.clubId).get();
-                if (cDoc.exists) clubName = cDoc.data().name || m.clubId;
+                if (cDoc.exists) clubName = cDoc.data().clubName || m.clubId;
             }
         } catch (e) {}
 
