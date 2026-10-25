@@ -1150,7 +1150,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         card.className = 'mecz-card' + (isFinished ? ' mc-finished' : '');
 
-        let label = isFinished ? 'ZAKOŃCZONY' : isLive ? '🔴 NA ŻYWO' : (md.homeAway === 'HOME' ? 'MECZ DOMOWY' : 'MECZ WYJAZDOWY');
+        let label = isFinished ? t('home.matchFinishedLabel') : isLive ? t('home.matchLiveLabel') : (md.homeAway === 'HOME' ? t('home.matchHomeLabel') : t('home.matchAwayLabel'));
 
         let bg = isFinished && md.result?.outcome === 'WIN' ? '🏆' : isLive ? '🔴' : '⚽';
 
@@ -1172,26 +1172,26 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         if (isCoachRole) {
             if (isUpcoming) {
-                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-upcoming">⏳ Przed meczem</span></div>`;
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-upcoming">${t('mecz.upcomingBadge')}</span></div>`;
             } else if (isLive) {
-                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">🔴 Na żywo</span></div>`;
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">${t('mecz.liveBadge')}</span></div>`;
             } else if (isFinished) {
-                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-finished">✅ Zakończony</span><button class="mc-action-btn mc-btn-takeover" onclick="reopenMatch('${matchId}')">↩ Cofnij zakończenie</button></div>`;
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-finished">${t('mecz.finishedBadge')}</span><button class="mc-action-btn mc-btn-takeover" onclick="reopenMatch('${matchId}')">↩ ${t('mecz.revertButton')}</button></div>`;
             }
         } else if (isParent && parentsCanAssist && !isFinished) {
             if (isLive && !isLiveAssistant) {
-                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-live-indicator"><span class="mc-live-dot"></span>NA ŻYWO</span></div>`;
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-live-indicator"><span class="mc-live-dot"></span>${t('home.matchLiveLabel').replace('🔴', '').trim()}</span></div>`;
             } else if (!la || !la.userId) {
                 if (isMatchDay) {
-                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-claim" onclick="claimMatch('${matchId}')">📋 Obsługuję mecz</button></div>`;
+                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-claim" onclick="claimMatch('${matchId}')">${t('mecz.claimButton')}</button></div>`;
                 }
             } else if (la.userId !== currentUserData.userId) {
-                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-request" onclick="requestTakeover('${matchId}')">🔄 Poproś o przejęcie</button></div>`;
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><button class="mc-action-btn mc-btn-request" onclick="requestTakeover('${matchId}')">${t('mecz.requestTakeoverButton')}</button></div>`;
             } else if (isLiveAssistant) {
                 if (isLive) {
-                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">🔴 Na żywo</span></div>`;
+                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">${t('mecz.liveBadge')}</span></div>`;
                 } else if (isUpcoming) {
-                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-upcoming">⏳ Przed meczem</span></div>`;
+                    statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-upcoming">${t('mecz.upcomingBadge')}</span></div>`;
                 }
             }
         }
@@ -1318,7 +1318,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     async function reopenMatch(eventId) {
-        if (!await showConfirmSheet('Cofnąć zakończenie meczu? Status wróci do "Na żywo".')) return;
+        if (!await showConfirmSheet(t('mecz.revertConfirmTitle') + ' ' + t('mecz.revertConfirmBody'))) return;
         if (!db) return;
         try {
             await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE', 'matchData.endedAt': null, 'matchData.endedBy': null });
@@ -1399,14 +1399,14 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         // Status bar
         let barHtml = '';
-        if (isLive) barHtml += `<span class="mp-badge mp-badge-live">🔴 Na żywo</span>`;
-        else if (isFinished) barHtml += `<span class="mp-badge mp-badge-finished">✅ Zakończony</span>`;
-        else barHtml += `<span class="mp-badge mp-badge-upcoming">⏳ Przed meczem</span>`;
+        if (isLive) barHtml += `<span class="mp-badge mp-badge-live">${t('mecz.liveBadge')}</span>`;
+        else if (isFinished) barHtml += `<span class="mp-badge mp-badge-finished">${t('mecz.finishedBadge')}</span>`;
+        else barHtml += `<span class="mp-badge mp-badge-upcoming">${t('mecz.upcomingBadge')}</span>`;
 
         if (la && la.userId) {
             barHtml += `<span class="mp-bar-info">📋 <strong>${la.displayName || la.userId}</strong></span>`;
         } else if (!isFinished) {
-            barHtml += `<span class="mp-bar-info" style="color:var(--warn)">📋 Brak obsługi</span>`;
+            barHtml += `<span class="mp-bar-info" style="color:var(--warn)">${t('mecz.noAssistant')}</span>`;
         }
 
         if (isFinished) {
@@ -1606,7 +1606,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     async function mpReopenMatch(eventId) {
-        if (!await showConfirmSheet('Cofnąć zakończenie meczu? Status wróci do "Na żywo".')) return;
+        if (!await showConfirmSheet(t('mecz.revertConfirmTitle') + ' ' + t('mecz.revertConfirmBody'))) return;
         if (!db) return;
         try {
             await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE', 'matchData.endedAt': null, 'matchData.endedBy': null });
