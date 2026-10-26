@@ -1038,6 +1038,20 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     async function loadNextMatch(teamId) {
         const todayStr = getLocalDateStr();
 
+        // Niezależne od _loadCalWidget (który biegnie po tym Promise.all w refreshDashboard) -
+        // potrzebne już tutaj do rozwinięcia sentinela '__TEAM__' w renderMatchCard (liczniki obecności).
+        let teamPlayers = [];
+        let teamAbsences = [];
+        try {
+            const [playersSnap, absences] = await Promise.all([
+                playersOfTeamQuery(teamId, _activeClubId).get(),
+                getTeamAbsences(teamId)
+            ]);
+            teamPlayers = playersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+                .filter(p => p.teams && p.teams.some(t => t.teamId === teamId && t.status === 'ACTIVE') && p.isActive !== false);
+            teamAbsences = absences;
+        } catch (e) { console.error('❌ loadNextMatch (players/absences)', e); }
+
         let matchDays = DEFAULT_MATCH_DAYS;
         try {
             const teamDoc = await db.collection('teams').doc(teamId).get();
@@ -1109,7 +1123,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         dotsEl.innerHTML = '';
 
         _mecze = visible;
-        visible.forEach(match => { carousel.appendChild(renderMatchCard(match, todayStr, userCache, parentsCanAssist, teamName)); });
+        visible.forEach(match => { carousel.appendChild(renderMatchCard(match, todayStr, userCache, parentsCanAssist, teamName, teamPlayers, teamAbsences)); });
 
         // Live listener — re-renderuje kartę gdy wynik meczu się zmienia
         if (_liveMatchUnsub) { _liveMatchUnsub(); _liveMatchUnsub = null; }
@@ -1122,7 +1136,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 const updatedMatch = { ...liveMatch, matchData: ev.matchData || {}, attendance: ev.attendance || liveMatch.attendance };
                 _mecze[liveIdx] = updatedMatch;
                 const cards = carousel.querySelectorAll('.mecz-card');
-                if (cards[liveIdx]) cards[liveIdx].replaceWith(renderMatchCard(updatedMatch, todayStr, userCache, parentsCanAssist, teamName));
+                if (cards[liveIdx]) cards[liveIdx].replaceWith(renderMatchCard(updatedMatch, todayStr, userCache, parentsCanAssist, teamName, teamPlayers, teamAbsences));
             });
         }
 
@@ -1140,7 +1154,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         }
     }
 
-    function renderMatchCard(match, todayStr, userCache, parentsCanAssist, teamName) {
+    function renderMatchCard(match, todayStr, userCache, parentsCanAssist, teamName, teamPlayers, teamAbsences) {
         const card = document.createElement('div');
         const md = match.matchData || {};
         const isFinished = md.matchStatus === 'FINISHED';
@@ -1155,12 +1169,14 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         let bg = isFinished && md.result?.outcome === 'WIN' ? '🏆' : isLive ? '🔴' : '⚽';
 
         const att = match.attendance || {};
-        const invP  = (att.invited || []).filter(id => id.includes('player_'));
+        const invP  = (att.invited || []).includes('__TEAM__')
+            ? (teamPlayers || calAllPlayers).map(p => p.playerId)
+            : (att.invited || []).filter(id => id.includes('player_'));
         const confSet = new Set(att.confirmed || []);
         const conf  = invP.filter(id => confSet.has(id)).length;
         // 2026-09-26: nieobecność długoterminowa liczy się jako "nieobecny" tak samo jak declined/markedAbsent
         // (priorytet PO confirmed) — 1:1 z appką (sync #0041, countAttendance()).
-        const decl  = invP.filter(id => !confSet.has(id) && ((att.declined || []).includes(id) || (att.markedAbsent || []).includes(id) || findAbsenceFor(id, match.date))).length;
+        const decl  = invP.filter(id => !confSet.has(id) && ((att.declined || []).includes(id) || (att.markedAbsent || []).includes(id) || findAbsenceFor(id, match.date, teamAbsences))).length;
         const noResp = Math.max(0, invP.length - conf - decl);
 
         const la = md.liveAssistant;
@@ -2256,9 +2272,10 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     // Zwraca aktywną nieobecność zawodnika `playerId` pokrywającą datę `dateStr` (YYYY-MM-DD), albo null.
-    function findAbsenceFor(playerId, dateStr) {
+    function findAbsenceFor(playerId, dateStr, absencesList) {
         if (!playerId || !dateStr) return null;
-        return calAllAbsences.find(a => a.playerId === playerId && a.dateFrom <= dateStr && a.dateTo >= dateStr) || null;
+        const list = absencesList || calAllAbsences;
+        return list.find(a => a.playerId === playerId && a.dateFrom <= dateStr && a.dateTo >= dateStr) || null;
     }
 
     async function navigateCalMonth(delta) {
