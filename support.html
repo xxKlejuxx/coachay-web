@@ -1005,7 +1005,13 @@ async function confirmActivation() {
                 card_token:  null,
                 activatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 activatedBy: getCurrentUserId(),
-            }
+            },
+            // 2026-10-27: zapisujemy status od razu — inaczej clubs.licenseStatus zostaje stare
+            // (EXPIRED) aż do nocnego CF updateClubLicenseStatuses (06:00), a loadClubs() po
+            // aktywacji nadpisuje optymistyczny stan lokalny tą starą wartością z Firestore.
+            licenseStatus:          'ACTIVE',
+            licenseStatusSource:    'club_license',
+            licenseStatusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });
 
         // Zaktualizuj lokalnie
@@ -1135,7 +1141,11 @@ async function confirmExtend() {
                 extendedAt:  firebase.firestore.FieldValue.serverTimestamp(),
                 extendedBy:  getCurrentUserId(),
                 provider:    'manual_support',
-            }
+            },
+            // 2026-10-27: jw. (patrz confirmActivation) - inaczej status zostaje EXPIRED do 06:00.
+            licenseStatus:          'ACTIVE',
+            licenseStatusSource:    'club_license',
+            licenseStatusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });
 
         msgEl.className  = 'sup-sheet-msg ok';
