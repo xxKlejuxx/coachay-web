@@ -178,9 +178,14 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
                     placeholder="Twoja opinia pomoże nam poprawić Coachay..."></textarea>
             </div>
 
-            <div style="text-align:center;font-size:14px;color:var(--szary);margin-top:4px;">
-                <span data-i18n="rodo.ukCurrentlyLoggedAs">Jesteś zalogowany jako:</span>
-                <strong id="uk-current-email" style="color:var(--bialy);">—</strong>
+            <div class="rodo-section" style="padding:14px 16px;">
+                <div class="rodo-section-title" data-i18n="rodo.ukIdentityTitle">Potwierdź, czyje konto usuwasz</div>
+                <div style="display:flex;flex-direction:column;gap:6px;font-size:14px;margin-top:4px;">
+                    <div><span style="color:var(--szary);" data-i18n="rodo.ukIdentityRole">Typ konta:</span> <strong id="uk-id-role" style="color:var(--bialy);">—</strong></div>
+                    <div><span style="color:var(--szary);" data-i18n="rodo.ukIdentityName">Imię i nazwisko:</span> <strong id="uk-id-name" style="color:var(--bialy);">—</strong></div>
+                    <div><span style="color:var(--szary);" data-i18n="rodo.ukCurrentlyLoggedAs">Jesteś zalogowany jako:</span> <strong id="uk-current-email" style="color:var(--bialy);">—</strong></div>
+                    <div><span style="color:var(--szary);" data-i18n="rodo.ukIdentityMethod">Sposób logowania:</span> <strong id="uk-id-method" style="color:var(--bialy);">—</strong></div>
+                </div>
             </div>
 
             <button class="rodo-delete-btn" onclick="selfDeleteFlow()" data-i18n="rodo.deleteAccountButton">
@@ -222,13 +227,47 @@ window.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged(async user => {
         if (_loaded || !user) { if (!user) window.location.href = 'index.html?redirect=usunkonto.html'; return; }
         _loaded = true;
-        // Pokazujemy e-mail NA ŻYWO z auth.currentUser (nie z cache/Firestore) — safety-net
+        // Pokazujemy dane NA ŻYWO z auth.currentUser (nie z cache/Firestore) — safety-net
         // na wypadek rozjazdu między tym co appka wyświetla a tym, kto realnie jest zalogowany
         // (patrz sync #0146 — ryzyko usunięcia "nie tego" konta po wielu rejestracjach na
         // jednym urządzeniu bez czystego wylogowania).
         const emailEl = document.getElementById('uk-current-email');
         if (emailEl) emailEl.textContent = user.email || '(brak adresu e-mail — logowanie telefonem/PIN)';
+
+        const methodEl = document.getElementById('uk-id-method');
+        if (methodEl) {
+            const PROVIDER_LABELS = {
+                'password': 'e-mail i hasło',
+                'google.com': 'Google',
+                'apple.com': 'Apple',
+                'phone': 'telefon (SMS)'
+            };
+            const methods = (user.providerData || []).map(p => PROVIDER_LABELS[p.providerId] || p.providerId);
+            methodEl.textContent = methods.length ? methods.join(' + ') : '—';
+        }
+
         await initSession();
+
+        // Rola i imię/nazwisko pochodzą z danych wczytanych przez initSession() —
+        // te same, które user widzi w appce po zalogowaniu.
+        const ROLE_LABELS = {
+            'TRENER_GLOWNY': 'Trener Główny',
+            'TRENER_POMOCNICZY': 'Trener Pomocniczy',
+            'TRENER': 'Trener',
+            'RODZIC': 'Rodzic',
+            'ZAWODNIK': 'Zawodnik',
+            'KIBIC': 'Kibic',
+            'OBSERWATOR': 'Obserwator'
+        };
+        const roleEl = document.getElementById('uk-id-role');
+        if (roleEl) {
+            const rola = (typeof aktualnaRola !== 'undefined') ? aktualnaRola : null;
+            roleEl.textContent = (rola && ROLE_LABELS[rola]) || rola || '—';
+        }
+        const nameEl = document.getElementById('uk-id-name');
+        if (nameEl) {
+            nameEl.textContent = (typeof currentUserData !== 'undefined' && currentUserData && currentUserData.displayName) || '—';
+        }
     });
 });
 
