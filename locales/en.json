@@ -1417,7 +1417,8 @@
   "ukStepNotifications": "Notifications",
   "ukStepMemberships": "Club/team memberships",
   "ukStepPersonal": "Personal data",
-  "ukStepAccount": "Account"
+  "ukStepAccount": "Account",
+  "ukCurrentlyLoggedAs": "You're currently logged in as:"
  },
  "rodo2": {
   "pageTitle": "Account deletion — Coachay",

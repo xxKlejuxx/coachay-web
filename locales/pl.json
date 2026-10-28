@@ -1417,7 +1417,8 @@
   "ukStepNotifications": "Powiadomienia",
   "ukStepMemberships": "Członkostwa w klubach/drużynach",
   "ukStepPersonal": "Dane osobowe",
-  "ukStepAccount": "Konto"
+  "ukStepAccount": "Konto",
+  "ukCurrentlyLoggedAs": "Jesteś zalogowany jako:"
  },
  "rodo2": {
   "pageTitle": "Usunięcie konta — Coachay",

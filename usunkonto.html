@@ -178,6 +178,11 @@ body:has(#app-sidebar) .rodo-wrap { padding: 20px 28px 80px; }
                     placeholder="Twoja opinia pomoże nam poprawić Coachay..."></textarea>
             </div>
 
+            <div style="text-align:center;font-size:14px;color:var(--szary);margin-top:4px;">
+                <span data-i18n="rodo.ukCurrentlyLoggedAs">Jesteś zalogowany jako:</span>
+                <strong id="uk-current-email" style="color:var(--bialy);">—</strong>
+            </div>
+
             <button class="rodo-delete-btn" onclick="selfDeleteFlow()" data-i18n="rodo.deleteAccountButton">
                 🗑️ Usuń moje konto i dane
             </button>
@@ -217,6 +222,12 @@ window.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged(async user => {
         if (_loaded || !user) { if (!user) window.location.href = 'index.html?redirect=usunkonto.html'; return; }
         _loaded = true;
+        // Pokazujemy e-mail NA ŻYWO z auth.currentUser (nie z cache/Firestore) — safety-net
+        // na wypadek rozjazdu między tym co appka wyświetla a tym, kto realnie jest zalogowany
+        // (patrz sync #0146 — ryzyko usunięcia "nie tego" konta po wielu rejestracjach na
+        // jednym urządzeniu bez czystego wylogowania).
+        const emailEl = document.getElementById('uk-current-email');
+        if (emailEl) emailEl.textContent = user.email || '(brak adresu e-mail — logowanie telefonem/PIN)';
         await initSession();
     });
 });
