@@ -591,6 +591,27 @@
         <div class="s-label">Historia powiadomień push</div>
         <div id="bcast-history" style="font-size:12px;color:var(--szary);padding:8px 0">Ładowanie...</div>
 
+        <!-- Przywracanie usuniętego konta — 2026-10-28, sync #0147/#0148 -->
+        <div class="s-label">Przywróć usunięte konto</div>
+        <div class="bcast-card">
+            <div style="font-size:12px;color:var(--szary);margin-bottom:10px;line-height:1.5;">
+                Działa TYLKO dla kont usuniętych przez "Usuń moje konto" (selfDeleteAccount) — dane
+                osobowe leżą zaszyfrowane w kolekcji <code>temp</code>. Przywraca konto logowania
+                (Firebase Auth) i dane w <code>users</code>. <strong>Nie przywraca haseł</strong> —
+                to jest niemożliwe technicznie (Firebase nigdy nie udostępnia hasła, nawet nam).
+                Membershipy (kluby/drużyny) trzeba ręcznie zdecydować/odtworzyć osobno — nie robimy
+                tego automatycznie. Uruchamiane wyłącznie ręcznie, na żądanie — nic tu nie działa
+                samo z siebie.
+            </div>
+            <div class="sup-sheet-field">
+                <div class="sup-sheet-label">E-mail usuniętego konta</div>
+                <input type="email" id="restore-email" class="sup-sheet-input" placeholder="np. jan@example.com">
+            </div>
+            <button class="bcast-send-btn" id="restore-btn" onclick="restoreAccountRun()">Sprawdź i przywróć</button>
+            <div class="bcast-msg" id="restore-msg"></div>
+            <div id="restore-result" style="display:none; margin-top:12px; font-size:13px; line-height:1.6; background:var(--tlo); border:1px solid var(--border); border-radius:8px; padding:12px;"></div>
+        </div>
+
     </div><!-- /sup-container -->
     </div><!-- /screen-body -->
 
@@ -1801,6 +1822,100 @@ async function bcastCancel(broadcastId) {
 
 function _escHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+/* ===================================================
+   Przywracanie usuniętego konta — 2026-10-28 (sync #0147/#0148)
+   Tylko na żądanie, przycisk w panelu — nic tu nie jest automatyczne.
+=================================================== */
+const RESTORE_PROVIDER_LABELS = {
+    'password': 'e-mail i hasło',
+    'google.com': 'Google',
+    'apple.com': 'Apple',
+    'phone': 'telefon (SMS)',
+};
+
+async function restoreAccountRun() {
+    const emailInput = document.getElementById('restore-email');
+    const btn = document.getElementById('restore-btn');
+    const msg = document.getElementById('restore-msg');
+    const resultBox = document.getElementById('restore-result');
+    const email = (emailInput.value || '').trim();
+
+    resultBox.style.display = 'none';
+    resultBox.innerHTML = '';
+    msg.className = 'bcast-msg';
+    msg.textContent = '';
+
+    if (!email) {
+        msg.className = 'bcast-msg err';
+        msg.textContent = 'Podaj e-mail usuniętego konta.';
+        return;
+    }
+    if (!confirm(`Przywrócić konto na adresie ${email}?\n\nOdtworzy to login (Firebase Auth) i dane w users. Nie przywróci haseł (trzeba zresetować) ani membershipów klubowych (to ręcznie, osobno).`)) {
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Przywracanie...';
+    try {
+        const fx = firebase.app().functions('europe-west1');
+        const call = fx.httpsCallable('restoreDeletedAccount');
+        const res = await call({ email });
+        const d = res.data;
+
+        msg.className = 'bcast-msg ok';
+        msg.textContent = `Przywrócono: ${d.displayName || d.email} (userId: ${d.userId}).`;
+
+        const providerLabels = (d.providers || []).map(p => RESTORE_PROVIDER_LABELS[p] || p);
+        const uidNote = d.uidChanged
+            ? `<div style="color:var(--pomaranczowy, #e8a33d);margin-top:6px;">⚠️ Nie udało się użyć starego UID (zajęty) — nadano NOWY. Odłączone licencje rodzinne zostały przepisane automatycznie.</div>`
+            : '';
+
+        let loginNote;
+        if (!providerLabels.length) {
+            loginNote = 'Nie znamy oryginalnej metody logowania (konto usunięte zanim zaczęliśmy to zapisywać) — najbezpieczniej wyślij reset hasła.';
+        } else {
+            loginNote = `Oryginalnie user logował się: <strong>${providerLabels.join(' + ')}</strong>. `
+                + (providerLabels.some(p => p === 'Google' || p === 'Apple')
+                    ? 'Dla Google/Apple: user po prostu loguje się tą metodą ponownie na ten mail — podlinkuje się automatycznie, bez żadnej akcji z naszej strony. '
+                    : '')
+                + (providerLabels.includes('e-mail i hasło')
+                    ? 'Dla metody mail+hasło: hasła NIE dało się odtworzyć (to niemożliwe) — wyślij reset poniżej.'
+                    : '');
+        }
+
+        resultBox.style.display = 'block';
+        resultBox.innerHTML = `
+            ${uidNote}
+            <div style="margin-top:4px;">${loginNote}</div>
+            <button class="bcast-send-btn" style="margin-top:10px;" onclick="restoreSendPasswordReset('${_escHtml(d.email || email)}')">Wyślij e-mail z resetem hasła</button>
+            <div id="restore-pwreset-msg" style="margin-top:6px;font-size:12px;"></div>
+        `;
+
+        emailInput.value = '';
+    } catch (e) {
+        console.error('restoreAccountRun:', e);
+        msg.className = 'bcast-msg err';
+        msg.textContent = 'Błąd: ' + (e.message || e);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sprawdź i przywróć';
+    }
+}
+
+async function restoreSendPasswordReset(email) {
+    const el = document.getElementById('restore-pwreset-msg');
+    el.textContent = 'Wysyłanie...';
+    try {
+        await auth.sendPasswordResetEmail(email);
+        el.style.color = 'var(--zielony, #3fae55)';
+        el.textContent = `Wysłano link resetu hasła na ${email}.`;
+    } catch (e) {
+        console.error('restoreSendPasswordReset:', e);
+        el.style.color = 'var(--czerwony, #d9534f)';
+        el.textContent = 'Błąd wysyłki: ' + (e.message || e);
+    }
 }
 </script>
 </body>

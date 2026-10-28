@@ -3835,6 +3835,18 @@ exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECR
 
     const nowIso = new Date().toISOString();
 
+    // Lista metod logowania (password/google.com/apple.com/phone) — potrzebna, żeby przy
+    // ewentualnym przywracaniu konta (patrz sync #0147/#0148, restoreDeletedAccount) wiedzieć,
+    // jaką metodę user ma odtworzyć (hasło → trzeba zresetować, Google/Apple → user loguje się
+    // ponownie i auto-linkuje się po mailu, telefon → można ustawić wprost przy odtwarzaniu).
+    let providers = [];
+    try {
+        const authUserRecord = await getAuth().getUser(authUid);
+        providers = (authUserRecord.providerData || []).map(p => p.providerId);
+    } catch (e) {
+        console.error(`selfDeleteAccount[${userId}] odczyt providerData:`, e);
+    }
+
     // ── Krok 1: anonimizacja + archiwizacja zaszyfrowana w `temp` ──────────
     const archivePayload = {
         userId,
@@ -3847,6 +3859,7 @@ exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECR
         photoURL: userData.photoURL || null,
         pinHash: userData.pinHash || null,
         language: userData.language || null,
+        providers,
     };
     const encKey = SELFDELETE_ENC_KEY.value();
     const encrypted = _encryptSelfDeletePayload(archivePayload, encKey);
@@ -3996,4 +4009,111 @@ exports.selfDeleteAccount = onCall({ secrets: [SELFDELETE_ENC_KEY, ...APPLE_SECR
 
     console.log(`selfDeleteAccount OK userId=${userId} authUid=${authUid}`);
     return { success: true };
+});
+
+/* ═══════════════════════════════════════════════════
+   restoreDeletedAccount — przywracanie usuniętego konta z archiwum `temp` (sync #0147/#0148).
+   Tylko na żądanie admina z panelu support.html (isPlatformAdmin, sprawdzane SERVER-SIDE) —
+   nic tu nie działa automatycznie/na schedule. Potwierdzone działającym testem ręcznym
+   (2026-10-28): odtworzenie Auth + users + authIndex dla konta "Jan Tester iOS" zadziałało
+   w 100%, reset hasła przez usera po stronie klienta przeszedł bez problemu.
+
+   Nie przywracamy automatycznie membershipów (status REMOVED) — to świadoma decyzja: zmiana
+   stanu klubów/drużyn może kolidować z tym, co się działo w międzyczasie (sloty licencyjne
+   zajęte przez kogoś innego itp.), więc to osobna, ręczna decyzja admina po restore.
+   ═══════════════════════════════════════════════════ */
+exports.restoreDeletedAccount = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    }
+    await _assertPlatformAdmin(request.auth.uid);
+
+    const email = (request.data && typeof request.data.email === 'string')
+        ? request.data.email.trim().toLowerCase() : '';
+    if (!email) {
+        throw new HttpsError('invalid-argument', 'Podaj e-mail usuniętego konta.');
+    }
+
+    const encKey = SELFDELETE_ENC_KEY.value();
+    const tempSnap = await db.collection('temp').get();
+    let foundUserId = null;
+    let archivePayload = null;
+    for (const doc of tempSnap.docs) {
+        try {
+            const payload = _decryptSelfDeletePayload(doc.data(), encKey);
+            if ((payload.email || '').toLowerCase() === email) {
+                foundUserId = doc.id;
+                archivePayload = payload;
+                break;
+            }
+        } catch (e) {
+            // inny klucz szyfrowania / uszkodzony dokument — pomijamy
+        }
+    }
+    if (!foundUserId) {
+        throw new HttpsError('not-found', 'Nie znaleziono usuniętego konta z tym adresem e-mail w archiwum.');
+    }
+
+    // ── Krok 1: Firebase Auth — najpierw próba z TYM SAMYM UID, fallback na nowy ──
+    let newAuthUid = archivePayload.authUid;
+    let uidChanged = false;
+    const buildCreateParams = (uid) => {
+        const p = {};
+        if (uid) p.uid = uid;
+        if (archivePayload.email) p.email = archivePayload.email;
+        if (archivePayload.displayName) p.displayName = archivePayload.displayName;
+        if (archivePayload.phone) p.phoneNumber = archivePayload.phone;
+        return p;
+    };
+    try {
+        await getAuth().createUser(buildCreateParams(archivePayload.authUid));
+    } catch (e) {
+        if (e.code === 'auth/uid-already-exists' || e.code === 'auth/email-already-exists') {
+            const newUser = await getAuth().createUser(buildCreateParams(null));
+            newAuthUid = newUser.uid;
+            uidChanged = true;
+        } else {
+            throw new HttpsError('internal', 'Nie udało się odtworzyć konta logowania: ' + (e.message || e));
+        }
+    }
+
+    // ── Krok 2: users/{userId} — odtworzenie danych osobowych ──
+    await db.collection('users').doc(foundUserId).update({
+        firstName: archivePayload.firstName || '',
+        lastName: archivePayload.lastName || '',
+        displayName: archivePayload.displayName || '',
+        email: archivePayload.email || null,
+        phone: archivePayload.phone || null,
+        photoURL: archivePayload.photoURL || '',
+        pinHash: archivePayload.pinHash || '',
+        authUid: newAuthUid,
+        isDeleted: false,
+        deletedAt: null,
+        restoredAt: new Date().toISOString(),
+        restoredBy: request.auth.uid,
+    });
+
+    // ── Krok 3: authIndex/{newAuthUid} ──
+    await db.collection('authIndex').doc(newAuthUid).set({ userId: foundUserId, clubIds: [] });
+
+    // ── Krok 4: jeśli UID się zmienił — przepisz familySlotParent w memberships (licencje rodzinne) ──
+    if (uidChanged) {
+        const famSnap = await db.collection('memberships').where('familySlotParent', '==', archivePayload.authUid).get();
+        if (!famSnap.empty) {
+            const batch = db.batch();
+            famSnap.docs.forEach(d => batch.update(d.ref, { familySlotParent: newAuthUid }));
+            await batch.commit();
+        }
+    }
+
+    console.log(`restoreDeletedAccount OK userId=${foundUserId} authUid=${newAuthUid} uidChanged=${uidChanged} by=${request.auth.uid}`);
+    return {
+        success: true,
+        userId: foundUserId,
+        authUid: newAuthUid,
+        uidChanged,
+        email: archivePayload.email || null,
+        displayName: archivePayload.displayName || null,
+        providers: archivePayload.providers || [],
+    };
 });
