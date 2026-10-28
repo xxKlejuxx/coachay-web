@@ -481,6 +481,25 @@
             </div>
         </div>
 
+        <!-- Licencje użytkowników (indywidualne + rodzinne) — 2026-10-28. Osobno od licznika
+             klubów wyżej: ten liczy userów z planem indywidualnym (users.subscription) albo
+             rodzinnym (access_rights, source=family_license) — NIE liczy slotów klubowych. -->
+        <div class="s-label">Licencje użytkowników (indywidualne + rodzinne)</div>
+        <div class="sup-stats">
+            <div class="sup-stat">
+                <div class="sup-stat-val green" id="stat-user-active">–</div>
+                <div class="sup-stat-lbl">Aktywne</div>
+            </div>
+            <div class="sup-stat">
+                <div class="sup-stat-val red" id="stat-user-expired">–</div>
+                <div class="sup-stat-lbl">Wygasłe</div>
+            </div>
+            <div class="sup-stat">
+                <div class="sup-stat-val" id="stat-user-total">–</div>
+                <div class="sup-stat-lbl">Razem</div>
+            </div>
+        </div>
+
         <!-- Wyszukiwarka -->
         <div class="s-label">Kluby</div>
         <div class="sup-search-wrap">
@@ -703,11 +722,13 @@ async function loadClubs() {
     try {
         // Równoległe zapytania: kluby + drużyny + memberships + access_rights (daty licencji)
         const now = new Date();
-        const [clubsSnap, teamsSnap, membSnap, arSnap] = await Promise.all([
+        const [clubsSnap, teamsSnap, membSnap, arSnap, usersSnap, famArSnap] = await Promise.all([
             db.collection('clubs').get(),
             db.collection('teams').get(),
             db.collection('memberships').get(),
             db.collection('access_rights').where('valid_until', '>', firebase.firestore.Timestamp.fromDate(now)).get(),
+            db.collection('users').get(),
+            db.collection('access_rights').where('source', '==', 'family_license').get(),
         ]);
 
         // Mapa: clubId – najdalsza data valid_until z aktywnych access_rights
@@ -801,6 +822,26 @@ async function loadClubs() {
         document.getElementById('stat-trial').textContent   = trial;
         document.getElementById('stat-expired').textContent = expired;
         document.getElementById('stat-total').textContent   = allClubs.length;
+
+        // Licencje użytkowników — indywidualne (users.subscription) + rodzinne (access_rights,
+        // source=family_license). Osobno od licznika klubów wyżej — to NIE liczy slotów
+        // klubowych, tylko realne plany per-user. Brak koncepcji "trial" w tych danych
+        // (RevenueCat nie zapisuje nam periodType), więc tylko Aktywne/Wygasłe/Razem.
+        let userLicActive = 0, userLicExpired = 0;
+        usersSnap.docs.forEach(doc => {
+            const sub = doc.data().subscription;
+            if (!sub) return; // user bez jakiejkolwiek historii planu indywidualnego — nie liczymy
+            const exp = sub.expiresAt?.toDate ? sub.expiresAt.toDate() : (sub.expiresAt ? new Date(sub.expiresAt) : null);
+            if (sub.status === 'ACTIVE' && exp && exp > now) userLicActive++; else userLicExpired++;
+        });
+        famArSnap.docs.forEach(d => {
+            const { valid_until } = d.data();
+            const exp = valid_until?.toDate ? valid_until.toDate() : (valid_until ? new Date(valid_until) : null);
+            if (exp && exp > now) userLicActive++; else userLicExpired++;
+        });
+        document.getElementById('stat-user-active').textContent  = userLicActive;
+        document.getElementById('stat-user-expired').textContent = userLicExpired;
+        document.getElementById('stat-user-total').textContent   = userLicActive + userLicExpired;
 
         allClubs.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
         renderClubs(allClubs);
@@ -1279,6 +1320,7 @@ async function viewClubUsers(clubId) {
                           || usersMap[doc.id].displayName
                           || '–';
                 usersMap[doc.id].displayName = name;
+                usersMap[doc.id].authUid = d.authUid || null;
                 const sub = d.subscription;
                 if (sub?.status && sub?.expiresAt) {
                     const exp = sub.expiresAt.toDate ? sub.expiresAt.toDate() : new Date(sub.expiresAt);
@@ -1293,6 +1335,21 @@ async function viewClubUsers(clubId) {
             });
         }
 
+        // Info o logowaniu (mail/telefon/Google/Apple) — 2026-10-28. Firebase Auth nie jest
+        // czytelne z klienta dla cudzych userów, więc idzie przez admin-only Cloud Function.
+        const authInfoByUid = {};
+        const authUidList = Object.values(usersMap).map(u => u.authUid).filter(Boolean);
+        if (authUidList.length) {
+            try {
+                const fx = firebase.app().functions('europe-west1');
+                const call = fx.httpsCallable('adminGetAuthInfo');
+                const res = await call({ authUids: authUidList });
+                (res.data.users || []).forEach(u => { authInfoByUid[u.authUid] = u; });
+            } catch (e) {
+                console.error('adminGetAuthInfo:', e);
+            }
+        }
+
         const members = Object.values(usersMap).map(u => ({
             userId:      u.userId,
             displayName: u.displayName || '–',
@@ -1301,7 +1358,8 @@ async function viewClubUsers(clubId) {
             sortKey:     Math.min(...[...u.roles].map(r => roleOrder[r] ?? 9)),
             lic:         licMap[u.userId] || null,
             usedSlot:    u.usedSlot,
-            trialEndsAt: u.trialEndsAt
+            trialEndsAt: u.trialEndsAt,
+            authInfo:    u.authUid ? (authInfoByUid[u.authUid] || null) : null
         }));
         members.sort((a, b) => a.sortKey - b.sortKey || a.displayName.localeCompare(b.displayName, 'pl'));
 
@@ -1360,6 +1418,16 @@ async function viewClubUsers(clubId) {
                             badges.push(`<span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;background:${tCol};color:${tText};border:1px solid ${tBorder};white-space:nowrap">Okres próbny ${fmtD(m.trialEndsAt)}</span>`);
                         }
                         const licBadge = badges.join(' ');
+
+                        // Info o logowaniu — mail/telefon + sposób (Google/Apple/e-mail+hasło/telefon)
+                        const PROVIDER_LABELS_SHORT = { 'password': 'e-mail+hasło', 'google.com': 'Google', 'apple.com': 'Apple', 'phone': 'telefon' };
+                        let loginInfo = '';
+                        if (m.authInfo) {
+                            const contact = m.authInfo.email || m.authInfo.phoneNumber || '';
+                            const provs = (m.authInfo.providers || []).map(p => PROVIDER_LABELS_SHORT[p] || p).join(' + ');
+                            loginInfo = [contact, provs].filter(Boolean).join(' · ');
+                        }
+
                         const canRemove = m.lic != null;
                         const licBtn = canRemove
                             ? `<button onclick="event.stopPropagation();removeLicense('${m.userId}','${m.lic.type}','${m.lic.arDocId||''}','${clubId}',this)"
@@ -1380,6 +1448,7 @@ async function viewClubUsers(clubId) {
                                 ${licBadge}
                             </div>
                             <div style="font-size:9px;color:var(--szary-j);font-family:var(--font-d);margin-top:1px;letter-spacing:0.3px">${shortId(m.userId)}</div>
+                            ${loginInfo ? `<div style="font-size:9px;color:var(--szary);margin-top:1px;">${_escHtml(loginInfo)}</div>` : ''}
                         </div>
                         ${licBtn}
                     </label>`;

@@ -4180,3 +4180,30 @@ exports.listDeletedAccounts = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async (r
     accounts.sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || ''));
     return { accounts };
 });
+
+/* ═══════════════════════════════════════════════════
+   adminGetAuthInfo — info o logowaniu (mail/telefon/providerzy) dla listy userów
+   w panelu support.html (viewClubUsers, 2026-10-28). Admin-only. Firebase Auth nie jest
+   czytelny dla klienta inaczej niż przez requestujący własny token, więc to musi iść
+   przez Admin SDK — stąd Cloud Function, nie zapytanie z przeglądarki.
+   ═══════════════════════════════════════════════════ */
+exports.adminGetAuthInfo = onCall({}, async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    }
+    await _assertPlatformAdmin(request.auth.uid);
+
+    const authUids = Array.isArray(request.data && request.data.authUids)
+        ? request.data.authUids.filter(uid => typeof uid === 'string' && uid).slice(0, 100)
+        : [];
+    if (!authUids.length) return { users: [] };
+
+    const result = await getAuth().getUsers(authUids.map(uid => ({ uid })));
+    const users = result.users.map(u => ({
+        authUid: u.uid,
+        email: u.email || null,
+        phoneNumber: u.phoneNumber || null,
+        providers: (u.providerData || []).map(p => p.providerId),
+    }));
+    return { users };
+});
