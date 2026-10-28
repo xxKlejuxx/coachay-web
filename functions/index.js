@@ -2692,11 +2692,8 @@ exports.revenuecatWebhook = onRequest(
         const event = req.body?.event;
         if (!event) return res.status(400).send('Bad Request: brak pola event');
 
-        const { type, app_user_id, expiration_at_ms, product_id, store, cancel_reason, period_type } = event;
+        const { type, app_user_id, expiration_at_ms, product_id, store, cancel_reason } = event;
         if (!app_user_id) return res.status(400).send('Bad Request: brak app_user_id');
-        // period_type z RevenueCat: NORMAL | TRIAL | INTRO — zapisujemy jako subscription.periodType
-        // / access_rights.periodType, żeby support.html mógł odróżnić trial od realnej płatności
-        // (2026-10-29). Dotyczy tylko zdarzeń od teraz — brak historii dla wcześniejszych.
 
         console.log(`revenuecatWebhook: type=${type} user=${app_user_id} cancel_reason=${cancel_reason || '-'}`);
 
@@ -2723,7 +2720,7 @@ exports.revenuecatWebhook = onRequest(
             const isFamilyProduct = baseProductId.startsWith('coachay_family_');
 
             if (isFamilyProduct) {
-                await applyFamilyLicenseUpdate(app_user_id, type, expiration_at_ms, product_id, ACTIVE_EVENTS, willRenew, period_type);
+                await applyFamilyLicenseUpdate(app_user_id, type, expiration_at_ms, product_id, ACTIVE_EVENTS, willRenew);
             } else {
                 // Znajdź użytkownika po app_user_id (= userId w Coachay)
                 const userSnap = await db.collection('users').doc(app_user_id).get();
@@ -2735,9 +2732,9 @@ exports.revenuecatWebhook = onRequest(
                         console.warn(`revenuecatWebhook: user ${app_user_id} nie istnieje`);
                         return res.status(200).send('OK'); // 200 żeby RC nie retry'ował
                     }
-                    await applyLicenseUpdate(byField.docs[0].ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew, period_type);
+                    await applyLicenseUpdate(byField.docs[0].ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew);
                 } else {
-                    await applyLicenseUpdate(userSnap.ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew, period_type);
+                    await applyLicenseUpdate(userSnap.ref, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew);
                 }
             }
 
@@ -2820,7 +2817,7 @@ exports.moderateEvents = onDocumentWritten('events/{id}', (event) =>
 
 /* ─────────────────────────────────────────────────── */
 
-async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id, ACTIVE_EVENTS, willRenew = null, periodType = null) {
+async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id, ACTIVE_EVENTS, willRenew = null) {
     const isActive = ACTIVE_EVENTS.includes(type);
     const isUserCancelled = willRenew === false;
     const arSnap = await db.collection('access_rights').where('uid', '==', uid).get();
@@ -2868,7 +2865,6 @@ async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id,
         if (validUntil) updates.valid_until = validUntil;
         if (product_id) updates.productId = product_id;
         if (effWillRenew !== null) updates.willRenew = effWillRenew;
-        if (periodType) updates.periodType = periodType;
         batch.update(doc.ref, updates);
     }
     await batch.commit();
@@ -2898,7 +2894,7 @@ async function applyFamilyLicenseUpdate(uid, type, expiration_at_ms, product_id,
     }
 }
 
-async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew = null, periodType = null) {
+async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, store, ACTIVE_EVENTS, willRenew = null) {
     const isActive = ACTIVE_EVENTS.includes(type);
     const isUserCancelled = willRenew === false;
     const userId = userRef.id;
@@ -2929,7 +2925,6 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
     };
     if (product_id) updates['subscription.productId'] = product_id;
     if (store)      updates['subscription.store']     = store;
-    if (periodType) updates['subscription.periodType'] = periodType;
     // Wygaśnięcie / anulowanie (nie USER_CANCELLED) → subskrypcja się nie odnowi
     const effWillRenew = isActive ? willRenew : false;
     if (effWillRenew !== null) updates['subscription.willRenew'] = effWillRenew;
@@ -2975,12 +2970,11 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
     const allMems = await db.collection('memberships').where('userId', '==', userId).get();
     if (!allMems.empty) {
         const cachedSub = {
-            status:     updates['subscription.status'],
-            expiresAt:  updates['subscription.expiresAt'] || null,
-            productId:  product_id || null,
-            willRenew:  effWillRenew ?? null,
-            periodType: periodType || null,
-            updatedAt:  FieldValue.serverTimestamp(),
+            status:    updates['subscription.status'],
+            expiresAt: updates['subscription.expiresAt'] || null,
+            productId: product_id || null,
+            willRenew: effWillRenew ?? null,
+            updatedAt: FieldValue.serverTimestamp(),
         };
         const chunks = [];
         for (let i = 0; i < allMems.docs.length; i += 499) chunks.push(allMems.docs.slice(i, i + 499));

@@ -487,8 +487,9 @@
         <!-- Licencje użytkowników (indywidualne + rodzinne) — 2026-10-29. Osobno od licznika
              klubów wyżej: ten liczy userów z planem indywidualnym (users.subscription) albo
              rodzinnym (access_rights, source=family_license) — NIE liczy slotów klubowych.
-             Trial liczony z period_type z webhooka RevenueCat (bez podziału ind/family —
-             jedna liczba), aktywne/wygasłe osobno dla ind i family. Brak podziału mc/rok. -->
+             Trial = darmowy 90-dniowy okres z memberships.trialEndsAt (nie RevenueCat) — jedna
+             łączna liczba (bez podziału ind/family). Aktywne/wygasłe osobno dla ind i family.
+             Brak podziału mc/rok. -->
         <div class="s-label">Licencje użytkowników (indywidualne + rodzinne)</div>
         <div class="sup-stats">
             <div class="sup-stat">
@@ -857,26 +858,38 @@ async function loadClubs() {
 
         // Licencje użytkowników — indywidualne (users.subscription) + rodzinne (access_rights,
         // source=family_license). Osobno od licznika klubów wyżej — to NIE liczy slotów
-        // klubowych, tylko realne plany per-user. Trial = periodType='TRIAL' zapisywane przez
-        // revenuecatWebhook (2026-10-29) — jedna łączna liczba (bez podziału ind/family).
-        // Brak podziału mc/rok (decyzja Rafała — niepotrzebne).
-        let userTrial = 0, userActiveInd = 0, userActiveFamily = 0, userExpiredInd = 0, userExpiredFamily = 0;
+        // klubowych, tylko realne plany per-user. Brak podziału mc/rok (decyzja Rafała).
+        //
+        // Trial (2026-10-29, poprawka po weryfikacji na żywych danych — NIE jest to RevenueCat
+        // period_type, którego nigdzie w bazie nie ma): to darmowy 90-dniowy okres przed
+        // wymogiem posiadania licencji, zapisany na memberships.trialEndsAt (jest na WSZYSTKICH
+        // membershipach — sprawdzone: 62/62). User liczy się do "Trial" tylko jeśli nie ma już
+        // aktywnej licencji ind/family (żeby się nie dublował z tamtymi kolumnami).
+        const activeIndUserIds = new Set(), activeFamilyUserIds = new Set();
+        let userActiveInd = 0, userActiveFamily = 0, userExpiredInd = 0, userExpiredFamily = 0;
         usersSnap.docs.forEach(doc => {
             const sub = doc.data().subscription;
             if (!sub) return; // user bez jakiejkolwiek historii planu indywidualnego — nie liczymy
             const exp = sub.expiresAt?.toDate ? sub.expiresAt.toDate() : (sub.expiresAt ? new Date(sub.expiresAt) : null);
-            const isActive = sub.status === 'ACTIVE' && exp && exp > now;
-            if (isActive && sub.periodType === 'TRIAL') userTrial++;
-            else if (isActive) userActiveInd++;
+            if (sub.status === 'ACTIVE' && exp && exp > now) { userActiveInd++; activeIndUserIds.add(doc.id); }
             else userExpiredInd++;
         });
         famArSnap.docs.forEach(d => {
-            const { valid_until, periodType } = d.data();
-            const exp = valid_until?.toDate ? valid_until.toDate() : (valid_until ? new Date(valid_until) : null);
-            const isActive = exp && exp > now;
-            if (isActive && periodType === 'TRIAL') userTrial++;
-            else if (isActive) userActiveFamily++;
+            const data = d.data();
+            const exp = data.valid_until?.toDate ? data.valid_until.toDate() : (data.valid_until ? new Date(data.valid_until) : null);
+            if (exp && exp > now) { userActiveFamily++; if (data.uid) activeFamilyUserIds.add(data.uid); }
             else userExpiredFamily++;
+        });
+
+        const trialUserIds = new Set();
+        allMemberships.forEach(m => {
+            if (m.status === 'REMOVED' || !m.userId) return;
+            const te = m.trialEndsAt?.toDate ? m.trialEndsAt.toDate() : (m.trialEndsAt ? new Date(m.trialEndsAt) : null);
+            if (te && te > now) trialUserIds.add(m.userId);
+        });
+        let userTrial = 0;
+        trialUserIds.forEach(uid => {
+            if (!activeIndUserIds.has(uid) && !activeFamilyUserIds.has(uid)) userTrial++;
         });
         document.getElementById('stat-user-trial').textContent          = userTrial;
         document.getElementById('stat-user-active-ind').textContent     = userActiveInd;
