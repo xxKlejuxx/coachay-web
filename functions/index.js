@@ -2975,11 +2975,12 @@ async function applyLicenseUpdate(userRef, type, expiration_at_ms, product_id, s
     const allMems = await db.collection('memberships').where('userId', '==', userId).get();
     if (!allMems.empty) {
         const cachedSub = {
-            status:    updates['subscription.status'],
-            expiresAt: updates['subscription.expiresAt'] || null,
-            productId: product_id || null,
-            willRenew: effWillRenew ?? null,
-            updatedAt: FieldValue.serverTimestamp(),
+            status:     updates['subscription.status'],
+            expiresAt:  updates['subscription.expiresAt'] || null,
+            productId:  product_id || null,
+            willRenew:  effWillRenew ?? null,
+            periodType: periodType || null,
+            updatedAt:  FieldValue.serverTimestamp(),
         };
         const chunks = [];
         for (let i = 0; i < allMems.docs.length; i += 499) chunks.push(allMems.docs.slice(i, i + 499));
