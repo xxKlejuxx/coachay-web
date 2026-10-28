@@ -604,10 +604,15 @@
                 samo z siebie.
             </div>
             <div class="sup-sheet-field">
-                <div class="sup-sheet-label">E-mail usuniętego konta</div>
-                <input type="email" id="restore-email" class="sup-sheet-input" placeholder="np. jan@example.com">
+                <div class="sup-sheet-label">Usunięte konto</div>
+                <select id="restore-select" class="sup-sheet-input" onchange="document.getElementById('restore-btn').disabled = !this.value;">
+                    <option value="">Ładowanie listy...</option>
+                </select>
+                <div style="margin-top:6px;">
+                    <span style="font-size:11px;color:var(--szary);cursor:pointer;text-decoration:underline;" onclick="restoreLoadList()">Odśwież listę</span>
+                </div>
             </div>
-            <button class="bcast-send-btn" id="restore-btn" onclick="restoreAccountRun()">Sprawdź i przywróć</button>
+            <button class="bcast-send-btn" id="restore-btn" onclick="restoreAccountRun()" disabled>Przywróć</button>
             <div class="bcast-msg" id="restore-msg"></div>
             <div id="restore-result" style="display:none; margin-top:12px; font-size:13px; line-height:1.6; background:var(--tlo); border:1px solid var(--border); border-radius:8px; padding:12px;"></div>
         </div>
@@ -686,6 +691,7 @@ window.addEventListener('DOMContentLoaded', () => {
             loadClubs();
             loadUsageMetrics();
             bcastLoadHistory();
+            restoreLoadList();
         } else {
             window.location.href = 'index.html';
         }
@@ -1835,24 +1841,58 @@ const RESTORE_PROVIDER_LABELS = {
     'phone': 'telefon (SMS)',
 };
 
+let restoreAccountsList = [];
+
+async function restoreLoadList() {
+    const select = document.getElementById('restore-select');
+    const btn = document.getElementById('restore-btn');
+    select.innerHTML = '<option value="">Ładowanie listy...</option>';
+    btn.disabled = true;
+    try {
+        const fx = firebase.app().functions('europe-west1');
+        const call = fx.httpsCallable('listDeletedAccounts');
+        const res = await call({});
+        restoreAccountsList = res.data.accounts || [];
+        if (!restoreAccountsList.length) {
+            select.innerHTML = '<option value="">Brak usuniętych kont w archiwum</option>';
+            return;
+        }
+        select.innerHTML = '<option value="">— wybierz konto (' + restoreAccountsList.length + ') —</option>' + restoreAccountsList.map(a => {
+            // Nie każde konto ma mail — część rejestruje się telefonem/PIN-em.
+            const contact = a.email || a.phone || '(brak maila/telefonu)';
+            const name = [a.firstName, a.lastName].filter(Boolean).join(' ') || a.displayName || '(brak imienia)';
+            const when = a.deletedAt ? new Date(a.deletedAt).toLocaleDateString('pl-PL') : '?';
+            return `<option value="${a.userId}">${_escHtml(name)} — ${_escHtml(contact)} — usunięto ${when}</option>`;
+        }).join('');
+    } catch (e) {
+        console.error('restoreLoadList:', e);
+        select.innerHTML = '<option value="">Błąd wczytywania listy</option>';
+    }
+    document.getElementById('restore-btn').disabled = !select.value;
+}
+
 async function restoreAccountRun() {
-    const emailInput = document.getElementById('restore-email');
+    const select = document.getElementById('restore-select');
     const btn = document.getElementById('restore-btn');
     const msg = document.getElementById('restore-msg');
     const resultBox = document.getElementById('restore-result');
-    const email = (emailInput.value || '').trim();
+    const userId = select.value;
+    const acc = restoreAccountsList.find(a => a.userId === userId);
 
     resultBox.style.display = 'none';
     resultBox.innerHTML = '';
     msg.className = 'bcast-msg';
     msg.textContent = '';
 
-    if (!email) {
+    if (!userId) {
         msg.className = 'bcast-msg err';
-        msg.textContent = 'Podaj e-mail usuniętego konta.';
+        msg.textContent = 'Wybierz konto z listy.';
         return;
     }
-    if (!confirm(`Przywrócić konto na adresie ${email}?\n\nOdtworzy to login (Firebase Auth) i dane w users. Nie przywróci haseł (trzeba zresetować) ani membershipów klubowych (to ręcznie, osobno).`)) {
+    const label = acc
+        ? `${[acc.firstName, acc.lastName].filter(Boolean).join(' ') || acc.displayName || userId} (${acc.email || acc.phone || 'brak maila/telefonu'})`
+        : userId;
+    if (!confirm(`Przywrócić konto: ${label}?\n\nOdtworzy to login (Firebase Auth) i dane w users. Nie przywróci haseł (trzeba zresetować, jeśli dotyczy) ani membershipów klubowych (to ręcznie, osobno).`)) {
         return;
     }
 
@@ -1861,11 +1901,11 @@ async function restoreAccountRun() {
     try {
         const fx = firebase.app().functions('europe-west1');
         const call = fx.httpsCallable('restoreDeletedAccount');
-        const res = await call({ email });
+        const res = await call({ userId });
         const d = res.data;
 
         msg.className = 'bcast-msg ok';
-        msg.textContent = `Przywrócono: ${d.displayName || d.email} (userId: ${d.userId}).`;
+        msg.textContent = `Przywrócono: ${d.displayName || d.email || d.phone || d.userId} (userId: ${d.userId}).`;
 
         const providerLabels = (d.providers || []).map(p => RESTORE_PROVIDER_LABELS[p] || p);
         const uidNote = d.uidChanged
@@ -1874,7 +1914,8 @@ async function restoreAccountRun() {
 
         let loginNote;
         if (!providerLabels.length) {
-            loginNote = 'Nie znamy oryginalnej metody logowania (konto usunięte zanim zaczęliśmy to zapisywać) — najbezpieczniej wyślij reset hasła.';
+            loginNote = 'Nie znamy oryginalnej metody logowania (konto usunięte zanim zaczęliśmy to zapisywać) — '
+                + (d.email ? 'najbezpieczniej wyślij reset hasła.' : 'brak maila — user musi się zalogować telefonem/PIN-em, jeśli tak rejestrował się wcześniej.');
         } else {
             loginNote = `Oryginalnie user logował się: <strong>${providerLabels.join(' + ')}</strong>. `
                 + (providerLabels.some(p => p === 'Google' || p === 'Apple')
@@ -1882,25 +1923,32 @@ async function restoreAccountRun() {
                     : '')
                 + (providerLabels.includes('e-mail i hasło')
                     ? 'Dla metody mail+hasło: hasła NIE dało się odtworzyć (to niemożliwe) — wyślij reset poniżej.'
+                    : '')
+                + (providerLabels.includes('telefon (SMS)')
+                    ? 'Telefon został odtworzony — logowanie SMS powinno zadziałać od razu.'
                     : '');
         }
+
+        const pwResetBtn = d.email
+            ? `<button class="bcast-send-btn" style="margin-top:10px;" onclick="restoreSendPasswordReset('${_escHtml(d.email)}')">Wyślij e-mail z resetem hasła</button>
+               <div id="restore-pwreset-msg" style="margin-top:6px;font-size:12px;"></div>`
+            : `<div style="margin-top:10px;font-size:12px;color:var(--szary);">Brak maila na koncie — nie można wysłać resetu hasła tą drogą.</div>`;
 
         resultBox.style.display = 'block';
         resultBox.innerHTML = `
             ${uidNote}
             <div style="margin-top:4px;">${loginNote}</div>
-            <button class="bcast-send-btn" style="margin-top:10px;" onclick="restoreSendPasswordReset('${_escHtml(d.email || email)}')">Wyślij e-mail z resetem hasła</button>
-            <div id="restore-pwreset-msg" style="margin-top:6px;font-size:12px;"></div>
+            ${pwResetBtn}
         `;
 
-        emailInput.value = '';
+        await restoreLoadList(); // odśwież — przywrócone konto zniknie z listy
     } catch (e) {
         console.error('restoreAccountRun:', e);
         msg.className = 'bcast-msg err';
         msg.textContent = 'Błąd: ' + (e.message || e);
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Sprawdź i przywróć';
+        btn.textContent = 'Przywróć';
     }
 }
 

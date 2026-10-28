@@ -4028,30 +4028,49 @@ exports.restoreDeletedAccount = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async 
     }
     await _assertPlatformAdmin(request.auth.uid);
 
+    const reqUserId = (request.data && typeof request.data.userId === 'string') ? request.data.userId.trim() : '';
     const email = (request.data && typeof request.data.email === 'string')
         ? request.data.email.trim().toLowerCase() : '';
-    if (!email) {
-        throw new HttpsError('invalid-argument', 'Podaj e-mail usuniętego konta.');
+    if (!reqUserId && !email) {
+        throw new HttpsError('invalid-argument', 'Podaj konto do przywrócenia (userId albo e-mail) — nie każde usunięte konto ma zapisany mail.');
     }
 
     const encKey = SELFDELETE_ENC_KEY.value();
-    const tempSnap = await db.collection('temp').get();
     let foundUserId = null;
     let archivePayload = null;
-    for (const doc of tempSnap.docs) {
-        try {
-            const payload = _decryptSelfDeletePayload(doc.data(), encKey);
-            if ((payload.email || '').toLowerCase() === email) {
-                foundUserId = doc.id;
-                archivePayload = payload;
-                break;
+
+    // Preferowana ścieżka: userId wybrany z listy (listDeletedAccounts) — bezpośredni odczyt
+    // dokumentu, bez skanowania całej kolekcji.
+    if (reqUserId) {
+        const doc = await db.collection('temp').doc(reqUserId).get();
+        if (doc.exists) {
+            try {
+                archivePayload = _decryptSelfDeletePayload(doc.data(), encKey);
+                foundUserId = reqUserId;
+            } catch (e) {
+                // nieprawidłowy klucz / uszkodzony dokument — spróbujemy fallbackiem po mailu, jeśli podano
             }
-        } catch (e) {
-            // inny klucz szyfrowania / uszkodzony dokument — pomijamy
+        }
+    }
+    // Fallback: szukanie po mailu (gdy nie znamy userId) — część kont nie ma maila wcale
+    // (rejestracja telefonem/PIN), więc to nie jest uniwersalna ścieżka.
+    if (!foundUserId && email) {
+        const tempSnap = await db.collection('temp').get();
+        for (const doc of tempSnap.docs) {
+            try {
+                const payload = _decryptSelfDeletePayload(doc.data(), encKey);
+                if ((payload.email || '').toLowerCase() === email) {
+                    foundUserId = doc.id;
+                    archivePayload = payload;
+                    break;
+                }
+            } catch (e) {
+                // inny klucz szyfrowania / uszkodzony dokument — pomijamy
+            }
         }
     }
     if (!foundUserId) {
-        throw new HttpsError('not-found', 'Nie znaleziono usuniętego konta z tym adresem e-mail w archiwum.');
+        throw new HttpsError('not-found', 'Nie znaleziono usuniętego konta w archiwum.');
     }
 
     // ── Krok 1: Firebase Auth — najpierw próba z TYM SAMYM UID, fallback na nowy ──
@@ -4106,6 +4125,14 @@ exports.restoreDeletedAccount = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async 
         }
     }
 
+    // ── Krok 5: archiwum `temp` już niepotrzebne — konto znów żyje, usuwamy wpis, żeby nie
+    // pojawiało się dalej na liście "usuniętych kont" do przywrócenia ──
+    try {
+        await db.collection('temp').doc(foundUserId).delete();
+    } catch (e) {
+        console.error(`restoreDeletedAccount[${foundUserId}] usuwanie temp:`, e);
+    }
+
     console.log(`restoreDeletedAccount OK userId=${foundUserId} authUid=${newAuthUid} uidChanged=${uidChanged} by=${request.auth.uid}`);
     return {
         success: true,
@@ -4113,7 +4140,43 @@ exports.restoreDeletedAccount = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async 
         authUid: newAuthUid,
         uidChanged,
         email: archivePayload.email || null,
+        phone: archivePayload.phone || null,
         displayName: archivePayload.displayName || null,
         providers: archivePayload.providers || [],
     };
+});
+
+/* ═══════════════════════════════════════════════════
+   listDeletedAccounts — lista kont do przywrócenia (do dropdownu w support.html).
+   Admin-only (isPlatformAdmin, SERVER-SIDE). Odszyfrowuje każdy wpis `temp` tylko do
+   pokazania identyfikatora (imię/nazwisko/mail/telefon) — nigdy pinHash.
+   ═══════════════════════════════════════════════════ */
+exports.listDeletedAccounts = onCall({ secrets: [SELFDELETE_ENC_KEY] }, async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    }
+    await _assertPlatformAdmin(request.auth.uid);
+
+    const encKey = SELFDELETE_ENC_KEY.value();
+    const tempSnap = await db.collection('temp').get();
+    const accounts = [];
+    for (const doc of tempSnap.docs) {
+        try {
+            const payload = _decryptSelfDeletePayload(doc.data(), encKey);
+            accounts.push({
+                userId: doc.id,
+                firstName: payload.firstName || null,
+                lastName: payload.lastName || null,
+                displayName: payload.displayName || null,
+                email: payload.email || null,
+                phone: payload.phone || null,
+                providers: payload.providers || [],
+                deletedAt: doc.data().deletedAt || null,
+            });
+        } catch (e) {
+            // inny klucz szyfrowania / uszkodzony dokument — pomijamy, nie blokujemy listy
+        }
+    }
+    accounts.sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || ''));
+    return { accounts };
 });
