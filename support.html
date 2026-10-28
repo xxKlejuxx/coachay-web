@@ -460,43 +460,56 @@
     <div class="screen-body">
     <div class="sup-container">
 
-        <!-- Stats -->
-        <div class="s-label">Przegląd platformy</div>
+        <!-- Stats: licencje KLUBOWE — liczone wprost z license.valid_until vs dziś
+             (nie z clubs.licenseStatus/grace), żeby było proste i zrozumiałe — 2026-10-29.
+             Dwa kąty: ile klubów ma aktywną/wygasłą licencję, i ile SLOTÓW (license.total)
+             siedzi w tych aktywnych/wygasłych licencjach (kapacytet, nie tylko liczba klubów). -->
+        <div class="s-label">Licencje klubowe</div>
         <div class="sup-stats">
             <div class="sup-stat">
-                <div class="sup-stat-val green" id="stat-active">–</div>
-                <div class="sup-stat-lbl">Aktywne</div>
+                <div class="sup-stat-val green" id="stat-club-active">–</div>
+                <div class="sup-stat-lbl">Kluby aktywne</div>
             </div>
             <div class="sup-stat">
-                <div class="sup-stat-val amber" id="stat-trial">–</div>
-                <div class="sup-stat-lbl">Trial</div>
+                <div class="sup-stat-val red" id="stat-club-expired">–</div>
+                <div class="sup-stat-lbl">Kluby wygasłe</div>
             </div>
             <div class="sup-stat">
-                <div class="sup-stat-val red" id="stat-expired">–</div>
-                <div class="sup-stat-lbl">Wygasłe</div>
+                <div class="sup-stat-val green" id="stat-club-slots-active">–</div>
+                <div class="sup-stat-lbl">Sloty aktywne</div>
             </div>
             <div class="sup-stat">
-                <div class="sup-stat-val" id="stat-total">–</div>
-                <div class="sup-stat-lbl">Razem</div>
+                <div class="sup-stat-val red" id="stat-club-slots-expired">–</div>
+                <div class="sup-stat-lbl">Sloty wygasłe</div>
             </div>
         </div>
 
-        <!-- Licencje użytkowników (indywidualne + rodzinne) — 2026-10-28. Osobno od licznika
+        <!-- Licencje użytkowników (indywidualne + rodzinne) — 2026-10-29. Osobno od licznika
              klubów wyżej: ten liczy userów z planem indywidualnym (users.subscription) albo
-             rodzinnym (access_rights, source=family_license) — NIE liczy slotów klubowych. -->
+             rodzinnym (access_rights, source=family_license) — NIE liczy slotów klubowych.
+             Trial liczony z period_type z webhooka RevenueCat (bez podziału ind/family —
+             jedna liczba), aktywne/wygasłe osobno dla ind i family. Brak podziału mc/rok. -->
         <div class="s-label">Licencje użytkowników (indywidualne + rodzinne)</div>
         <div class="sup-stats">
             <div class="sup-stat">
-                <div class="sup-stat-val green" id="stat-user-active">–</div>
-                <div class="sup-stat-lbl">Aktywne</div>
+                <div class="sup-stat-val amber" id="stat-user-trial">–</div>
+                <div class="sup-stat-lbl">Trial</div>
             </div>
             <div class="sup-stat">
-                <div class="sup-stat-val red" id="stat-user-expired">–</div>
-                <div class="sup-stat-lbl">Wygasłe</div>
+                <div class="sup-stat-val green" id="stat-user-active-ind">–</div>
+                <div class="sup-stat-lbl">Aktywne IND</div>
             </div>
             <div class="sup-stat">
-                <div class="sup-stat-val" id="stat-user-total">–</div>
-                <div class="sup-stat-lbl">Razem</div>
+                <div class="sup-stat-val green" id="stat-user-active-family">–</div>
+                <div class="sup-stat-lbl">Aktywne Family</div>
+            </div>
+            <div class="sup-stat">
+                <div class="sup-stat-val red" id="stat-user-expired-ind">–</div>
+                <div class="sup-stat-lbl">Wygasłe IND</div>
+            </div>
+            <div class="sup-stat">
+                <div class="sup-stat-val red" id="stat-user-expired-family">–</div>
+                <div class="sup-stat-lbl">Wygasłe Family</div>
             </div>
         </div>
 
@@ -761,7 +774,12 @@ async function loadClubs() {
         allMemberships = membSnap.docs.map(d => d.data());
 
         allClubs = [];
-        let active = 0, trial = 0, expired = 0;
+        // Liczniki NOWEGO panelu "Licencje klubowe" — liczone wprost z license.valid_until
+        // vs dziś (2026-10-29, decyzja Rafała: "nie musi być idealnie dokładnie"). Osobno od
+        // badge'y pojedynczego klubu (licenseStatus), które zostają jak były (grace/trial itd.)
+        // — to tylko nowy, prostszy widok zbiorczy + widok "slotów" (kapacytet, nie tylko klub).
+        let clubLicActiveCount = 0, clubLicExpiredCount = 0;
+        let clubSlotsActive = 0, clubSlotsExpired = 0;
 
         for (const doc of clubsSnap.docs) {
             const d = doc.data();
@@ -796,9 +814,21 @@ async function loadClubs() {
                 }
             }
 
-            if (licenseStatus === 'active')  active++;
-            else if (licenseStatus === 'trial' || licenseStatus === 'grace') trial++;
-            else expired++;
+            // Nowy prosty licznik: aktywna/wygasła TYLKO na podstawie license.valid_until vs dziś.
+            // Klub bez license.valid_until (nigdy nie kupił) nie liczy się do żadnej z kolumn.
+            const licTotal = d.license?.total ?? null;
+            const licUsed  = d.license?.used  ?? null;
+            const licValidUntilRaw = d.license?.valid_until ?? d.license?.expiresAt;
+            const licValidUntil = licValidUntilRaw?.toDate?.() ?? (licValidUntilRaw ? new Date(licValidUntilRaw) : null);
+            if (licValidUntil) {
+                if (licValidUntil > now) {
+                    clubLicActiveCount++;
+                    if (licTotal) clubSlotsActive += licTotal;
+                } else {
+                    clubLicExpiredCount++;
+                    if (licTotal) clubSlotsExpired += licTotal;
+                }
+            }
 
             // Nazwa: pole name, fallback na clubName, fallback na '(brak nazwy)'
             const clubName = d.name || d.clubName || d.title || '';
@@ -813,35 +843,46 @@ async function loadClubs() {
                 memberCount:   membersByClub[doc.id]?.size || 0,
                 licenseStatus,
                 licenseExpiry,
+                licenseTotal:  licTotal,
+                licenseUsed:   licUsed,
                 createdAt:     createdAtDate || null,
                 licensePlan:   d.license?.planId || null,
             });
         }
 
-        document.getElementById('stat-active').textContent  = active;
-        document.getElementById('stat-trial').textContent   = trial;
-        document.getElementById('stat-expired').textContent = expired;
-        document.getElementById('stat-total').textContent   = allClubs.length;
+        document.getElementById('stat-club-active').textContent        = clubLicActiveCount;
+        document.getElementById('stat-club-expired').textContent       = clubLicExpiredCount;
+        document.getElementById('stat-club-slots-active').textContent  = clubSlotsActive;
+        document.getElementById('stat-club-slots-expired').textContent = clubSlotsExpired;
 
         // Licencje użytkowników — indywidualne (users.subscription) + rodzinne (access_rights,
         // source=family_license). Osobno od licznika klubów wyżej — to NIE liczy slotów
-        // klubowych, tylko realne plany per-user. Brak koncepcji "trial" w tych danych
-        // (RevenueCat nie zapisuje nam periodType), więc tylko Aktywne/Wygasłe/Razem.
-        let userLicActive = 0, userLicExpired = 0;
+        // klubowych, tylko realne plany per-user. Trial = periodType='TRIAL' zapisywane przez
+        // revenuecatWebhook (2026-10-29) — jedna łączna liczba (bez podziału ind/family).
+        // Brak podziału mc/rok (decyzja Rafała — niepotrzebne).
+        let userTrial = 0, userActiveInd = 0, userActiveFamily = 0, userExpiredInd = 0, userExpiredFamily = 0;
         usersSnap.docs.forEach(doc => {
             const sub = doc.data().subscription;
             if (!sub) return; // user bez jakiejkolwiek historii planu indywidualnego — nie liczymy
             const exp = sub.expiresAt?.toDate ? sub.expiresAt.toDate() : (sub.expiresAt ? new Date(sub.expiresAt) : null);
-            if (sub.status === 'ACTIVE' && exp && exp > now) userLicActive++; else userLicExpired++;
+            const isActive = sub.status === 'ACTIVE' && exp && exp > now;
+            if (isActive && sub.periodType === 'TRIAL') userTrial++;
+            else if (isActive) userActiveInd++;
+            else userExpiredInd++;
         });
         famArSnap.docs.forEach(d => {
-            const { valid_until } = d.data();
+            const { valid_until, periodType } = d.data();
             const exp = valid_until?.toDate ? valid_until.toDate() : (valid_until ? new Date(valid_until) : null);
-            if (exp && exp > now) userLicActive++; else userLicExpired++;
+            const isActive = exp && exp > now;
+            if (isActive && periodType === 'TRIAL') userTrial++;
+            else if (isActive) userActiveFamily++;
+            else userExpiredFamily++;
         });
-        document.getElementById('stat-user-active').textContent  = userLicActive;
-        document.getElementById('stat-user-expired').textContent = userLicExpired;
-        document.getElementById('stat-user-total').textContent   = userLicActive + userLicExpired;
+        document.getElementById('stat-user-trial').textContent          = userTrial;
+        document.getElementById('stat-user-active-ind').textContent     = userActiveInd;
+        document.getElementById('stat-user-active-family').textContent  = userActiveFamily;
+        document.getElementById('stat-user-expired-ind').textContent    = userExpiredInd;
+        document.getElementById('stat-user-expired-family').textContent = userExpiredFamily;
 
         allClubs.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
         renderClubs(allClubs);
@@ -921,6 +962,13 @@ function renderClubs(clubs) {
                     <span class="sup-club-status ${badgeClass}" style="flex-shrink:0">${statusLabel}</span>
                     <span style="font-size:11px; font-weight:600; color:var(--szary-j); flex:1">${licenseInfo}</span>
                 </div>
+                ${club.licenseTotal != null ? `
+                <!-- Kupione/wykorzystane/wolne sloty — 2026-10-29 -->
+                <div style="padding:6px 12px; font-size:10px; color:var(--szary); margin-bottom:4px; display:flex; gap:12px;">
+                    <span>Kupione: <strong style="color:var(--bialy)">${club.licenseTotal}</strong></span>
+                    <span>Wykorzystane: <strong style="color:var(--bialy)">${club.licenseUsed ?? 0}</strong></span>
+                    <span>Wolne: <strong style="color:var(--bialy)">${club.licenseTotal - (club.licenseUsed ?? 0)}</strong></span>
+                </div>` : ''}
 
                 <div class="sup-action-row">
                     <button class="sup-action-btn green" onclick="openSheet('${club.id}', '${club.name}')"
