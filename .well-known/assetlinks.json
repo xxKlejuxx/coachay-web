@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.coachay.mobile",
+      "sha256_cert_fingerprints":
+        ["B0:E1:64:5C:D3:C2:DC:EE:02:6B:AB:D6:73:93:61:2C:7F:D8:48:42:9A:89:F8:44:02:FA:E0:75:1B:7A:9A:FD"]
+    }
+  }
+]
