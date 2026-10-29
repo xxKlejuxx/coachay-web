@@ -658,6 +658,7 @@
   "matchLiveLabel": "🔴 LIVE",
   "assistantPrefix": "📋 Covered by: ",
   "noAssistantFree": "📋 Match open — no one covering",
+  "scoreLabel": "Score",
   "presentLabel": "Present",
   "absentLabel": "Absent",
   "noResponseLabel": "No response",

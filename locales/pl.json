@@ -658,6 +658,7 @@
   "matchLiveLabel": "🔴 NA ŻYWO",
   "assistantPrefix": "📋 Obsługuje: ",
   "noAssistantFree": "📋 Mecz wolny — brak obsługi",
+  "scoreLabel": "Wynik",
   "presentLabel": "Obecni",
   "absentLabel": "Nieobecni",
   "noResponseLabel": "Brak odp.",
