@@ -88,7 +88,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #DC2626; animation: mc-pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
 @keyframes mc-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
 .mc-scoreboard { display: flex; align-items: stretch; justify-content: space-between; gap: 6px; margin: 8px 0 4px; }
-.mc-sb-team { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 12px; padding: 8px 4px; }
+.mc-sb-team { flex: 1.3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 12px; padding: 8px 4px; }
 /* Kolory wypełnienia i czcionki 1:1 z przykładowego kodu (team-blue / team-red) */
 .mc-sb-team--our { background: linear-gradient(180deg, #1D4ED8 0%, #1E3A8A 60%, #0F172A 100%); border: none; }
 .mc-sb-team--opp { background: linear-gradient(180deg, #B91C1C 0%, #7F1D1D 60%, #450A0A 100%); border: none; }
@@ -96,11 +96,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-sb-name--our, .mc-sb-name--opp { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 /* Panel wyniku 1:1 z przykładu (meta-tag + score-display): etykieta jako ciemna pigułka z obwódką nad
    wynikiem na ciemnym granatowo-czarnym gradiencie, cyfry białe z lekkim glow */
-.mc-sb-center { flex: 1.3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, #1E293B 0%, #020617 100%); border-radius: 12px; padding: 8px 8px; }
-.mc-sb-label { font-family: var(--font-d); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #CBD5E1; background: #020617; border: 1px solid #475569; padding: 1px 8px; border-radius: 6px; }
-.mc-sb-score-row { display: flex; align-items: baseline; gap: 6px; }
-.mc-sb-score { font-family: var(--font-d); font-size: 32px; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 10px rgba(255,255,255,0.4); }
-.mc-sb-dash { font-family: var(--font-d); font-size: 22px; font-weight: 900; color: #fff; }
+.mc-sb-center { flex: 0.52; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, #1E293B 0%, #020617 100%); border-radius: 12px; padding: 8px 4px; }
+.mc-sb-label { font-family: var(--font-d); font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #CBD5E1; background: #020617; border: 1px solid #475569; padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+.mc-sb-score-row { display: flex; align-items: baseline; gap: 3px; }
+.mc-sb-score { font-family: var(--font-d); font-size: 24px; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 10px rgba(255,255,255,0.4); }
+.mc-sb-dash { font-family: var(--font-d); font-size: 16px; font-weight: 900; color: #fff; }
 .mc-counts { display: flex; gap: 8px; margin-top: 8px; }
 .mcc { flex: 1; border-radius: 12px; padding: 8px; text-align: center; }
 /* Gradienty i tekst 1:1 z przykładu (att-green/att-red/att-blue) — trzecia kafelka niebieska (nie szara),
