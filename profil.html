@@ -430,15 +430,23 @@ async function initProfil() {
     loadMenuPanel(user, membership, team);
 
     // Pobierz WSZYSTKIE trainerId tego usera (może pracować w kilku klubach) dla syncu awatara/nazwiska.
-    // 2026-10-29 fix: BEZ gate'u na currentUserRole — rola to tylko aktualnie WYBRANY kontekst (membership),
-    // a user może mieć dokument w `trainers` nawet jeśli w danej chwili rola nie zaczyna się od TRENER/OWNER
-    // (np. wybrany inny membership). Zapytanie jest tanie (0 wyników jeśli user nie jest trenerem), więc
-    // wykonujemy je zawsze, zamiast zgadywać na podstawie roli.
+    // 2026-10-29 fix #1: BEZ gate'u na currentUserRole — rola to tylko aktualnie WYBRANY kontekst (membership).
+    // 2026-10-29 fix #2 (prawdziwa przyczyna): Firestore REGUŁY dla `trainers` sprawdzają resource.data.clubId
+    // (przez inMyClub()) — zapytanie filtrowane TYLKO po `userId` (bez clubId w filtrze) jest odrzucane
+    // z "permission-denied" przez silnik reguł, niezależnie od tego, że konkretny dokument by przeszedł
+    // (potwierdzone empirycznie w konsoli: where(userId) → permission-denied, where(userId)+where(clubId) → OK).
+    // Dlatego pytamy PER KLUB (z authIndex.clubIds), zawsze z clubId w filtrze.
     try {
-        const snap = await db.collection('trainers')
-            .where('userId', '==', currentUserId)
-            .get();
-        currentTrainerIds = snap.docs.map(d => d.id);
+        const authUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || null;
+        let myClubIds = [];
+        if (authUid) {
+            const aiDoc = await db.collection('authIndex').doc(authUid).get();
+            myClubIds = (aiDoc.exists && aiDoc.data().clubIds) || [];
+        }
+        const snaps = await Promise.all(myClubIds.map(cid =>
+            db.collection('trainers').where('userId', '==', currentUserId).where('clubId', '==', cid).get()
+        ));
+        currentTrainerIds = [...new Set(snaps.flatMap(s => s.docs.map(d => d.id)))];
         if (user.trainerId && !currentTrainerIds.includes(user.trainerId)) currentTrainerIds.push(user.trainerId);
     } catch(e) { console.warn('Nie znaleziono trainerId:', e); }
 
