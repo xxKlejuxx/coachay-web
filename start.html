@@ -87,17 +87,18 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #DC2626; animation: mc-pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
 @keyframes mc-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
 .mc-scoreboard { display: flex; align-items: stretch; justify-content: space-between; gap: 6px; margin: 8px 0 4px; }
-.mc-sb-team { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 12px; padding: 6px 4px; }
-.mc-sb-team--our { background: rgba(37,99,235,0.10); border: 1px solid rgba(37,99,235,0.30); }
-.mc-sb-team--opp { background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.28); }
-.mc-sb-name { font-family: var(--font-d); font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; text-align: center; line-height: 1.2; }
-.mc-sb-name--our { color: #2563EB; }
-.mc-sb-name--opp { color: #DC2626; }
-/* Panel wyniku — czarny, wyśrodkowany, z etykietą WYNIK nad liczbami (zamiast samego ":") */
-.mc-sb-center { flex: 1.3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--czarny); border-radius: 12px; padding: 6px 8px; }
+.mc-sb-team { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 12px; padding: 8px 4px; }
+/* Pełne, nasycone kolory (nie blade odcienie) — tak jak w referencji: solidny niebieski/czerwony z białym tekstem */
+.mc-sb-team--our { background: #2563EB; border: 1px solid #1D4ED8; }
+.mc-sb-team--opp { background: #DC2626; border: 1px solid #B91C1C; }
+.mc-sb-name { font-family: var(--font-d); font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; text-align: center; line-height: 1.2; }
+.mc-sb-name--our, .mc-sb-name--opp { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+/* Panel wyniku — czarny pełny (bez var(--czarny)/var(--bialy), bo te zmienne nie są nigdzie zdefiniowane
+   w tym pliku i renderowały się jako przezroczyste — dlatego kolory na wprost, hex). */
+.mc-sb-center { flex: 1.3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: #0A0A0A; border-radius: 12px; padding: 8px 8px; }
 .mc-sb-label { font-family: var(--font-d); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
 .mc-sb-score-row { display: flex; align-items: baseline; gap: 6px; }
-.mc-sb-score { font-family: var(--font-d); font-size: 32px; font-weight: 900; color: var(--bialy); line-height: 1; }
+.mc-sb-score { font-family: var(--font-d); font-size: 32px; font-weight: 900; color: #fff; line-height: 1; }
 .mc-sb-dash { font-family: var(--font-d); font-size: 22px; font-weight: 900; color: rgba(255,255,255,0.5); }
 .mc-counts { display: flex; gap: 8px; margin-top: 8px; }
 .mcc { flex: 1; border-radius: 12px; padding: 8px; text-align: center; }
