@@ -566,7 +566,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 <select class="form-inp form-select" id="ev-add-topic" onchange="onEvTopicChange()">
                     <option value="" data-i18n="addEvent.topicPlaceholder">Wybierz temat...</option>
                 </select>
-                <input type="text" class="form-inp" id="ev-add-topic-custom" placeholder="Wpisz nowy temat..." style="display:none;margin-top:8px;">
+                <input type="text" class="form-inp" id="ev-add-topic-custom" data-i18n-placeholder="addEvent.topicCustomPlaceholder" placeholder="Wpisz nowy temat..." style="display:none;margin-top:8px;">
             </div>
             <!-- Przeciwnik (tylko mecz) — sync #0134/#0136: tytuł meczu budujemy automatycznie
                  z prawdziwej nazwy drużyny + przeciwnika, zamiast ręcznego wpisywania "Nazwa vs Nazwa" -->
@@ -2788,7 +2788,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 const label = (translated && translated !== i18nKey) ? translated : tp.title;
                 select.innerHTML += `<option value="${tp.topicId}">${label}</option>`;
             });
-            select.innerHTML += `<option value="__custom__">✏️ Wpisz nowy temat...</option>`;
+            select.innerHTML += `<option value="__custom__">${t('addEvent.topicCustomOption') || '✏️ Wpisz nowy temat...'}</option>`;
         } catch (e) { console.error('❌ _loadEvTopics', e); }
     }
 

@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261030'; // 2026-10-30: bump po dodaniu addEvent.topicDefault.* (tłumaczenia 8 standardowych tematów treningu) + home.scoreLabel
+    const LOCALE_V  = '20261030b'; // 2026-10-30b: bump po dodaniu addEvent.topicCustomOption/topicCustomPlaceholder ("Wpisz nowy temat...")
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */

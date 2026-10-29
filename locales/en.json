@@ -1816,6 +1816,8 @@
   "type": "Event type",
   "topicLabel": "Training topic",
   "topicPlaceholder": "Choose topic...",
+  "topicCustomOption": "✏️ Type a new topic...",
+  "topicCustomPlaceholder": "Type a new topic...",
   "topicDefault": {
    "technikaPodan": "Passing technique",
    "staleFragmentyGry": "Set pieces",

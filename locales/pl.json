@@ -1816,6 +1816,8 @@
   "type": "Typ wydarzenia",
   "topicLabel": "Temat treningu",
   "topicPlaceholder": "Wybierz temat...",
+  "topicCustomOption": "✏️ Wpisz nowy temat...",
+  "topicCustomPlaceholder": "Wpisz nowy temat...",
   "topicDefault": {
    "technikaPodan": "Technika podań",
    "staleFragmentyGry": "Stałe fragmenty gry",
