@@ -429,16 +429,18 @@ async function initProfil() {
     loadCtxOverlay(user, membership, team);
     loadMenuPanel(user, membership, team);
 
-    // Trener – pobierz WSZYSTKIE trainerId tego usera (może pracować w kilku klubach) dla syncu awatara/nazwiska
-    if (currentUserRole.startsWith('TRENER') || currentUserRole === 'OWNER') {
-        try {
-            const snap = await db.collection('trainers')
-                .where('userId', '==', currentUserId)
-                .get();
-            currentTrainerIds = snap.docs.map(d => d.id);
-            if (user.trainerId && !currentTrainerIds.includes(user.trainerId)) currentTrainerIds.push(user.trainerId);
-        } catch(e) { console.warn('Nie znaleziono trainerId:', e); }
-    }
+    // Pobierz WSZYSTKIE trainerId tego usera (może pracować w kilku klubach) dla syncu awatara/nazwiska.
+    // 2026-10-29 fix: BEZ gate'u na currentUserRole — rola to tylko aktualnie WYBRANY kontekst (membership),
+    // a user może mieć dokument w `trainers` nawet jeśli w danej chwili rola nie zaczyna się od TRENER/OWNER
+    // (np. wybrany inny membership). Zapytanie jest tanie (0 wyników jeśli user nie jest trenerem), więc
+    // wykonujemy je zawsze, zamiast zgadywać na podstawie roli.
+    try {
+        const snap = await db.collection('trainers')
+            .where('userId', '==', currentUserId)
+            .get();
+        currentTrainerIds = snap.docs.map(d => d.id);
+        if (user.trainerId && !currentTrainerIds.includes(user.trainerId)) currentTrainerIds.push(user.trainerId);
+    } catch(e) { console.warn('Nie znaleziono trainerId:', e); }
 
     renderProfile(user);
     renderSubscription();
