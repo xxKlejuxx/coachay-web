@@ -1785,11 +1785,23 @@ async function doRegisterTrainer() {
         // 2026-10-30: domyślne tematy treningu dla nowego klubu — bez tego ekran "Nowy event > Trening" pokazuje
         // pustą listę ("Wybierz temat..." + "Wpisz nowy temat...") dopóki ktoś ręcznie nie doda własnego tematu;
         // te same 8 tematów co w klubie demo (club_orly_praga), ale jako osobne dokumenty tego klubu (edytowalne niezależnie).
-        var _defaultTopics = ['Technika podań','Stałe fragmenty gry','Kondycja i szybkość','Taktyka defensywna','Taktyka ofensywna','Gra w małych grupach','Koordynacja i zwinność','Mecz sparingowy wewnętrzny'];
+        // topicKey = stabilny klucz i18n (addEvent.topicDefault.<key> w locales/*.json) — pozwala wyświetlać
+        // te 8 standardowych tematów przetłumaczone, niezależnie od tego w jakim języku zostały zapisane
+        // (title to zapisany na sztywno polski tekst, używany jako fallback gdy tłumaczenia brak).
+        var _defaultTopics = [
+            { key: 'technikaPodan',            title: 'Technika podań' },
+            { key: 'staleFragmentyGry',         title: 'Stałe fragmenty gry' },
+            { key: 'kondycjaISzybkosc',         title: 'Kondycja i szybkość' },
+            { key: 'taktykaDefensywna',         title: 'Taktyka defensywna' },
+            { key: 'taktykaOfensywna',          title: 'Taktyka ofensywna' },
+            { key: 'graWMalychGrupach',         title: 'Gra w małych grupach' },
+            { key: 'koordynacjaIZwinnosc',      title: 'Koordynacja i zwinność' },
+            { key: 'meczSparingowyWewnetrzny',  title: 'Mecz sparingowy wewnętrzny' }
+        ];
         var _topicsBatch = db.batch();
-        _defaultTopics.forEach(function(title, i) {
+        _defaultTopics.forEach(function(topic, i) {
             var topicId = 'topic_'+dateStr+'_'+(i+1)+'_'+Math.floor(Math.random()*900000+100000);
-            _topicsBatch.set(db.collection('trainingTopics').doc(topicId), { topicId, clubId, title, isActive:true, priority:i+1, createdAt:now });
+            _topicsBatch.set(db.collection('trainingTopics').doc(topicId), { topicId, clubId, title: topic.title, topicKey: topic.key, isActive:true, priority:i+1, createdAt:now });
         });
         try { await _topicsBatch.commit(); } catch(e) { console.warn('⚠️ Nie udało się dodać domyślnych tematów treningu', e); }
         localStorage.setItem('currentUserId', userCode);

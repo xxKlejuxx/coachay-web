@@ -2781,7 +2781,12 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             if (!select) return;
             select.innerHTML = `<option value="">${t('addEvent.topicPlaceholder') || 'Wybierz temat...'}</option>`;
             _evTrainingTopics.forEach(tp => {
-                select.innerHTML += `<option value="${tp.topicId}">${tp.title}</option>`;
+                // 2026-10-30: 8 standardowych tematów ma topicKey -> tłumaczone przez i18n (addEvent.topicDefault.<key>);
+                // własne tematy usera (bez topicKey) zostają jako zwykły, niezmieniony tekst (tp.title).
+                const i18nKey = tp.topicKey ? `addEvent.topicDefault.${tp.topicKey}` : null;
+                const translated = i18nKey ? t(i18nKey) : null;
+                const label = (translated && translated !== i18nKey) ? translated : tp.title;
+                select.innerHTML += `<option value="${tp.topicId}">${label}</option>`;
             });
             select.innerHTML += `<option value="__custom__">✏️ Wpisz nowy temat...</option>`;
         } catch (e) { console.error('❌ _loadEvTopics', e); }

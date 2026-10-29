@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261025'; // 2026-10-25: bump po dodaniu addEvent.opponentLabel/opponentPlaceholder/opponentValidationError (pole "Z kim gramy?")
+    const LOCALE_V  = '20261030'; // 2026-10-30: bump po dodaniu addEvent.topicDefault.* (tłumaczenia 8 standardowych tematów treningu) + home.scoreLabel
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */

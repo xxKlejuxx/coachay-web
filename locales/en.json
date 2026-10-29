@@ -1816,6 +1816,16 @@
   "type": "Event type",
   "topicLabel": "Training topic",
   "topicPlaceholder": "Choose topic...",
+  "topicDefault": {
+   "technikaPodan": "Passing technique",
+   "staleFragmentyGry": "Set pieces",
+   "kondycjaISzybkosc": "Fitness and speed",
+   "taktykaDefensywna": "Defensive tactics",
+   "taktykaOfensywna": "Offensive tactics",
+   "graWMalychGrupach": "Small-sided games",
+   "koordynacjaIZwinnosc": "Coordination and agility",
+   "meczSparingowyWewnetrzny": "Internal friendly match"
+  },
   "typeTraining": "Training",
   "typeMatch": "Match",
   "typeTrip": "Trip",

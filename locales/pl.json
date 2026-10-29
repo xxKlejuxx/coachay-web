@@ -1816,6 +1816,16 @@
   "type": "Typ wydarzenia",
   "topicLabel": "Temat treningu",
   "topicPlaceholder": "Wybierz temat...",
+  "topicDefault": {
+   "technikaPodan": "Technika podań",
+   "staleFragmentyGry": "Stałe fragmenty gry",
+   "kondycjaISzybkosc": "Kondycja i szybkość",
+   "taktykaDefensywna": "Taktyka defensywna",
+   "taktykaOfensywna": "Taktyka ofensywna",
+   "graWMalychGrupach": "Gra w małych grupach",
+   "koordynacjaIZwinnosc": "Koordynacja i zwinność",
+   "meczSparingowyWewnetrzny": "Mecz sparingowy wewnętrzny"
+  },
   "typeTraining": "Trening",
   "typeMatch": "Mecz",
   "typeTrip": "Wyjazd",
