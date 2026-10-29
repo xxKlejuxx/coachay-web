@@ -734,27 +734,21 @@ window.addEventListener('DOMContentLoaded', () => {
 /* === Załaduj kluby === */
 async function loadClubs() {
     try {
-        // Równoległe zapytania: kluby + drużyny + memberships + access_rights (daty licencji)
+        // Równoległe zapytania: kluby + drużyny + memberships + users (licencje indywidualne)
+        // + access_rights rodzinne. 2026-10-29: usunięto wcześniejsze zapytanie access_rights
+        // "where valid_until > now" + mapę arExpiryByClub — służyło jako fallback daty ważności
+        // licencji klubu, ale access_rights to grant PER-USER (np. admin_perpetual dla jednego
+        // konta support), nie licencja całego klubu. Efekt: klub bez własnej license (nigdy
+        // nie kupił) pokazywał "Wygasła – ważna do 2099" wzięte z czyjegoś osobistego grantu.
+        // Teraz licenseExpiry = wyłącznie clubs.license, bez tego fallbacku.
         const now = new Date();
-        const [clubsSnap, teamsSnap, membSnap, arSnap, usersSnap, famArSnap] = await Promise.all([
+        const [clubsSnap, teamsSnap, membSnap, usersSnap, famArSnap] = await Promise.all([
             db.collection('clubs').get(),
             db.collection('teams').get(),
             db.collection('memberships').get(),
-            db.collection('access_rights').where('valid_until', '>', firebase.firestore.Timestamp.fromDate(now)).get(),
             db.collection('users').get(),
             db.collection('access_rights').where('source', '==', 'family_license').get(),
         ]);
-
-        // Mapa: clubId – najdalsza data valid_until z aktywnych access_rights
-        const arExpiryByClub = {};
-        arSnap.docs.forEach(d => {
-            const { club_id: cid, valid_until } = d.data();
-            if (!cid || !valid_until) return;
-            const expiry = valid_until?.toDate?.() ?? new Date(valid_until);
-            if (!arExpiryByClub[cid] || expiry > arExpiryByClub[cid]) {
-                arExpiryByClub[cid] = expiry;
-            }
-        });
 
         // Policz drużyny per klub
         const teamCountByClub = {};
@@ -803,10 +797,9 @@ async function loadClubs() {
             // Fallback: jeśli CF nie uruchomiła jeszcze – licz z createdAt
             if (d.licenseStatus) {
                 licenseStatus = d.licenseStatus.toLowerCase();
-                // licenseExpiry: najpierw clubs.license, fallback na access_rights admina
+                // licenseExpiry: wyłącznie z clubs.license (nie z czyjegoś osobistego access_rights)
                 const rawExp = d.license?.valid_until ?? d.license?.expiresAt;
-                licenseExpiry = rawExp?.toDate?.() ?? (rawExp ? new Date(rawExp) : null)
-                             ?? arExpiryByClub[doc.id] ?? null;
+                licenseExpiry = rawExp?.toDate?.() ?? (rawExp ? new Date(rawExp) : null);
             } else {
                 // Fallback: trial z createdAt
                 if (trialExpiry && trialExpiry < now) {
@@ -844,6 +837,7 @@ async function loadClubs() {
                 memberCount:   membersByClub[doc.id]?.size || 0,
                 licenseStatus,
                 licenseExpiry,
+                licenseExists: !!d.license, // 2026-10-29: klub NIGDY nie kupił vs licencja wygasła
                 licenseTotal:  licTotal,
                 licenseUsed:   licUsed,
                 createdAt:     createdAtDate || null,
@@ -918,18 +912,26 @@ function renderClubs(clubs) {
 
     container.innerHTML = '';
     clubs.forEach(club => {
+        // 2026-10-29: klub, który NIGDY nie kupił licencji (brak clubs.license) i ma status
+        // expired/grace tylko bo skończył się darmowy trial — to nie "Wygasła" (sugeruje że
+        // coś było i przestało działać), to "Brak licencji klubowej". Bez daty w ogóle —
+        // nie ma czego datować. Klub wciąż W trialu (status='trial') to inny, osobny stan.
+        const noLicense = !club.licenseExists && (club.licenseStatus === 'expired' || club.licenseStatus === 'grace');
+
         // Grace = nadal aktywna, badge taki sam jak Active
         const badgeClass = club.licenseStatus === 'grace' ? 'active' : club.licenseStatus;
-        const statusLabel = { active: 'Aktywna', trial: 'Trial', expired: 'Wygasła' }[badgeClass] || '–';
+        const statusLabel = noLicense ? 'Brak licencji' : ({ active: 'Aktywna', trial: 'Trial', expired: 'Wygasła' }[badgeClass] || '–');
 
-        const _expiryDate = club.licenseExpiry ?? club.trialExpiry ?? null;
+        const _expiryDate = noLicense ? null : (club.licenseExpiry ?? club.trialExpiry ?? null);
         const expiryStr = _expiryDate
             ? _expiryDate.toISOString().slice(0, 10)
             : '–';
 
         // Tekst info-bara licencji
         let licenseInfo = '–';
-        if (club.licenseStatus === 'trial') {
+        if (noLicense) {
+            licenseInfo = 'Brak licencji klubowej';
+        } else if (club.licenseStatus === 'trial') {
             if (club.trialExpiry) {
                 const trialStr = club.trialExpiry.toLocaleDateString('pl-PL', { day:'2-digit', month:'short', year:'numeric' });
                 licenseInfo = `Trial wygasa: <strong>${trialStr}</strong>`;
