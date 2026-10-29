@@ -186,8 +186,8 @@ function buildMembership(fields) {
         createdAt:    firebase.firestore.FieldValue.serverTimestamp()
     };
     const doc = { ...base, ...(fields || {}), createdBy: MEMBERSHIP_CREATED_BY };
-    if (!doc.membershipId || !doc.role) console.warn('?? buildMembership: brak membershipId lub role', doc);
-    if (!doc.clubId) console.warn('?? buildMembership: puste clubId dla', doc.membershipId, doc);
+    if (!doc.membershipId || !doc.role) console.warn('⚠️ buildMembership: brak membershipId lub role', doc);
+    if (!doc.clubId) console.warn('⚠️ buildMembership: puste clubId dla', doc.membershipId, doc);
     return doc;
 }
 

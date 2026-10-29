@@ -151,7 +151,7 @@
 
                 <div class="form-group" id="rap-sekcja-okres">
                     <label class="form-lbl" data-i18n="raporty.periodLabel">Okres</label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span data-i18n="raporty.periodSingleDay">?? Na dzień</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-na-dzien" onchange="przelaczTrybOkresu()"><span data-i18n="raporty.periodSingleDay">📅 Na dzień</span></label>
                     <div class="rap-row2" id="rap-okres-miesiac">
                         <div>
                             <select class="rap-select" id="rap-miesiac"></select>
@@ -167,16 +167,16 @@
 
                 <div class="form-group" id="rap-sekcja-zajecia">
                     <label class="form-lbl" data-i18n="raporty.eventTypeLabel">Rodzaj zajęć</label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-trening" checked><span data-i18n="raporty.checkTraining">? Treningi</span></label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-mecz"><span data-i18n="raporty.checkMatch">?? Mecze</span></label>
-                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-wyjazd"><span data-i18n="raporty.checkTrip">?? Wyjazdy</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-trening" checked><span data-i18n="raporty.checkTraining">⚽ Treningi</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-mecz"><span data-i18n="raporty.checkMatch">🏆 Mecze</span></label>
+                    <label class="rap-chk-row"><input type="checkbox" id="rap-typ-wyjazd"><span data-i18n="raporty.checkTrip">🚌 Wyjazdy</span></label>
                 </div>
 
                 <div class="form-group" id="rap-sekcja-format">
                     <label class="form-lbl" data-i18n="raporty.formatLabel">Format pliku</label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-pdf" checked><span data-i18n="raporty.formatPdf">?? PDF</span></label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-csv"><span data-i18n="raporty.formatCsv">?? CSV</span></label>
-                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-xlsx"><span data-i18n="raporty.formatXlsx">?? Excel (XLSX)</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-pdf" checked><span data-i18n="raporty.formatPdf">📄 PDF</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-csv"><span data-i18n="raporty.formatCsv">📋 CSV</span></label>
+                    <label class="rap-radio-row"><input type="radio" name="rap-format" id="rap-format-xlsx"><span data-i18n="raporty.formatXlsx">📊 Excel (XLSX)</span></label>
                 </div>
 
                 <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="generujRaport()" id="rap-btn-generuj" data-i18n="raporty.generateButton">Generuj raport</button>
@@ -201,16 +201,16 @@
             <div class="menu-panel-role" id="menu-role"></div>
         </div>
         <div class="menu-panel-items">
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" onclick="window.location.href='ustawienia.html'"><div class="menu-item-icon">⚙️</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">></span></div>
         </div>
         <div class="menu-panel-bottom">
             <div class="menu-logout" onclick="logout()">
-                <span class="menu-logout-icon">??</span>
+                <span class="menu-logout-icon">🚪</span>
                 <span class="menu-logout-txt">Wyloguj się</span>
             </div>
         </div>
@@ -259,11 +259,11 @@ const RAPORTY_REJESTR = {
         generujDane: (ctx) => ctx.typy.map(typ => budujPakietSzczegolowy(typ, ctx))
     },
     kody_rodzicow: {
-        get label() { return typeof t === 'function' ? t('raporty.typeInviteCodes') : '?? Karteczki z kodami dla rodziców'; },
+        get label() { return typeof t === 'function' ? t('raporty.typeInviteCodes') : '🔑 Karteczki z kodami dla rodziców'; },
         specjalny: 'karteczki'
     },
     bez_rodzica: {
-        get label() { return typeof t === 'function' ? t('raporty.typeWithoutParent') : '?? Zawodnicy bez rodzica'; },
+        get label() { return typeof t === 'function' ? t('raporty.typeWithoutParent') : '👤 Zawodnicy bez rodzica'; },
         specjalny: 'bez_rodzica'
     }
 };
@@ -383,8 +383,8 @@ function onRaportTypChange() {
     document.getElementById('rap-sekcja-legenda').style.display  = uzywaOkres ? '' : 'none';
     const _tR2 = (key, fb) => typeof t === 'function' ? t(key) : fb;
     let btnLabel = _tR2('raporty.generateButton', 'Generuj raport');
-    if (isKarteczki)  btnLabel = _tR2('raporty.printCardsButton', '??? Drukuj karteczki');
-    if (isBezRodzica) btnLabel = _tR2('raporty.printListButton',  '??? Drukuj listę');
+    if (isKarteczki)  btnLabel = _tR2('raporty.printCardsButton', '🖨️ Drukuj karteczki');
+    if (isBezRodzica) btnLabel = _tR2('raporty.printListButton',  '🖨️ Drukuj listę');
     document.getElementById('rap-btn-generuj').textContent = btnLabel;
     document.getElementById('rap-msg').textContent = '';
     if (uzywaTeam) zaladujDruzyny();
@@ -493,7 +493,7 @@ async function generujRaport() {
         else if (format === 'xlsx') pobierzXLSX(pakiety, nazwaZbiorcza);
         else pobierzPDF(pakiety, nazwaZbiorcza);
 
-        msgEl.textContent = '? ' + _tR('raporty.generateButton', 'Generuj raport');
+        msgEl.textContent = '✓ ' + _tR('raporty.generateButton', 'Generuj raport');
         msgEl.className = 'rap-msg ok';
     } catch (e) {
         console.error('Błąd generowania raportu:', e);
@@ -602,7 +602,7 @@ async function generujKarteczkiRodzicow() {
         }
 
         drukujKarteczki(karteczki);
-        msgEl.textContent = `? Otwarto okno druku — ${karteczki.length} karteczek`;
+        msgEl.textContent = `✓ Otwarto okno druku — ${karteczki.length} karteczek`;
         msgEl.className = 'rap-msg ok';
     } catch (e) {
         console.error(e);
@@ -610,7 +610,7 @@ async function generujKarteczkiRodzicow() {
         msgEl.className = 'rap-msg err';
     } finally {
         btn.disabled = false;
-        btn.textContent = typeof t === 'function' ? t('raporty.printCardsButton') : '??? Drukuj karteczki';
+        btn.textContent = typeof t === 'function' ? t('raporty.printCardsButton') : '🖨️ Drukuj karteczki';
     }
 }
 
@@ -763,14 +763,14 @@ async function generujBezRodzica() {
         const bezRodzica = activePlayers.filter(p => !rodziczeMap[p.id]);
 
         if (bezRodzica.length === 0) {
-            msgEl.textContent = '? Wszyscy aktywni zawodnicy mają zarejestrowanego rodzica.';
+            msgEl.textContent = '✓ Wszyscy aktywni zawodnicy mają zarejestrowanego rodzica.';
             msgEl.className = 'rap-msg ok';
             return;
         }
 
         const teamName = document.getElementById('rap-druzyna-select').selectedOptions?.[0]?.text || '';
         drukujBezRodzica(bezRodzica, teamName);
-        msgEl.textContent = `? Otwarto okno druku — ${bezRodzica.length} zawodników bez rodzica`;
+        msgEl.textContent = `✓ Otwarto okno druku — ${bezRodzica.length} zawodników bez rodzica`;
         msgEl.className = 'rap-msg ok';
     } catch (e) {
         console.error(e);
@@ -778,7 +778,7 @@ async function generujBezRodzica() {
         msgEl.className = 'rap-msg err';
     } finally {
         btn.disabled = false;
-        btn.textContent = typeof t === 'function' ? t('raporty.printListButton') : '??? Drukuj listę';
+        btn.textContent = typeof t === 'function' ? t('raporty.printListButton') : '🖨️ Drukuj listę';
     }
 }
 
@@ -809,7 +809,7 @@ function drukujBezRodzica(zawodnicy, teamName) {
 </style>
 </head>
 <body>
-<h1>?? Zawodnicy bez zarejestrowanego rodzica</h1>
+<h1>👤 Zawodnicy bez zarejestrowanego rodzica</h1>
 <div class="sub">${escHtml(teamName)} &nbsp;|&nbsp; ${zawodnicy.length} zawodników</div>
 <table>
   <thead><tr><th>#</th><th>Zawodnik</th></tr></thead>
@@ -979,16 +979,16 @@ async function pobierzPlik(content, filename, mime) {
             try {
                 await FileOpener.open({ filePath: zapisany.uri, contentType: mime });
             } catch (openErr) {
-                console.warn('?? FileOpener — brak aplikacji do otwarcia, pokazuję Udostępnij zamiast:', openErr);
+                console.warn('⚠️ FileOpener — brak aplikacji do otwarcia, pokazuję Udostępnij zamiast:', openErr);
                 await Share.share({ title: filename, url: zapisany.uri });
             }
         } catch (e) {
-            console.error('? Zapis pliku w appce:', e);
+            console.error('❌ Zapis pliku w appce:', e);
             alert('Błąd zapisu pliku: ' + e.message);
         }
         return;
     }
-    const blob = content instanceof Blob ? content : new Blob(['?' + content], { type: mime });
+    const blob = content instanceof Blob ? content : new Blob(['﻿' + content], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1135,7 +1135,7 @@ function pobierzPDF(pakiety, nazwaZbiorcza) {
 
 /* ── Start ── */
 window.addEventListener('DOMContentLoaded', () => {
-    if (typeof firebase === 'undefined') { console.error('? Firebase nie załadowany'); return; }
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase nie załadowany'); return; }
     initFirebase();
     initRaporty();
 });

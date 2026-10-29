@@ -278,7 +278,7 @@ async function _licenseInfoHtml(access, ok) {
     };
     const rows = [];
     rows.push(ok
-        ? '? <b>' + _trb('blocked.recheckAccessActive', 'Dostęp aktywny') + '</b>' + (SRC[access?.source] ? ' — ' + _esc(SRC[access.source]) : '') + (access?.expiryDate ? ' (' + until + ' ' + _fmtPL(_toDate(access.expiryDate)) + ')' : '')
+        ? '✅ <b>' + _trb('blocked.recheckAccessActive', 'Dostęp aktywny') + '</b>' + (SRC[access?.source] ? ' — ' + _esc(SRC[access.source]) : '') + (access?.expiryDate ? ' (' + until + ' ' + _fmtPL(_toDate(access.expiryDate)) + ')' : '')
         : '❌ <b>' + _trb('blocked.recheckAccessNone', 'Brak dostępu') + '</b>');
 
     // 1. źródła równolegle
@@ -622,7 +622,7 @@ async function redeemCode() {
         setTimeout(() => { window.location.href = 'start.html'; }, 1200);
 
     } catch (e) {
-        console.error('? redeemCode:', e);
+        console.error('❌ redeemCode:', e);
         msgEl.className = 'invite-msg err';
         msgEl.textContent = t('blocked.inviteConnectError');
     }

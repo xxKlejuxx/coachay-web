@@ -399,7 +399,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
                 <!-- Wybór typu kodu -->
                 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="dp-typ-kodu-row">
                     <button class="sort-btn active" data-typ="RODZIC" onclick="wybierzTypKodu(this,'RODZIC')" data-i18n="druzyna.kodTypLabel.RODZIC">👩‍👦 Rodzic</button>
-                    <button class="sort-btn" data-typ="ZAWODNIK" onclick="wybierzTypKodu(this,'ZAWODNIK')" data-i18n="druzyna.kodTypLabel.ZAWODNIK">? Zawodnik</button>
+                    <button class="sort-btn" data-typ="ZAWODNIK" onclick="wybierzTypKodu(this,'ZAWODNIK')" data-i18n="druzyna.kodTypLabel.ZAWODNIK">⚽ Zawodnik</button>
                 </div>
                 <div id="dp-typ-kodu-info" style="font-size: 16px;color:var(--szary);margin-bottom:10px;line-height:1.5;"></div>
                 <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:12px;font-size: 17px;" onclick="generujKod()" data-i18n="druzyna.generateCodeButton">🔑 Wygeneruj nowy kod</button>
@@ -424,7 +424,7 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 
             <!-- Rozłącz profil rodzica (tylko trener, tylko gdy są aktywni rodzice) -->
             <div class="dp-section" id="dp-przejmij-section" style="display:none">
-                <button class="btn-ghost" style="width:100%;padding:11px;font-size:18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">? Rozłącz profil rodzica</button>
+                <button class="btn-ghost" style="width:100%;padding:11px;font-size:18px;font-weight:800;color:#F87171;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);border-radius:12px;" onclick="przejmijZawodnikaZPowrotem()" data-i18n="druzyna.reclaimButton">↩ Rozłącz profil rodzica</button>
             </div>
 
             <!-- Usuń zawodnika (tylko TRENER_GLOWNY) -->
@@ -793,11 +793,11 @@ const POZYCJE_DEF = [
 // Mapa stary tekst (PL/EN, z emoji lub bez) – ID – dla danych sprzed przełączenia na select
 const POZYCJE_LEGACY_MAP = {
     'Ogólna': 'general', 'General': 'general',
-    '? Ogólna': 'general', '? General': 'general',
+    '⚽ Ogólna': 'general', '⚽ General': 'general',
     'Bramkarz': 'gk', 'Goalkeeper': 'gk', '🧤 Bramkarz': 'gk', '🧤 Goalkeeper': 'gk',
     'Obrońca': 'def', 'Defender': 'def', '🛡️ Obrońca': 'def', '🛡️ Defender': 'def',
     'Pomocnik': 'mid', 'Midfielder': 'mid', '🏃 Pomocnik': 'mid', '🏃 Midfielder': 'mid',
-    'Napastnik': 'fwd', 'Forward': 'fwd', '? Napastnik': 'fwd', '? Forward': 'fwd',
+    'Napastnik': 'fwd', 'Forward': 'fwd', '⚡ Napastnik': 'fwd', '⚡ Forward': 'fwd',
     'Środkowy obrońca': 'cb', 'Center back': 'cb', '🛡 Środkowy obrońca': 'cb', '🛡 Center back': 'cb',
     'Skrzydłowy': 'win', 'Winger': 'win', '💨 Skrzydłowy': 'win', '💨 Winger': 'win',
 };
@@ -1400,7 +1400,7 @@ async function zapiszAbsencje() {
         await db.collection('absences').doc(absDoc.absenceId).set(absDoc);
         zamknijAbsencje();
         await zaladujAbsencje(aktualnyZawodnik);
-        console.log('? Absencja zapisana:', absDoc.absenceId);
+        console.log('✅ Absencja zapisana:', absDoc.absenceId);
     } catch (e) { alert('Błąd zapisu absencji.'); console.error(e); }
 }
 

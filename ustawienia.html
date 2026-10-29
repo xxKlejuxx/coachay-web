@@ -112,7 +112,7 @@
         <div class="settings-group" id="sg-druzyna" style="display:none;">
             <div class="sg-label" data-i18n="settings.groupTeam">Drużyna</div>
             <div class="si" onclick="openPanel('sezon')">
-                <span class="si-icon">??</span>
+                <span class="si-icon">📅</span>
                 <div class="si-body">
                     <div class="si-text" data-i18n="settings.seasonRowTitle">Daty sezonu</div>
                     <div class="si-desc" id="si-sezon-desc" data-i18n="settings.seasonRowDescDefault">Okres liczenia statystyk</div>
@@ -120,7 +120,7 @@
                 <div class="si-right"><span class="si-arr">></span></div>
             </div>
             <div class="si" onclick="openPanel('pozycje')">
-                <span class="si-icon">??</span>
+                <span class="si-icon">🎽</span>
                 <div class="si-body">
                     <div class="si-text" data-i18n="settings.positionsRowTitle">Pozycje zawodników</div>
                     <div class="si-desc" data-i18n="settings.positionsRowDesc">Widoczność na profilach i w meczu</div>
@@ -128,7 +128,7 @@
                 <div class="si-right"><span class="si-arr">></span></div>
             </div>
             <div class="si" id="si-reminder" onclick="openPanel('reminder')">
-                <span class="si-icon">??</span>
+                <span class="si-icon">🔔</span>
                 <div class="si-body">
                     <div class="si-text" data-i18n="settings.reminderRowTitle">Powiadomienie przed eventem</div>
                     <div class="si-desc" id="si-reminder-desc"></div>
@@ -136,7 +136,7 @@
                 <div class="si-right"><span class="si-arr">></span></div>
             </div>
             <div class="si" id="si-licencja" style="display:none" onclick="openPanel('licencja')">
-                <span class="si-icon">??</span>
+                <span class="si-icon">🏢</span>
                 <div class="si-body">
                     <div class="si-text" data-i18n="settings.licenseRowTitle">Licencja klubowa</div>
                     <div class="si-desc" id="si-licencja-desc" data-i18n="settings.licenseRowDesc">Kto korzysta z puli</div>
@@ -149,7 +149,7 @@
         <div class="settings-group">
             <div class="sg-label" data-i18n="settings.groupApp">Aplikacja</div>
             <div class="si" onclick="openPanel('jezyk')">
-                <span class="si-icon">??</span>
+                <span class="si-icon">🌍</span>
                 <div class="si-body"><div class="si-text" data-i18n="settings.languageRowTitle">Język aplikacji</div></div>
                 <div class="si-right"><span class="si-val" id="si-lang-val">Polski</span><span class="si-arr">></span></div>
             </div>
@@ -159,13 +159,13 @@
         <div class="settings-group">
             <div class="sg-label" data-i18n="settings.groupLegal">Prawne</div>
             <div class="si" onclick="window.location.href='rodo.html'">
-                <span class="si-icon">??</span>
+                <span class="si-icon">📜</span>
                 <div class="si-body"><div class="si-text" data-i18n="settings.legalRowTitle">Polityka prywatności i RODO</div></div>
                 <div class="si-right"><span class="si-arr">></span></div>
             </div>
         </div>
 
-        <button class="logout-btn" onclick="confirmLogout()" data-i18n="settings.logoutButton">?? Wyloguj się</button>
+        <button class="logout-btn" onclick="confirmLogout()" data-i18n="settings.logoutButton">🚪 Wyloguj się</button>
 
     </div><!-- /ust-wrap -->
     </div><!-- /screen-body -->
@@ -179,7 +179,7 @@
         <div class="dp-scroll">
             <div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:14px;">
                 <p style="font-size:17px;font-weight:700;color:rgba(251,191,36,0.9);line-height:1.6;" data-i18n="settings.seasonWarning">
-                    ?? Daty sezonu wpływają na liczenie statystyk i raportów obecności.
+                    ⚠️ Daty sezonu wpływają na liczenie statystyk i raportów obecności.
                 </p>
             </div>
             <div class="sezon-row">
@@ -341,15 +341,15 @@
     <div class="menu-panel" id="menu-panel">
         <div class="menu-panel-top"><div class="menu-panel-avatar" id="menu-avatar"></div><div class="menu-panel-name" id="menu-name"></div><div class="menu-panel-role" id="menu-role"></div></div>
         <div class="menu-panel-items">
-            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">??</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">></span></div>
-            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">???</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" onclick="window.location.href='profil.html'"><div class="menu-item-icon">👤</div><span class="menu-item-label" data-i18n="menu.profile">Mój profil</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" onclick="window.location.href='trenerzy.html'"><div class="menu-item-icon">🎽</div><span class="menu-item-label" data-i18n="menu.trainers">Trenerzy</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item active" onclick="closeMenu()"><div class="menu-item-icon">⚙️</div><span class="menu-item-label" data-i18n="menu.settings">Ustawienia</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-platnosci" onclick="window.location.href='platnosci.html'"><div class="menu-item-icon">💳</div><span class="menu-item-label" data-i18n="menu.payments">Płatności</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-raporty" onclick="window.location.href='raporty.html'"><div class="menu-item-icon">📊</div><span class="menu-item-label" data-i18n="menu.reports">Raporty</span><span class="menu-item-arrow">></span></div>
+            <div class="menu-item" id="menu-klub" onclick="window.location.href='klub.html'"><div class="menu-item-icon">🏟️</div><span class="menu-item-label" data-i18n="menu.clubTeams">Drużyny klubu</span><span class="menu-item-arrow">></span></div>
         </div>
         <div class="menu-panel-bottom">
-            <div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">??</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj się</span></div>
+            <div class="menu-logout" onclick="logout()"><span class="menu-logout-icon">🚪</span><span class="menu-logout-txt" data-i18n="menu.logout">Wyloguj się</span></div>
         </div>
     </div>
 
@@ -386,7 +386,7 @@ onI18nReady(function () {
 
 /* ── Init ── */
 window.addEventListener('DOMContentLoaded', () => {
-    if (typeof firebase === 'undefined') { console.error('? Firebase!'); return; }
+    if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
     initFirebase();
     let _loaded = false;
     auth.onAuthStateChanged(async user => {
