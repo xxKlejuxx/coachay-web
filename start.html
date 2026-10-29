@@ -88,9 +88,9 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 @keyframes mc-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
 .mc-scoreboard { display: flex; align-items: stretch; justify-content: space-between; gap: 6px; margin: 8px 0 4px; }
 .mc-sb-team { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 12px; padding: 8px 4px; }
-/* Pełne, nasycone kolory (nie blade odcienie) — tak jak w referencji: solidny niebieski/czerwony z białym tekstem */
-.mc-sb-team--our { background: #2563EB; border: 1px solid #1D4ED8; }
-.mc-sb-team--opp { background: #DC2626; border: 1px solid #B91C1C; }
+/* Kolory wypełnienia i czcionki dokładnie wg referencji: głęboki granat/bordo (nie jaskrawy niebieski/czerwony), biały tekst */
+.mc-sb-team--our { background: linear-gradient(180deg, #2F5AA8 0%, #16305C 100%); border: 1px solid #0F1F3D; }
+.mc-sb-team--opp { background: linear-gradient(180deg, #B33434 0%, #5C1212 100%); border: 1px solid #3D0C0C; }
 .mc-sb-name { font-family: var(--font-d); font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; text-align: center; line-height: 1.2; }
 .mc-sb-name--our, .mc-sb-name--opp { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
 /* Panel wyniku — czarny pełny (bez var(--czarny)/var(--bialy), bo te zmienne nie są nigdzie zdefiniowane
