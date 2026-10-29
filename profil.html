@@ -623,13 +623,15 @@ async function saveName() {
     }
 
     // memberships – displayName we wszystkich aktywnych kontekstach (ZAWODNIK nigdy tu nie dociera, patrz early return wyżej)
+    // status bywa zapisany jako 'active' albo 'ACTIVE' (oba warianty istnieją w bazie) – trzeba oba zapytania,
+    // tak jak w trenerzy.html, inaczej część membershipów zostaje ze starym displayName.
     try {
-        const mbrSnap = await db.collection('memberships')
-            .where('userId', '==', currentUserId)
-            .where('status', '==', 'ACTIVE')
-            .get();
+        const [mbrSnap1, mbrSnap2] = await Promise.all([
+            db.collection('memberships').where('userId', '==', currentUserId).where('status', '==', 'active').get(),
+            db.collection('memberships').where('userId', '==', currentUserId).where('status', '==', 'ACTIVE').get()
+        ]);
         const updates = [];
-        mbrSnap.forEach(doc => {
+        [...mbrSnap1.docs, ...mbrSnap2.docs].forEach(doc => {
             updates.push(doc.ref.update({ displayName }));
         });
         await Promise.all(updates);

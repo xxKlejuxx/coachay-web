@@ -1179,6 +1179,7 @@
   "otherAvatarsButton": "Inne awatary",
   "firstNamePlaceholder": "Jan",
   "lastNamePlaceholder": "Kowalski",
+  "nameEditHint": "Imię i nazwisko zmienia tylko sam trener, w swoim profilu.",
   "clubAdminLabel": "Administrator klubu",
   "clubAdminSub": "pełny dostęp do zarządzania",
   "bioLabel": "O trenerze (bio)",

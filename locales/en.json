@@ -1179,6 +1179,7 @@
   "otherAvatarsButton": "Other avatars",
   "firstNamePlaceholder": "John",
   "lastNamePlaceholder": "Smith",
+  "nameEditHint": "Only the trainer themself can change their first and last name, in their own profile.",
   "clubAdminLabel": "Club administrator",
   "clubAdminSub": "full management access",
   "bioLabel": "About the coach (bio)",

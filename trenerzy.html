@@ -272,13 +272,14 @@ body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !imp
             <div style="display:flex;gap:10px;">
                 <div class="form-group" style="flex:1">
                     <label class="form-lbl" data-i18n="common.firstNameLabel">Imię</label>
-                    <input class="form-inp" id="ep-fname" type="text" placeholder="Jan" data-i18n-placeholder="trenerzy.firstNamePlaceholder">
+                    <input class="form-inp" id="ep-fname" type="text" readonly style="opacity:0.6;cursor:not-allowed;">
                 </div>
                 <div class="form-group" style="flex:1">
                     <label class="form-lbl" data-i18n="common.lastNameLabel">Nazwisko</label>
-                    <input class="form-inp" id="ep-lname" type="text" placeholder="Kowalski" data-i18n-placeholder="trenerzy.lastNamePlaceholder">
+                    <input class="form-inp" id="ep-lname" type="text" readonly style="opacity:0.6;cursor:not-allowed;">
                 </div>
             </div>
+            <div style="font-size:13px;color:var(--szary);margin-top:-10px;" data-i18n="trenerzy.nameEditHint">Imię i nazwisko zmienia tylko sam trener, w swoim profilu.</div>
             <div class="toggle-row" id="ep-admin-row" style="display:none">
                 <div>
                     <div class="toggle-label" data-i18n="trenerzy.clubAdminLabel">Administrator klubu</div>
@@ -913,12 +914,10 @@ async function saveEditTrainer() {
     const sinceYear = parseInt(document.getElementById('ep-since').value);
     const coachingSince = sinceYear >= 1970 ? `${sinceYear}-01-01` : (t.coachProfile?.coachingSince || null);
 
-    const newFirstName   = document.getElementById('ep-fname').value.trim();
-    const newLastName    = document.getElementById('ep-lname').value.trim();
-    const newDisplayName = (newFirstName + ' ' + newLastName).trim() || t.displayName;
-
+    // Imię i nazwisko NIE są tu edytowalne (pola readonly) — zmienia je wyłącznie sam
+    // trener w profil.html. Tutaj tylko isClubAdmin + reszta profilu klubowego.
     try {
-        // Zaktualizuj displayName we wszystkich aktywnych memberships (status active lub ACTIVE)
+        // Zaktualizuj isClubAdmin we wszystkich aktywnych memberships (status active lub ACTIVE)
         if (t.userId) {
             const [mbrSnap1, mbrSnap2] = await Promise.all([
                 db.collection('memberships').where('userId', '==', t.userId).where('clubId', '==', currentClubId).where('status', '==', 'active').get(),
@@ -926,31 +925,12 @@ async function saveEditTrainer() {
             ]);
             const mbrSnap = { docs: [...mbrSnap1.docs, ...mbrSnap2.docs] };
             const batch = db.batch();
-            mbrSnap.docs.forEach(d => batch.update(d.ref, { displayName: newDisplayName, isClubAdmin: newIsAdmin }));
+            mbrSnap.docs.forEach(d => batch.update(d.ref, { isClubAdmin: newIsAdmin }));
             await batch.commit();
-
-            // Zaktualizuj users doc
-            try {
-                console.log('🔍 users update – userId:', t.userId);
-                const uDoc = await db.collection('users').doc(t.userId).get();
-                console.log('🔍 users doc exists:', uDoc.exists, 'data:', uDoc.exists ? uDoc.data()?.displayName : 'N/A');
-                const uData = uDoc.exists ? uDoc.data() : {};
-                const uUpdates = { firstName: newFirstName, lastName: newLastName, displayName: newDisplayName };
-                const newEmail = document.getElementById('ep-email').value.trim();
-                const newPhone = document.getElementById('ep-tel').value.trim();
-                if (!uData.email && newEmail) uUpdates.email = newEmail;
-                if (!uData.phone && newPhone) uUpdates.phone = newPhone;
-                console.log('🔍 users uUpdates:', uUpdates);
-                await db.collection('users').doc(t.userId).update(uUpdates);
-                console.log('✅ users updated');
-            } catch(e) { console.error('❌ users update failed:', e.code, e.message); }
         }
 
         // Zaktualizuj trainer doc
         const updates = {
-            firstName: newFirstName || t.firstName || '',
-            lastName:  newLastName  || t.lastName  || '',
-            displayName: newDisplayName,
             isClubAdmin: newIsAdmin,
             coachProfile: {
                 ...(t.coachProfile || {}),
