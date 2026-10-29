@@ -109,6 +109,13 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mcc-l { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #999; }
 .mc-finished .mcc-l { color: #bbb; }
 
+/* Mecz zakończony — wynik zostaje duży (tak jak LIVE), frekwencja schodzi na dół i jest dużo mniejsza */
+.mc-outcome-row { display: flex; justify-content: center; margin: 2px 0 6px; }
+.mc-counts--compact { gap: 5px; margin-top: 2px; }
+.mc-counts--compact .mcc { padding: 4px 6px; border-radius: 8px; }
+.mc-counts--compact .mcc-n { font-size: 14px; }
+.mc-counts--compact .mcc-l { font-size: 9px; margin-top: 0; }
+
 .mecz-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
 .mecz-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: all 0.2s; cursor: pointer; }
 .mecz-dot.active { background: var(--akcent); width: 20px; border-radius: 4px; }
@@ -1218,12 +1225,14 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         const titleRaw = match.title || md.opponent || '';
         const titleHasVS = /\bvs\.?\s/i.test(titleRaw) || /\bvs\.?$/i.test(titleRaw);
-        const tytulHtml = (isLive && titleHasVS) ? '' : `<div class="mc-tytul">${trunc(titleRaw, 22)}</div>`;
+        const tytulHtml = ((isLive || isFinished) && titleHasVS) ? '' : `<div class="mc-tytul">${trunc(titleRaw, 22)}</div>`;
 
-        // Scoreboard dla LIVE
+        // Scoreboard dla LIVE i FINISHED — wynik jest najważniejszy, zostaje ten sam duży widok
+        // w obu stanach; frekwencja (gdy mecz się skończył) schodzi niżej i jest dużo mniejsza.
         let scoreboardHtml = '';
+        let outcomeBadgeHtml = '';
         let countsHtml = '';
-        if (isLive) {
+        if (isLive || isFinished) {
             const ourScore  = md.result?.our      ?? 0;
             const oppScore  = md.result?.opponent  ?? 0;
             // spróbuj wyciągnąć nazwy z tytułu "X vs Y"
@@ -1242,19 +1251,23 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                         <div class="mc-sb-score">${oppScore}</div>
                     </div>
                 </div>`;
-        } else {
-            let resultHtml = '';
+
             if (isFinished && md.result) {
                 const outcome = md.result.outcome;
                 const outcomeLabel = outcome === 'WIN' ? 'Wygrana' : outcome === 'LOSS' ? 'Przegrana' : 'Remis';
                 const outcomeClass = outcome === 'WIN' ? 'mc-result-win' : outcome === 'LOSS' ? 'mc-result-loss' : 'mc-result-draw';
-                if (isCoachRole) {
-                    resultHtml = `<div class="mc-wynik"><span class="mc-wynik-label">Wynik:</span>${md.result.our} : ${md.result.opponent}</div><span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
-                } else {
-                    resultHtml = `<span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span>`;
-                }
+                outcomeBadgeHtml = `<div class="mc-outcome-row"><span class="mc-result-info ${outcomeClass}">${outcomeLabel}</span></div>`;
             }
-            countsHtml = `${resultHtml}<div class="mc-counts">
+        }
+
+        if (isFinished) {
+            countsHtml = `<div class="mc-counts mc-counts--compact">
+                <div class="mcc mcc-g"><div class="mcc-n mn-g">${conf}</div><div class="mcc-l">${_tP('home.presentLabel', 'Obecni')}</div></div>
+                <div class="mcc mcc-r"><div class="mcc-n mn-r">${decl}</div><div class="mcc-l">${_tP('home.absentLabel', 'Nieobecni')}</div></div>
+                <div class="mcc mcc-s"><div class="mcc-n mn-s">${noResp}</div><div class="mcc-l">${_tP('home.noResponseLabel', 'Brak odp.')}</div></div>
+            </div>`;
+        } else if (isUpcoming) {
+            countsHtml = `<div class="mc-counts">
                 <div class="mcc mcc-g"><div class="mcc-n mn-g">${conf}</div><div class="mcc-l">${_tP('home.presentLabel', 'Obecni')}</div></div>
                 <div class="mcc mcc-r"><div class="mcc-n mn-r">${decl}</div><div class="mcc-l">${_tP('home.absentLabel', 'Nieobecni')}</div></div>
                 <div class="mcc mcc-s"><div class="mcc-n mn-s">${noResp}</div><div class="mcc-l">${_tP('home.noResponseLabel', 'Brak odp.')}</div></div>
@@ -1266,7 +1279,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             ${tytulHtml}
             ${descHtml}
             <div class="mc-info">${venueText ? `<span class="mc-info-venue">📍 ${venueText}</span>` : ''}<span class="mc-info-time">🕐 ${formatDateDisplay(match.date)} · ${match.timeFrom || ''}</span></div>
-            ${scoreboardHtml}${countsHtml}
+            ${scoreboardHtml}${outcomeBadgeHtml}${countsHtml}
             ${statusRowHtml}
         `;
         // card.onclick = () => openMeczPanel(matchId);
