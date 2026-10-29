@@ -1099,6 +1099,7 @@ async function initSession() {
                             try { await db.collection('users').doc(userId).update({ selectedMembershipId: membership.id }); } catch(e) {}
                         } else {
                             // Brak innych aktywnych → blocked.html
+                            window._initSessionRedirecting = true;
                             if (!window.location.href.includes('blocked.html')) window.location.href = 'blocked.html';
                             return null;
                         }
@@ -1132,6 +1133,7 @@ async function initSession() {
                     .limit(1).get();
                 if (!anySnap.empty) {
                     localStorage.setItem('_dbg_redirect', JSON.stringify({ to: 'blocked.html', reason: 'initSession_3b_no_active_memberships', userId, allMembershipsCount: allMemberships.length, isPlatformAdmin: user.isPlatformAdmin, ts: new Date().toISOString() }));
+                    window._initSessionRedirecting = true;
                     if (!window.location.href.includes('blocked.html')) window.location.href = 'blocked.html';
                     return null;
                 }
