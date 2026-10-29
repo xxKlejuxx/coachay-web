@@ -1782,6 +1782,16 @@ async function doRegisterTrainer() {
         await db.collection('memberships').doc(membershipId).set(buildMembership({ membershipId, userId:userCode, teamId:null, clubId, playerId:null, role:'TRENER_GLOWNY', status:'active', displayName, joinedAt:now, createdAt:firebase.firestore.Timestamp.fromDate(new Date()), isDemo:false }));
         var trainerId = 'trainer_'+dateStr+'_'+Math.floor(Math.random()*9000000+1000000);
         await db.collection('trainers').doc(trainerId).set({ trainerId, clubId, userId:userCode, displayName, firstName:fname, lastName:lname, role:'TRENER_GLOWNY', isActive:true, isClubAdmin:true, registrationStatus:'ACTIVE', createdAt:now });
+        // 2026-10-30: domyślne tematy treningu dla nowego klubu — bez tego ekran "Nowy event > Trening" pokazuje
+        // pustą listę ("Wybierz temat..." + "Wpisz nowy temat...") dopóki ktoś ręcznie nie doda własnego tematu;
+        // te same 8 tematów co w klubie demo (club_orly_praga), ale jako osobne dokumenty tego klubu (edytowalne niezależnie).
+        var _defaultTopics = ['Technika podań','Stałe fragmenty gry','Kondycja i szybkość','Taktyka defensywna','Taktyka ofensywna','Gra w małych grupach','Koordynacja i zwinność','Mecz sparingowy wewnętrzny'];
+        var _topicsBatch = db.batch();
+        _defaultTopics.forEach(function(title, i) {
+            var topicId = 'topic_'+dateStr+'_'+(i+1)+'_'+Math.floor(Math.random()*900000+100000);
+            _topicsBatch.set(db.collection('trainingTopics').doc(topicId), { topicId, clubId, title, isActive:true, priority:i+1, createdAt:now });
+        });
+        try { await _topicsBatch.commit(); } catch(e) { console.warn('⚠️ Nie udało się dodać domyślnych tematów treningu', e); }
         localStorage.setItem('currentUserId', userCode);
         await cred.user.sendEmailVerification();
         showVerifyScreen(email);
