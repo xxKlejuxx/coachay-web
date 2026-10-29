@@ -1202,7 +1202,8 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             } else if (isLive) {
                 statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-live">${t('mecz.liveBadge')}</span></div>`;
             } else if (isFinished) {
-                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-finished">${t('mecz.finishedBadge')}</span><button class="mc-action-btn mc-btn-takeover" onclick="reopenMatch('${matchId}')">↩ ${t('mecz.revertButton')}</button></div>`;
+                // 2026-10-29: "Cofnij zakończenie" tylko w apce mobilnej (na życzenie) — na web tylko odznaka statusu.
+                statusRowHtml = `<div class="mc-status-row" onclick="event.stopPropagation()"><span class="mc-status-badge mc-status-finished">${t('mecz.finishedBadge')}</span></div>`;
             }
         } else if (isParent && parentsCanAssist && !isFinished) {
             if (isLive && !isLiveAssistant) {
