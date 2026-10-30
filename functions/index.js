@@ -102,8 +102,9 @@ function formatDate(dateStr, locale) {
 }
 
 // Nowy format: tytuł = krótka kategoria ("Nowy trening"), treść = szczegóły
-function buildNotifBody(event, { childName = null, childNames = null, requiresAction = false, confirmLabel = 'potwierdź obecność', changes = null } = {}) {
-    const { day, date } = formatDatePL(event.date);
+function buildNotifBody(event, { childName = null, childNames = null, requiresAction = false, confirmLabel = 'potwierdź obecność', changes = null, lang = 'pl' } = {}) {
+    // 2026-10-30: lokalizacja treści wg języka ODBIORCY (patrz sync #0153) — wcześniej zawsze pl-PL.
+    const { day, date } = formatDate(event.date, (I18N[lang] || I18N.pl).locale);
     const parts = [];
     if (event.title) parts.push(event.title);
     if (changes) { parts.push(...changes); }
@@ -362,12 +363,15 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
             if (playerUserId && !skipUserIds.includes(playerUserId)) {
                 const exists = await notifExists(playerUserId, eventId, personId);
                 if (!exists) {
+                    // 2026-10-30: język ODBIORCY (sync #0153), nie sztywno pl.
+                    const lang = await getLang(playerUserId);
+                    const i18n = I18N[lang] || I18N.pl;
                     await createNotification({
                         userId: playerUserId,
                         teamId: event.teamId,
                         type: requiresAction ? 'EVENT_ATTENDANCE' : 'EVENT_CREATED',
-                        title: I18N.pl.newTitle(event.type),
-                        body: buildNotifBody(event, { requiresAction, confirmLabel: I18N.pl.confirmAction }),
+                        title: i18n.newTitle(event.type),
+                        body: buildNotifBody(event, { requiresAction, confirmLabel: i18n.confirmAction, lang }),
                         referenceId: eventId,
                         referenceType: 'event',
                         forPlayerId: personId,
@@ -393,12 +397,15 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
                         const pd = await db.collection('players').doc(personId).get();
                         if (pd.exists) childName = pd.data().name || personId;
                     } catch (e) {}
+                    // 2026-10-30: język ODBIORCY (sync #0153), nie sztywno pl.
+                    const lang = await getLang(parentId);
+                    const i18n = I18N[lang] || I18N.pl;
                     await createNotification({
                         userId: parentId,
                         teamId: event.teamId,
                         type: 'EVENT_ATTENDANCE',
-                        title: I18N.pl.newTitle(event.type),
-                        body: buildNotifBody(event, { childName, requiresAction: true, confirmLabel: I18N.pl.confirmAction }),
+                        title: i18n.newTitle(event.type),
+                        body: buildNotifBody(event, { childName, requiresAction: true, confirmLabel: i18n.confirmAction, lang }),
                         referenceId: eventId,
                         referenceType: 'event',
                         forPlayerId: personId,
@@ -417,12 +424,15 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
             if (!skipUserIds.includes(personId)) {
                 const exists = await notifExists(personId, eventId);
                 if (!exists) {
+                    // 2026-10-30: język ODBIORCY (sync #0153), nie sztywno pl.
+                    const lang = await getLang(personId);
+                    const i18n = I18N[lang] || I18N.pl;
                     await createNotification({
                         userId: personId,
                         teamId: event.teamId,
                         type: 'EVENT_CREATED',
-                        title: I18N.pl.newTitle(event.type),
-                        body: buildNotifBody(event),
+                        title: i18n.newTitle(event.type),
+                        body: buildNotifBody(event, { lang }),
                         referenceId: eventId,
                         referenceType: 'event',
                         forPlayerId: null,
@@ -453,12 +463,15 @@ async function sendNotificationsForEvent(event, skipUserIds = [], filterPlayerId
                 childNames.push(pd.exists ? (pd.data().name || cid) : cid);
             } catch (e) { childNames.push(cid); }
         }
+        // 2026-10-30: język ODBIORCY (sync #0153), nie sztywno pl.
+        const lang = await getLang(parentId);
+        const i18n = I18N[lang] || I18N.pl;
         await createNotification({
             userId: parentId,
             teamId: event.teamId,
             type: 'EVENT_CREATED',
-            title: I18N.pl.newTitle(event.type),
-            body: buildNotifBody(event, { childNames, requiresAction: false, confirmLabel: I18N.pl.confirmAction }),
+            title: i18n.newTitle(event.type),
+            body: buildNotifBody(event, { childNames, requiresAction: false, confirmLabel: i18n.confirmAction, lang }),
             referenceId: eventId,
             referenceType: 'event',
             forPlayerId: null,
@@ -588,22 +601,13 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
         _newlyAddedEarly.length > 0;
     if (!significantChange) return;
 
-    // Określ język na podstawie osoby która anulowała / edytowała
-    const senderLang = await getLang(after.cancelledBy || after.updatedBy || after.createdBy);
-    const i18n = I18N[senderLang] || I18N.pl;
-    const typeName = i18n.types[after.type] || i18n.types.INNE;
-    const { day, date } = formatDate(after.date, i18n.locale);
-    const eventLabel = after.title || `${typeName} ${day} ${date}`;
+    // 2026-10-30 (sync #0153): język NIE jest już ustalany raz dla całej funkcji na
+    // podstawie osoby edytującej/anulującej — każdy odbiorca dostaje powiadomienie
+    // w SWOIM języku (getLang(userId) per odbiorca, w pętlach niżej).
 
     try {
         // ── A: Odwołanie eventu ──────────────────────────────────────────
         if (before.status !== 'CANCELLED' && after.status === 'CANCELLED') {
-            const notifBody  = [
-                typeName, `${day} ${date}`,
-                after.timeFrom ? `${after.timeFrom}${after.timeTo ? '–' + after.timeTo : ''}` : null,
-                after.location?.venueName || null,
-            ].filter(Boolean).join(' · ');
-
             // Dezaktywuj stare notyfikacje ATTENDANCE/CREATED dla tego eventu
             try {
                 const oldSnap = await db.collection('notifications')
@@ -620,11 +624,13 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
             const recipients = await resolveInvitedUserIds(after, after.cancelledBy || after.createdBy);
             let sent = 0;
             for (const { userId, forPlayerId, playerName } of recipients) {
+                const lang = await getLang(userId);
+                const i18n = I18N[lang] || I18N.pl;
                 await createNotification({
                     userId, teamId: after.teamId,
                     type: 'EVENT_CANCELLED',
                     title: i18n.cancelledTitle(after.type),
-                    body: buildNotifBody(after, { childName: playerName || null }),
+                    body: buildNotifBody(after, { childName: playerName || null, lang }),
                     referenceId: eventId, referenceType: 'event',
                     forPlayerId: forPlayerId || null, requiresAction: false,
                 });
@@ -652,11 +658,13 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
             const recipients = await resolveInvitedUserIds(after, after.deletedBy || after.createdBy);
             let sent = 0;
             for (const { userId, forPlayerId, playerName } of recipients) {
+                const lang = await getLang(userId);
+                const i18n = I18N[lang] || I18N.pl;
                 await createNotification({
                     userId, teamId: after.teamId,
                     type: 'EVENT_DELETED',
                     title: i18n.deletedTitle(after.type),
-                    body: buildNotifBody(after, { childName: playerName || null }),
+                    body: buildNotifBody(after, { childName: playerName || null, lang }),
                     referenceId: eventId, referenceType: 'event',
                     forPlayerId: forPlayerId || null, requiresAction: false,
                 });
@@ -668,44 +676,48 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
 
         // ── B: Zmiana daty / godziny / miejsca ──────────────────────────
         if (after.status !== 'CANCELLED') {
-            const changes = [];
-            if (before.date !== after.date) {
-                const { day: nd, date: ndt } = formatDate(after.date, i18n.locale);
-                changes.push(i18n.dateChange(`${nd} ${ndt}`));
-            }
-            if (before.timeFrom !== after.timeFrom || before.timeTo !== after.timeTo) {
-                changes.push(i18n.timeChange(`${after.timeFrom || '—'}–${after.timeTo || '—'}`));
-            }
-            if ((before.location?.venueName || '') !== (after.location?.venueName || '')) {
-                changes.push(i18n.placeChange(after.location?.venueName || '—'));
-            }
-            if (before.title !== after.title) {
-                changes.push(i18n.titleChange(after.title || '—'));
-            }
-            if (before.description !== after.description) {
-                changes.push(i18n.descChange());
-            }
+            // Flagi "co się zmieniło" — niezależne od języka (sam fakt zmiany, nie tekst).
+            // Lokalizowane zdania budujemy niżej, osobno dla KAŻDEGO odbiorcy (sync #0153).
+            const dateChanged  = before.date !== after.date;
+            const timeChanged  = before.timeFrom !== after.timeFrom || before.timeTo !== after.timeTo;
+            const placeChanged = (before.location?.venueName || '') !== (after.location?.venueName || '');
+            const titleChanged = before.title !== after.title;
+            const descChanged  = before.description !== after.description;
+            const anyChanged   = dateChanged || timeChanged || placeChanged || titleChanged || descChanged;
 
-            // Uwaga: NIE robimy tu `return` gdy changes.length===0 — sam dopisany
+            // Uwaga: NIE robimy tu `return` gdy anyChanged===false — sam dopisany
             // zawodnik (branch C niżej) nie zmienia tych pól, a i tak ma dostać
             // powiadomienie. Po prostu pomijamy wysyłkę EVENT_UPDATED, bez wychodzenia z funkcji.
-            if (changes.length > 0) {
+            if (anyChanged) {
                 const skipBy     = after.updatedBy || after.createdBy;
 
                 const recipients = await resolveInvitedUserIds(after, skipBy);
                 let sent = 0;
+                let changesLog = null;
                 for (const { userId, forPlayerId, playerName } of recipients) {
+                    const lang = await getLang(userId);
+                    const i18n = I18N[lang] || I18N.pl;
+                    const changes = [];
+                    if (dateChanged) {
+                        const { day: nd, date: ndt } = formatDate(after.date, i18n.locale);
+                        changes.push(i18n.dateChange(`${nd} ${ndt}`));
+                    }
+                    if (timeChanged)  changes.push(i18n.timeChange(`${after.timeFrom || '—'}–${after.timeTo || '—'}`));
+                    if (placeChanged) changes.push(i18n.placeChange(after.location?.venueName || '—'));
+                    if (titleChanged) changes.push(i18n.titleChange(after.title || '—'));
+                    if (descChanged)  changes.push(i18n.descChange());
+                    if (!changesLog) changesLog = changes; // tylko do logu niżej, dowolny język wystarczy
                     await createNotification({
                         userId, teamId: after.teamId,
                         type: 'EVENT_UPDATED',
                         title: i18n.updatedTitle(after.type),
-                        body: buildNotifBody(after, { childName: playerName || null, changes }),
+                        body: buildNotifBody(after, { childName: playerName || null, changes, lang }),
                         referenceId: eventId, referenceType: 'event',
                         forPlayerId: forPlayerId || null, requiresAction: false,
                     });
                     sent++;
                 }
-                console.log(`✅ onEventUpdated [${eventId}] UPDATED: ${sent} powiadomień (${changes.join(', ')})`);
+                console.log(`✅ onEventUpdated [${eventId}] UPDATED: ${sent} powiadomień (${(changesLog || []).join(', ')})`);
             }
         }
     } catch (e) {
