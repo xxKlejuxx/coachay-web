@@ -88,8 +88,13 @@ body:has(#app-sidebar) .tr-inner { padding: 28px 24px 48px; }
 /* === Slide panels (mobile base – desktop override w _desktop.css) === */
 .slide-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--tlo); transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); display: flex; flex-direction: column; overflow: hidden; }
 .slide-panel.open { transform: translateY(0); }
-/* edytuj trenera – ta sama szerokość co detail panel */
-body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !important; z-index: 310 !important; }
+/* edytuj trenera – ta sama szerokość co detail panel (TYLKO desktop – patrz sync:
+   sidebar #app-sidebar jest w DOM zawsze, nawet na mobile (schowany transformem),
+   więc bez @media to zawężało panel na telefonie i psuło translateX(110%) –
+   panel wychodził tylko częściowo za ekran zamiast w całości) */
+@media (min-width: 769px) {
+    body:has(#app-sidebar) #edit-panel { width: min(760px, calc(100vw - 220px)) !important; z-index: 310 !important; }
+}
 
 /* === Panel edycji trenera === */
 .edit-panel-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }

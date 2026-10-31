@@ -61,9 +61,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 /* ── Mecz carousel ── */
 .mecz-carousel-wrap { margin-bottom: 20px; }
 .mecz-carousel {
-    display: flex; overflow-x: hidden; scroll-snap-type: x mandatory;
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
     border-radius: 16px;
 }
+.mecz-carousel::-webkit-scrollbar { display: none; }
 .mecz-card {
     min-width: 100%; background: #ffffff; border-radius: 16px; padding: 16px;
     scroll-snap-align: start; cursor: default; transition: background 0.15s;
@@ -843,9 +845,12 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
        GLOBALNE STAŁE
     ───────────────────────────────────────────────────── */
     const UPCOMING_DAYS = 7;
-    const MAX_EVENTS = 3;
-    const MAX_ANN    = 3;
-    const MAX_TASKS  = 3;
+    // 2026-10-31: podgląd na dashboardzie (nie pełna lista pod "Wszystkie ›") skrócony –
+    // 3+3+3 wysokich kart zajmowało tyle miejsca, że sekcja "Najbliższe wydarzenia i zadania"
+    // wymagała wielu ekranów przewijania zanim dało się dojść do kalendarza (patrz sync).
+    const MAX_EVENTS = 2;
+    const MAX_ANN    = 1;
+    const MAX_TASKS  = 2;
 
     let orgNames = {};
     let playerNamesCache = {};
@@ -1243,10 +1248,20 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             const vsMatch = titleRaw.match(/^(.+?)\s+vs\.?\s+(.+)$/i);
             const ourName  = teamName  || (vsMatch ? vsMatch[1].trim() : '') || 'Drużyna';
             const oppName  = md.opponent || (vsMatch ? vsMatch[2].trim() : '') || 'Przeciwnik';
+            // 2026-10-31: długie, jednowyrazowe nazwy (np. "BARCELONA") zamiast łamać się na
+            // dwie linie dostają trochę mniejszą czcionkę – ładniej mieści się w jednej linii
+            // na wąskich telefonach (patrz sync).
+            const sbNameStyle = (name) => {
+                const len = (name || '').length;
+                if (len > 16) return ' style="font-size:13px"';
+                if (len > 12) return ' style="font-size:15px"';
+                if (len > 9)  return ' style="font-size:17px"';
+                return '';
+            };
             scoreboardHtml = `
                 <div class="mc-scoreboard">
                     <div class="mc-sb-team mc-sb-team--our">
-                        <div class="mc-sb-name mc-sb-name--our">${ourName}</div>
+                        <div class="mc-sb-name mc-sb-name--our"${sbNameStyle(ourName)}>${ourName}</div>
                     </div>
                     <div class="mc-sb-center">
                         <div class="mc-sb-label">${_tP('home.scoreLabel', 'Wynik')}</div>
@@ -1257,7 +1272,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                         </div>
                     </div>
                     <div class="mc-sb-team mc-sb-team--opp">
-                        <div class="mc-sb-name mc-sb-name--opp">${oppName}</div>
+                        <div class="mc-sb-name mc-sb-name--opp"${sbNameStyle(oppName)}>${oppName}</div>
                     </div>
                 </div>`;
 
