@@ -1154,6 +1154,9 @@ body {
     .phone {
         width: 100% !important;
         height: 100vh !important;
+        height: 100dvh !important;
+        /* 2026-11-01: ostateczna, zmierzona realnie wartość – patrz komentarz w _sidebar.js */
+        height: var(--app-vh, 100dvh) !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
@@ -1169,6 +1172,8 @@ html.native-app body {
 html.native-app .phone {
     width: 100% !important;
     height: 100vh !important;
+    height: 100dvh !important;
+    height: var(--app-vh, 100dvh) !important;
     border-radius: 0 !important;
     border: none !important;
     box-shadow: none !important;

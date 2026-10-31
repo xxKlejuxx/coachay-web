@@ -12,6 +12,8 @@ body {
     padding: 0 !important;
     height: 100vh !important;
     height: 100dvh !important;
+    /* 2026-11-01: patrz komentarz w _sidebar.js – realnie zmierzona wysokość */
+    height: var(--app-vh, 100dvh) !important;
     overflow: hidden !important;
     background: var(--tlo) !important;
 }
@@ -196,6 +198,7 @@ body {
         width: 100% !important;
         height: 100vh !important;
         height: 100dvh !important;
+        height: var(--app-vh, 100dvh) !important;
         max-width: none !important;
         border-radius: 0 !important;
         border: none !important;

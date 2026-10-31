@@ -1,4 +1,24 @@
 /* _sidebar.js — wstrzykuje sidebar na każdy ekran desktop */
+
+/* 2026-11-01: na telefonie 100vh/100dvh nie zawsze trafia w realną wysokość widocznego
+   ekranu, gdy pasek przeglądarki (adres/narzędzia na dole) jest rozwinięty – dno strony
+   (przyciski "+ Dodaj...") ląduje wtedy pod tym paskiem, mimo poprawki marginesu.
+   Mierzymy realną wysokość przez window.visualViewport i trzymamy w zmiennej CSS --app-vh,
+   aktualizowanej na żywo przy scrollu/zmianie rozmiaru. */
+(function () {
+    function setAppVh() {
+        var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        document.documentElement.style.setProperty('--app-vh', h + 'px');
+    }
+    setAppVh();
+    window.addEventListener('resize', setAppVh);
+    window.addEventListener('orientationchange', setAppVh);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setAppVh);
+        window.visualViewport.addEventListener('scroll', setAppVh);
+    }
+})();
+
 (function () {
     // Czcionki Google — preconnect + stylesheet (szybciej niż @import w CSS)
     if (!document.querySelector('link[href*="fonts.googleapis.com"]')) {
