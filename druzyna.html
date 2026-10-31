@@ -46,7 +46,9 @@
 .zaw-liga-lbl { font-size: 14px; color: var(--szary); font-weight: 700; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* === FAB dodaj zawodnika === */
-.add-player-bar { position: absolute; bottom: 72px; right: 16px; z-index: 10; display: none; }
+/* 2026-11-01: na telefonie "bottom: 72px" (czyli tuż nad bottom-nav) potrafi lądować pod
+   paskiem przeglądarki – dajemy dodatkowy stały zapas 34px + env() jako bonus. */
+.add-player-bar { position: absolute; bottom: calc(72px + 34px + env(safe-area-inset-bottom, 0px)); right: 16px; z-index: 10; display: none; }
 body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .add-player-btn { width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size: 19px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); transition: opacity 0.15s; }
 .add-player-btn:active { opacity: 0.85; }
