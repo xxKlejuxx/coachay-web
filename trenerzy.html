@@ -136,7 +136,8 @@ body:has(#app-sidebar) .tr-inner { padding: 28px 24px 48px; }
 .av-thumb.selected { border-color: var(--akcent); }
 
 /* === Sticky save === */
-.sticky-save { position: sticky; bottom: 0; padding: 14px 16px; background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
+/* 2026-10-31: + safe-area-inset-bottom (patrz sync przy start.html) – ten sam przycisk-pod-paskiem bug. */
+.sticky-save { position: sticky; bottom: 0; padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
 
 /* === Badges admin / blocked === */
 .tr-admin-badge { font-size:14px; font-weight: 900; color: #FBBF24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); border-radius: 999px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; }

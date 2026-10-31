@@ -330,7 +330,9 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .slide-panel-body::-webkit-scrollbar { display: none; }
 
 /* ── Add-panel forms ── */
-.add-panel-footer { padding: 10px 16px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
+/* 2026-10-31: + safe-area-inset-bottom – bez tego przycisk "Dodaj"/"Zapisz" w panelu
+   chował się pod paskiem przeglądarki na telefonie (patrz sync). */
+.add-panel-footer { padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); flex-shrink: 0; }
 #panel-add-event .slide-panel-body, #panel-add-task .slide-panel-body { gap: 14px; padding-bottom: 8px; }
 .form-select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
 .form-group { display: flex; flex-direction: column; gap: 4px; }
