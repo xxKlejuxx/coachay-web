@@ -1423,7 +1423,20 @@ async function resetTrainerAccess() {
 }
 
 /* === Start === */
+// 2026-10-31: na telefonach (zwłaszcza Safari/iOS) powrót na ten ekran przez
+// "wstecz"/gest/przełączenie karty często przywraca stronę z pamięci podręcznej
+// (bfcache) z zapamiętanym stanem DOM – np. panel "Dodaj trenera" wciąż z klasą
+// .open, mimo że żaden JS się nie odpalił na nowo. Na desktopie to się nie
+// zdarza (inne zachowanie nawigacji), więc bug był widoczny tylko na mobile.
+// Domykamy wszystkie panele przy każdym pokazaniu strony (świeżym i z cache).
+function closeAllTrenerzyPanels() {
+    document.querySelectorAll('.slide-panel.open, .detail-panel.open, .modal-overlay.open')
+        .forEach(p => p.classList.remove('open'));
+}
+window.addEventListener('pageshow', closeAllTrenerzyPanels);
+
 window.addEventListener('DOMContentLoaded', () => {
+    closeAllTrenerzyPanels();
     if (typeof firebase === 'undefined') { console.error('❌ Firebase!'); return; }
     initFirebase();
     let _loaded = false;

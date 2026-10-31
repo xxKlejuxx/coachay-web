@@ -88,11 +88,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mc-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #DC2626; animation: mc-pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
 @keyframes mc-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
 .mc-scoreboard { display: flex; align-items: stretch; justify-content: space-between; gap: 6px; margin: 8px 0 4px; }
-.mc-sb-team { flex: 1.3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 12px; padding: 8px 4px; }
+.mc-sb-team { flex: 1.3; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 12px; padding: 8px 4px; }
 /* Kolory wypełnienia i czcionki 1:1 z przykładowego kodu (team-blue / team-red) */
 .mc-sb-team--our { background: linear-gradient(180deg, #1D4ED8 0%, #1E3A8A 60%, #0F172A 100%); border: none; }
 .mc-sb-team--opp { background: linear-gradient(180deg, #B91C1C 0%, #7F1D1D 60%, #450A0A 100%); border: none; }
-.mc-sb-name { font-family: var(--font-d); font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; text-align: center; line-height: 1.2; }
+.mc-sb-name { font-family: var(--font-d); font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; text-align: center; line-height: 1.2; overflow-wrap: break-word; word-break: break-word; hyphens: auto; }
 .mc-sb-name--our, .mc-sb-name--opp { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 /* Panel wyniku 1:1 z przykładu (meta-tag + score-display): etykieta jako ciemna pigułka z obwódką nad
    wynikiem na ciemnym granatowo-czarnym gradiencie, cyfry białe z lekkim glow */
