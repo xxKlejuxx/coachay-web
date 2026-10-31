@@ -176,8 +176,9 @@ body:has(#app-sidebar) .add-player-bar { bottom: 24px; right: 24px; }
 .kod-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 
 /* === Sticky save btn === */
-/* 2026-10-31: + safe-area-inset-bottom (patrz sync przy start.html) – ten sam przycisk-pod-paskiem bug. */
-.sticky-save { position: sticky; bottom: 0; padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
+/* 2026-10-31: env() sam nic nie daje bez viewport-fit=cover (nie ma go nigdzie w apce,
+   to osobna, większa zmiana) – stały margines 34px działa zawsze, env() jako bonus. */
+.sticky-save { position: sticky; bottom: 0; padding: 14px 16px calc(34px + env(safe-area-inset-bottom, 0px)); background: var(--tlo); border-top: 1px solid var(--border); flex-shrink: 0; }
 
 /* === Kod dostępu === */
 .kod-box { background: var(--tlo-karta); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; }
