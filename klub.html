@@ -56,8 +56,14 @@ body:has(#app-sidebar) .kb-page-title { display: block; }
 .team-card-arrow { color: var(--border2); font-size:21px; flex-shrink: 0; }
 
 /* === FAB === */
-.fab { position: absolute; bottom: 72px; right: 16px; width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size:19px; font-weight: 800; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); z-index: 10; }
-body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
+/* 2026-11-01: dodatkowy zapas 34px na mobile (pasek przeglądarki) + env() jako bonus. */
+.fab { position: absolute; bottom: calc(72px + 34px + env(safe-area-inset-bottom, 0px)); right: 16px; width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size:19px; font-weight: 800; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); z-index: 10; }
+/* 2026-11-01: #app-sidebar jest w DOM zawsze (nawet na mobile, schowany transformem) –
+   bez @media to "desktopowe" bottom:24px wygrywało też na telefonie i chowało FAB pod
+   bottom-navem (ten sam bug co przy #edit-panel / trenerzy.fab / druzyna.add-player-bar). */
+@media (min-width: 769px) {
+    body:has(#app-sidebar) .fab { bottom: 24px; right: 24px; }
+}
 .fab:active { opacity: 0.85; }
 
 /* === Detail panel (drużyna, slide right) === */
