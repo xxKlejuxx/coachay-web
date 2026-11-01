@@ -57,7 +57,7 @@ body:has(#app-sidebar) .kb-page-title { display: block; }
 
 /* === FAB === */
 /* 2026-11-01: dodatkowy zapas 34px na mobile (pasek przeglądarki) + env() jako bonus. */
-.fab { position: absolute; bottom: calc(72px + 34px + env(safe-area-inset-bottom, 0px)); right: 16px; width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size:19px; font-weight: 800; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); z-index: 10; }
+.fab { position: absolute; bottom: calc(72px + 84px + env(safe-area-inset-bottom, 0px)); right: 16px; width: auto; padding: 0 20px; height: 50px; background: var(--akcent); border-radius: 999px; border: none; color: #fff; font-size:19px; font-weight: 800; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(59,130,246,0.4); z-index: 10; }
 /* 2026-11-01: #app-sidebar jest w DOM zawsze (nawet na mobile, schowany transformem) –
    bez @media to "desktopowe" bottom:24px wygrywało też na telefonie i chowało FAB pod
    bottom-navem (ten sam bug co przy #edit-panel / trenerzy.fab / druzyna.add-player-bar). */

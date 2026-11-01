@@ -48,7 +48,7 @@
 /* === FAB dodaj zawodnika === */
 /* 2026-11-01: na telefonie "bottom: 72px" (czyli tuż nad bottom-nav) potrafi lądować pod
    paskiem przeglądarki – dajemy dodatkowy stały zapas 34px + env() jako bonus. */
-.add-player-bar { position: absolute; bottom: calc(72px + 34px + env(safe-area-inset-bottom, 0px)); right: 16px; z-index: 10; display: none; }
+.add-player-bar { position: absolute; bottom: calc(72px + 84px + env(safe-area-inset-bottom, 0px)); right: 16px; z-index: 10; display: none; }
 /* 2026-11-01: #app-sidebar jest w DOM zawsze (nawet na mobile, schowany transformem) –
    bez @media to "desktopowe" bottom:24px wygrywało też na telefonie i chowało FAB pod
    bottom-navem (ten sam bug co przy #edit-panel, patrz sync). */
