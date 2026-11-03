@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matematyka — Funkcje liniowe — Etap 2</title>
+<style>
+:root{
+  --bg:#f5f7fb; --card:#ffffff; --text:#1f2937; --muted:#6b7280;
+  --accent:#2563eb; --accent-light:#dbeafe; --good:#16a34a; --good-light:#dcfce7;
+  --warn:#b45309; --warn-light:#fef3c7; --border:#e2e8f0; --radius:16px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.65;}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 70px;}
+header.top{text-align:center;padding:22px 10px 18px;}
+.stage-badge{display:inline-block;background:var(--accent);color:#fff;font-weight:800;
+  padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:.5px;}
+h1{font-size:25px;margin:14px 0 6px;}
+.subtitle{color:var(--muted);font-size:15.5px;}
+.backlink{display:inline-block;margin-bottom:10px;color:var(--accent);font-size:14px;
+  text-decoration:none;font-weight:700;}
+.progress{display:flex;gap:6px;justify-content:center;margin-top:16px;}
+.progress span{width:40px;height:6px;border-radius:3px;background:var(--border);}
+.progress span.active{background:var(--accent);}
+section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px;margin-bottom:16px;}
+section h2{font-size:19px;margin-top:0;display:flex;align-items:center;gap:10px;}
+.num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
+  border-radius:50%;background:var(--accent-light);color:var(--accent);font-weight:800;
+  font-size:14px;flex-shrink:0;}
+.box-def{background:var(--accent-light);border-left:4px solid var(--accent);
+  border-radius:10px;padding:13px 15px;margin:13px 0;}
+.box-def b{color:var(--accent);}
+.box-example{background:#fafbfc;border:1px solid var(--border);border-radius:10px;
+  padding:15px;margin:13px 0;}
+.box-example .tag{font-size:12.5px;font-weight:800;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block;}
+.step{display:flex;gap:10px;margin:9px 0;align-items:flex-start;}
+.step .dot{width:25px;height:25px;border-radius:50%;background:var(--accent);color:#fff;
+  font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:2px;}
+.step .txt{flex:1;font-size:15.5px;}
+.step .txt .why{color:var(--muted);font-size:14px;display:block;margin-top:2px;}
+.formula{font-family:Georgia,'Cambria Math',serif;font-size:18.5px;background:#fff;
+  border:1px solid var(--border);border-radius:8px;padding:7px 13px;display:inline-block;
+  margin:4px 0;}
+table.vals{border-collapse:collapse;width:100%;margin:13px 0;}
+table.vals th,table.vals td{border:1px solid var(--border);padding:8px 10px;
+  text-align:center;font-size:15px;}
+table.vals th{background:var(--accent-light);color:var(--accent);}
+svg.graf{background:#fff;border:1px solid var(--border);border-radius:10px;
+  display:block;margin:13px auto;max-width:100%;height:auto;}
+.important{background:var(--warn-light);border-left:4px solid var(--warn);
+  border-radius:10px;padding:13px 15px;margin:13px 0;}
+.task{border:2px dashed var(--border);border-radius:10px;padding:16px;margin:16px 0;}
+.task .tag{font-size:12.5px;font-weight:800;color:var(--warn);
+  text-transform:uppercase;letter-spacing:.5px;}
+.task .pytanie{font-size:16px;margin:8px 0 12px;}
+.answer-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0;}
+.answer-row label{font-size:15px;}
+.answer-input{width:110px;padding:8px 10px;font-size:16px;border:2px solid var(--border);
+  border-radius:8px;text-align:center;font-family:inherit;}
+.answer-input.correct{border-color:var(--good);background:var(--good-light);}
+.answer-input.incorrect{border-color:#dc2626;background:#fee2e2;}
+.check-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;
+  padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;}
+.check-btn:active{opacity:.8;}
+.hint-box,.solution,.success-box{display:none;border-radius:10px;padding:12px 15px;
+  margin-top:12px;font-size:15px;}
+.hint-box.open,.solution.open,.success-box.open{display:block;}
+.hint-box{background:var(--warn-light);border-left:4px solid var(--warn);}
+.solution{background:var(--good-light);border-left:4px solid var(--good);}
+.success-box{background:var(--good-light);border-left:4px solid var(--good);
+  font-weight:700;color:var(--good);}
+footer.end{text-align:center;color:var(--muted);font-size:14px;padding:26px 16px;}
+.next-stage{display:inline-block;margin-top:8px;background:var(--border);
+  color:var(--muted);padding:10px 20px;border-radius:999px;font-weight:700;font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="backlink" href="mat_fl1.html">← Etap 1</a>
+<header class="top">
+  <span class="stage-badge">ETAP 2 z 4 — CO ZNACZĄ a I b</span>
+  <h1>Funkcje liniowe — czytamy wzór bez liczenia tabelki</h1>
+  <p class="subtitle">Jak z samego wzoru y = ax + b od razu wiedzieć, gdzie prosta
+    przecina oś Y, czy idzie w górę czy w dół, i jak stromo.</p>
+  <div class="progress"><span></span><span class="active"></span><span></span><span></span></div>
+</header>
+
+<section id="przypomnienie">
+  <h2><span class="num">i</span> Przypomnienie z etapu 1</h2>
+  <p>Umiesz już: zaznaczać punkty (x, y), liczyć y dla danego x we wzorze
+    y = ax + b, oraz rysować wykres na podstawie tabelki wartości. Teraz
+    nauczysz się czytać wzór <b>bez</b> liczenia całej tabelki — od razu
+    z liczb a i b.</p>
+</section>
+<section id="wspb">
+  <h2><span class="num">1</span> Co oznacza b</h2>
+  <div class="box-def">
+    <b>b</b> to punkt, w którym prosta przecina <b>oś Y</b>. Wzór przecina
+    oś Y zawsze w punkcie <span class="formula">(0, b)</span>.
+  </div>
+  <div class="box-example">
+    <span class="tag">Dlaczego tak jest — dowód w 1 kroku</span>
+    <div class="step"><div class="dot">1</div><div class="txt">
+      Na osi Y zawsze x = 0 (to definicja tej osi — "nic w bok").
+      Podstawmy x = 0 do wzoru y = ax + b:
+      <span class="formula">y = a · 0 + b = 0 + b = b</span>
+      <span class="why">Skoro a razy 0 zawsze daje 0, to y = b — czyli
+        punkt przecięcia z osią Y to zawsze (0, b), niezależnie od a.</span></div></div>
+  </div>
+  <div class="box-example">
+    <span class="tag">Przykład — y = 2x + 3</span>
+    Tu b = 3, więc prosta przecina oś Y w punkcie <b>(0, 3)</b> — bez
+    liczenia czegokolwiek, od razu to widać ze wzoru.
+    <svg class="graf" viewBox="0 0 320 320" width="320" height="320">
+      <g stroke="#eef1f5" stroke-width="1">
+        <line x1="20" y1="0" x2="20" y2="320"/><line x1="48" y1="0" x2="48" y2="320"/>
+        <line x1="76" y1="0" x2="76" y2="320"/><line x1="104" y1="0" x2="104" y2="320"/>
+        <line x1="132" y1="0" x2="132" y2="320"/><line x1="160" y1="0" x2="160" y2="320"/>
+        <line x1="188" y1="0" x2="188" y2="320"/><line x1="216" y1="0" x2="216" y2="320"/>
+        <line x1="244" y1="0" x2="244" y2="320"/><line x1="272" y1="0" x2="272" y2="320"/>
+        <line x1="300" y1="0" x2="300" y2="320"/>
+        <line y1="20" x1="0" y2="20" x2="320"/><line y1="48" x1="0" y2="48" x2="320"/>
+        <line y1="76" x1="0" y2="76" x2="320"/><line y1="104" x1="0" y2="104" x2="320"/>
+        <line y1="132" x1="0" y2="132" x2="320"/><line y1="160" x1="0" y2="160" x2="320"/>
+        <line y1="188" x1="0" y2="188" x2="320"/><line y1="216" x1="0" y2="216" x2="320"/>
+        <line y1="244" x1="0" y2="244" x2="320"/><line y1="272" x1="0" y2="272" x2="320"/>
+        <line y1="300" x1="0" y2="300" x2="320"/>
+      </g>
+      <line x1="10" y1="160" x2="312" y2="160" stroke="#94a3b8" stroke-width="2"/>
+      <line x1="160" y1="310" x2="160" y2="8" stroke="#94a3b8" stroke-width="2"/>
+      <polygon points="312,160 303,155 303,165" fill="#94a3b8"/>
+      <polygon points="160,8 155,17 165,17" fill="#94a3b8"/>
+      <text x="163" y="174" font-size="12" fill="#94a3b8">0</text>
+      <line x1="48" y1="300" x2="188" y2="20" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="160" cy="76" r="5.5" fill="#dc2626"/>
+      <text x="166" y="72" font-size="13" font-weight="700" fill="#dc2626">b = (0, 3)</text>
+    </svg>
+  </div>
+
+  <div class="task" id="zad1">
+    <span class="tag">Zadanie 1</span>
+    <p class="pytanie">Nie licząc niczego — podaj punkt, w którym funkcja
+      y = -4x + 7 przecina oś Y (podaj samo y, czyli wartość b).</p>
+    <div class="answer-row"><label>b =</label>
+      <input class="answer-input" id="zad1-b" data-answer="7"></div>
+    <button class="check-btn" onclick="sprawdzZadanie('zad1')">Sprawdź</button>
+    <div class="hint-box">b to po prostu liczba stojąca samodzielnie na końcu
+      wzoru, bez x przy niej.</div>
+    <div class="solution">We wzorze y = -4x + 7, liczba przy x to a = -4, a
+      liczba bez x to b = <b>7</b>. Punkt przecięcia z osią Y to (0, 7).</div>
+    <div class="success-box">Dobrze! b = 7.</div>
+  </div>
+</section>
+<section id="wspa">
+  <h2><span class="num">2</span> Co oznacza a</h2>
+  <div class="box-def">
+    <b>a</b> mówi dwie rzeczy naraz: <b>w którą stronę</b> idzie prosta i
+    <b>jak bardzo stromo</b>.<br>
+    • a &gt; 0 (dodatnie) → funkcja <b>rosnąca</b> (prosta idzie w górę).<br>
+    • a &lt; 0 (ujemne) → funkcja <b>malejąca</b> (prosta idzie w dół).<br>
+    • a = 0 → prosta <b>pozioma</b> (y się w ogóle nie zmienia).<br>
+    • im większa wartość <b>|a|</b> (bez znaku), tym prosta <b>bardziej stroma</b>.
+  </div>
+  <div class="box-example">
+    <span class="tag">Dlaczego tak jest</span>
+    <div class="step"><div class="dot">1</div><div class="txt">
+      Policzmy y dla x, a potem dla x+1 (czyli "krok w prawo"):
+      <span class="formula">y(x+1) = a(x+1) + b = ax + a + b</span></div></div>
+    <div class="step"><div class="dot">2</div><div class="txt">
+      To jest dokładnie <span class="formula">y(x) + a</span> (bo y(x) = ax+b).
+      <span class="why">Czyli: za każdym razem, gdy x rośnie o 1, y zmienia się
+        dokładnie o a. To właśnie definiuje kierunek i stromość.</span></div></div>
+  </div>
+  <div class="box-example">
+    <span class="tag">Porównanie — ta sama b=0, różne a</span>
+    <svg class="graf" viewBox="0 0 320 320" width="320" height="320">
+      <g stroke="#eef1f5" stroke-width="1">
+        <line x1="20" y1="0" x2="20" y2="320"/><line x1="48" y1="0" x2="48" y2="320"/>
+        <line x1="76" y1="0" x2="76" y2="320"/><line x1="104" y1="0" x2="104" y2="320"/>
+        <line x1="132" y1="0" x2="132" y2="320"/><line x1="160" y1="0" x2="160" y2="320"/>
+        <line x1="188" y1="0" x2="188" y2="320"/><line x1="216" y1="0" x2="216" y2="320"/>
+        <line x1="244" y1="0" x2="244" y2="320"/><line x1="272" y1="0" x2="272" y2="320"/>
+        <line x1="300" y1="0" x2="300" y2="320"/>
+        <line y1="20" x1="0" y2="20" x2="320"/><line y1="48" x1="0" y2="48" x2="320"/>
+        <line y1="76" x1="0" y2="76" x2="320"/><line y1="104" x1="0" y2="104" x2="320"/>
+        <line y1="132" x1="0" y2="132" x2="320"/><line y1="160" x1="0" y2="160" x2="320"/>
+        <line y1="188" x1="0" y2="188" x2="320"/><line y1="216" x1="0" y2="216" x2="320"/>
+        <line y1="244" x1="0" y2="244" x2="320"/><line y1="272" x1="0" y2="272" x2="320"/>
+        <line y1="300" x1="0" y2="300" x2="320"/>
+      </g>
+      <line x1="10" y1="160" x2="312" y2="160" stroke="#94a3b8" stroke-width="2"/>
+      <line x1="160" y1="310" x2="160" y2="8" stroke="#94a3b8" stroke-width="2"/>
+      <line x1="113" y1="300" x2="207" y2="20" stroke="#2563eb" stroke-width="2.5"/>
+      <line x1="20" y1="300" x2="300" y2="20" stroke="#16a34a" stroke-width="2.5"/>
+      <line x1="20" y1="202" x2="300" y2="118" stroke="#d97706" stroke-width="2.5"/>
+      <line x1="20" y1="20" x2="300" y2="300" stroke="#dc2626" stroke-width="2.5"/>
+    </svg>
+    <p style="font-size:14.5px;">
+      <span style="color:#2563eb;font-weight:800;">■</span> y = 3x (stromo, w górę) &nbsp;
+      <span style="color:#16a34a;font-weight:800;">■</span> y = x (średnio, w górę) &nbsp;
+      <span style="color:#d97706;font-weight:800;">■</span> y = 0,3x (łagodnie, w górę)<br>
+      <span style="color:#dc2626;font-weight:800;">■</span> y = -x (w dół — ujemne a)
+    </p>
+    <p style="font-size:14.5px;color:var(--muted);">Wszystkie mają b=0, więc
+      wszystkie przechodzą przez (0,0) — różni je tylko a.</p>
+  </div>
+  <div class="task" id="zad2">
+    <span class="tag">Zadanie 2</span>
+    <p class="pytanie">Czy funkcja y = -5x + 2 jest rosnąca, malejąca czy stała?
+      (wpisz jedno słowo)</p>
+    <div class="answer-row">
+      <input class="answer-input" id="zad2-t" data-answer="malejąca|malejaca" style="width:160px"></div>
+    <button class="check-btn" onclick="sprawdzZadanie('zad2')">Sprawdź</button>
+    <div class="hint-box">Spójrz tylko na a (liczbę przy x). Czy jest dodatnia,
+      czy ujemna?</div>
+    <div class="solution">a = -5, czyli liczba ujemna → funkcja <b>malejąca</b>
+      (prosta idzie w dół).</div>
+    <div class="success-box">Dobrze! Malejąca.</div>
+  </div>
+
+  <div class="task" id="zad3">
+    <span class="tag">Zadanie 3</span>
+    <p class="pytanie">Dla funkcji y = 6x - 2: o ile zmieni się y, jeśli x
+      wzrośnie o 1?</p>
+    <div class="answer-row"><label>Δy =</label>
+      <input class="answer-input" id="zad3-d" data-answer="6"></div>
+    <button class="check-btn" onclick="sprawdzZadanie('zad3')">Sprawdź</button>
+    <div class="hint-box">To pytanie o samo a — nie musisz nic liczyć z -2.</div>
+    <div class="solution">Zmiana y przy wzroście x o 1 to zawsze <b>a</b>.
+      Tu a = 6.</div>
+    <div class="success-box">Dobrze! Δy = 6.</div>
+  </div>
+
+  <div class="task" id="zad4">
+    <span class="tag">Zadanie 4 — uwaga na znak</span>
+    <p class="pytanie">Dla funkcji y = -3x + 1: o ile zmieni się y, jeśli x
+      wzrośnie o 1?</p>
+    <div class="answer-row"><label>Δy =</label>
+      <input class="answer-input" id="zad4-d" data-answer="-3"></div>
+    <button class="check-btn" onclick="sprawdzZadanie('zad4')">Sprawdź</button>
+    <div class="hint-box">To znowu samo a, razem ze znakiem minus.</div>
+    <div class="solution">a = -3, więc y <b>zmniejszy się o 3</b> — odpowiedź to -3.</div>
+    <div class="success-box">Dobrze! Δy = -3.</div>
+  </div>
+</section>
+<section id="szybko">
+  <h2><span class="num">3</span> Szybkie rysowanie wykresu — bez tabelki</h2>
+  <div class="box-example">
+    <span class="tag">Metoda — przykład y = -2x + 1</span>
+    <div class="step"><div class="dot">1</div><div class="txt">
+      Zaznacz punkt (0, b) — tu b=1, więc punkt <b>(0, 1)</b>.
+      <span class="why">To z rozdziału 1 — zawsze przecina oś Y w (0, b).</span></div></div>
+    <div class="step"><div class="dot">2</div><div class="txt">
+      Od tego punktu idź <b>1 krok w prawo</b>, a potem o <b>a</b> w górę/dół
+      (tu a=-2, czyli <b>2 w dół</b>, bo ujemne). Lądujesz w punkcie <b>(1, -1)</b>.
+      <span class="why">To z rozdziału 2 — przy +1 do x, y zmienia się o a.</span></div></div>
+    <div class="step"><div class="dot">3</div><div class="txt">
+      Połącz oba punkty linią prostą i przedłuż ją w obie strony poza punkty.</div></div>
+    <svg class="graf" viewBox="0 0 320 320" width="320" height="320">
+      <g stroke="#eef1f5" stroke-width="1">
+        <line x1="20" y1="0" x2="20" y2="320"/><line x1="48" y1="0" x2="48" y2="320"/>
+        <line x1="76" y1="0" x2="76" y2="320"/><line x1="104" y1="0" x2="104" y2="320"/>
+        <line x1="132" y1="0" x2="132" y2="320"/><line x1="160" y1="0" x2="160" y2="320"/>
+        <line x1="188" y1="0" x2="188" y2="320"/><line x1="216" y1="0" x2="216" y2="320"/>
+        <line x1="244" y1="0" x2="244" y2="320"/><line x1="272" y1="0" x2="272" y2="320"/>
+        <line x1="300" y1="0" x2="300" y2="320"/>
+        <line y1="20" x1="0" y2="20" x2="320"/><line y1="48" x1="0" y2="48" x2="320"/>
+        <line y1="76" x1="0" y2="76" x2="320"/><line y1="104" x1="0" y2="104" x2="320"/>
+        <line y1="132" x1="0" y2="132" x2="320"/><line y1="160" x1="0" y2="160" x2="320"/>
+        <line y1="188" x1="0" y2="188" x2="320"/><line y1="216" x1="0" y2="216" x2="320"/>
+        <line y1="244" x1="0" y2="244" x2="320"/><line y1="272" x1="0" y2="272" x2="320"/>
+        <line y1="300" x1="0" y2="300" x2="320"/>
+      </g>
+      <line x1="10" y1="160" x2="312" y2="160" stroke="#94a3b8" stroke-width="2"/>
+      <line x1="160" y1="310" x2="160" y2="8" stroke="#94a3b8" stroke-width="2"/>
+      <text x="163" y="174" font-size="12" fill="#94a3b8">0</text>
+      <line x1="104" y1="20" x2="244" y2="300" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="160" cy="132" r="5.5" fill="#dc2626"/>
+      <text x="100" y="124" font-size="12" font-weight="700" fill="#dc2626">(0, 1)</text>
+      <line x1="160" y1="132" x2="188" y2="132" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <line x1="188" y1="132" x2="188" y2="188" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <circle cx="188" cy="188" r="5.5" fill="#dc2626"/>
+      <text x="194" y="200" font-size="12" font-weight="700" fill="#dc2626">(1, -1)</text>
+      <text x="166" y="128" font-size="11" fill="#16a34a">1 w prawo</text>
+      <text x="192" y="165" font-size="11" fill="#16a34a">2 w dół</text>
+    </svg>
+  </div>
+  <div class="task" id="zad5">
+    <span class="tag">Zadanie 5</span>
+    <p class="pytanie">Dla funkcji y = 3x - 2 metodą z tego rozdziału: podaj
+      punkt przecięcia z osią Y (samo b), a potem y po przesunięciu o 1 w prawo.</p>
+    <div class="answer-row"><label>b =</label>
+      <input class="answer-input" id="zad5-b" data-answer="-2"></div>
+    <div class="answer-row"><label>y po 1 w prawo =</label>
+      <input class="answer-input" id="zad5-y2" data-answer="1"></div>
+    <button class="check-btn" onclick="sprawdzZadanie('zad5')">Sprawdź</button>
+    <div class="hint-box">b to liczba bez x we wzorze. Drugi punkt: do b dodaj a
+      (tu a=3).</div>
+    <div class="solution">b = -2 (punkt (0,-2)). Krok w prawo: y = -2 + 3 = <b>1</b>
+      (punkt (1,1)).</div>
+    <div class="success-box">Super, dokładnie tak!</div>
+  </div>
+</section>
+<section id="podsumowanie">
+  <h2><span class="num">✓</span> Podsumowanie etapu 2</h2>
+  <ul style="padding-left:20px;font-size:15.5px;">
+    <li>b = punkt przecięcia z osią Y, zawsze (0, b).</li>
+    <li>a &gt; 0 → rosnąca, a &lt; 0 → malejąca, a = 0 → pozioma (stała).</li>
+    <li>Im większe |a|, tym bardziej stroma prosta.</li>
+    <li>Przy wzroście x o 1, y zmienia się dokładnie o a — to pozwala
+      narysować wykres bez tabelki: punkt (0,b), potem 1 w prawo i a w górę/dół.</li>
+  </ul>
+  <div class="important">
+    W <b>etapie 3</b> nauczysz się wyznaczać cały wzór funkcji (czyli a i b),
+    mając dany tylko wykres albo dwa punkty — bez podanego wzoru z góry.</div>
+  <span class="next-stage">Etap 3 — wkrótce</span>
+</section>
+
+<footer class="end">Coachay — materiały dodatkowe · Etap 2 z 4</footer>
+</div>
+<script>
+function normalizuj(s){
+  s = (s||'').toString().trim().toLowerCase().replace(',', '.').replace(/\s+/g,'');
+  var mapa = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z'};
+  return s.replace(/[ąćęłńóśźż]/g, function(ch){ return mapa[ch]; });
+}
+function sprawdzZadanie(taskId){
+  var task = document.getElementById(taskId);
+  var inputs = task.querySelectorAll('.answer-input');
+  var wszystkoOk = true;
+  inputs.forEach(function(inp){
+    var warianty = (inp.dataset.answer||'').split('|').map(normalizuj);
+    var wpisane = normalizuj(inp.value);
+    var ok = (wpisane.length > 0) && warianty.indexOf(wpisane) !== -1;
+    inp.classList.remove('correct','incorrect');
+    inp.classList.add(ok ? 'correct' : 'incorrect');
+    if(!ok) wszystkoOk = false;
+  });
+  var proby = (parseInt(task.dataset.proby) || 0) + 1;
+  task.dataset.proby = proby;
+  var hint = task.querySelector('.hint-box');
+  var sol = task.querySelector('.solution');
+  var ok2 = task.querySelector('.success-box');
+  if(wszystkoOk){
+    if(hint) hint.classList.remove('open');
+    if(sol) sol.classList.remove('open');
+    if(ok2) ok2.classList.add('open');
+  } else {
+    if(ok2) ok2.classList.remove('open');
+    if(proby <= 1){ if(hint) hint.classList.add('open'); }
+    else { if(sol) sol.classList.add('open'); }
+  }
+}
+</script>
+</body>
+</html>
