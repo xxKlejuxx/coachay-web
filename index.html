@@ -468,7 +468,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
 .store-badge-link { display: block; border-radius: 7.5px; overflow: hidden; transition: opacity 0.15s; }
 .store-badge-link:hover { opacity: 0.8; }
 .store-badge-link svg { display: block; width: 100%; height: auto; }
-.pricing-trial-note { font-size: 11px; color: var(--szary); text-align: center; }
+.pricing-trial-note { font-size: 13px; font-weight: 500; color: var(--szary-j); text-align: center; }
 .pricing-buy-btn {
   display: block; width: 100%; text-align: center;
   background: var(--akcent); color: #fff;
@@ -484,12 +484,15 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
   border-radius: 14px; padding: 16px 20px;
 }
 .pricing-qr-box {
-  width: 72px; height: 72px; flex-shrink: 0;
+  width: 92px; height: 92px; flex-shrink: 0;
   background: var(--tlo-karta2); border: 1px dashed var(--border2);
   border-radius: 8px; display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 800; color: var(--szary); text-align: center;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.04em; overflow: hidden;
 }
+.pricing-qr-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pricing-qr-badge { width: 100px; }
+.pricing-qr-badge svg { display: block; width: 100%; height: auto; }
 .pricing-qr-text { font-size: 14px; color: var(--szary-j); line-height: 1.55; }
 @media (min-width: 769px) {
   .pricing-store-btns { display: none !important; }
@@ -867,7 +870,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
           <a href="https://apps.apple.com/pl/app/coachay/id6805582217" target="_blank" rel="noopener" class="store-badge-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48"><rect width="160" height="48" rx="7.5" fill="#000"/><g transform="translate(9,11)"><path fill="#fff" d="M18.5,11.7c0-2.4,2-3.6,2.1-3.7c-1.1-1.7-2.9-1.9-3.5-1.9c-1.5-0.2-3,0.9-3.8,0.9c-0.8,0-2-0.9-3.3-0.9c-1.7,0-3.3,1-4.1,2.5c-1.8,3.1-0.5,7.7,1.3,10.2c0.9,1.3,1.9,2.7,3.2,2.7c1.3,0,1.8-0.8,3.4-0.8c1.6,0,2.1,0.8,3.4,0.8c1.4,0,2.2-1.3,3.1-2.5c0.6-0.9,1.1-1.8,1.4-2.9c-2.7-1-2.7-4.9-0.2-4.4z"/><path fill="#fff" d="M15.4,4.9c0.7-0.8,1.1-2,1-3.2c-1,0-2.2,0.7-2.9,1.5c-0.7,0.8-1.2,2-1,3.1c1.1,0.1,2.2-0.5,2.9-1.4z"/></g><text x="42" y="21" fill="#fff" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" letter-spacing="0.2">Download on the</text><text x="41" y="37" fill="#fff" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="18.5" font-weight="600" letter-spacing="-0.5">App Store</text></svg></a>
           <a href="https://play.google.com/store/apps/details?id=com.coachay.mobile" target="_blank" rel="noopener" class="store-badge-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48"><rect width="160" height="48" rx="7.5" fill="#000"/><polygon points="12,24 12,10 19,24" fill="#34A853"/><polygon points="12,10 34,24 19,24" fill="#FBBC04"/><polygon points="34,24 12,38 19,24" fill="#EA4335"/><polygon points="12,38 12,24 19,24" fill="#4285F4"/><text x="43" y="20" fill="#fff" font-family="Roboto,Helvetica,Arial,sans-serif" font-size="9.5" letter-spacing="1.5">GET IT ON</text><text x="42" y="37" fill="#fff" font-family="Roboto,Helvetica,Arial,sans-serif" font-size="18.5" font-weight="500" letter-spacing="-0.3">Google Play</text></svg></a>
         </div>
-        <a href="#" class="pricing-buy-btn" id="buy-btn-ind" onclick="openAuthPanel();return false;" data-i18n="landing.pricingBuyBtnInd">Zarejestruj się i kup →</a>
+        <a href="#" class="pricing-buy-btn" id="buy-btn-ind" onclick="openAuthPanel();return false;" data-i18n="landing.pricingBuyBtnInd">Rozpocznij 90 dni za darmo →</a>
         <div class="pricing-trial-note" data-i18n="landing.pricingTrialNote">90 dni bezpłatnie – bez karty kredytowej</div>
       </div>
       <!-- Family 6 -->
@@ -888,14 +891,21 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
           <a href="https://apps.apple.com/pl/app/coachay/id6805582217" target="_blank" rel="noopener" class="store-badge-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48"><rect width="160" height="48" rx="7.5" fill="#000"/><g transform="translate(9,11)"><path fill="#fff" d="M18.5,11.7c0-2.4,2-3.6,2.1-3.7c-1.1-1.7-2.9-1.9-3.5-1.9c-1.5-0.2-3,0.9-3.8,0.9c-0.8,0-2-0.9-3.3-0.9c-1.7,0-3.3,1-4.1,2.5c-1.8,3.1-0.5,7.7,1.3,10.2c0.9,1.3,1.9,2.7,3.2,2.7c1.3,0,1.8-0.8,3.4-0.8c1.6,0,2.1,0.8,3.4,0.8c1.4,0,2.2-1.3,3.1-2.5c0.6-0.9,1.1-1.8,1.4-2.9c-2.7-1-2.7-4.9-0.2-4.4z"/><path fill="#fff" d="M15.4,4.9c0.7-0.8,1.1-2,1-3.2c-1,0-2.2,0.7-2.9,1.5c-0.7,0.8-1.2,2-1,3.1c1.1,0.1,2.2-0.5,2.9-1.4z"/></g><text x="42" y="21" fill="#fff" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" letter-spacing="0.2">Download on the</text><text x="41" y="37" fill="#fff" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="18.5" font-weight="600" letter-spacing="-0.5">App Store</text></svg></a>
           <a href="https://play.google.com/store/apps/details?id=com.coachay.mobile" target="_blank" rel="noopener" class="store-badge-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48"><rect width="160" height="48" rx="7.5" fill="#000"/><polygon points="12,24 12,10 19,24" fill="#34A853"/><polygon points="12,10 34,24 19,24" fill="#FBBC04"/><polygon points="34,24 12,38 19,24" fill="#EA4335"/><polygon points="12,38 12,24 19,24" fill="#4285F4"/><text x="43" y="20" fill="#fff" font-family="Roboto,Helvetica,Arial,sans-serif" font-size="9.5" letter-spacing="1.5">GET IT ON</text><text x="42" y="37" fill="#fff" font-family="Roboto,Helvetica,Arial,sans-serif" font-size="18.5" font-weight="500" letter-spacing="-0.3">Google Play</text></svg></a>
         </div>
-        <a href="#" class="pricing-buy-btn" id="buy-btn-fam" onclick="openAuthPanel();return false;" data-i18n="landing.pricingBuyBtnFam">Zarejestruj się i kup →</a>
+        <a href="#" class="pricing-buy-btn" id="buy-btn-fam" onclick="openAuthPanel();return false;" data-i18n="landing.pricingBuyBtnFam">Rozpocznij 90 dni za darmo →</a>
         <div class="pricing-trial-note" data-i18n="landing.pricingTrialNote">90 dni bezpłatnie – bez karty kredytowej</div>
       </div>
     </div>
     <!-- QR hint – widoczny tylko na desktopie -->
     <div class="pricing-qr-hint">
-      <div class="pricing-qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https%3A%2F%2Fwww.coachay.com" alt="QR" loading="lazy" style="width:100%;height:100%;border-radius:6px;object-fit:contain;"></div>
-      <div class="pricing-qr-text" data-i18n="landing.pricingQrHint">Chcesz kupić na telefonie? Pobierz aplikację, skanując ten kod QR.</div>
+      <div class="pricing-qr-item">
+        <div class="pricing-qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https%3A%2F%2Fapps.apple.com%2Fpl%2Fapp%2Fcoachay%2Fid6805582217" alt="QR App Store" loading="lazy" style="width:100%;height:100%;object-fit:contain;"></div>
+        <a href="https://apps.apple.com/pl/app/coachay/id6805582217" target="_blank" rel="noopener" class="pricing-qr-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48"><rect width="160" height="48" rx="7.5" fill="#000"/><g transform="translate(9,11)"><path fill="#fff" d="M18.5,11.7c0-2.4,2-3.6,2.1-3.7c-1.1-1.7-2.9-1.9-3.5-1.9c-1.5-0.2-3,0.9-3.8,0.9c-0.8,0-2-0.9-3.3-0.9c-1.7,0-3.3,1-4.1,2.5c-1.8,3.1-0.5,7.7,1.3,10.2c0.9,1.3,1.9,2.7,3.2,2.7c1.3,0,1.8-0.8,3.4-0.8c1.6,0,2.1,0.8,3.4,0.8c1.4,0,2.2-1.3,3.1-2.5c0.6-0.9,1.1-1.8,1.4-2.9c-2.7-1-2.7-4.9-0.2-4.4z"/><path fill="#fff" d="M15.4,4.9c0.7-0.8,1.1-2,1-3.2c-1,0-2.2,0.7-2.9,1.5c-0.7,0.8-1.2,2-1,3.1c1.1,0.1,2.2-0.5,2.9-1.4z"/></g><text x="42" y="21" fill="#fff" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" letter-spacing="0.2">Download on the</text><text x="41" y="37" fill="#fff" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="18.5" font-weight="600" letter-spacing="-0.5">App Store</text></svg></a>
+      </div>
+      <div class="pricing-qr-item">
+        <div class="pricing-qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.coachay.mobile" alt="QR Google Play" loading="lazy" style="width:100%;height:100%;object-fit:contain;"></div>
+        <a href="https://play.google.com/store/apps/details?id=com.coachay.mobile" target="_blank" rel="noopener" class="pricing-qr-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48"><rect width="160" height="48" rx="7.5" fill="#000"/><polygon points="12,24 12,10 19,24" fill="#34A853"/><polygon points="12,10 34,24 19,24" fill="#FBBC04"/><polygon points="34,24 12,38 19,24" fill="#EA4335"/><polygon points="12,38 12,24 19,24" fill="#4285F4"/><text x="43" y="20" fill="#fff" font-family="Roboto,Helvetica,Arial,sans-serif" font-size="9.5" letter-spacing="1.5">GET IT ON</text><text x="42" y="37" fill="#fff" font-family="Roboto,Helvetica,Arial,sans-serif" font-size="18.5" font-weight="500" letter-spacing="-0.3">Google Play</text></svg></a>
+      </div>
+      <div class="pricing-qr-text" data-i18n="landing.pricingQrHint">Zeskanuj kod QR pasujący do Twojego systemu, aby pobrać aplikację.</div>
     </div>
     <!-- B2B -->
     <div class="pricing-b2b">
