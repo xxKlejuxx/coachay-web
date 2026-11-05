@@ -1785,9 +1785,9 @@
   "pricingB2bTitle": "Licencja klubowa",
   "pricingB2bDesc": "Dla klubów z wieloma drużynami i trenerami. Jedna licencja obejmuje cały klub — trenerów i rodziców. Cena negocjowana.",
   "pricingB2bCta": "Napisz do nas →",
-  "pricingBuyBtnInd": "Zarejestruj się i kup →",
-  "pricingBuyBtnFam": "Zarejestruj się i kup →",
-  "pricingQrHint": "Chcesz kupić na telefonie? Pobierz aplikację, skanując ten kod QR."
+  "pricingBuyBtnInd": "Rozpocznij 90 dni za darmo →",
+  "pricingBuyBtnFam": "Rozpocznij 90 dni za darmo →",
+  "pricingQrHint": "Pobierz aplikację"
  },
  "start": {
   "upcomingEvents": "Najbliższe wydarzenia",

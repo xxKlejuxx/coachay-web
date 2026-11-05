@@ -1785,9 +1785,9 @@
   "pricingB2bTitle": "Club license",
   "pricingB2bDesc": "For clubs with multiple teams and coaches. One license covers the whole club — coaches and parents. Pricing on request.",
   "pricingB2bCta": "Get in touch →",
-  "pricingBuyBtnInd": "Sign up & buy →",
-  "pricingBuyBtnFam": "Sign up & buy →",
-  "pricingQrHint": "Want to buy on mobile? Download the app by scanning this QR code."
+  "pricingBuyBtnInd": "Start your 90 days free →",
+  "pricingBuyBtnFam": "Start your 90 days free →",
+  "pricingQrHint": "Get the app"
  },
  "start": {
   "upcomingEvents": "Upcoming Events",

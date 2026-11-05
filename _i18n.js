@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261030b'; // 2026-10-30b: bump po dodaniu addEvent.topicCustomOption/topicCustomPlaceholder ("Wpisz nowy temat...")
+    const LOCALE_V  = '20261105a'; // 2026-11-05a: bump po zmianie tekstow pricingBuyBtnInd/Fam i pricingQrHint (sekcja cennika)
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */
