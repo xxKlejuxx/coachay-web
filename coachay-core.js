@@ -73,6 +73,44 @@ function initFirebase() {
         // }
         db = firebase.firestore();
         auth = firebase.auth();
+
+        // TYMCZASOWY licznik odczytów Firestore do diagnozy (2026-11-06) — włączany flagą,
+        // żeby nic nie ruszać domyślnie. Włącz w konsoli: localStorage.setItem('fsDebugLog','1')
+        // potem przeładuj stronę. Wyłącz: localStorage.removeItem('fsDebugLog'). Do usunięcia
+        // po zakończeniu diagnozy odczytów.
+        if (localStorage.getItem('fsDebugLog') === '1') {
+            (function () {
+                const pathOf = (ref) => {
+                    try { return ref._query ? ref._query.path.canonicalString() : ref.path; }
+                    catch (e) { return '(?)'; }
+                };
+                const origQueryGet = firebase.firestore.Query.prototype.get;
+                firebase.firestore.Query.prototype.get = function (...args) {
+                    const p = pathOf(this);
+                    console.log('🔍 QUERY GET:', p);
+                    return origQueryGet.apply(this, args).then(snap => {
+                        console.log('   → wynik:', snap.size, 'dok. |', p);
+                        return snap;
+                    });
+                };
+                const origQuerySnap = firebase.firestore.Query.prototype.onSnapshot;
+                firebase.firestore.Query.prototype.onSnapshot = function (...args) {
+                    console.log('👂 QUERY ONSNAPSHOT (nasłuch otwarty):', pathOf(this));
+                    return origQuerySnap.apply(this, args);
+                };
+                const origDocGet = firebase.firestore.DocumentReference.prototype.get;
+                firebase.firestore.DocumentReference.prototype.get = function (...args) {
+                    console.log('🔍 DOC GET:', this.path);
+                    return origDocGet.apply(this, args);
+                };
+                const origDocSnap = firebase.firestore.DocumentReference.prototype.onSnapshot;
+                firebase.firestore.DocumentReference.prototype.onSnapshot = function (...args) {
+                    console.log('👂 DOC ONSNAPSHOT (nasłuch otwarty):', this.path);
+                    return origDocSnap.apply(this, args);
+                };
+                console.log('✅ Firestore read-logger AKTYWNY na tej stronie:', location.pathname);
+            })();
+        }
         // 2026-09-26: enablePersistence() (offline cache w IndexedDB dla Firestore) CAŁKOWICIE
         // WYŁĄCZONE NA STAŁE. Historia: próbowaliśmy najpierw wywoływać ją wprost (oryginalny stan)
         // — na Safari z "Zapobiegaj śledzeniu między witrynami" IndexedDB potrafi wisieć bardzo długo
