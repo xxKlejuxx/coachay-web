@@ -2867,28 +2867,14 @@ async function loadCtxOverlay(user, membership, team) {
     teamsEl.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--szary);">Ładowanie...</div>';
 
     try {
-        let allTeams = [];
         // isAdmin — sprawdź bieżące membership ORAZ wszystkie aktywne (backfill mogły nie mieć flagi)
         const _cachedMbrs = getCurrentUserData()?.allMemberships || [];
         const isAdmin = !!(membership?.isClubAdmin || _cachedMbrs.some(m => m.isClubAdmin === true));
         const isTrenerGlowny = effectiveRole === 'TRENER_GLOWNY';
-
-        if (clubId && db) {
-            if (isAdmin || isTrenerGlowny) {
-                // Admin i trener główny widzi wszystkie drużyny klubu
-                const snap = await db.collection('teams').where('clubId', '==', clubId).get();
-                allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            } else {
-                // Trener pomocniczy, rodzic, zawodnik — tylko swoja drużyna (rozszerzone poniżej o inne aktywne)
-                allTeams = [team];
-            }
-        } else {
-            allTeams = [team];
-        }
+        const userId = getCurrentUserId();
 
         // Memberships usera — z cache currentUserData (szybkie, bez dodatkowego zapytania)
         // Fallback: zapytanie Firestore jeśli cache niedostępny (np. ekrany bez initSession)
-        const userId = getCurrentUserId();
         let activeMemberships = getCurrentUserData()?.allMemberships || [];
         if (activeMemberships.length === 0 && db && userId) {
             try {
@@ -2901,52 +2887,92 @@ async function loadCtxOverlay(user, membership, team) {
             if (m.teamId) membershipByTeam[m.teamId] = m;
         });
 
-        // Dołącz wszystkie drużyny z aktywnych memberships których jeszcze nie ma na liście
-        // (dotyczy każdej roli — np. trener w klubie A i rodzic w klubie B widzi obie drużyny)
-        {
-            const extraTeamIds = Object.keys(membershipByTeam)
-                .filter(tid => !allTeams.some(t => (t.teamId || t.id) === tid));
-            if (extraTeamIds.length > 0 && db) {
-                try {
-                    // 2026-11-06: batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
-                    const extraMap = await _getDocsByIds('teams', extraTeamIds);
-                    extraTeamIds.forEach(tid => { if (extraMap[tid]) allTeams.push({ id: tid, ...extraMap[tid] }); });
-                } catch(e) { /* ignoruj */ }
-            }
-        }
-        // Pobierz zablokowane/usunięte osobno (by pokazać status)
-        const blockedByTeam = {};
+        // 2026-11-06: cache przełącznika drużyn w sessionStorage (patrz decisions.md - fix #5
+        // z kolejki N+1/duplikaty). loadCtxOverlay() odpala się na KAŻDYM ekranie z menu i robiła
+        // do 3 osobnych zapytań (teams-w-klubie, zablokowane/usunięte, archiwalne) za każdym razem,
+        // mimo że te dane rzadko się zmieniają w ramach sesji. TTL 2 min - świadomy kompromis:
+        // nowa drużyna/zmiana statusu membership może być widoczna z opóźnieniem do 2 min zamiast
+        // natychmiast, w zamian za odczyty oszczędzone na każdym kolejnym ekranie w tym oknie.
+        const CTX_CACHE_TTL_MS = 120000;
+        const ctxCacheKey = 'ctxCache_' + (clubId || '') + '_' + (userId || '');
+        let allTeams = [], blockedByTeam = {}, archivedByTeam = {};
+        let ctxCacheHit = false;
         try {
-            const blockedSnap = await db.collection('memberships')
-                .where('userId', '==', userId)
-                .where('status', 'in', ['BLOCKED', 'REMOVED'])
-                .get();
-            blockedSnap.docs.forEach(d => {
-                const m = { id: d.id, ...d.data() };
-                if (m.teamId && !membershipByTeam[m.teamId]) blockedByTeam[m.teamId] = m;
-            });
-        } catch(e) { /* brak indeksu lub brak uprawnień — ignoruj */ }
-
-        // Pobierz archiwalne (INACTIVE) — poprzednie drużyny po transferze
-        const archivedByTeam = {};
-        try {
-            const archivedMbrs = await getArchivedMemberships(userId);
-            archivedMbrs.forEach(m => {
-                if (m.teamId && !membershipByTeam[m.teamId] && !blockedByTeam[m.teamId])
-                    archivedByTeam[m.teamId] = m;
-            });
-        } catch(e) { /* ignoruj */ }
-
-        // Dla ról innych niż admin/TRENER_GLOWNY — dołącz archiwalne drużyny do listy
-        if (!isAdmin && !isTrenerGlowny && Object.keys(archivedByTeam).length > 0) {
-            const archivedTeamIds = Object.keys(archivedByTeam).filter(tid => !allTeams.some(t => (t.teamId || t.id) === tid));
-            if (archivedTeamIds.length > 0) {
-                try {
-                    // 2026-11-06: batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
-                    const archMap = await _getDocsByIds('teams', archivedTeamIds);
-                    archivedTeamIds.forEach(tid => { if (archMap[tid]) allTeams.push({ id: tid, ...archMap[tid] }); });
-                } catch(e) { /* ignoruj */ }
+            const raw = sessionStorage.getItem(ctxCacheKey);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Date.now() - parsed.t < CTX_CACHE_TTL_MS) {
+                    allTeams = parsed.allTeams || [];
+                    blockedByTeam = parsed.blockedByTeam || {};
+                    archivedByTeam = parsed.archivedByTeam || {};
+                    ctxCacheHit = true;
+                }
             }
+        } catch (e) { /* sessionStorage niedostępny (tryb prywatny itp.) - pobierz normalnie */ }
+
+        if (!ctxCacheHit) {
+            if (clubId && db) {
+                if (isAdmin || isTrenerGlowny) {
+                    // Admin i trener główny widzi wszystkie drużyny klubu
+                    const snap = await db.collection('teams').where('clubId', '==', clubId).get();
+                    allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                } else {
+                    // Trener pomocniczy, rodzic, zawodnik — tylko swoja drużyna (rozszerzone poniżej o inne aktywne)
+                    allTeams = [team];
+                }
+            } else {
+                allTeams = [team];
+            }
+
+            // Dołącz wszystkie drużyny z aktywnych memberships których jeszcze nie ma na liście
+            // (dotyczy każdej roli — np. trener w klubie A i rodzic w klubie B widzi obie drużyny)
+            {
+                const extraTeamIds = Object.keys(membershipByTeam)
+                    .filter(tid => !allTeams.some(t => (t.teamId || t.id) === tid));
+                if (extraTeamIds.length > 0 && db) {
+                    try {
+                        // 2026-11-06: batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
+                        const extraMap = await _getDocsByIds('teams', extraTeamIds);
+                        extraTeamIds.forEach(tid => { if (extraMap[tid]) allTeams.push({ id: tid, ...extraMap[tid] }); });
+                    } catch(e) { /* ignoruj */ }
+                }
+            }
+            // Pobierz zablokowane/usunięte osobno (by pokazać status)
+            try {
+                const blockedSnap = await db.collection('memberships')
+                    .where('userId', '==', userId)
+                    .where('status', 'in', ['BLOCKED', 'REMOVED'])
+                    .get();
+                blockedSnap.docs.forEach(d => {
+                    const m = { id: d.id, ...d.data() };
+                    if (m.teamId && !membershipByTeam[m.teamId]) blockedByTeam[m.teamId] = m;
+                });
+            } catch(e) { /* brak indeksu lub brak uprawnień — ignoruj */ }
+
+            // Pobierz archiwalne (INACTIVE) — poprzednie drużyny po transferze
+            try {
+                const archivedMbrs = await getArchivedMemberships(userId);
+                archivedMbrs.forEach(m => {
+                    if (m.teamId && !membershipByTeam[m.teamId] && !blockedByTeam[m.teamId])
+                        archivedByTeam[m.teamId] = m;
+                });
+            } catch(e) { /* ignoruj */ }
+
+            // Dla ról innych niż admin/TRENER_GLOWNY — dołącz archiwalne drużyny do listy
+            if (!isAdmin && !isTrenerGlowny && Object.keys(archivedByTeam).length > 0) {
+                const archivedTeamIds = Object.keys(archivedByTeam).filter(tid => !allTeams.some(t => (t.teamId || t.id) === tid));
+                if (archivedTeamIds.length > 0) {
+                    try {
+                        // 2026-11-06: batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
+                        const archMap = await _getDocsByIds('teams', archivedTeamIds);
+                        archivedTeamIds.forEach(tid => { if (archMap[tid]) allTeams.push({ id: tid, ...archMap[tid] }); });
+                    } catch(e) { /* ignoruj */ }
+                }
+            }
+
+            try {
+                sessionStorage.setItem(ctxCacheKey, JSON.stringify({ t: Date.now(), allTeams, blockedByTeam, archivedByTeam }));
+            } catch (e) { /* quota / tryb prywatny - ignoruj, po prostu nie cache'ujemy */ }
         }
 
         teamsEl.innerHTML = '';
