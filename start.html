@@ -833,7 +833,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     <div class="mp-body" id="mp-body"></div>
 </div>
 
-<script src="coachay-core.js?v=20261106d"></script>
+<script src="coachay-core.js?v=20261106e"></script>
 <script>
     /* ─────────────────────────────────────────────────────
        i18n helpers
@@ -2275,6 +2275,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const team = await getCurrentTeam();
         if (!team) return;
         const teamId = team.teamId || team.id;
+        if (typeof _lastDashboardRefresh !== 'undefined') _lastDashboardRefresh = Date.now();
         await Promise.all([
             loadNextMatch(teamId),
             loadUpcomingEvents(teamId),
@@ -2794,8 +2795,14 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         });
     });
 
+    // 2026-11-06: throttle - bez tego kazde przelaczenie karty (nawet na 1-2 sek.)
+    // odpalalo caly refreshDashboard() (loadNextMatch+loadUpcomingEvents+loadTasks+loadCalWidget)
+    // bez zadnego ograniczenia - potwierdzony w logach produkcyjnych jako jedno z glownych zrodel
+    // nadmiarowych odczytow Firestore (patrz decisions.md, "Firestore read-cost investigation").
+    let _lastDashboardRefresh = 0;
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && typeof refreshDashboard === 'function') {
+            if (Date.now() - _lastDashboardRefresh < 60000) return;
             refreshDashboard();
         }
     });
@@ -3177,8 +3184,9 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             if (!opponent) { alert(t('addEvent.opponentValidationError') || 'Podaj z kim gramy'); return; }
             let ourTeamName = '';
             try {
-                const teamDoc = await db.collection('teams').doc(_activeTeamId).get();
-                if (teamDoc.exists) ourTeamName = teamDoc.data().teamName || teamDoc.data().displayName || '';
+                // 2026-11-06: zamiast ponownego odczytu teams/{id} - initSession() juz go ma w _rawTeam
+                const td = getCurrentUserData()?._rawTeam;
+                ourTeamName = (td?.teamName || td?.displayName || '');
             } catch (e) {}
             title = (ourTeamName ? (ourTeamName + ' vs ' + opponent) : opponent).substring(0, 40);
         } else {
