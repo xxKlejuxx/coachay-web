@@ -743,7 +743,7 @@
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20261106b"></script>
+<script src="coachay-core.js?v=20261106c"></script>
 <script>
 /* ===================================================
    DRUŻYNA – logika ekranu
@@ -938,22 +938,21 @@ async function initDruzyna() {
     aktualnyClubId = team.clubId || membership?.clubId || null;
 
     // Pobierz daty sezonu z ustawień drużyny
+    // 2026-11-06: zamiast ponownego odczytu teams/{id} - initSession() juz go ma w team
+    // (patrz decisions.md - N+1/duplikat-fetch fix queue)
     try {
-        const teamDoc = await db.collection('teams').doc(aktualnyTeamId).get();
-        if (teamDoc.exists) {
-            const settings = teamDoc.data().settings || {};
-            const s = settings.season;
-            if (s?.start) sezonStart = s.start;
-            if (s?.end)   sezonEnd   = s.end;
+        const settings = team.settings || {};
+        const s = settings.season;
+        if (s?.start) sezonStart = s.start;
+        if (s?.end)   sezonEnd   = s.end;
 
-            const pos = settings.positions;
-            if (pos) _teamPositionsSettings = pos;
+        const pos = settings.positions;
+        if (pos) _teamPositionsSettings = pos;
 
-            dostepneSezony = [];
-            if (s?.start && s?.end) dostepneSezony.push(s);
-            dostepneSezony = dostepneSezony.concat(settings.seasonHistory || []);
-            dostepneSezony.sort((a, b) => (b.start || '').localeCompare(a.start || ''));
-        }
+        dostepneSezony = [];
+        if (s?.start && s?.end) dostepneSezony.push(s);
+        dostepneSezony = dostepneSezony.concat(settings.seasonHistory || []);
+        dostepneSezony.sort((a, b) => (b.start || '').localeCompare(a.start || ''));
     } catch (e) { }
 
     loadCtxOverlay(user, membership, team);

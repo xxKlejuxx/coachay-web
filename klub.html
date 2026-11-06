@@ -307,7 +307,7 @@ body:has(#app-sidebar) .kb-page-title { display: block; }
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20261106b"></script>
+<script src="coachay-core.js?v=20261106c"></script>
 <script>
 /* ===================================================
    KLUB.HTML – Zarządzanie klubem i drużynami
@@ -498,8 +498,9 @@ async function loadTrainers() {
                 userIds.push(m.userId);
         });
         if (!userIds.length) { allTrainers = []; return; }
-        const userDocs = await Promise.all(userIds.map(uid => db.collection('users').doc(uid).get()));
-        allTrainers = userDocs.filter(d => d.exists).map(d => ({ userId: d.id, ...d.data() }));
+        // 2026-11-06: batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
+        const userMap = await _getDocsByIds('users', userIds);
+        allTrainers = userIds.filter(uid => userMap[uid]).map(uid => ({ userId: uid, ...userMap[uid] }));
     } catch (e) {
         console.error('❌ loadTrainers:', e);
         allTrainers = [];

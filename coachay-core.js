@@ -2908,10 +2908,9 @@ async function loadCtxOverlay(user, membership, team) {
                 .filter(tid => !allTeams.some(t => (t.teamId || t.id) === tid));
             if (extraTeamIds.length > 0 && db) {
                 try {
-                    const extraSnaps = await Promise.all(
-                        extraTeamIds.map(tid => db.collection('teams').doc(tid).get())
-                    );
-                    extraSnaps.forEach(d => { if (d.exists) allTeams.push({ id: d.id, ...d.data() }); });
+                    // 2026-11-06: batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
+                    const extraMap = await _getDocsByIds('teams', extraTeamIds);
+                    extraTeamIds.forEach(tid => { if (extraMap[tid]) allTeams.push({ id: tid, ...extraMap[tid] }); });
                 } catch(e) { /* ignoruj */ }
             }
         }
@@ -2943,10 +2942,9 @@ async function loadCtxOverlay(user, membership, team) {
             const archivedTeamIds = Object.keys(archivedByTeam).filter(tid => !allTeams.some(t => (t.teamId || t.id) === tid));
             if (archivedTeamIds.length > 0) {
                 try {
-                    const archSnaps = await Promise.all(
-                        archivedTeamIds.map(tid => db.collection('teams').doc(tid).get())
-                    );
-                    archSnaps.forEach(d => { if (d.exists) allTeams.push({ id: d.id, ...d.data() }); });
+                    // 2026-11-06: batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
+                    const archMap = await _getDocsByIds('teams', archivedTeamIds);
+                    archivedTeamIds.forEach(tid => { if (archMap[tid]) allTeams.push({ id: tid, ...archMap[tid] }); });
                 } catch(e) { /* ignoruj */ }
             }
         }
