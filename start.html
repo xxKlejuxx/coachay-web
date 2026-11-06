@@ -1130,23 +1130,29 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 
         const nonPlayerIds = new Set();
         visible.forEach(m => {
-            (m.attendance?.invited || []).filter(id => !id.includes('player_')).forEach(id => nonPlayerIds.add(id));
+            // 2026-11-06: '__TEAM__' to sentinel "cała drużyna zaproszona", nie ID usera -
+            // bez tego filtra leciał zbędny odczyt users/__TEAM__ (patrz decisions.md)
+            (m.attendance?.invited || []).filter(id => id !== '__TEAM__' && !id.includes('player_')).forEach(id => nonPlayerIds.add(id));
             if (m.matchData?.liveAssistant?.userId) nonPlayerIds.add(m.matchData.liveAssistant.userId);
         });
         const userCache = {};
-        for (const uid of nonPlayerIds) {
-            try {
-                const uDoc = await db.collection('users').doc(uid).get();
-                userCache[uid] = uDoc.exists ? { name: uDoc.data().displayName || uid, role: uDoc.data().role || '' } : { name: uid, role: '' };
-            } catch (e) { userCache[uid] = { name: uid, role: '' }; }
+        try {
+            // Batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
+            const userMap = await _getDocsByIds('users', [...nonPlayerIds]);
+            nonPlayerIds.forEach(uid => {
+                userCache[uid] = userMap[uid] ? { name: userMap[uid].displayName || uid, role: userMap[uid].role || '' } : { name: uid, role: '' };
+            });
+        } catch (e) {
+            nonPlayerIds.forEach(uid => { userCache[uid] = { name: uid, role: '' }; });
         }
 
+        // 2026-11-06: jeszcze jeden duplikat teams/{id} w tej samej funkcji - zamiast ponownego
+        // odczytu, dane sa juz w getCurrentUserData()._rawTeam z initSession() (patrz decisions.md)
         _parentsCanAssist = true;
         let _teamName = '';
         try {
-            const teamDoc = await db.collection('teams').doc(teamId).get();
-            if (teamDoc.exists) {
-                const td = teamDoc.data();
+            const td = getCurrentUserData()?._rawTeam;
+            if (td) {
                 const ml = td.settings?.matchLive;
                 if (ml && ml.parentsCanAssist === false) _parentsCanAssist = false;
                 _teamName = td.teamName || td.displayName || '';
