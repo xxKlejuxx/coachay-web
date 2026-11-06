@@ -445,6 +445,15 @@ function showSeriesScopeSheet(message) {
 
 // Wyloguj (wyczyść tryb demo i wróć do index.html)
 async function logout() {
+    // Wyczyść fcmToken konta, z którego się wylogowujemy — inaczej to urządzenie
+    // zostaje "przypisane" do starego konta i push może polecieć na niewłaściwy ekran.
+    try {
+        const uid = getCurrentUserId();
+        if (uid && db) {
+            await db.collection('users').doc(uid).update({ fcmToken: firebase.firestore.FieldValue.delete() });
+            localStorage.removeItem('fcmSynced_' + uid); // inaczej ponowne logowanie na to samo konto pominie zapis
+        }
+    } catch(e) { console.warn('⚠️ Czyszczenie fcmToken przy wylogowaniu:', e); }
     localStorage.removeItem('demoMode');
     localStorage.removeItem('demoRole');
     localStorage.removeItem('currentUserId');
@@ -1219,13 +1228,13 @@ async function initSession() {
 }
 
 // Rejestracja push notifications (FCM) — tylko w appce natywnej (Capacitor), web push w WebView jest niepewny
-let _pushRegistered = false;
+// UWAGA: appka to wiele osobnych stron (pełny reload przy nawigacji), więc zmienne modułowe
+// NIE przetrwają między stronami — do pilnowania "czy już zapisałem ten token" używamy localStorage,
+// żeby nie robić zbędnego zapisu do Firestore przy każdym przejściu między ekranami.
 async function setupPushNotifications(userId) {
-    if (_pushRegistered) return;
     if (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) return;
     const PushNotifications = window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
     if (!PushNotifications) return;
-    _pushRegistered = true;
 
     try {
         const perm = await PushNotifications.requestPermissions();
@@ -1233,7 +1242,12 @@ async function setupPushNotifications(userId) {
 
         PushNotifications.addListener('registration', async (token) => {
             try {
-                await db.collection('users').doc(userId).update({ fcmToken: token.value });
+                const uid = getCurrentUserId(); // zawsze aktualnie zalogowane konto, nie to z momentu setupu
+                if (!uid) return;
+                const cacheKey = 'fcmSynced_' + uid;
+                if (localStorage.getItem(cacheKey) === token.value) return; // nic się nie zmieniło — pomiń zapis
+                await db.collection('users').doc(uid).update({ fcmToken: token.value });
+                localStorage.setItem(cacheKey, token.value);
                 console.log('✅ FCM token zarejestrowany');
             } catch (e) { console.warn('⚠️ Zapis fcmToken:', e); }
         });
