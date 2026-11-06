@@ -3830,8 +3830,14 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
         // ── Pobierz klub raz ──────────────────────────────────────
         // 2026-11-06: zapamiętaj na 5s (_rememberDoc) - ekrany typu klub.html od razu
         // potem odpytują ten sam clubs/{id} ponownie (patrz decisions.md - N+1/duplikat fix queue)
-        const clubDoc = await db.collection('clubs').doc(clubId).get();
-        _rememberDoc('clubs/' + clubId, clubDoc);
+        // 2026-11-06 (cz.2): getAccessStatus() samo bywa wołane 2x na jednym ładowaniu
+        // strony (np. checkPaymentAccess() na starcie + renderSubscription() w profil.html,
+        // każde z innym claimSlot) - sprawdzamy najpierw _recentDoc zamiast zawsze odpytywać.
+        let clubDoc = _recentDoc('clubs/' + clubId);
+        if (!clubDoc) {
+            clubDoc = await db.collection('clubs').doc(clubId).get();
+            _rememberDoc('clubs/' + clubId, clubDoc);
+        }
         if (!clubDoc.exists) return _r('EXPIRED', 'no_club', null);
         const cd  = clubDoc.data();
         const lic = cd.license || null;
