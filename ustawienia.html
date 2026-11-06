@@ -355,7 +355,7 @@
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20261106f"></script>
+<script src="coachay-core.js?v=20261106g"></script>
 <script>
 /* ===================================================
    USTAWIENIA.HTML v2.1 | 2026-08-19 — i18n
@@ -552,7 +552,13 @@ async function loadReminder() {
         return `<option value="${h}">${h}h</option>`;
     }).join('');
     try {
-        const clubDoc = await db.collection('clubs').doc(_clubId).get();
+        // 2026-11-06: reuse clubs/{id} jesli juz pobrany chwile wczesniej (checkPaymentAccess
+        // albo loadLicencja) - _recentDoc/_rememberDoc, 5s pamiec (patrz decisions.md - N+1 fix queue)
+        let clubDoc = typeof _recentDoc === 'function' ? _recentDoc('clubs/' + _clubId) : null;
+        if (!clubDoc) {
+            clubDoc = await db.collection('clubs').doc(_clubId).get();
+            if (typeof _rememberDoc === 'function') _rememberDoc('clubs/' + _clubId, clubDoc);
+        }
         const rh = clubDoc.exists ? (clubDoc.data().reminderHoursBefore ?? 0) : 0;
         sel.value = String(rh);
         _updateReminderDesc(rh);
@@ -727,7 +733,13 @@ async function _licLoadPage(pageIdx) {
 async function loadLicencja() {
     if (!_clubId) return;
     try {
-        const clubDoc = await db.collection('clubs').doc(_clubId).get();
+        // 2026-11-06: reuse clubs/{id} jesli juz pobrany chwile wczesniej (checkPaymentAccess
+        // albo loadReminder) - _recentDoc/_rememberDoc, 5s pamiec (patrz decisions.md - N+1 fix queue)
+        let clubDoc = typeof _recentDoc === 'function' ? _recentDoc('clubs/' + _clubId) : null;
+        if (!clubDoc) {
+            clubDoc = await db.collection('clubs').doc(_clubId).get();
+            if (typeof _rememberDoc === 'function') _rememberDoc('clubs/' + _clubId, clubDoc);
+        }
         const lic = clubDoc.exists ? clubDoc.data().license : null;
         _licenseDoc = lic;
 

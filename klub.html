@@ -307,7 +307,7 @@ body:has(#app-sidebar) .kb-page-title { display: block; }
 
 </div><!-- /phone -->
 
-<script src="coachay-core.js?v=20261106f"></script>
+<script src="coachay-core.js?v=20261106g"></script>
 <script>
 /* ===================================================
    KLUB.HTML – Zarządzanie klubem i drużynami
@@ -418,8 +418,12 @@ async function loadAll() {
     }
     try {
         // Równolegle: dane klubu + drużyny
+        // 2026-11-06: checkPaymentAccess()/getAccessStatus() już pobrało clubs/{id} chwilę wcześniej
+        // na tym samym załadowaniu strony - reużywamy z _recentDoc (5s pamięć) zamiast odpytywać
+        // ponownie (patrz decisions.md - N+1/duplikat-fetch fix queue)
+        const _cachedClubDoc = typeof _recentDoc === 'function' ? _recentDoc('clubs/' + currentClubId) : null;
         const [clubSnap, teamsSnap] = await Promise.all([
-            db.collection('clubs').doc(currentClubId).get(),
+            _cachedClubDoc ? Promise.resolve(_cachedClubDoc) : db.collection('clubs').doc(currentClubId).get(),
             db.collection('teams').where('clubId', '==', currentClubId).get()
         ]);
 

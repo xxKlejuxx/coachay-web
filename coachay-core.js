@@ -3828,7 +3828,10 @@ async function getAccessStatus(uid, clubId, { claimSlot = false } = {}) {
 
     try {
         // ── Pobierz klub raz ──────────────────────────────────────
+        // 2026-11-06: zapamiętaj na 5s (_rememberDoc) - ekrany typu klub.html od razu
+        // potem odpytują ten sam clubs/{id} ponownie (patrz decisions.md - N+1/duplikat fix queue)
         const clubDoc = await db.collection('clubs').doc(clubId).get();
+        _rememberDoc('clubs/' + clubId, clubDoc);
         if (!clubDoc.exists) return _r('EXPIRED', 'no_club', null);
         const cd  = clubDoc.data();
         const lic = cd.license || null;
