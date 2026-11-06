@@ -84,18 +84,24 @@ function initFirebase() {
                     try { return ref._query ? ref._query.path.canonicalString() : ref.path; }
                     catch (e) { return '(?)'; }
                 };
+                const callSite = () => {
+                    const lines = (new Error().stack || '').split('\n');
+                    // [0]=Error, [1]=ta funkcja, [2]=wrapper get/onSnapshot, [3]=prawdziwy wołający
+                    return (lines[3] || lines[2] || '(?)').trim();
+                };
                 const origQueryGet = firebase.firestore.Query.prototype.get;
                 firebase.firestore.Query.prototype.get = function (...args) {
                     const p = pathOf(this);
-                    console.log('🔍 QUERY GET:', p);
+                    const cs = callSite();
+                    console.log('🔍 QUERY GET:', p, '|', cs);
                     return origQueryGet.apply(this, args).then(snap => {
-                        console.log('   → wynik:', snap.size, 'dok. |', p);
+                        console.log('   → wynik:', snap.size, 'dok. |', p, '|', cs);
                         return snap;
                     });
                 };
                 const origQuerySnap = firebase.firestore.Query.prototype.onSnapshot;
                 firebase.firestore.Query.prototype.onSnapshot = function (...args) {
-                    console.log('👂 QUERY ONSNAPSHOT (nasłuch otwarty):', pathOf(this));
+                    console.log('👂 QUERY ONSNAPSHOT (nasłuch otwarty):', pathOf(this), '|', callSite());
                     return origQuerySnap.apply(this, args);
                 };
                 const origDocGet = firebase.firestore.DocumentReference.prototype.get;
@@ -3259,6 +3265,23 @@ async function getUserName(userId) {
 }
 
 // Pobierz członków zespołu (użytkownicy + ich dane)
+// Pobiera wiele dokumentów po ID jednym/kilkoma zapytaniami zamiast N osobnych .get()
+// (limit Firestore 'in' to maks. 10 wartości na zapytanie — dzielimy na paczki po 10)
+async function _getDocsByIds(collectionName, ids) {
+    const uniqueIds = [...new Set(ids)].filter(Boolean);
+    if (uniqueIds.length === 0) return {};
+    const chunks = [];
+    for (let i = 0; i < uniqueIds.length; i += 10) chunks.push(uniqueIds.slice(i, i + 10));
+    const snaps = await Promise.all(chunks.map(chunk =>
+        db.collection(collectionName)
+          .where(firebase.firestore.FieldPath.documentId(), 'in', chunk)
+          .get()
+    ));
+    const map = {};
+    snaps.forEach(snap => snap.docs.forEach(doc => { map[doc.id] = doc.data(); }));
+    return map;
+}
+
 async function getTeamMembers(teamId) {
     if (!db) return [];
     try {
@@ -3272,14 +3295,10 @@ async function getTeamMembers(teamId) {
         const userIds = [...new Set(memberships.map(m => m.userId).filter(Boolean))];
         const playerIds = [...new Set(memberships.filter(m => m.playerId).map(m => m.playerId))];
 
-        const [userDocs, playerDocs] = await Promise.all([
-            Promise.all(userIds.map(uid => db.collection('users').doc(uid).get())),
-            Promise.all(playerIds.map(pid => db.collection('players').doc(pid).get()))
+        const [userMap, playerMap] = await Promise.all([
+            _getDocsByIds('users', userIds),
+            _getDocsByIds('players', playerIds)
         ]);
-        const userMap = {};
-        userDocs.forEach(doc => { if (doc.exists) userMap[doc.id] = doc.data(); });
-        const playerMap = {};
-        playerDocs.forEach(doc => { if (doc.exists) playerMap[doc.id] = doc.data(); });
 
         const members = memberships.filter(m => m.userId).map(m => {
             const u = userMap[m.userId] || {};
@@ -3318,9 +3337,7 @@ async function getClubMembers(clubId, teamId) {
 
         const memberships = mbrSnap.docs.map(d => ({ membershipId: d.id, ...d.data() }));
         const userIds = [...new Set(memberships.map(m => m.userId).filter(Boolean))];
-        const userDocs = await Promise.all(userIds.map(uid => db.collection('users').doc(uid).get()));
-        const userMap = {};
-        userDocs.forEach(doc => { if (doc.exists) userMap[doc.id] = doc.data(); });
+        const userMap = await _getDocsByIds('users', userIds);
 
         const members = memberships.filter(m => m.userId).map(m => {
             const u = userMap[m.userId] || {};
