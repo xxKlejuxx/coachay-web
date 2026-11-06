@@ -1780,8 +1780,18 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         // nieobecności ze wszystkich klubów/drużyn), niepotrzebnie drogie.
         const activeAbsences = await getTeamAbsences(teamId);
 
-        const oids = [...new Set(upEv.map(e => e.createdBy).filter(Boolean))];
-        for (const o of oids) { if (!orgNames[o]) orgNames[o] = await getUserName(o); }
+        // 2026-11-06: wstepnie wypelniony wlasnymi danymi - gdy to Ty jestes tworca eventu/ogloszenia,
+        // unika zbednego refetchu users/{wlasny id} (potwierdzone na produkcji w fsDebugLog).
+        // Batching reszty przez _getDocsByIds zamiast sekwencyjnych await getUserName() w petli.
+        // (patrz decisions.md - N+1/duplikat fix queue)
+        if (currentUserData?.userId && !orgNames[currentUserData.userId]) {
+            orgNames[currentUserData.userId] = currentUserData.displayName || currentUserData.userId;
+        }
+        const oids = [...new Set(upEv.map(e => e.createdBy).filter(Boolean))].filter(o => !orgNames[o]);
+        if (oids.length) {
+            const oidMap = await _getDocsByIds('users', oids);
+            oids.forEach(o => { orgNames[o] = oidMap[o]?.displayName || o; });
+        }
 
         const anns = await getTeamAnnouncements(teamId);
         const validAnns = anns.filter(a => {
@@ -1792,8 +1802,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             const exp = a.expiresAt.toDate ? a.expiresAt.toDate() : new Date(a.expiresAt);
             return exp >= today;
         });
-        const annOids = [...new Set(validAnns.map(a => a.createdBy).filter(Boolean))];
-        for (const o of annOids) { if (!orgNames[o]) orgNames[o] = await getUserName(o); }
+        const annOids = [...new Set(validAnns.map(a => a.createdBy).filter(Boolean))].filter(o => !orgNames[o]);
+        if (annOids.length) {
+            const annMap = await _getDocsByIds('users', annOids);
+            annOids.forEach(o => { orgNames[o] = annMap[o]?.displayName || o; });
+        }
 
         const items = [];
         const isParentRole = currentUserData.role === 'RODZIC';
