@@ -833,7 +833,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     <div class="mp-body" id="mp-body"></div>
 </div>
 
-<script src="coachay-core.js?v=20261106c"></script>
+<script src="coachay-core.js?v=20261106d"></script>
 <script>
     /* ─────────────────────────────────────────────────────
        i18n helpers
@@ -2222,12 +2222,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const creatorIds = [...new Set(my.map(t => t.createdBy).filter(Boolean).filter(id => id !== userId))];
         const mm = {};
         if (creatorIds.length) {
-            await Promise.all(creatorIds.map(async id => {
-                try {
-                    const doc = await db.collection('users').doc(id).get();
-                    if (doc.exists) mm[id] = doc.data().displayName || id;
-                } catch (e) {}
-            }));
+            try {
+                // Batching zamiast N osobnych .doc().get() (patrz decisions.md - N+1 fix queue)
+                const creatorMap = await _getDocsByIds('users', creatorIds);
+                creatorIds.forEach(id => { if (creatorMap[id]) mm[id] = creatorMap[id].displayName || id; });
+            } catch (e) {}
         }
 
         const allLabel = _tP('start.seeAll', 'Wszystkie');

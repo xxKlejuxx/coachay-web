@@ -106,7 +106,7 @@ function initFirebase() {
                 };
                 const origDocGet = firebase.firestore.DocumentReference.prototype.get;
                 firebase.firestore.DocumentReference.prototype.get = function (...args) {
-                    console.log('🔍 DOC GET:', this.path);
+                    console.log('🔍 DOC GET:', this.path, '|', callSite());
                     return origDocGet.apply(this, args);
                 };
                 const origDocSnap = firebase.firestore.DocumentReference.prototype.onSnapshot;
