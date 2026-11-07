@@ -232,12 +232,18 @@ Może dalej korzystać z apki.
 
 | ID produktu | Nazwa | Przelewy24 / Google | Apple IAP | Czas | Sloty |
 |---|---|---|---|---|---|
-| `sub_individual_monthly` | Indywidualny | 2 zł/mies | 4 zł/mies | 30 dni | 1 |
-| `sub_individual_yearly` | Indywidualny | 20 zł/rok | 40 zł/rok | 365 dni | 1 |
-| `sub_family_monthly` | Rodzinny | 5 zł/mies | 10 zł/mies | 30 dni | 6 |
-| `sub_family_yearly` | Rodzinny | 50 zł/rok | 100 zł/rok | 365 dni | 6 |
+| `sub_individual_monthly` | Indywidualny | 2,99 zł/mies | 5,99 zł/mies | 30 dni | 1 |
+| `sub_individual_yearly` | Indywidualny | 29,99 zł/rok | 59,99 zł/rok | 365 dni | 1 |
+| `sub_family_monthly` | Rodzinny (6) | 14,99 zł/mies | 29,99 zł/mies | 30 dni | 6 |
+| `sub_family_yearly` | Rodzinny (6) | 149,99 zł/rok | 299,99 zł/rok | 365 dni | 6 |
 
-Apple x2 — powód: 30% prowizja Apple + minimalna cena ~3,99 zł.
+Apple x2 — powód: 30% prowizja Apple. Ceny roczne = mies. × 10 (2 miesiące gratis).
+**Decyzja (2026-11-07): ceny indywidualne/rodzinne muszą zawsze wychodzić drożej per-slot
+niż pakiety klubowe B2B (sekcja 7)** — żeby klub miał sens kupić licencję zbiorową zamiast
+liczyć na to, że każdy user zapłaci sam. Sprawdzenie: 2,99 zł (ind.) > 2,00 zł/slot (najniższy
+próg klubowy); 14,99 zł / 6 = 2,50 zł/slot (rodzinny) > 2,00 zł/slot również. ✅
+**WDROŻONE w `platnosci.html` (2026-11-07)** — ceny B2C już są w kodzie (`getPLANS()`), nie tylko
+w tym dokumencie. Klubowe (sekcja 7) wciąż TYLKO projekt — kod nie istnieje.
 
 ### Pula rodzinna (FAMILY)
 - `slots_total: 6` — właściciel (RODZIC który kupił licencję) zajmuje **1 slot przy zakupie**
@@ -273,15 +279,33 @@ Odnowienie liczy się od `valid_until` (data wygaśnięcia), **nie od daty płat
 
 ### Pakiety i ceny
 
-| Pakiet | Miesięczny | Roczny |
+**PRZEPROJEKTOWANE 2026-11-07** (konkurencja: ProTrainUp — Club Pro 125 zł/105 miejsc,
+Silver/Gold/Platinum 245/495/899 zł bez limitu). Stary model (płaskie 2 zł/slot bez sufitu)
+odrzucony — przy dużych klubach wypadał kilka razy drożej niż konkurencyjne pakiety "bez
+limitu". Nowy model: tylko 2 realne progi (3 niższe to tylko punkty wejścia dla małych
+klubów) — każdy klub >~50 osób i tak racjonalnie wybierze "bez limitu", więc pośrednie
+progi (100/150/200 licencji) zostały świadomie usunięte — nikt by ich nie kupił.
+
+| Pakiet | Miesięczny | Roczny (×10, 2 mies. gratis) |
 |---|---|---|
 | 10 licencji | 20 zł/mies | 200 zł/rok |
+| 30 licencji | 60 zł/mies | 600 zł/rok |
 | 50 licencji | 100 zł/mies | 1 000 zł/rok |
-| 100 licencji | 200 zł/mies | 2 000 zł/rok |
-| 500 licencji | 1 000 zł/mies | 10 000 zł/rok |
+| **Bez limitu (50+)** | **119 zł/mies** | **1 190 zł/rok** |
 
-Przelicznik: 2 zł/user/mies. Płatność: Stripe lub Przelewy24 (nie przez sklepy).
-Klub płaci poza apką — admin platformy aktywuje przez `support.html`.
+Przelicznik niskich progów: 2 zł/user/mies (niezmieniony, nadal tańszy niż ProTrainUp dla
+bardzo małych klubów — oni nie mają niczego poniżej 125 zł). "Bez limitu" 119 zł to -51%
+vs ich Silver (245 zł) — cel -50% osiągnięty. Przy 50 licencjach (100 zł) próg "bez limitu"
+(119 zł) jest już na tyle blisko, że to naturalny, oczywisty upsell — nie trzeba liczyć
+slotów żeby zobaczyć że się opłaca.
+
+Płatność: Stripe lub Przelewy24 (nie przez sklepy — wykorzystuje wyjątek Apple/Google dla
+sprzedaży B2B/enterprise organizacjom, bez prowizji sklepu). Klub płaci poza apką — admin
+platformy aktywuje przez `support.html`.
+
+**STATUS: tylko projekt, kod nie istnieje jeszcze** — `product_id` `club_license_*` nie
+występuje nigdzie w repo (sprawdzone 2026-11-07). Do zrobienia przed uruchomieniem: UI
+wyboru pakietu + aktywacji w `support.html`, zapis do `clubs.license` (patrz sekcja 1).
 
 ### Floating License — mechanizm przypisywania slotów
 Licencje są **pływające** — slot przypisywany automatycznie przy pierwszym logowaniu
