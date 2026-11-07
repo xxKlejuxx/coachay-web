@@ -3758,6 +3758,10 @@ async function claimClubLicenseSlot(uid, clubId, membershipDoc) {
         }
 
         // Transakcja: przydziel slot
+        // 2026-11-07 (pakiet "Bez limitu", sync pricing-redesign): license.unlimited===true
+        // pomija sprawdzanie pojemności całkowicie — total/used nadal liczone (do statystyk
+        // w support.html), ale nigdy nie blokują. BEZ tej flagi total:null dawałoby total=0
+        // (przez `|| 0`) i 0>=0 blokowałoby KAŻDEGO — stąd jawna flaga zamiast sentinela.
         let claimedExpiry = null;
         await db.runTransaction(async t => {
             const freshClub = await t.get(clubRef);
@@ -3765,7 +3769,7 @@ async function claimClubLicenseSlot(uid, clubId, membershipDoc) {
             const freshLic = freshClub.data().license;
             const used  = freshLic.used  || 0;
             const total = freshLic.total || 0;
-            if (used >= total) throw new Error('POOL_FULL');
+            if (!freshLic.unlimited && used >= total) throw new Error('POOL_FULL');
             claimedExpiry = expiry;
             t.update(clubRef, { 'license.used': used + 1 });
             t.update(membershipDoc.ref, { usedSlot: 1, usedSlotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });

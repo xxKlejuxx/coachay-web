@@ -32,11 +32,14 @@ enkapsuluje nazwy — ekrany nie odpytują `access_rights` bezpośrednio.
 ### Kolekcja `clubs/{clubId}` — pole licencji klubowej B2B
 ```
 license: {
-  total:          number,     // liczba zakupionych licencji (10 / 50 / 100 / 500)
-  used:           number,     // aktualnie przypisanych slotów
+  total:          number,     // liczba zakupionych licencji (10 / 30 / 50); IGNOROWANE gdy unlimited===true
+  used:           number,     // aktualnie przypisanych slotów (liczone zawsze, też przy unlimited — do statystyk)
+  unlimited:      boolean,    // 2026-11-07: true dla pakietu "Bez limitu" (50+) — pomija total/used w bramce
+                               // claimClubLicenseSlot. NIE używać total:null jako sentinela "bez limitu" —
+                               // `total || 0` dałoby 0, a 0>=0 zablokowałoby każdego usera.
   valid_until:    Timestamp,  // koniec opłaconego okresu klubowego
   renewed_at:     Timestamp,  // kiedy admin kupił/odnowił licencję (używane do reset slotów)
-  product_id:     string,     // "club_license_10" | ... | "club_license_500"
+  product_id:     string,     // "club_license_10" | "club_license_30" | "club_license_50" | "club_license_unlimited"
   provider:       string,     // "stripe" | "przelewy24" | "manual_support"
   auto_renew:     boolean,
   card_token:     string|null,
