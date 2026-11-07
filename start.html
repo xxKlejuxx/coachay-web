@@ -1226,12 +1226,13 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             });
         }
 
-        // 2026-11-07 (sync #0172): panel licznika — śledzi dzisiejszy mecz (UPCOMING albo LIVE),
-        // tylko dla trenera/asystenta live, tylko w dniu meczu. Ten sam listener co karta powyżej
-        // (gdy to ten sam mecz) nie dubluje odczytu — oba po prostu czytają jeden dokument.
+        // 2026-11-07 (sync #0172, poprawione po feedbacku Rafała): panel licznika — śledzi
+        // NAJBLIŻSZY niezakończony mecz z karuzeli (tak jak karta meczu), nie tylko ten z
+        // dzisiejszą datą — bo najbliższy mecz drużyny często wypada innego dnia niż "dziś".
+        // Tylko dla trenera/asystenta live. Ten sam listener co karta powyżej (gdy to ten sam
+        // mecz) nie dubluje odczytu — oba po prostu czytają jeden dokument.
         const isCoachForClock = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
         const clockCandidate = visible.find(m => {
-            if (m.date !== todayStr) return false;
             const st = m.matchData?.matchStatus;
             if (st === 'FINISHED') return false;
             const laId = m.matchData?.liveAssistant?.userId;
