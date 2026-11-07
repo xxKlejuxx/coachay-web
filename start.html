@@ -131,6 +131,25 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
 .mecz-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: all 0.2s; cursor: pointer; }
 .mecz-dot.active { background: var(--akcent); width: 20px; border-radius: 4px; }
 
+/* ── Live Clock Panel (sync #0172/#0165) — osobny panel Start/Pauza/Koniec ── */
+.lcp-panel {
+    background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%); border-radius: 16px;
+    padding: 14px 16px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;
+}
+.lcp-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lcp-title { font-size: 15px; font-weight: 800; color: #E2E8F0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+.lcp-time { font-family: var(--font-d); font-size: 28px; font-weight: 900; color: #fff; letter-spacing: .02em; flex-shrink: 0; }
+.lcp-time.lcp-paused { color: #FBBF24; }
+.lcp-actions { display: flex; gap: 8px; }
+.lcp-btn {
+    flex: 1; border: none; border-radius: 10px; padding: 11px 8px; font-size: 15px; font-weight: 800;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.lcp-btn-start  { background: #22C55E; color: #052E16; }
+.lcp-btn-pause  { background: #FBBF24; color: #451A03; }
+.lcp-btn-resume { background: #22C55E; color: #052E16; }
+.lcp-btn-end    { background: #EF4444; color: #450A0A; }
+
 /* ── Section header ── */
 /* 2026-10-31: flex-wrap + min-width:0 – na wąskich telefonach tytuł + "+ Dodaj" + "Wszystkie ›"
    nie zawsze mieszczą się w jednym wierszu; zamiast rozpychać całą stronę (patrz sync), teraz
@@ -478,6 +497,16 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             <div class="mecz-carousel-wrap" id="mecz-carousel-wrap" style="display:none">
                 <div class="mecz-carousel" id="mecz-carousel"></div>
                 <div class="mecz-dots" id="mecz-dots"></div>
+            </div>
+
+            <!-- 2026-11-07 (sync #0172/#0165): osobny panel licznika meczu — Start/Pauza/Koniec,
+                 zegar w 100% lokalny (matchData.clockSegments), zero odczytów Firestore podczas tykania. -->
+            <div class="lcp-panel" id="lcp-panel" style="display:none">
+                <div class="lcp-top">
+                    <div class="lcp-title" id="lcp-title"></div>
+                    <div class="lcp-time" id="lcp-time">00:00</div>
+                </div>
+                <div class="lcp-actions" id="lcp-actions"></div>
             </div>
 
             <!-- Hub 2-col grid -->
@@ -1196,6 +1225,38 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                 dotsEl.querySelectorAll('.mecz-dot').forEach((d, i) => d.classList.toggle('active', i === activeIdx));
             });
         }
+
+        // 2026-11-07 (sync #0172): panel licznika — śledzi dzisiejszy mecz (UPCOMING albo LIVE),
+        // tylko dla trenera/asystenta live, tylko w dniu meczu. Ten sam listener co karta powyżej
+        // (gdy to ten sam mecz) nie dubluje odczytu — oba po prostu czytają jeden dokument.
+        const isCoachForClock = currentUserData.role === 'TRENER_GLOWNY' || currentUserData.role === 'TRENER_POMOCNICZY';
+        const clockCandidate = visible.find(m => {
+            if (m.date !== todayStr) return false;
+            const st = m.matchData?.matchStatus;
+            if (st === 'FINISHED') return false;
+            const laId = m.matchData?.liveAssistant?.userId;
+            return isCoachForClock || laId === currentUserData.userId;
+        });
+        if (!clockCandidate) {
+            _lcpMatch = null;
+            _renderLcpPanel();
+        } else {
+            const cid = clockCandidate.eventId || clockCandidate.id;
+            if (!_lcpMatch || _lcpMatch.eventId !== cid) {
+                _lcpMatch = { eventId: cid, title: clockCandidate.title, matchData: clockCandidate.matchData || {} };
+                _renderLcpPanel();
+            }
+            // Dopina się do TEGO SAMEGO dokumentu co listener karty powyżej (gdy liveMatch === clockCandidate) —
+            // jeśli clockCandidate jest dopiero UPCOMING (jeszcze bez LIVE listenera karty), doczepiamy własny.
+            if (!liveMatch || (liveMatch.eventId || liveMatch.id) !== cid) {
+                db.collection('events').doc(cid).onSnapshot(doc => {
+                    if (!doc.exists || !_lcpMatch || _lcpMatch.eventId !== cid) return;
+                    _lcpMatch.matchData = doc.data().matchData || {};
+                    if (_lcpMatch.matchData.matchStatus === 'FINISHED') { _lcpMatch = null; }
+                    _renderLcpPanel();
+                });
+            }
+        }
     }
 
     function renderMatchCard(match, todayStr, userCache, parentsCanAssist, teamName, teamPlayers, teamAbsences) {
@@ -1417,6 +1478,148 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     let _meczPanelPlayers = [];
     let _liveMatchUnsub = null;
     let _meczTeamName = '';
+
+    /* ── Live Clock Panel (sync #0172, kod 1:1 z #0165 — MOBILE) ──────────
+       Zegar w 100% lokalny: setInterval co 1s tylko podmienia tekst w DOM,
+       licząc z matchData.clockSegments (lista odcinków gry) trzymanego w
+       pamięci z ostatniego snapshotu listenera — ZERO odczytów Firestore
+       podczas tykania. Firestore dotykamy wyłącznie przy Start/Pauza/
+       Wznów/Koniec (po 1 zapisie na akcję). */
+    let _lcpMatch = null;     // { eventId, matchData } — ostatni znany stan śledzonego meczu
+    let _lcpTicker = null;
+    const LCP_MAX_MIN = 240;  // limit 4h łącznego czasu gry -> "240:00+"
+
+    function _lcpFmt(ms) {
+        const capped = ms >= LCP_MAX_MIN * 60000;
+        const total = Math.floor(Math.min(Math.max(0, ms), LCP_MAX_MIN * 60000) / 1000);
+        const mm = Math.floor(total / 60), ss = total % 60;
+        return String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0') + (capped ? '+' : '');
+    }
+    function _lcpSegMs(sg, now) {
+        const a = new Date(sg.start).getTime();
+        const b = sg.end ? new Date(sg.end).getTime() : now;
+        return (isNaN(a) || isNaN(b)) ? 0 : Math.max(0, b - a);
+    }
+    function _lcpComputeClock(segs, live, now) {
+        segs = segs || [];
+        const running = live && segs.length > 0 && !segs[segs.length - 1].end;
+        const paused  = live && !running;
+        const cycle   = segs.length ? _lcpSegMs(segs[segs.length - 1], now) : 0; // bieżący/ostatni cykl
+        return { running, paused, cycle };
+    }
+    function _lcpStopTicker() { if (_lcpTicker) { clearInterval(_lcpTicker); _lcpTicker = null; } }
+    function _lcpStartTicker() {
+        _lcpStopTicker();
+        const tick = () => {
+            if (!_lcpMatch) return;
+            const md = _lcpMatch.matchData || {};
+            const segs = md.clockSegments || [];
+            const live = md.matchStatus === 'LIVE';
+            const timeEl = document.getElementById('lcp-time');
+            if (!timeEl) return;
+            if (!segs.length) { timeEl.textContent = '00:00'; timeEl.classList.remove('lcp-paused'); return; }
+            const c = _lcpComputeClock(segs, live, Date.now());
+            timeEl.textContent = _lcpFmt(c.cycle);
+            timeEl.classList.toggle('lcp-paused', c.paused);
+        };
+        tick();
+        if (_lcpMatch && _lcpMatch.matchData?.matchStatus === 'LIVE') _lcpTicker = setInterval(tick, 1000);
+    }
+
+    function _renderLcpPanel() {
+        const panel = document.getElementById('lcp-panel');
+        if (!panel) return;
+        if (!_lcpMatch) { panel.style.display = 'none'; _lcpStopTicker(); return; }
+        panel.style.display = '';
+        const md = _lcpMatch.matchData || {};
+        const eid = _lcpMatch.eventId;
+        document.getElementById('lcp-title').textContent = _lcpMatch.title || (md.opponent ? ('vs ' + md.opponent) : 'Mecz');
+
+        const isLive = md.matchStatus === 'LIVE';
+        const isFinished = md.matchStatus === 'FINISHED';
+        const running = isLive && (md.clockSegments || []).length > 0 && !(md.clockSegments || []).slice(-1)[0].end;
+
+        let actionsHtml = '';
+        if (isFinished) {
+            // Panel znika po Koniec (patrz _lcpMatch = null w lcpEnd) — tu tylko defensywnie.
+            actionsHtml = '';
+        } else if (!isLive) {
+            actionsHtml = `<button class="lcp-btn lcp-btn-start" onclick="lcpStart('${eid}')">▶ Start</button>`;
+        } else if (running) {
+            actionsHtml = `<button class="lcp-btn lcp-btn-pause" onclick="lcpPause('${eid}')">⏸ Pauza</button>
+                           <button class="lcp-btn lcp-btn-end" onclick="lcpEnd('${eid}')">⏹ Koniec</button>`;
+        } else {
+            actionsHtml = `<button class="lcp-btn lcp-btn-resume" onclick="lcpResume('${eid}')">▶ Wznów</button>
+                           <button class="lcp-btn lcp-btn-end" onclick="lcpEnd('${eid}')">⏹ Koniec</button>`;
+        }
+        document.getElementById('lcp-actions').innerHTML = actionsHtml;
+        _lcpStartTicker();
+    }
+
+    // START — tworzy pierwszy otwarty odcinek
+    async function lcpStart(eventId) {
+        if (!db) return;
+        try {
+            await db.collection('events').doc(eventId).update({
+                'matchData.matchStatus': 'LIVE',
+                'matchData.clockSegments': [{ start: new Date().toISOString(), end: null }]
+            });
+            if (_lcpMatch && _lcpMatch.eventId === eventId) {
+                _lcpMatch.matchData = { ...(_lcpMatch.matchData || {}), matchStatus: 'LIVE', clockSegments: [{ start: new Date().toISOString(), end: null }] };
+                _renderLcpPanel();
+            }
+            await refreshDashboard();
+        } catch (e) { alert('Błąd: ' + e.message); }
+    }
+    // PAUZA — zamyka bieżący odcinek (segs z pamięci _lcpMatch — zero dodatkowego odczytu)
+    async function lcpPause(eventId) {
+        if (!db || !_lcpMatch) return;
+        const segs = (_lcpMatch.matchData?.clockSegments || []).map(x => ({ ...x }));
+        if (!segs.length || segs[segs.length - 1].end) return;
+        segs[segs.length - 1].end = new Date().toISOString();
+        try {
+            await db.collection('events').doc(eventId).update({ 'matchData.clockSegments': segs });
+            _lcpMatch.matchData = { ..._lcpMatch.matchData, clockSegments: segs };
+            _renderLcpPanel();
+        } catch (e) { alert('Błąd: ' + e.message); }
+    }
+    // WZNÓW — dopisuje nowy otwarty odcinek
+    async function lcpResume(eventId) {
+        if (!db || !_lcpMatch) return;
+        const segs = (_lcpMatch.matchData?.clockSegments || []).map(x => ({ ...x }));
+        if (segs.length && !segs[segs.length - 1].end) return;
+        segs.push({ start: new Date().toISOString(), end: null });
+        try {
+            await db.collection('events').doc(eventId).update({ 'matchData.clockSegments': segs });
+            _lcpMatch.matchData = { ..._lcpMatch.matchData, clockSegments: segs };
+            _renderLcpPanel();
+        } catch (e) { alert('Błąd: ' + e.message); }
+    }
+    // KONIEC — zamyka otwarty odcinek, prosi o wynik, zapisuje FINISHED
+    async function lcpEnd(eventId) {
+        const input = prompt('Podaj wynik (nasz:przeciwnik), np. 3:1');
+        if (input === null) return;
+        const parts = input.split(':').map(s => parseInt(s.trim()));
+        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) { alert('Nieprawidłowy format. Użyj np. 3:1'); return; }
+        const our = parts[0], opp = parts[1];
+        const outcome = our > opp ? 'WIN' : our < opp ? 'LOSS' : 'DRAW';
+        if (!db || !_lcpMatch) return;
+        const nowIso = new Date().toISOString();
+        const segs = (_lcpMatch.matchData?.clockSegments || []).map(x => ({ ...x }));
+        if (segs.length && !segs[segs.length - 1].end) segs[segs.length - 1].end = nowIso;
+        try {
+            await db.collection('events').doc(eventId).update({
+                ...(segs.length ? { 'matchData.clockSegments': segs } : {}),
+                'matchData.matchStatus': 'FINISHED',
+                'matchData.endedAt': nowIso,
+                'matchData.endedBy': currentUserData.userId,
+                'matchData.result': { our, opponent: opp, outcome, updatedBy: currentUserData.userId, updatedAt: nowIso }
+            });
+            _lcpMatch = null; // panel znika — mecz skończony, karta na dashboardzie pokazuje wynik
+            _renderLcpPanel();
+            await refreshDashboard();
+        } catch (e) { alert('Błąd: ' + e.message); }
+    }
 
     function openMeczPanel(matchId) {
         const match = (_mecze || []).find(e => (e.eventId || e.id) === matchId) || (calAllEvents || []).find(e => (e.eventId || e.id) === matchId);
