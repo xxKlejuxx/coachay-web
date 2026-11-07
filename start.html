@@ -1829,10 +1829,20 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
     }
 
     /* ── Akcje meczu z panelu ── */
+    // 2026-11-07 (sync #0173): mpStartMatch/mpEndMatch/mpReopenMatch zarządzają teraz
+    // matchData.clockSegments tak samo jak lcpStart/lcpEnd — żeby stary bottom-sheet
+    // i nowy panel licznika (lcp-panel) były ze sobą zgodne, niezależnie który trener użyje.
     async function mpStartMatch(eventId) {
         if (!db) return;
         try {
-            await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE' });
+            const cur = await db.collection('events').doc(eventId).get();
+            const curMd = cur.exists ? (cur.data().matchData || {}) : {};
+            const update = { 'matchData.matchStatus': 'LIVE' };
+            if (curMd.matchStatus !== 'LIVE') {
+                update['matchData.clockSegments'] = [{ start: new Date().toISOString(), end: null }];
+            }
+            await db.collection('events').doc(eventId).update(update);
+            if (_lcpMatch && _lcpMatch.eventId === eventId) { _lcpMatch = null; _renderLcpPanel(); }
             const doc = await db.collection('events').doc(eventId).get();
             if (doc.exists && _meczPanelMatch) { _meczPanelMatch = { ...doc.data(), id: doc.id }; _renderMeczPanel(); }
             await refreshDashboard();
@@ -1848,7 +1858,17 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         const outcome = our > opp ? 'WIN' : our < opp ? 'LOSS' : 'DRAW';
         if (!db) return;
         try {
-            await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'FINISHED', 'matchData.endedAt': new Date().toISOString(), 'matchData.endedBy': currentUserData.userId, 'matchData.result': { our, opponent: opp, outcome, updatedBy: currentUserData.userId, updatedAt: new Date().toISOString() } });
+            const nowIso = new Date().toISOString();
+            const cur = await db.collection('events').doc(eventId).get();
+            const curMd = cur.exists ? (cur.data().matchData || {}) : {};
+            const segs = (curMd.clockSegments || []).map(x => ({ ...x }));
+            if (segs.length && !segs[segs.length - 1].end) segs[segs.length - 1].end = nowIso;
+            await db.collection('events').doc(eventId).update({
+                ...(segs.length ? { 'matchData.clockSegments': segs } : {}),
+                'matchData.matchStatus': 'FINISHED', 'matchData.endedAt': nowIso, 'matchData.endedBy': currentUserData.userId,
+                'matchData.result': { our, opponent: opp, outcome, updatedBy: currentUserData.userId, updatedAt: nowIso }
+            });
+            if (_lcpMatch && _lcpMatch.eventId === eventId) { _lcpMatch = null; _renderLcpPanel(); }
             const doc = await db.collection('events').doc(eventId).get();
             if (doc.exists && _meczPanelMatch) { _meczPanelMatch = { ...doc.data(), id: doc.id }; _renderMeczPanel(); }
             await refreshDashboard();
@@ -1894,7 +1914,11 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         if (!await showConfirmSheet(t('mecz.revertConfirmTitle') + ' ' + t('mecz.revertConfirmBody'))) return;
         if (!db) return;
         try {
-            await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE', 'matchData.endedAt': null, 'matchData.endedBy': null });
+            const cur = await db.collection('events').doc(eventId).get();
+            const curMd = cur.exists ? (cur.data().matchData || {}) : {};
+            const segs = (curMd.clockSegments || []).map(x => ({ ...x }));
+            segs.push({ start: new Date().toISOString(), end: null });
+            await db.collection('events').doc(eventId).update({ 'matchData.matchStatus': 'LIVE', 'matchData.endedAt': null, 'matchData.endedBy': null, 'matchData.clockSegments': segs });
             const doc = await db.collection('events').doc(eventId).get();
             if (doc.exists && _meczPanelMatch) { _meczPanelMatch = { ...doc.data(), id: doc.id }; _renderMeczPanel(); }
             await refreshDashboard();

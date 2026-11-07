@@ -2073,16 +2073,23 @@ exports.autoFinishMatches = onSchedule('every day 00:00', async () => {
             const our = matchData.result?.our ?? 0;
             const opp = matchData.result?.opponent ?? 0;
             const outcome = our > opp ? 'WIN' : our < opp ? 'LOSS' : 'DRAW';
-            
+
+            // sync #0173: zamknij ewentualny otwarty segment licznika (clockSegments),
+            // żeby auto-zakończony mecz nie został z wiszącym "end: null".
+            const nowIso = new Date().toISOString();
+            const segs = (matchData.clockSegments || []).map(x => ({ ...x }));
+            if (segs.length && !segs[segs.length - 1].end) segs[segs.length - 1].end = nowIso;
+
             await db.collection('events').doc(doc.id).update({
+                ...(segs.length ? { 'matchData.clockSegments': segs } : {}),
                 'matchData.matchStatus': 'FINISHED',
-                'matchData.endedAt': new Date().toISOString(),
+                'matchData.endedAt': nowIso,
                 'matchData.endedBy': 'SYSTEM_AUTO',
                 'matchData.result.outcome': outcome,
                 'matchData.result.updatedBy': 'SYSTEM_AUTO',
-                'matchData.result.updatedAt': new Date().toISOString(),
+                'matchData.result.updatedAt': nowIso,
                 'matchData.autoFinished': true,
-                'matchData.autoFinishedAt': new Date().toISOString()
+                'matchData.autoFinishedAt': nowIso
             });
             
             finishedCount++;
