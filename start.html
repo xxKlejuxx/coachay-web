@@ -1240,6 +1240,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
         });
         if (!clockCandidate) {
             console.log('🕐 LCP: brak meczu-kandydata dla panelu licznika (brak niezakończonego meczu, do którego masz uprawnienia)');
+            if (_lcpOwnUnsub) { _lcpOwnUnsub(); _lcpOwnUnsub = null; }
             _lcpMatch = null;
             _renderLcpPanel();
         } else {
@@ -1251,9 +1252,13 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
             }
             // Dopina się do TEGO SAMEGO dokumentu co listener karty powyżej (gdy liveMatch === clockCandidate) —
             // jeśli clockCandidate jest dopiero UPCOMING (jeszcze bez LIVE listenera karty), doczepiamy własny.
+            // 2026-11-07 (fix po zgłoszeniu Rafała — log pokazał rosnącą liczbę nasłuchów): bez
+            // śledzenia unsub, każde refreshDashboard() (np. visibilitychange) otwierało NOWY
+            // onSnapshot na ten sam dokument bez zamykania poprzedniego — wyciek nasłuchów.
             if (!liveMatch || (liveMatch.eventId || liveMatch.id) !== cid) {
+                if (_lcpOwnUnsub) { _lcpOwnUnsub(); _lcpOwnUnsub = null; }
                 console.log('🕐 LCP: doczepiam własny nasłuch (karta meczu go nie otworzyła, bo mecz nie jest jeszcze LIVE) →', cid);
-                db.collection('events').doc(cid).onSnapshot(doc => {
+                _lcpOwnUnsub = db.collection('events').doc(cid).onSnapshot(doc => {
                     if (!doc.exists || !_lcpMatch || _lcpMatch.eventId !== cid) return;
                     _lcpMatch.matchData = doc.data().matchData || {};
                     console.log('🕐 LCP: aktualizacja z onSnapshot →', cid, '| matchStatus:', _lcpMatch.matchData.matchStatus, '| clockSegments:', JSON.stringify(_lcpMatch.matchData.clockSegments || []));
@@ -1261,6 +1266,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
                     _renderLcpPanel();
                 });
             } else {
+                if (_lcpOwnUnsub) { _lcpOwnUnsub(); _lcpOwnUnsub = null; } // karta już nasłuchuje tego dokumentu — zamknij nasz, jeśli był
                 console.log('🕐 LCP: współdzielę nasłuch z kartą meczu (ten sam dokument) →', cid);
             }
         }
@@ -1494,6 +1500,7 @@ body:not(:has(#app-sidebar)) .hub-grid { grid-template-columns: 1fr; }
        Wznów/Koniec (po 1 zapisie na akcję). */
     let _lcpMatch = null;     // { eventId, matchData } — ostatni znany stan śledzonego meczu
     let _lcpTicker = null;
+    let _lcpOwnUnsub = null;  // unsub własnego onSnapshot (tylko gdy karta meczu nie nasłuchuje tego samego dokumentu)
     const LCP_MAX_MIN = 240;  // limit 4h łącznego czasu gry -> "240:00+"
 
     function _lcpFmt(ms) {
