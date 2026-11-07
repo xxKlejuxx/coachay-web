@@ -558,26 +558,39 @@ exports.onEventUpdated = onDocumentUpdated('events/{eventId}', async (event) => 
 
             if (pushData) {
                 try {
+                    // 2026-11-07 (sync #0172/#0164): MATCH_FINISHED jest teraz WIDOCZNYM pushem
+                    // (tytuł+treść), nie cichym — na życzenie Rafała/APP. Nie dostaje go osoba,
+                    // która sama zakończyła mecz (matchData.endedBy) — ona już zna wynik.
+                    // Wysyłane też przy POWTÓRNYM zakończeniu (np. trener poprawił wynik) — celowo,
+                    // bez debounce: rodzice mają zobaczyć aktualny, poprawiony wynik.
+                    const isFinished = pushData.type === 'MATCH_FINISHED';
+                    const visibleTitle = isFinished ? 'Koniec meczu' : null;
+                    const visibleBody  = isFinished ? `${after.title || ''}: ${pushData.our}:${pushData.opponent}` : null;
+
                     const recipients = await resolveInvitedUserIds(after, null);
-                    const uniqueIds = [...new Set(recipients.map(r => r.userId))];
+                    const excludeUid = isFinished ? (amd.endedBy || null) : null;
+                    const uniqueIds = [...new Set(recipients.map(r => r.userId))].filter(uid => uid !== excludeUid);
                     const tokenDocs = await Promise.all(uniqueIds.map(uid => db.collection('users').doc(uid).get()));
                     const messages = [];
                     for (const doc of tokenDocs) {
                         if (!doc.exists) continue;
+                        if (_isDemoAccount(doc.id)) continue; // 2026-11-07 (sync #0172): bez pusha na konta demo
                         const token = (doc.data().pushToken || '').trim();
                         if (token && Expo.isExpoPushToken(token)) {
-                            // TTL 3h (2026-10-15) — cichy push live/wynik jest bezuzyteczny
+                            // TTL 3h (2026-10-15) — push live/wynik jest bezuzyteczny
                             // po dluzszej przerwie (np. telefon offline), mecz dawno sie skonczy.
-                            messages.push({ to: token, sound: null, _contentAvailable: true, data: pushData, ttl: 3 * 3600 });
+                            const msg = { to: token, sound: isFinished ? 'default' : null, _contentAvailable: true, data: pushData, ttl: 3 * 3600 };
+                            if (isFinished) { msg.title = visibleTitle; msg.body = visibleBody; }
+                            messages.push(msg);
                         }
                     }
                     if (messages.length > 0) {
                         for (const chunk of expo.chunkPushNotifications(messages)) {
                             await expo.sendPushNotificationsAsync(chunk);
                         }
-                        console.log(`Match silent push [${pushData.type}] → ${messages.length} tokenów`);
+                        console.log(`Match push [${pushData.type}] → ${messages.length} tokenów${isFinished ? ' (widoczny: ' + visibleBody + ')' : ' (cichy)'}`);
                     }
-                } catch (e) { console.error('Match silent push error:', e); }
+                } catch (e) { console.error('Match push error:', e); }
             }
         }
     }
@@ -1122,6 +1135,17 @@ exports.onMembershipUpdated = onDocumentUpdated('memberships/{membershipId}', as
 const { Expo } = require('expo-server-sdk');
 const expo = new Expo(); // v2
 
+// 2026-11-07 (sync #0172): konta demo są współdzielone (wielu ludzi/urządzeń loguje się
+// na to samo konto, np. demo_trener_jan) i nie czyszczą swojego push-tokenu niezawodnie
+// przy wylogowaniu (bug po stronie app, zgłoszony do naprawy) — więc token "przykleja się"
+// do czyjegoś prywatnego telefonu i ten ktoś dostaje realne powiadomienia z demo kont.
+// Zabezpieczenie po stronie backendu: demo_* NIGDY nie dostaje realnego OS pusha,
+// niezależnie od tego czy klient naprawi czyszczenie tokenu. isDemo bywa niespójne
+// w danych, więc liczy się TYLKO prefiks userId.
+function _isDemoAccount(userId) {
+    return typeof userId === 'string' && userId.startsWith('demo_');
+}
+
 /* ═══════════════════════════════════════════════════
    TTL / expiration dla pushy (2026-10-15, sync #0124)
    Limit nakladamy TYLKO tam, gdzie spoznienie robi z pusha cos faktycznie
@@ -1173,6 +1197,7 @@ async function calcBadgeCount(userId) {
 // sendEventReminders), użyj go do expiration zamiast dociągać event ponownie z Firestore.
 async function sendDirectPush(userId, eventId, eventStartMs) {
     try {
+        if (_isDemoAccount(userId)) return; // 2026-11-07 (sync #0172): nigdy realnego pusha na konto demo
         const userDoc = await db.collection('users').doc(userId).get();
         if (!userDoc.exists) return;
         const userData = userDoc.data();
@@ -1209,6 +1234,7 @@ async function sendDirectPush(userId, eventId, eventStartMs) {
 
 // Wysyła silent push z aktualnym badgeCounts do usera
 async function sendBadgePush(userId) {
+    if (_isDemoAccount(userId)) return; // 2026-11-07 (sync #0172): nigdy realnego pusha na konto demo
     const userDoc = await db.collection('users').doc(userId).get();
     if (!userDoc.exists) return;
     const userData = userDoc.data();
@@ -1248,8 +1274,10 @@ exports.onNotificationCreated = onDocumentCreated('notifications/{notificationId
         if (!userDoc.exists) return;
         const userData = userDoc.data();
 
-        const expoToken = (userData.pushToken || '').trim() || null;
-        const fcmToken  = (userData.fcmToken  || '').trim() || null;
+        // 2026-11-07 (sync #0172): konto demo nigdy nie dostaje realnego OS pusha (patrz _isDemoAccount) —
+        // w appce (lista powiadomień/badge) nadal widzi wszystko normalnie, tylko bez pusha na czyjś telefon.
+        const expoToken = _isDemoAccount(notif.userId) ? null : ((userData.pushToken || '').trim() || null);
+        const fcmToken  = _isDemoAccount(notif.userId) ? null : ((userData.fcmToken  || '').trim() || null);
 
         const title = (notif.title || '').trim() || 'Coachay';
         const body  = (notif.body  || '').trim();
