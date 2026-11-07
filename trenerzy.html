@@ -573,11 +573,9 @@ async function loadTrainers() {
         // Buduj teamNames z memberships (source of truth)
         const userIds = allTrainers.filter(t => t.userId).map(t => t.userId);
         if (userIds.length) {
-            const [mbrSnap1, mbrSnap2] = await Promise.all([
-                db.collection('memberships').where('clubId', '==', currentClubId).where('status', '==', 'active').get(),
-                db.collection('memberships').where('clubId', '==', currentClubId).where('status', '==', 'ACTIVE').get()
-            ]);
-            const allMbrs = [...mbrSnap1.docs, ...mbrSnap2.docs].map(d => d.data());
+            // 2026-11-07: status zmigrowany do wyłącznie 'ACTIVE' (patrz decisions.md) – jedno zapytanie, nie dwa.
+            const mbrSnap1 = await db.collection('memberships').where('clubId', '==', currentClubId).where('status', '==', 'ACTIVE').get();
+            const allMbrs = mbrSnap1.docs.map(d => d.data());
 
             // Buduj mapę teamId → teamName z allClubTeams
             const teamNameMap = {};
@@ -931,13 +929,10 @@ async function saveEditTrainer() {
     // Imię i nazwisko NIE są tu edytowalne (pola readonly) — zmienia je wyłącznie sam
     // trener w profil.html. Tutaj tylko isClubAdmin + reszta profilu klubowego.
     try {
-        // Zaktualizuj isClubAdmin we wszystkich aktywnych memberships (status active lub ACTIVE)
+        // Zaktualizuj isClubAdmin we wszystkich aktywnych memberships
+        // 2026-11-07: status zmigrowany do wyłącznie 'ACTIVE' (patrz decisions.md) – jedno zapytanie, nie dwa.
         if (t.userId) {
-            const [mbrSnap1, mbrSnap2] = await Promise.all([
-                db.collection('memberships').where('userId', '==', t.userId).where('clubId', '==', currentClubId).where('status', '==', 'active').get(),
-                db.collection('memberships').where('userId', '==', t.userId).where('clubId', '==', currentClubId).where('status', '==', 'ACTIVE').get()
-            ]);
-            const mbrSnap = { docs: [...mbrSnap1.docs, ...mbrSnap2.docs] };
+            const mbrSnap = await db.collection('memberships').where('userId', '==', t.userId).where('clubId', '==', currentClubId).where('status', '==', 'ACTIVE').get();
             const batch = db.batch();
             mbrSnap.docs.forEach(d => batch.update(d.ref, { isClubAdmin: newIsAdmin }));
             await batch.commit();

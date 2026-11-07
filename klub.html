@@ -446,19 +446,15 @@ async function loadTeamStats() {
     try {
         const playersSnap = await db.collection('players').where('clubId', '==', currentClubId).get(); // 2026-09-25: tylko klub
 
-        // Licz trenerów z memberships (obie wersje statusu: 'ACTIVE' i 'active')
+        // Licz trenerów z memberships (status: 'ACTIVE')
         const trainerCount = {};  // teamId – liczba trenerów
         mainTrainerByTeam = {};   // teamId – userId TRENER_GLOWNY
         window.trainersByTeam = {}; // teamId – [{userId, isGlowny}]
         for (let i = 0; i < teamIds.length; i += 10) {
             const chunk = teamIds.slice(i, i + 10);
-            const [snapA, snapB] = await Promise.all([
-                db.collection('memberships').where('teamId', 'in', chunk).where('status', '==', 'ACTIVE').get(),
-                db.collection('memberships').where('teamId', 'in', chunk).where('status', '==', 'active').get()
-            ]);
-            const seen = new Set();
-            [...snapA.docs, ...snapB.docs].forEach(d => {
-                if (seen.has(d.id)) return; seen.add(d.id);
+            // 2026-11-07: status zmigrowany do wyłącznie 'ACTIVE' (patrz decisions.md) — jedno zapytanie, nie dwa
+            const snapA = await db.collection('memberships').where('teamId', 'in', chunk).where('status', '==', 'ACTIVE').get();
+            snapA.docs.forEach(d => {
                 const m = d.data();
                 if (!['TRENER_GLOWNY','TRENER_POMOCNICZY','TRENER'].includes(m.role) || !m.userId) return;
                 trainerCount[m.teamId] = (trainerCount[m.teamId] || 0) + 1;
@@ -490,13 +486,9 @@ async function loadTrainers() {
     try {
         // Wszyscy aktywni trenerzy klubu – z memberships (clubId match, rola trenerska, ACTIVE)
         const trainerRoles = ['TRENER_GLOWNY', 'TRENER_POMOCNICZY', 'TRENER'];
-        const [snapA, snapB] = await Promise.all([
-            db.collection('memberships').where('clubId','==',currentClubId).where('status','==','ACTIVE').get(),
-            db.collection('memberships').where('clubId','==',currentClubId).where('status','==','active').get()
-        ]);
-        const seen = new Set(); const userIds = [];
-        [...snapA.docs, ...snapB.docs].forEach(d => {
-            if (seen.has(d.id)) return; seen.add(d.id);
+        const snapA = await db.collection('memberships').where('clubId','==',currentClubId).where('status','==','ACTIVE').get();
+        const userIds = [];
+        snapA.docs.forEach(d => {
             const m = d.data();
             if (trainerRoles.includes(m.role) && m.userId && !userIds.includes(m.userId))
                 userIds.push(m.userId);
@@ -843,13 +835,8 @@ async function fillTrainersList(teamId, preselectedUserId) {
     let teamRoleMap = {};
     if (teamId) {
         try {
-            const [snapA, snapB] = await Promise.all([
-                db.collection('memberships').where('teamId','==',teamId).where('status','==','ACTIVE').get(),
-                db.collection('memberships').where('teamId','==',teamId).where('status','==','active').get()
-            ]);
-            const seen = new Set();
-            [...snapA.docs, ...snapB.docs].forEach(d => {
-                if (seen.has(d.id)) return; seen.add(d.id);
+            const snapA = await db.collection('memberships').where('teamId','==',teamId).where('status','==','ACTIVE').get();
+            snapA.docs.forEach(d => {
                 const data = d.data();
                 if (['TRENER_GLOWNY','TRENER_POMOCNICZY','TRENER'].includes(data.role) && data.userId) {
                     // Nie nadpisuj TRENER_GLOWNY jeśli już ustawiony
@@ -990,14 +977,9 @@ async function saveTeam() {
             // === Edycja istniejącej drużyny ===
             const teamId = selectedTeam.id || selectedTeam.teamId;
 
-            // Oblicz zmiany trenerów – obie wersje statusu (ACTIVE i active)
-            const [_prevA, _prevB] = await Promise.all([
-                db.collection('memberships').where('teamId','==',teamId).where('clubId','==',currentClubId).where('status','==','ACTIVE').get(),
-                db.collection('memberships').where('teamId','==',teamId).where('clubId','==',currentClubId).where('status','==','active').get()
-            ]);
-            const _prevSeen = new Set();
-            const prevAssigned = [..._prevA.docs, ..._prevB.docs]
-                .filter(d => { if (_prevSeen.has(d.id)) return false; _prevSeen.add(d.id); return true; })
+            // Oblicz zmiany trenerów (status zmigrowany do wyłącznie 'ACTIVE' — patrz decisions.md)
+            const _prevA = await db.collection('memberships').where('teamId','==',teamId).where('clubId','==',currentClubId).where('status','==','ACTIVE').get();
+            const prevAssigned = _prevA.docs
                 .filter(d => ['TRENER_GLOWNY','TRENER_POMOCNICZY','TRENER'].includes(d.data().role) && d.data().userId)
                 .map(d => d.data().userId);
             const prevSet = new Set(prevAssigned);
@@ -1006,14 +988,10 @@ async function saveTeam() {
             const toRemove = prevAssigned.filter(uid => !newSet.has(uid));
             const toUpdate = selectedTrainers.filter(t => prevSet.has(t.userId));
 
-            // Helper: wszystkie aktywne memberships per userId (obie wersje statusu)
+            // Helper: wszystkie aktywne memberships per userId
             async function getActiveMbrs(uid) {
-                const [a, b] = await Promise.all([
-                    db.collection('memberships').where('userId','==',uid).where('teamId','==',teamId).where('status','==','ACTIVE').get(),
-                    db.collection('memberships').where('userId','==',uid).where('teamId','==',teamId).where('status','==','active').get()
-                ]);
-                const seen = new Set();
-                return [...a.docs,...b.docs].filter(d => { if(seen.has(d.id))return false; seen.add(d.id); return true; });
+                const a = await db.collection('memberships').where('userId','==',uid).where('teamId','==',teamId).where('status','==','ACTIVE').get();
+                return a.docs;
             }
 
             // Dodaj/reaktywuj – upsert (nie tworzy duplikatu)
@@ -1048,11 +1026,8 @@ async function saveTeam() {
                 for (const doc of existing) await doc.ref.update({ status: 'REMOVED', removedAt: now, removedBy: currentUserId });
 
                 // Czy trener ma jeszcze inne aktywne memberships w klubie?
-                const [otherA, otherB] = await Promise.all([
-                    db.collection('memberships').where('userId','==',userId).where('clubId','==',currentClubId).where('status','==','ACTIVE').get(),
-                    db.collection('memberships').where('userId','==',userId).where('clubId','==',currentClubId).where('status','==','active').get()
-                ]);
-                const hasOther = [...otherA.docs, ...otherB.docs].some(d => d.data().teamId && d.data().teamId !== teamId);
+                const otherA = await db.collection('memberships').where('userId','==',userId).where('clubId','==',currentClubId).where('status','==','ACTIVE').get();
+                const hasOther = otherA.docs.some(d => d.data().teamId && d.data().teamId !== teamId);
                 if (!hasOther) {
                     // Brak innych drużyn – utwórz club-level membership (teamId: null)
                     const clubMbrId = makeMbrId('TRENER_POMOCNICZY');
@@ -1218,7 +1193,7 @@ async function confirmTransfer() {
         // 1. Dezaktywuj stare membership ZAWODNIKA (precyzyjny filtr na role)
         const oldSnap = await db.collection('memberships')
             .where('teamId','==',fromTeamId).where('playerId','==',playerId)
-            .where('role','==','ZAWODNIK').where('status','in',['active','ACTIVE']).limit(1).get();
+            .where('role','==','ZAWODNIK').where('status','==','ACTIVE').limit(1).get();
 
         let oldUserId = null;
         let oldTrialEndsAt = null;
@@ -1250,15 +1225,9 @@ async function confirmTransfer() {
         }));
 
         // 3. Przenieś RODZIC i KIBIC
-        // Dwa osobne queries zamiast 'in' (unikamy composite index)
-        const [famSnapA, famSnapB] = await Promise.all([
-            db.collection('memberships').where('teamId','==',fromTeamId).where('playerId','==',playerId).where('status','==','active').get(),
-            db.collection('memberships').where('teamId','==',fromTeamId).where('playerId','==',playerId).where('status','==','ACTIVE').get()
-        ]);
-        const famById = {};
-        [...famSnapA.docs, ...famSnapB.docs].forEach(d => { famById[d.id] = d; });
-        const familyRoles = Object.values(famById).filter(d => ['RODZIC','KIBIC'].includes(d.data().role));
-        console.log(`🔍 family transfer: znaleziono ${famSnapA.size + famSnapB.size} docs (active+ACTIVE), RODZIC/KIBIC: ${familyRoles.length}`);
+        const famSnapA = await db.collection('memberships').where('teamId','==',fromTeamId).where('playerId','==',playerId).where('status','==','ACTIVE').get();
+        const familyRoles = famSnapA.docs.filter(d => ['RODZIC','KIBIC'].includes(d.data().role));
+        console.log(`🔍 family transfer: znaleziono ${famSnapA.size} docs (ACTIVE), RODZIC/KIBIC: ${familyRoles.length}`);
 
         const familyUserIds = new Set();
         for (const doc of familyRoles) {
@@ -1464,11 +1433,8 @@ async function deletePlayer(playerId, encodedName) {
             t.teamId === teamId ? { ...t, status: 'DELETE', deletedAt: now } : t
         );
         await db.collection('players').doc(playerId).update({ teams });
-        const [snapA, snapB] = await Promise.all([
-            db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','ACTIVE').get(),
-            db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','active').get()
-        ]);
-        for (const d of [...snapA.docs, ...snapB.docs]) await d.ref.update({ status: 'DELETE', deletedAt: now });
+        const snapA = await db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','ACTIVE').get();
+        for (const d of snapA.docs) await d.ref.update({ status: 'DELETE', deletedAt: now });
         await loadTeamPlayers(teamId);
     } catch (e) { alert('Błąd: ' + e.message); }
 }
@@ -1485,11 +1451,8 @@ async function restorePlayer(playerId, encodedName) {
             t.teamId === teamId ? { ...t, status: 'ACTIVE', restoredAt: now } : t
         );
         await db.collection('players').doc(playerId).update({ teams });
-        const [snapA, snapB] = await Promise.all([
-            db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','DELETE').get(),
-            db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','delete').get()
-        ]);
-        for (const d of [...snapA.docs, ...snapB.docs]) await d.ref.update({ status: 'ACTIVE', restoredAt: now });
+        const snapA = await db.collection('memberships').where('playerId','==',playerId).where('teamId','==',teamId).where('status','==','DELETE').get();
+        for (const d of snapA.docs) await d.ref.update({ status: 'ACTIVE', restoredAt: now });
         await loadTeamPlayers(teamId);
     } catch (e) { alert('Błąd: ' + e.message); }
 }
