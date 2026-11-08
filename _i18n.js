@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261105a'; // 2026-11-05a: bump po zmianie tekstow pricingBuyBtnInd/Fam i pricingQrHint (sekcja cennika)
+    const LOCALE_V  = '20261108a'; // 2026-11-08a: bump po zmianie cen/tekstow B2B (landing + platnosci)
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */
