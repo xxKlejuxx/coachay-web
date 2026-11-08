@@ -230,14 +230,19 @@ Może dalej korzystać z apki.
 
 ### Produkty subskrypcyjne
 
-| ID produktu | Nazwa | Przelewy24 / Google | Apple IAP | Czas | Sloty |
-|---|---|---|---|---|---|
-| `sub_individual_monthly` | Indywidualny | 2,99 zł/mies | 5,99 zł/mies | 30 dni | 1 |
-| `sub_individual_yearly` | Indywidualny | 29,99 zł/rok | 59,99 zł/rok | 365 dni | 1 |
-| `sub_family_monthly` | Rodzinny (6) | 14,99 zł/mies | 29,99 zł/mies | 30 dni | 6 |
-| `sub_family_yearly` | Rodzinny (6) | 149,99 zł/rok | 299,99 zł/rok | 365 dni | 6 |
+| ID produktu | Nazwa | Cena (jedna, wszystkie platformy) | Czas | Sloty |
+|---|---|---|---|---|
+| `sub_individual_monthly` | Indywidualny | 2,99 zł/mies | 30 dni | 1 |
+| `sub_individual_yearly` | Indywidualny | 29,99 zł/rok | 365 dni | 1 |
+| `sub_family_monthly` | Rodzinny (6) | 14,99 zł/mies | 30 dni | 6 |
+| `sub_family_yearly` | Rodzinny (6) | 149,99 zł/rok | 365 dni | 6 |
 
-Apple x2 — powód: 30% prowizja Apple. Ceny roczne = mies. × 10 (2 miesiące gratis).
+**2026-11-08 (korekta, Rafał): JEDNA cena na wszystkich platformach** — brak osobnej,
+wyższej ceny dla Apple (wcześniejszy pomysł "Apple x2 dla pokrycia 30% prowizji" nie był
+uzgodniony z Rafałem na te nowe kwoty i został wycofany z `platnosci.html` — `getPLANS()`
+ma teraz tylko pole `price`, bez `priceBase`/`priceApple` i bez rozróżnienia `isApple`).
+W App Store Connect / Google Play Console należy ustawić dokładnie te same kwoty co w
+kolumnie wyżej (Polska), nie podwojone. Ceny roczne = mies. × 10 (2 miesiące gratis).
 **Decyzja (2026-11-07): ceny indywidualne/rodzinne muszą zawsze wychodzić drożej per-slot
 niż pakiety klubowe B2B (sekcja 7)** — żeby klub miał sens kupić licencję zbiorową zamiast
 liczyć na to, że każdy user zapłaci sam. Sprawdzenie: 2,99 zł (ind.) > 2,00 zł/slot (najniższy

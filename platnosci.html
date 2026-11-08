@@ -314,12 +314,12 @@ function getPLANS() {
               name: _tPl('platnosci.planMonthlyName', 'Miesięczny'),
               period: _tPl('platnosci.periodMonthly', 'mies.'),
               sub: _tPl('platnosci.subMonthlyDesc', '30 dni dostępu'),
-              priceBase: '2,99 zł', priceApple: '5,99 zł', badge: null },
+              price: '2,99 zł', badge: null },
             { id: 'sub_individual_yearly',
               name: _tPl('platnosci.planYearlyName', 'Roczny'),
               period: _tPl('platnosci.periodYearly', 'rok'),
               sub: _tPl('platnosci.subYearlyDesc', '2 miesiące gratis'),
-              priceBase: '29,99 zł', priceApple: '59,99 zł',
+              price: '29,99 zł',
               badge: _tPl('platnosci.badgeRecommended', 'Polecane') },
         ],
         family: [
@@ -327,12 +327,12 @@ function getPLANS() {
               name: _tPl('platnosci.planFamilyMonthlyName', 'Rodzinny mies.'),
               period: _tPl('platnosci.periodMonthly', 'mies.'),
               sub: _tPl('platnosci.subFamilyMonthlyDesc', '6 kont — 30 dni'),
-              priceBase: '14,99 zł', priceApple: '29,99 zł', badge: null },
+              price: '14,99 zł', badge: null },
             { id: 'sub_family_yearly',
               name: _tPl('platnosci.planFamilyYearlyName', 'Rodzinny roczny'),
               period: _tPl('platnosci.periodYearly', 'rok'),
               sub: _tPl('platnosci.subFamilyYearlyDesc', '6 kont — 2 miesiące gratis'),
-              priceBase: '149,99 zł', priceApple: '299,99 zł',
+              price: '149,99 zł',
               badge: _tPl('platnosci.badgeBest', 'Najlepszy') },
         ]
     };
@@ -361,7 +361,7 @@ function renderCards() {
 
     plans.forEach(plan => {
         const isSelected = plan.id === selectedPlanId;
-        const price = isApple ? plan.priceApple : plan.priceBase;
+        const price = plan.price;
         const badgeHtml = plan.badge
             ? `<span class="pay-badge ${plan.badge === 'Polecane' ? 'popular' : ''}">${plan.badge}</span>`
             : '';
@@ -405,7 +405,7 @@ function updateFooter() {
     const allPlans = [...getPLANS().individual, ...getPLANS().family];
     const plan = allPlans.find(p => p.id === selectedPlanId);
     if (!plan) return;
-    const price = isApple ? plan.priceApple : plan.priceBase;
+    const price = plan.price;
     document.getElementById('pay-footer').textContent =
         typeof t === 'function'
             ? t('platnosci.payingComingBody')
