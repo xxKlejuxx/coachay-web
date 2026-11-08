@@ -32,11 +32,8 @@ enkapsuluje nazwy — ekrany nie odpytują `access_rights` bezpośrednio.
 ### Kolekcja `clubs/{clubId}` — pole licencji klubowej B2B
 ```
 license: {
-  total:          number,     // liczba zakupionych licencji (10 / 30 / 50); IGNOROWANE gdy unlimited===true
-  used:           number,     // aktualnie przypisanych slotów (liczone zawsze, też przy unlimited — do statystyk)
-  unlimited:      boolean,    // 2026-11-07: true dla pakietu "Bez limitu" (50+) — pomija total/used w bramce
-                               // claimClubLicenseSlot. NIE używać total:null jako sentinela "bez limitu" —
-                               // `total || 0` dałoby 0, a 0>=0 zablokowałoby każdego usera.
+  total:          number,     // liczba zakupionych licencji: 10 / 30 / 50 / 10000 (sentinel "bez limitu")
+  used:           number,     // aktualnie przypisanych slotów
   valid_until:    Timestamp,  // koniec opłaconego okresu klubowego
   renewed_at:     Timestamp,  // kiedy admin kupił/odnowił licencję (używane do reset slotów)
   product_id:     string,     // "club_license_10" | "club_license_30" | "club_license_50" | "club_license_unlimited"
@@ -309,6 +306,12 @@ platformy aktywuje przez `support.html`.
 **STATUS: tylko projekt, kod nie istnieje jeszcze** — `product_id` `club_license_*` nie
 występuje nigdzie w repo (sprawdzone 2026-11-07). Do zrobienia przed uruchomieniem: UI
 wyboru pakietu + aktywacji w `support.html`, zapis do `clubs.license` (patrz sekcja 1).
+
+**Ważne przy aktywacji "Bez limitu" (2026-11-08):** ustawić `license.total: 10000` (sentinel,
+nie `null`/`unlimited` flaga — patrz uzasadnienie w sekcji 1 i komentarz w
+`claimClubLicenseSlot()`). Każdy przyszły ekran pokazujący "X/Y slotów" admina musi dla tego
+pakietu wyświetlać etykietę "Bez limitu" na podstawie `license.product_id === 'club_license_unlimited'`,
+NIE pokazywać surowej wartości `10000` jako realnej liczby — to tylko techniczny sufit bramki.
 
 ### Floating License — mechanizm przypisywania slotów
 Licencje są **pływające** — slot przypisywany automatycznie przy pierwszym logowaniu

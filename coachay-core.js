@@ -3758,10 +3758,13 @@ async function claimClubLicenseSlot(uid, clubId, membershipDoc) {
         }
 
         // Transakcja: przydziel slot
-        // 2026-11-07 (pakiet "Bez limitu", sync pricing-redesign): license.unlimited===true
-        // pomija sprawdzanie pojemności całkowicie — total/used nadal liczone (do statystyk
-        // w support.html), ale nigdy nie blokują. BEZ tej flagi total:null dawałoby total=0
-        // (przez `|| 0`) i 0>=0 blokowałoby KAŻDEGO — stąd jawna flaga zamiast sentinela.
+        // 2026-11-07/08 (pakiet "Bez limitu"): zamiast osobnej flagi `unlimited` (rozważane,
+        // odrzucone — wymagałoby pilnowania tego warunku w każdym przyszłym miejscu, które
+        // czyta license.total), pakiet "club_license_unlimited" dostaje po prostu
+        // license.total: 10000 przy aktywacji — przy skali amatorskich klubów młodzieżowych
+        // żaden klub nigdy się do tego nie zbliży, więc działa jak realny brak limitu, a
+        // kod bramki zostaje nietknięty (mniej gałęzi do utrzymania). Etykieta "Bez limitu"
+        // w UI (support.html) ma pochodzić z license.product_id, nie z wartości total.
         let claimedExpiry = null;
         await db.runTransaction(async t => {
             const freshClub = await t.get(clubRef);
@@ -3769,7 +3772,7 @@ async function claimClubLicenseSlot(uid, clubId, membershipDoc) {
             const freshLic = freshClub.data().license;
             const used  = freshLic.used  || 0;
             const total = freshLic.total || 0;
-            if (!freshLic.unlimited && used >= total) throw new Error('POOL_FULL');
+            if (used >= total) throw new Error('POOL_FULL');
             claimedExpiry = expiry;
             t.update(clubRef, { 'license.used': used + 1 });
             t.update(membershipDoc.ref, { usedSlot: 1, usedSlotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
