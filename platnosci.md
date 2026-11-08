@@ -294,15 +294,16 @@ progi (100/150/200 licencji) zostały świadomie usunięte — nikt by ich nie k
 | Pakiet | Miesięczny | Roczny (×10, 2 mies. gratis) |
 |---|---|---|
 | 10 licencji | 20 zł/mies | 200 zł/rok |
-| 30 licencji | 60 zł/mies | 600 zł/rok |
-| 50 licencji | 100 zł/mies | 1 000 zł/rok |
-| **Bez limitu (50+)** | **119 zł/mies** | **1 190 zł/rok** |
+| 30 licencji | 50 zł/mies | 500 zł/rok |
+| 50 licencji | 70 zł/mies | 700 zł/rok |
+| **Bez limitu (50+)** | **100 zł/mies** | **1 000 zł/rok** |
 
-Przelicznik niskich progów: 2 zł/user/mies (niezmieniony, nadal tańszy niż ProTrainUp dla
-bardzo małych klubów — oni nie mają niczego poniżej 125 zł). "Bez limitu" 119 zł to -51%
-vs ich Silver (245 zł) — cel -50% osiągnięty. Przy 50 licencjach (100 zł) próg "bez limitu"
-(119 zł) jest już na tyle blisko, że to naturalny, oczywisty upsell — nie trzeba liczyć
-slotów żeby zobaczyć że się opłaca.
+**2026-11-08 (korekta, Rafał): obniżone progi 30/50/bez limitu** — poprzednie ceny (60/100/119 zł)
+nie były konkurencyjne wobec ProTrainUp (125 zł za 100 miejsc) — im więcej licencji, tym mniej
+powinno się opłacać kupować pojedynczo, więc wyższe progi muszą być relatywnie tańsze, nie
+droższe. Przelicznik per-slot: 10 lic. = 2,00 zł/slot, 30 lic. = 1,67 zł/slot, 50 lic. = 1,40 zł/slot,
+bez limitu 100 zł vs ich Silver (245 zł) = -59%. Nadal spełniona zasada z sekcji 6 (B2C musi
+wychodzić drożej per-slot niż B2B) — B2C min. 2,50 zł/slot (rodzinny) > B2B max. 2,00 zł/slot.
 
 Płatność: Stripe lub Przelewy24 (nie przez sklepy — wykorzystuje wyjątek Apple/Google dla
 sprzedaży B2B/enterprise organizacjom, bez prowizji sklepu). Klub płaci poza apką — admin
