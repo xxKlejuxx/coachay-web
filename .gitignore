@@ -4,3 +4,24 @@ node_modules/
 .DS_Store
 .windsurf/
 .claude/settings.local.json
+
+# Lokalne skrypty diagnostyczne/robocze (nigdy nie wchodza na GitHub)
+_check_*.js
+_check_*.ps1
+_bump_version*.ps1
+_commit_msg_*.txt
+_audit_status.js
+_auth_audit_result.json
+_find_token_dupes.js
+_fix_demo_accounts.js
+_get_push_token.js
+_list_hosting_metrics.js
+_list_limit_metrics.js
+_list_metrics.js
+_migrate_status_dryrun.js
+_migrate_status_execute.js
+_syntax_check_inline.js
+_test_lcp_long_segment.js
+_test_push_anna.js
+_users_export.json
+kody_polecenia.md
