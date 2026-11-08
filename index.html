@@ -510,6 +510,18 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
 }
 .pricing-b2b-title { font-family: var(--font-d); font-size: 18px; font-weight: 800; margin-bottom: 8px; }
 .pricing-b2b-desc { font-size: 16px; color: var(--szary-j); line-height: 1.65; }
+.pricing-b2b-tiers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; }
+.pricing-b2b-tier {
+  background: var(--tlo-karta2); border: 1px solid var(--border2); border-radius: 12px;
+  padding: 12px 8px; text-align: center;
+}
+.pricing-b2b-tier-price { font-family: var(--font-d); font-size: 20px; font-weight: 800; color: var(--bialy); white-space: nowrap; }
+.pricing-b2b-tier-price span { font-size: 12px; font-weight: 700; color: var(--szary-j); margin-left: 2px; }
+.pricing-b2b-tier-label { font-size: 13px; font-weight: 600; color: var(--szary); margin-top: 5px; }
+.pricing-b2b-note { font-size: 14px; color: var(--szary); margin-top: 12px; }
+@media (max-width: 600px) {
+  .pricing-b2b-tiers { grid-template-columns: repeat(2, 1fr); }
+}
 
 /* === RESPONSIVE === */
 @media (max-width: 980px) {
@@ -912,7 +924,26 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
     <div class="pricing-b2b">
       <div>
         <div class="pricing-b2b-title" data-i18n="landing.pricingB2bTitle">Licencja klubowa</div>
-        <div class="pricing-b2b-desc" data-i18n="landing.pricingB2bDesc">Dla klubów z wieloma drużynami i trenerami. Jedna licencja obejmuje cały klub – trenerów i rodziców. Pakiety od 20 zł/mies (10 licencji) do 100 zł/mies bez limitu. Większe kluby – oferta indywidualna.</div>
+        <div class="pricing-b2b-desc" data-i18n="landing.pricingB2bDesc">Dla klubów z wieloma drużynami i trenerami. Jedna licencja obejmuje cały klub – trenerów i rodziców.</div>
+        <div class="pricing-b2b-tiers">
+          <div class="pricing-b2b-tier">
+            <div class="pricing-b2b-tier-price">20<span>zł/mies</span></div>
+            <div class="pricing-b2b-tier-label">10 <span data-i18n="landing.pricingB2bLicenses">licencji</span></div>
+          </div>
+          <div class="pricing-b2b-tier">
+            <div class="pricing-b2b-tier-price">50<span>zł/mies</span></div>
+            <div class="pricing-b2b-tier-label">30 <span data-i18n="landing.pricingB2bLicenses">licencji</span></div>
+          </div>
+          <div class="pricing-b2b-tier">
+            <div class="pricing-b2b-tier-price">70<span>zł/mies</span></div>
+            <div class="pricing-b2b-tier-label">50 <span data-i18n="landing.pricingB2bLicenses">licencji</span></div>
+          </div>
+          <div class="pricing-b2b-tier">
+            <div class="pricing-b2b-tier-price">100<span>zł/mies</span></div>
+            <div class="pricing-b2b-tier-label" data-i18n="landing.pricingB2bUnlimited">Bez limitu</div>
+          </div>
+        </div>
+        <div class="pricing-b2b-note" data-i18n="landing.pricingB2bNote">Większe kluby – oferta indywidualna.</div>
       </div>
       <a href="mailto:support@coachay.com" class="btn-ghost" data-i18n="landing.pricingB2bCta">Napisz do nas →</a>
     </div>
