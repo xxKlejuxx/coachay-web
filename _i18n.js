@@ -15,7 +15,7 @@
 ═══════════════════════════════════════════ */
 (function () {
     const SUPPORTED = ['pl', 'en'];
-    const LOCALE_V  = '20261108a'; // 2026-11-08a: bump po zmianie cen/tekstow B2B (landing + platnosci)
+    const LOCALE_V  = '20261108b'; // 2026-11-08b: bump po dodaniu tabelki B2B (kafelki) na platnosci.html + nowy klucz b2bDescShort
 
     /* ?lang=xx w URL (np. deep link z appki mobilnej) nadpisuje zapamiętany język —
        pozwala appce otworzyć stronę web w swoim aktualnym języku zamiast domyślnego PL. */

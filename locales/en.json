@@ -1367,6 +1367,7 @@
   "payingComingBody": "In-app payments are coming soon — for now, manage your subscription at coachay.com.",
   "b2bTitle": "Running a club?",
   "b2bDesc": "A club license covers your whole team — coaches and parents. Packages from 20 PLN/mo (10 licenses) up to 100 PLN/mo unlimited. Larger clubs — custom offer.",
+  "b2bDescShort": "A club license covers your whole team — coaches and parents.",
   "b2bCta": "Contact us →",
   "planMonthlyName": "Monthly",
   "planYearlyName": "Yearly",

@@ -170,6 +170,28 @@
     text-align: center; line-height: 1.6;
 }
 
+/* ── B2B box (informacyjnie, kod aktywacji jeszcze nie istnieje) ── */
+.pay-b2b {
+    margin-top: 24px; padding: 16px 18px;
+    border: 1.5px solid var(--border); border-radius: var(--r);
+    background: var(--tlo-karta);
+}
+.pay-b2b-title { font-family: var(--font-d); font-size: 19px; font-weight: 800; color: var(--bialy); }
+.pay-b2b-desc { font-size: 15px; font-weight: 600; color: var(--szary); margin-top: 4px; line-height: 1.5; }
+.pay-b2b-tiers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.pay-b2b-tier {
+    background: var(--tlo-karta2); border: 1px solid var(--border2); border-radius: 12px;
+    padding: 12px 8px; text-align: center;
+}
+.pay-b2b-tier-price { font-family: var(--font-d); font-size: 18px; font-weight: 800; color: var(--bialy); }
+.pay-b2b-tier-price span { font-size: 12px; font-weight: 700; color: var(--szary-j); }
+.pay-b2b-tier-label { font-size: 13px; font-weight: 600; color: var(--szary); margin-top: 5px; }
+.pay-b2b-note { font-size: 14px; color: var(--szary); margin-top: 12px; }
+.pay-b2b-cta {
+    display: block; margin-top: 14px; text-align: center;
+    font-size: 15px; font-weight: 800; color: var(--akcent); text-decoration: none;
+}
+
 /* ── Tryb blocked — ukryj sidebar, pokaż pasek nawigacji ── */
 body.pay-blocked-mode #app-sidebar,
 body.pay-blocked-mode .sidebar { display: none !important; }
@@ -287,12 +309,29 @@ body.pay-blocked-mode .pay-blocked-bar { display: flex; }
         </div>
 
         <!-- B2B — informacyjnie, kod aktywacji jeszcze nie istnieje (patrz platnosci.md sekcja 7) -->
-        <div style="margin-top:24px; padding:16px 18px; border:1.5px solid var(--border); border-radius:var(--r); background:var(--tlo-karta); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:200px;">
-                <div style="font-family:var(--font-d); font-size:19px; font-weight:800; color:var(--bialy);" data-i18n="platnosci.b2bTitle">Prowadzisz klub?</div>
-                <div style="font-size:15px; font-weight:600; color:var(--szary); margin-top:4px; line-height:1.5;" data-i18n="platnosci.b2bDesc">Licencja klubowa obejmuje cały zespół — trenerów i rodziców. Pakiety od 20 zł/mies (10 licencji) do 100 zł/mies bez limitu. Większe kluby — oferta indywidualna.</div>
+        <div class="pay-b2b">
+            <div class="pay-b2b-title" data-i18n="platnosci.b2bTitle">Prowadzisz klub?</div>
+            <div class="pay-b2b-desc" data-i18n="platnosci.b2bDescShort">Licencja klubowa obejmuje cały zespół — trenerów i rodziców.</div>
+            <div class="pay-b2b-tiers">
+                <div class="pay-b2b-tier">
+                    <div class="pay-b2b-tier-price">20 <span>PLN</span> <span data-i18n="landing.pricingPerMonth">/mies</span></div>
+                    <div class="pay-b2b-tier-label">10 <span data-i18n="landing.pricingB2bLicenses">licencji</span></div>
+                </div>
+                <div class="pay-b2b-tier">
+                    <div class="pay-b2b-tier-price">50 <span>PLN</span> <span data-i18n="landing.pricingPerMonth">/mies</span></div>
+                    <div class="pay-b2b-tier-label">30 <span data-i18n="landing.pricingB2bLicenses">licencji</span></div>
+                </div>
+                <div class="pay-b2b-tier">
+                    <div class="pay-b2b-tier-price">70 <span>PLN</span> <span data-i18n="landing.pricingPerMonth">/mies</span></div>
+                    <div class="pay-b2b-tier-label">50 <span data-i18n="landing.pricingB2bLicenses">licencji</span></div>
+                </div>
+                <div class="pay-b2b-tier">
+                    <div class="pay-b2b-tier-price">100 <span>PLN</span> <span data-i18n="landing.pricingPerMonth">/mies</span></div>
+                    <div class="pay-b2b-tier-label" data-i18n="landing.pricingB2bUnlimited">Bez limitu</div>
+                </div>
             </div>
-            <a href="mailto:support@coachay.com" style="flex-shrink:0; font-size:15px; font-weight:800; color:var(--akcent); text-decoration:none; white-space:nowrap;" data-i18n="platnosci.b2bCta">Napisz do nas →</a>
+            <div class="pay-b2b-note" data-i18n="landing.pricingB2bNote">Większe kluby — oferta indywidualna.</div>
+            <a href="mailto:support@coachay.com" class="pay-b2b-cta" data-i18n="platnosci.b2bCta">Napisz do nas →</a>
         </div>
 
       </div><!-- /.pay-container -->
