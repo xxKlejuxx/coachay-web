@@ -60,6 +60,13 @@ const I18N = {
         reminderTitle:  (typeName, timeStr) => `${typeName} już za ${timeStr}`,
         reminderReady:  'czy jesteś gotowy?',
         locale: 'pl-PL',
+        // 2026-11-09 (sync #0179): widoczny push EVENT_REMINDER budowany po stronie CF
+        remindPrefix: 'Przypomnienie',
+        remindOwn:    (name, title, timeStr) => `${name}, pamiętasz o: ${title} za ${timeStr}`,
+        remindNoName: (title, timeStr) => `Pamiętasz o: ${title} za ${timeStr}`,
+        remindChild:  (childNames, title, timeStr) => `Pamiętasz o: ${childNames} — ${title} za ${timeStr}`,
+        timeHours:    (h) => `${h} godz.`,
+        timeMinutes:  (m) => `${m} min`,
     },
     en: {
         types: { TRENING: 'Training', MECZ: 'Match', WYJAZD: 'Away game', INNE: 'Event' },
@@ -76,8 +83,21 @@ const I18N = {
         reminderTitle:  (typeName, timeStr) => `${typeName} in ${timeStr}`,
         reminderReady:  'are you ready?',
         locale: 'en-GB',
+        // 2026-11-09 (sync #0179): widoczny push EVENT_REMINDER budowany po stronie CF
+        remindPrefix: 'Reminder',
+        remindOwn:    (name, title, timeStr) => `${name}, remember: ${title} in ${timeStr}`,
+        remindNoName: (title, timeStr) => `Remember: ${title} in ${timeStr}`,
+        remindChild:  (childNames, title, timeStr) => `Remember: ${childNames} — ${title} in ${timeStr}`,
+        timeHours:    (h) => `${h}h`,
+        timeMinutes:  (m) => `${m} min`,
     },
 };
+
+// Format czasu do startu w stylu "za 1 godz." / "za 30 min" (albo "in 1h" / "in 30 min" dla EN)
+function _timeUntilStr(hoursBefore, i18n) {
+    if (hoursBefore >= 1) return i18n.timeHours(Math.round(hoursBefore));
+    return i18n.timeMinutes(Math.max(1, Math.round(hoursBefore * 60)));
+}
 
 async function getLang(userId) {
     if (!userId) return 'pl';
@@ -1191,11 +1211,14 @@ async function calcBadgeCount(userId) {
     return Math.max(0, counts.events || 0) + Math.max(0, counts.tasks || 0) + Math.max(0, counts.messages || 0);
 }
 
-// Wysyła cichy push EVENT_REMINDER (bez tytułu/treści) — appka mobilna
-// sama dociąga event po referenceId i buduje lokalne powiadomienie
+// Wysyła push EVENT_REMINDER — appka mobilna
 // eventStartMs (opcjonalnie, ms) — gdy wołający już zna czas startu wydarzenia (tak jak
 // sendEventReminders), użyj go do expiration zamiast dociągać event ponownie z Firestore.
-async function sendDirectPush(userId, eventId, eventStartMs) {
+// content (opcjonalnie, { title, body }) — 2026-11-09 (sync #0179): gdy podane, push jest
+// WIDOCZNY (tytuł/treść budowane przez CF, data.visible=true) — appka ≥1.1.73 na flagę
+// visible NIE buduje własnego lokalnego powiadomienia (unikamy dubla). Bez `content` push
+// zostaje cichy jak dawniej (appka buduje lokalnie sama).
+async function sendDirectPush(userId, eventId, eventStartMs, content = null) {
     try {
         if (_isDemoAccount(userId)) return; // 2026-11-07 (sync #0172): nigdy realnego pusha na konto demo
         const userDoc = await db.collection('users').doc(userId).get();
@@ -1206,14 +1229,18 @@ async function sendDirectPush(userId, eventId, eventStartMs) {
         const expirationSec = typeof eventStartMs === 'number'
             ? _expirationFromMs(eventStartMs)
             : Math.floor(Date.now() / 1000) + PUSH_TTL_EVENT_FALLBACK;
+        const data = { type: 'EVENT_REMINDER', referenceId: eventId };
+        if (content) { data.visible = true; data.screen = 'kalendarz'; data.eventId = eventId; }
         if (expoToken && Expo.isExpoPushToken(expoToken)) {
             const tickets = await expo.sendPushNotificationsAsync([{
                 to: expoToken,
-                sound: null,
+                sound: content ? 'default' : null,
+                title: content ? content.title : undefined,
+                body:  content ? content.body  : undefined,
                 _contentAvailable: true,
                 priority: 'high',
                 expiration: expirationSec,
-                data: { type: 'EVENT_REMINDER', referenceId: eventId }
+                data
             }]);
             // 2026-09-24: diagnostyka — status odpowiedzi Expo (ok / error + powód, np. DeviceNotRegistered)
             const tk = tickets?.[0] || {};
@@ -1221,11 +1248,9 @@ async function sendDirectPush(userId, eventId, eventStartMs) {
             console.log(`EVENT_REMINDER → ${userId} expo ${expoToken.slice(0, 30)}… ticket: ${tk.status}${tk.id ? ' id=' + tk.id : ''}${tk.message ? ' msg=' + tk.message : ''}${tk.details?.error ? ' err=' + tk.details.error : ''}`);
         } else if (fcmToken) {
             const ttlSec = Math.max(60, expirationSec - Math.floor(Date.now() / 1000));
-            await getMessaging().send({
-                token: fcmToken,
-                data: { type: 'EVENT_REMINDER', referenceId: eventId },
-                webpush: { headers: { TTL: String(ttlSec) } }
-            });
+            const msg = { token: fcmToken, data, webpush: { headers: { TTL: String(ttlSec) } } };
+            if (content) msg.notification = { title: content.title, body: content.body };
+            await getMessaging().send(msg);
         }
     } catch (e) {
         console.error(`sendDirectPush(${userId}):`, e);
@@ -2028,21 +2053,70 @@ exports.sendEventReminders = onSchedule({ schedule: '5,20,35,50 * * * *', timeZo
             // Oznacz jako wysłane PRZED wysyłką (anty-duplikat)
             await db.collection('events').doc(ev.id).update({ reminderSentAt: new Date().toISOString() });
 
-            // Pobierz wszystkich członków drużyny
+            // Pobierz wszystkich członków drużyny (role + playerId potrzebne do spersonalizowanej treści)
             const mbrSnap = await db.collection('memberships')
                 .where('teamId', '==', ev.teamId)
                 .where('status', 'in', ['active', 'ACTIVE', 'grace', 'demo'])
                 .get();
 
-            const userIds = [...new Set(
-                mbrSnap.docs.map(d => d.data().userId).filter(Boolean)
-            )];
-
-            for (const userId of userIds) {
-                await sendDirectPush(userId, ev.id, evTime);
+            // Grupuj po userId — jeden push na osobę, nawet gdy ma kilka membershipów (np. rodzic 2+ dzieci)
+            const byUser = {};
+            for (const d of mbrSnap.docs) {
+                const m = d.data();
+                if (!m.userId) continue;
+                if (!byUser[m.userId]) byUser[m.userId] = { roles: new Set(), playerIds: new Set() };
+                if (m.role) byUser[m.userId].roles.add(m.role);
+                if (m.playerId) byUser[m.userId].playerIds.add(m.playerId);
             }
 
-            console.log(`✅ Reminder: ${ev.id} (${ev.date} ${ev.timeFrom} PL = ${new Date(evTime).toISOString()}) → cichy push ${new Date(now).toISOString()} do ${userIds.length} users, rh=${rh}h`);
+            const typeName  = TYPE_NAMES[ev.type] || TYPE_NAMES.INNE;
+            const titleText = ev.title || typeName;
+            const playerNameCache = {};
+            const userIds = Object.keys(byUser);
+
+            for (const userId of userIds) {
+                // 2026-11-09 (sync #0179): widoczny push — tytuł/treść budowane tu, po stronie CF
+                let content = null;
+                try {
+                    const userDoc = await db.collection('users').doc(userId).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        const lang  = userData.language || userData.lang || 'pl';
+                        const i18n  = I18N[lang] || I18N.pl;
+                        const timeStr = _timeUntilStr(rh, i18n);
+                        const title   = `${i18n.remindPrefix}: ${(i18n.types[ev.type] || i18n.types.INNE).toLowerCase()}`;
+                        const { roles, playerIds } = byUser[userId];
+                        const isOwnName = [...roles].some(r => _MBR_TRAINER_ROLES.has(r) || r === 'ZAWODNIK');
+
+                        let body;
+                        if (!isOwnName && playerIds.size > 0) {
+                            const names = [];
+                            for (const pid of playerIds) {
+                                if (!(pid in playerNameCache)) {
+                                    try {
+                                        const pd = await db.collection('players').doc(pid).get();
+                                        playerNameCache[pid] = pd.exists ? (pd.data().name || null) : null;
+                                    } catch (e) { playerNameCache[pid] = null; }
+                                }
+                                if (playerNameCache[pid]) names.push(playerNameCache[pid]);
+                            }
+                            body = names.length
+                                ? i18n.remindChild(names.join(', '), titleText, timeStr)
+                                : i18n.remindNoName(titleText, timeStr);
+                        } else {
+                            body = userData.firstName
+                                ? i18n.remindOwn(userData.firstName, titleText, timeStr)
+                                : i18n.remindNoName(titleText, timeStr);
+                        }
+                        content = { title, body };
+                    }
+                } catch (e) {
+                    console.error(`sendEventReminders content(${userId}):`, e);
+                }
+                await sendDirectPush(userId, ev.id, evTime, content);
+            }
+
+            console.log(`✅ Reminder: ${ev.id} (${ev.date} ${ev.timeFrom} PL = ${new Date(evTime).toISOString()}) → widoczny push ${new Date(now).toISOString()} do ${userIds.length} users, rh=${rh}h`);
         }
     } catch (e) {
         console.error('❌ sendEventReminders:', e);
